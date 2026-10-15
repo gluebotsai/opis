@@ -1,0 +1,136 @@
+version: 1
+
+enums:
+  DealStage:
+    values:
+      - qualification
+      - discover
+      - propose
+      - negotiate
+      - closed_won
+      - closed_lost
+    weights:
+      qualification: 0.10
+      discover: 0.25
+      propose: 0.50
+      negotiate: 0.75
+      closed_won: 1.00
+      closed_lost: 0.00
+    open_stages:
+      - qualification
+      - discover
+      - propose
+      - negotiate
+
+  QuoteStatus:
+    values:
+      - draft
+      - sent
+      - accepted
+      - rejected
+      - void
+
+  OrderStatus:
+    values:
+      - draft
+      - confirmed
+      - fulfilled
+      - cancelled
+
+  InvoiceStatus:
+    values:
+      - draft
+      - sent
+      - paid
+      - void
+      - overdue
+
+  InvoiceApprovalStatus:
+    values:
+      - drafting
+      - pending_approval
+      - approved
+
+  InvoiceBillingKind:
+    values:
+      - standard
+      - setup
+      - subscription_start
+      - renewal
+      - amendment
+      - adjustment
+      - credit
+
+  InvoicePaymentMethod:
+    values:
+      - offline
+      - manual
+      - stripe
+      - razorpay
+
+  ContractStatus:
+    values:
+      - active
+      - expired
+      - cancelled
+
+  ContractBillingScheduleStatus:
+    values:
+      - scheduled
+      - generated
+      - cancelled
+
+  CompanyChannelRole:
+    values:
+      - standard
+      - franchise
+      - owned_store
+      - brand_hq
+    channel_hubs:
+      - franchise
+      - owned_store
+      - brand_hq
+
+  LocationType:
+    values:
+      - hq
+      - branch
+
+  LeadStatus:
+    values:
+      - new
+      - contacted
+      - qualified
+      - disqualified
+      - converted
+
+  ActivityType:
+    values:
+      - call
+      - meeting
+      - email
+      - sms
+      - note
+      - task
+
+  TaskStatus:
+    values:
+      - open
+      - in_progress
+      - completed
+
+  AppointmentStatus:
+    values:
+      - scheduled
+      - completed
+      - canceled
+
+  Role:
+    values:
+      - admin
+      - sales_manager
+      - sales_rep
+      - presales
+      - marketing
+      - finance
+      - viewer

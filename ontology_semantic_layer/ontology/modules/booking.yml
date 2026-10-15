@@ -1,0 +1,40 @@
+# Module: booking
+module: booking
+layer: domain
+depends_on: [core, identity]
+usecase: >
+  Lola BookingAgent — validate phone/email, calendar, book/reschedule.
+  Industry packs may relabel Appointment (e.g. Patient visit) without a new root type.
+
+classes:
+  - id: Appointment
+    extends: Event
+    definition: Scheduled meeting or demo with the customer.
+    properties: [startsAt, endsAt, status]
+    relations:
+      attendee: Contact
+      bookedOn: Channel
+
+relations:
+  - { from: Appointment, type: ATTENDEE, to: Contact }
+  - { from: Appointment, type: ATTENDEE, to: Contact }
+
+actions:
+  - id: action.validate_identity_field
+    operates_on: [Contact]
+    maps_to_tools: [VALIDATE_PHONE_NUMBER, VALIDATE_EMAIL]
+
+  - id: action.check_availability
+    operates_on: [Appointment]
+    mutates: false
+    maps_to_tools: [CALENDAR_TOOL]
+
+  - id: action.book_appointment
+    operates_on: [Appointment]
+    requires: [identityResolved]
+    maps_to_tools: [BOOK_APPOINTMENT]
+
+  - id: action.reschedule_appointment
+    operates_on: [Appointment]
+    requires: [identityResolved]
+    maps_to_tools: [RESCHEDULE_APPOINTMENT]

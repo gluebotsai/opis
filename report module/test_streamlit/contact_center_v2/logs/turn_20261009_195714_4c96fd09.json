@@ -1,0 +1,61 @@
+{
+  "turn_id": "4c96fd09",
+  "timestamp": "2026-10-09T14:27:14.733686+00:00",
+  "question": "What percentage of customers had their issue resolved on the first interaction?",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1017,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>First interaction resolution rate</strong></p><p>The percentage of conversations resolved on the first interaction for all time is <strong>15.62%</strong>.</p><p>Would you like to see this percentage broken down by channel?</p>",
+  "card": "card: kpi r1",
+  "facts": "result_id: r1\nwindow: all time\ncertified: false\ntask_goal: Calculate the percentage of conversations where the resolution code indicates it was resolved on the first interaction.\nanswer_type: number\nrow_count: 1\nrow 1: ?column?=0.1562",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1017,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "What percentage of customers had their issue resolved on the first interaction?",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants to know the percentage of conversations that were resolved on the first interaction.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Calculate the percentage of conversations where the resolution code indicates it was resolved on the first interaction.",
+          "time": "all time",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "free_sql_fallback": true,
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": false,
+        "kpi_id": null,
+        "row_count": 1
+      }
+    ],
+    "facts": "result_id: r1\nwindow: all time\ncertified: false\ntask_goal: Calculate the percentage of conversations where the resolution code indicates it was resolved on the first interaction.\nanswer_type: number\nrow_count: 1\nrow 1: ?column?=0.1562",
+    "grounded": true,
+    "card": "card: kpi r1"
+  },
+  "error": null
+}

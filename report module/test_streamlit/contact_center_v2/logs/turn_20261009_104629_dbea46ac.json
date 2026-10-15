@@ -1,0 +1,60 @@
+{
+  "turn_id": "dbea46ac",
+  "timestamp": "2026-10-09T05:16:29.651523+00:00",
+  "question": "how many conversations are waiting right now?",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1016,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Current waiting conversations</strong></p><p>There are <strong>0</strong> conversations waiting right now.</p><p>Would you like to see the average wait time for these conversations?</p>",
+  "card": "card: none",
+  "facts": "result_id: r1\nwindow: now (live)\nkpi: waiting\ncertified: true\ntask_goal: Count the number of conversations currently waiting in queue.\nanswer_type: number\nrow_count: 1\nrow 1: waiting=0",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1016,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "how many conversations are waiting right now?",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants to know the current count of conversations waiting in queue.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Count the number of conversations currently waiting in queue.",
+          "time": "now",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "waiting",
+        "row_count": 1
+      }
+    ],
+    "facts": "result_id: r1\nwindow: now (live)\nkpi: waiting\ncertified: true\ntask_goal: Count the number of conversations currently waiting in queue.\nanswer_type: number\nrow_count: 1\nrow 1: waiting=0",
+    "grounded": true,
+    "card": "card: none"
+  },
+  "error": null
+}

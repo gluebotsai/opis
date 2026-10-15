@@ -1,0 +1,33 @@
+# Tenant org1008 — CCaaS + CRM only (no campaign, no ticketing).
+# Hub sends products in the request; enabledSpokes is documentation for humans.
+
+tenantId: org1008
+organizationId: 1008
+industryPack: saas_b2b
+businessType: b2b
+enabledSpokes: [contact_centre, crm, hub, cdp]
+extra_modules: []
+
+labels:
+  wt:Customer: Prospect
+  wt:Contact: Contact
+  wt:Organization: Workspace
+  wt:Deal: Opportunity
+
+synonyms:
+  Account: Contact
+  Prospect: Contact
+  Opportunity: Opportunity
+
+binds:
+  wt:Customer:
+    live: GET /cdp/v1/profiles/{cdpId}
+    warehouse: cdp.customer_profile
+    keys: [cdpId, email, crmContactId]
+    join: { organization: organization_id }
+  wt:Deal:
+    warehouse: mart_deals
+    join: { customer: cdpId, organization: organization_id }
+
+policies:
+  contactWindow: { tz: Asia/Kolkata, hours: "09:00-18:00" }

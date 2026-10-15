@@ -1,0 +1,429 @@
+/**
+ * Sales — Dashboard (/dashboard)
+ * Analytics composition: header + KPI strip + insight panels + customers table.
+ * Canvas #F4F4F6 · Surfaces #FFFFFF · Border #C9C9CF · Accent icons from consistency MD.
+ */
+
+.app-content:has(.sales-dashboard-page) {
+  background: #f4f4f6;
+}
+
+.sales-dashboard-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
+  padding-bottom: 0;
+}
+
+.sales-dashboard-page .page-header {
+  flex: 0 0 auto;
+  margin-bottom: 0;
+}
+
+.sales-dashboard-page .page-header h1 {
+  color: #0b0b10;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 28px;
+  margin: 0;
+}
+
+.sales-dashboard-page .page-header__copy {
+  color: #3f3f49;
+  font-size: 14px;
+  line-height: 20px;
+  margin: 8px 0 0;
+  max-width: 640px;
+}
+
+/* KPI strip — equal card height in the row; strip itself stays content-sized */
+.sales-dashboard-summary {
+  align-items: stretch;
+  align-self: stretch;
+  display: grid;
+  flex: 0 0 auto;
+  gap: 16px;
+  grid-auto-rows: 1fr;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  height: max-content;
+}
+
+.sales-dashboard-page .sales-dashboard-stat-card {
+  align-items: flex-start;
+  align-self: stretch;
+  background: #ffffff;
+  border: 1px solid #c9c9cf;
+  border-radius: 12px;
+  box-shadow: none;
+  display: flex;
+  flex: 0 0 auto;
+  gap: 12px;
+  height: auto;
+  min-height: 100%;
+  padding: 14px 16px;
+}
+
+.sales-dashboard-stat-card__body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.sales-dashboard-stat-card__icon {
+  align-items: center;
+  border-radius: 8px;
+  display: inline-flex;
+  flex-shrink: 0;
+  height: 36px;
+  justify-content: center;
+  width: 36px;
+}
+
+.sales-dashboard-stat-card__icon--customers {
+  background: color-mix(in srgb, #3a3fe0 14%, #ffffff);
+  color: #3a3fe0;
+}
+
+.sales-dashboard-stat-card__icon--subscriptions {
+  background: color-mix(in srgb, #653ae0 14%, #ffffff);
+  color: #653ae0;
+}
+
+.sales-dashboard-stat-card__icon--mrr {
+  background: color-mix(in srgb, #098f6a 14%, #ffffff);
+  color: #098f6a;
+}
+
+.sales-dashboard-stat-card__icon--finance {
+  background: color-mix(in srgb, #e0b73a 18%, #ffffff);
+  color: #866300;
+}
+
+.sales-dashboard-stat-card__icon--renewals {
+  background: color-mix(in srgb, #3a9ee0 14%, #ffffff);
+  color: #3a9ee0;
+}
+
+.sales-dashboard-stat-card__label {
+  color: #5e5e69;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.sales-dashboard-stat-card__value {
+  color: #0b0b10;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 28px;
+}
+
+.sales-dashboard-stat-card__hint {
+  color: #7e7e88;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+/* Insight panels */
+.sales-dashboard-grid {
+  align-items: stretch;
+  display: grid;
+  flex: 0 0 auto;
+  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.sales-dashboard-page .sales-dashboard-panel,
+.sales-dashboard-page .onboarding-card.sales-dashboard-panel {
+  background: #ffffff;
+  border: 1px solid #c9c9cf;
+  border-radius: 12px;
+  box-shadow: none;
+  padding: 16px 20px;
+}
+
+.sales-dashboard-panel h2 {
+  color: #0b0b10;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+  margin: 0 0 12px;
+}
+
+.sales-dashboard-panel__header {
+  align-items: flex-start;
+  border-bottom: 1px solid #e2e2e6;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+}
+
+.sales-dashboard-panel__header h2 {
+  margin: 0;
+}
+
+.sales-dashboard-panel__header p {
+  color: #5e5e69;
+  font-size: 13px;
+  line-height: 18px;
+  margin: 4px 0 0;
+}
+
+.sales-dashboard-empty {
+  color: #5e5e69;
+  font-size: 14px;
+}
+
+/* Adoption bars — single blue series; shared baseline track; all catalog products */
+.sales-dashboard-adoption__bar-group {
+  cursor: default;
+}
+
+.sales-dashboard-adoption__bar-group:hover {
+  background: #f4f4f6;
+}
+
+.sales-dashboard-page .sales-dashboard-adoption__bar-track {
+  min-height: 0;
+}
+
+.sales-dashboard-page .sales-dashboard-adoption__bar,
+.sales-dashboard-page .sales-dashboard-adoption__bar--zero {
+  background: #3a9ee0;
+}
+
+.sales-dashboard-page .sales-dashboard-adoption__bar--zero {
+  opacity: 0.35;
+}
+
+.sales-dashboard-adoption__bar-group:hover .sales-dashboard-adoption__bar {
+  box-shadow: none;
+  filter: none;
+  transform: none;
+}
+
+/* Renewals — no row hover (actions are buttons, not row navigation) */
+.sales-dashboard-renewals li {
+  border-radius: 0;
+  margin: 0;
+  transition: none;
+}
+
+.sales-dashboard-renewals li:hover {
+  background: transparent;
+}
+
+.sales-dashboard-renewals-empty:hover {
+  background: transparent;
+}
+
+.sales-dashboard-renewals-empty:hover .sales-dashboard-renewals-empty__icon {
+  background: #f4f4f6;
+  color: #23232b;
+  transform: none;
+}
+
+.sales-dashboard-renewals__cta {
+  min-height: 32px;
+  padding: 0 12px;
+}
+
+.sales-dashboard-panel__content--product-requests {
+  min-height: 0;
+}
+
+.sales-dashboard-product-requests {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sales-dashboard-product-requests li {
+  align-items: center;
+  border-bottom: 1px solid #e2e2e6;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 12px 0;
+}
+
+.sales-dashboard-product-requests li:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.sales-dashboard-product-requests li:first-child {
+  padding-top: 0;
+}
+
+.sales-dashboard-product-requests__main {
+  display: flex;
+  flex: 1 1 220px;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.sales-dashboard-product-requests__main strong {
+  color: #0b0b10;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+}
+
+.sales-dashboard-product-requests__main small {
+  color: #5e5e69;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.sales-dashboard-product-requests__meta {
+  align-items: center;
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.sales-dashboard-product-requests__cta {
+  min-height: 32px;
+  padding: 0 12px;
+  white-space: nowrap;
+}
+
+.sales-dashboard-product-requests__more {
+  color: #5e5e69;
+  font-size: 12px;
+  line-height: 16px;
+  margin: 12px 0 0;
+}
+
+/* Customers table — hover only on navigable rows */
+.sales-dashboard-table-wrap {
+  border: 1px solid #c9c9cf;
+  border-radius: 8px;
+  overflow: auto;
+}
+
+.sales-dashboard-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+}
+
+.sales-dashboard-table th,
+.sales-dashboard-table td {
+  border-bottom: 1px solid #e2e2e6;
+  padding: 12px;
+}
+
+.sales-dashboard-table th {
+  background: #f4f4f6;
+  color: #5e5e69;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+.sales-dashboard-table tbody tr {
+  cursor: default;
+  transition: none;
+}
+
+.sales-dashboard-table tbody tr:hover {
+  background: transparent;
+}
+
+.sales-dashboard-table tbody tr.is-clickable {
+  cursor: pointer;
+}
+
+.sales-dashboard-table tbody tr.is-clickable:hover {
+  background: #f4f4f6;
+}
+
+.sales-dashboard-table tbody tr.is-clickable:hover .sales-dashboard-mini-usage__fill {
+  box-shadow: none;
+  filter: none;
+}
+
+.sales-dashboard-mini-usage__fill {
+  background: #653ae0;
+}
+
+.sales-dashboard-table-tools__search {
+  background: #ffffff;
+  border: 1px solid #c9c9cf;
+  border-radius: 8px;
+}
+
+.sales-dashboard-table-tools__search:focus-within {
+  border-color: #5f1fb0;
+  box-shadow: 0 0 0 3px color-mix(in srgb, #5f1fb0 18%, transparent);
+}
+
+.sales-dashboard-table-tools__view-all {
+  background: #0b0b10;
+  border: none;
+  border-radius: 12px;
+  font-weight: 500;
+  min-height: 40px;
+}
+
+.sales-dashboard-table-tools__view-all:hover {
+  background: #3f3f49;
+}
+
+@media (max-width: 1439px) {
+  .sales-dashboard-summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1100px) {
+  .sales-dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sales-dashboard-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .sales-dashboard-summary {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-height: 720px) {
+  .sales-dashboard-page {
+    gap: 16px;
+  }
+
+  .sales-dashboard-page .page-header__copy {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+    overflow: hidden;
+  }
+
+  .sales-dashboard-page .sales-dashboard-stat-card {
+    padding: 12px 14px;
+  }
+
+  .sales-dashboard-stat-card__value {
+    font-size: 18px;
+    line-height: 24px;
+  }
+}

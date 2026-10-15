@@ -1,0 +1,28 @@
+---
+description: inventory.products is the shared catalog — DML only, no field/DDL changes from CRM
+alwaysApply: true
+---
+
+# Shared catalog (`inventory`)
+
+`inventory.products` is the **only** product catalog table for all motions (B2B / B2C / B2B2C). CRM does **not** own that schema.
+
+Prisma maps `Product` with `@@schema("inventory")`. There is **no** `crm.products` table or view. Offers, addons, price books, and quote/order/invoice lines stay in `crm.*` and keep `product_id`.
+
+## Forbidden
+
+- `CREATE` / `ALTER` / `DROP` on **any** table, column, index, enum, or view in **`inventory`** (except approved one-time cutover migrations)
+- Adding product fields via Prisma migrations (`ALTER TABLE … products …`)
+- Reintroducing `crm.products` as a table or view
+- Treating `cdp.products` as the CRM working copy (different table; bigint ids)
+
+## Allowed
+
+- **SELECT / INSERT / UPDATE / DELETE** on **existing** `inventory.products` columns only
+- CRM overlays: `product_offers`, `addons`, `price_books`, quote/order/invoice lines in `crm.*`
+
+## Field changes
+
+If a new product field is required (or a type/enum change): **inform the inventory owners first**. Do not ship a CRM migration against `inventory`. After they add the column, CRM may map it in Prisma / DAO.
+
+When unsure about a column: query `information_schema` / existing code — do not invent columns.

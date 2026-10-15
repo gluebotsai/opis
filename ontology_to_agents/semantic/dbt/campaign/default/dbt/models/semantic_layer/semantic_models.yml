@@ -1,0 +1,310 @@
+version: 2
+
+semantic_models:
+
+  # ---------------------------------------------------------------
+  - name: sem_campaign_overview
+    description: Campaign-grain overview — counts, status, audience size.
+    model: ref('mart_campaign_overview')
+    defaults:
+      agg_time_dimension: created_at
+
+    entities:
+      - name: campaign
+        type: primary
+        expr: campaign_id
+      - name: organization
+        type: foreign
+        expr: organization_id
+      - name: branch
+        type: foreign
+        expr: branch_id
+
+    dimensions:
+      - name: created_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: organization_id
+        type: categorical
+      - name: campaign_status
+        type: categorical
+      - name: source_channel
+        type: categorical
+      - name: campaign_name
+        type: categorical
+      - name: is_live_flag
+        type: categorical
+      - name: is_scheduled_flag
+        type: categorical
+
+    measures:
+      - name: campaign_count
+        agg: count_distinct
+        expr: campaign_id
+      - name: audience_reached
+        agg: sum
+        expr: audience_reached
+      - name: avg_planned_duration_seconds
+        agg: average
+        expr: planned_duration_seconds
+
+  # ---------------------------------------------------------------
+  - name: sem_campaign_touch_performance
+    description: >
+      Campaign-grain send/engagement performance. Built on campaign_send_recipients,
+      the real-table proxy for the metrics doc's non-existent "campaign_touch" entity.
+      delivery_rate uses status='sent' as a proxy for "delivered" — no literal
+      delivered status exists in source. No conversion measure exists — the source
+      schema has no conversion/response field anywhere, so converted_touch_count and
+      conversion_rate are intentionally absent.
+    model: ref('mart_campaign_touch_performance')
+    defaults:
+      agg_time_dimension: campaign_created_at
+
+    entities:
+      - name: campaign
+        type: primary
+        expr: campaign_id
+
+    dimensions:
+      - name: campaign_created_at
+        type: time
+        type_params:
+          time_granularity: day
+      # organization_id intentionally NOT declared here — primary entity
+      # `campaign` already carries it on sem_campaign_overview, and
+      # MetricFlow requires each (primary entity, dimension) pairing to be
+      # unique across the manifest. Reachable as campaign__organization_id
+      # via the shared `campaign` entity. If filtering this model by org
+      # directly at the query layer, use the qualified path
+      # `campaign__organization_id`, not bare `organization_id`.
+
+    measures:
+      - name: touch_count
+        agg: sum
+        expr: touch_count
+      - name: sent_touch_count
+        agg: sum
+        expr: sent_touch_count
+      - name: failed_touch_count
+        agg: sum
+        expr: failed_touch_count
+      - name: opened_touch_count
+        agg: sum
+        expr: opened_touch_count
+      - name: clicked_touch_count
+        agg: sum
+        expr: clicked_touch_count
+      - name: unique_contacts_touched
+        agg: sum
+        expr: unique_contacts_touched
+      - name: avg_attempt_count
+        agg: average
+        expr: avg_attempt_count
+      - name: avg_seconds_to_open
+        agg: average
+        expr: avg_seconds_to_open
+      - name: avg_seconds_open_to_click
+        agg: average
+        expr: avg_seconds_open_to_click
+
+  # ---------------------------------------------------------------
+  - name: sem_template_approval
+    description: >
+      Org+channel grain. Covers regulated_channel_templates (sms/whatsapp) only —
+      the only templates with a real approval lifecycle. compliance_evaluation does
+      not exist as a table, so no compliance-eval measures are defined here.
+    model: ref('mart_template_approval')
+    defaults:
+      agg_time_dimension: first_submitted_at
+
+    entities:
+      - name: organization
+        type: primary
+        expr: organization_id
+
+    dimensions:
+      - name: channel_name
+        type: categorical
+      - name: first_submitted_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: organization_id
+        type: categorical
+
+    measures:
+      - name: template_count
+        agg: sum
+        expr: template_count
+      - name: approved_template_count
+        agg: sum
+        expr: approved_template_count
+      - name: rejected_template_count
+        agg: sum
+        expr: rejected_template_count
+
+  # ---------------------------------------------------------------
+  - name: sem_contact_engagement_org
+    description: >
+      Org grain. unsubscribe_rate/suppression counts are org-level proxies — cannot
+      be sliced per campaign or per touch, because both source tables
+      (campaign_contact_engagement, email_suppressions) are org-scoped, not
+      campaign-scoped.
+    model: ref('mart_contact_engagement_org')
+    primary_entity: contact_engagement_org
+    defaults:
+      agg_time_dimension: first_engagement_at
+
+    entities:
+      - name: organization
+        type: foreign
+        expr: organization_id
+
+    dimensions:
+      - name: organization_id
+        type: categorical
+      - name: first_engagement_at
+        type: time
+        type_params:
+          time_granularity: day
+
+    measures:
+      - name: engaged_contact_count
+        agg: sum
+        expr: engaged_contact_count
+      - name: unsubscribed_contact_count
+        agg: sum
+        expr: unsubscribed_contact_count
+      - name: suppressed_email_count
+        agg: sum
+        expr: suppressed_email_count
+      - name: bounce_suppressed_count
+        agg: sum
+        expr: bounce_suppressed_count
+      - name: complaint_suppressed_count
+        agg: sum
+        expr: complaint_suppressed_count
+
+  # ---------------------------------------------------------------
+  - name: sem_campaign_variant_performance
+    description: >
+      Campaign x ab_variant x recipient_platform grain. Compare open/click performance
+      across A/B variants and delivery platforms. Same sent_touch_count = status='sent'
+      proxy caveat as sem_campaign_touch_performance.
+    model: ref('mart_campaign_variant_performance')
+    defaults:
+      agg_time_dimension: campaign_created_at
+
+    entities:
+      - name: campaign_variant_platform
+        type: primary
+        expr: campaign_id || '-' || ab_variant || '-' || recipient_platform
+      - name: campaign
+        type: foreign
+        expr: campaign_id
+
+    dimensions:
+      - name: campaign_created_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: organization_id
+        type: categorical
+      - name: ab_variant
+        type: categorical
+      - name: recipient_platform
+        type: categorical
+
+    measures:
+      - name: variant_touch_count
+        agg: sum
+        expr: touch_count
+      - name: variant_sent_touch_count
+        agg: sum
+        expr: sent_touch_count
+      - name: variant_opened_touch_count
+        agg: sum
+        expr: opened_touch_count
+      - name: variant_clicked_touch_count
+        agg: sum
+        expr: clicked_touch_count
+
+  # ---------------------------------------------------------------
+  - name: sem_campaign_batch_health
+    description: >
+      Campaign x channel grain. Batch-level send infrastructure health — failure rate
+      and processing time, distinct from per-recipient outcomes.
+    model: ref('mart_campaign_batch_health')
+    defaults:
+      agg_time_dimension: first_batch_created_at
+
+    entities:
+      - name: campaign_channel
+        type: primary
+        expr: campaign_id || '-' || channel_name
+      - name: campaign
+        type: foreign
+        expr: campaign_id
+
+    dimensions:
+      - name: channel_name
+        type: categorical
+      - name: first_batch_created_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: organization_id
+        type: categorical
+
+    measures:
+      - name: batch_count
+        agg: sum
+        expr: batch_count
+      - name: failed_batch_count
+        agg: sum
+        expr: failed_batch_count
+      - name: completed_batch_count
+        agg: sum
+        expr: completed_batch_count
+      - name: total_expected_recipients
+        agg: sum
+        expr: total_expected_recipients
+      - name: avg_batch_processing_seconds
+        agg: average
+        expr: avg_batch_processing_seconds
+
+  # ---------------------------------------------------------------
+  - name: sem_template_rejection_reasons
+    description: >
+      Org x channel x rejected_reason grain. Why regulated_channel_templates were
+      rejected. rejected_reason is free-form text from the source, not a fixed enum.
+    model: ref('mart_template_rejection_reasons')
+    defaults:
+      agg_time_dimension: first_rejected_template_submitted_at
+
+    entities:
+      - name: org_channel_reason
+        type: primary
+        expr: organization_id || '-' || channel_name || '-' || rejected_reason
+      - name: organization
+        type: foreign
+        expr: organization_id
+
+    dimensions:
+      - name: channel_name
+        type: categorical
+      - name: rejected_reason
+        type: categorical
+      - name: first_rejected_template_submitted_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: organization_id
+        type: categorical
+
+    measures:
+      - name: rejection_reason_count
+        agg: sum
+        expr: rejected_template_count

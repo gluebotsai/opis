@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>POC Contact Center - Telephony Platform V1</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --accent-color: #6366f1;
+      --accent-hover: #4f46e5;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --success-color: #22c55e;
+      --warning-color: #eab308;
+      --danger-color: #ef4444;
+      --info-color: #3b82f6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      background: var(--bg-gradient);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--card-border);
+      padding: 16px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, #818cf8, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      background: rgba(34, 197, 94, 0.15);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      color: var(--success-color);
+    }
+
+    .status-badge.disconnected {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: rgba(239, 68, 68, 0.3);
+      color: var(--danger-color);
+    }
+
+    .pulse {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 8px currentColor;
+    }
+
+    main {
+      flex: 1;
+      padding: 24px 32px;
+      display: grid;
+      grid-template-columns: 340px 1fr 360px;
+      gap: 24px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 12px;
+    }
+
+    /* 5 Agents List */
+    .agent-item {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .agent-item:hover, .agent-item.selected {
+      background: rgba(99, 102, 241, 0.15);
+      border-color: var(--accent-color);
+    }
+
+    .agent-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .agent-name {
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .agent-ext {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+
+    .presence-pill {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 10px;
+      text-transform: uppercase;
+    }
+
+    .presence-AVAILABLE { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
+    .presence-BUSY { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+    .presence-ON_BREAK { background: rgba(234, 179, 8, 0.2); color: #facc15; }
+    .presence-OFFLINE { background: rgba(148, 163, 184, 0.2); color: #94a3b8; }
+
+    /* Active Agent Console */
+    .console-header {
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid var(--accent-color);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .status-select {
+      background: rgba(15, 23, 42, 0.8);
+      color: var(--text-primary);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    /* Softphone & Call Control */
+    .softphone-box {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    label {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    input {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 10px;
+      color: var(--text-primary);
+      font-size: 0.9rem;
+    }
+
+    .btn-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    button {
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: none;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn-primary { background: var(--accent-color); color: #fff; }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-success { background: var(--success-color); color: #fff; }
+    .btn-danger { background: var(--danger-color); color: #fff; }
+    .btn-warning { background: var(--warning-color); color: #0f172a; }
+    .btn-secondary { background: rgba(255, 255, 255, 0.1); color: var(--text-primary); }
+
+    /* Live Queue Metrics */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .metric-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .metric-val {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--accent-color);
+    }
+
+    .metric-lbl {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    /* Event Log Stream */
+    .log-stream {
+      background: #090d16;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 12px;
+      font-family: monospace;
+      font-size: 0.75rem;
+      height: 380px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .log-entry {
+      padding: 4px 8px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.02);
+      line-height: 1.4;
+    }
+
+    .log-time { color: var(--text-secondary); margin-right: 6px; }
+    .log-tag { font-weight: 700; color: #38bdf8; margin-right: 6px; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand-title">
+      🏢 Telephony Platform - POC Contact Center
+    </div>
+    <div id="socket-status" class="status-badge disconnected">
+      <span class="pulse"></span>
+      <span id="socket-text">Connecting to WS...</span>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- LEFT COLUMN: 5 Hardcoded Agents -->
+    <div class="card">
+      <div class="card-title">
+        <span>Contact Center Agents</span>
+        <span style="font-size: 0.75rem; color: var(--text-secondary)">5 Credentials</span>
+      </div>
+
+      <div id="agents-list" style="display: flex; flex-direction: column; gap: 10px;">
+        <!-- Dynamically rendered -->
+      </div>
+    </div>
+
+    <!-- CENTER COLUMN: Active Agent Console & Queue Routing -->
+    <div class="card">
+      <div class="card-title">
+        <span>Agent Operations Console</span>
+        <span id="active-agent-title" style="font-size: 0.85rem; color: var(--accent-color);">Ext 1001 selected</span>
+      </div>
+
+      <!-- Agent Status Toolbar -->
+      <div class="console-header">
+        <div>
+          <div id="selected-agent-name" style="font-weight: 700; font-size: 1rem;">Linphone Agent 1</div>
+          <div id="selected-agent-ext" style="font-size: 0.8rem; color: var(--text-secondary);">Extension 1001 (SIP: password1001)</div>
+        </div>
+
+        <select id="presence-select" class="status-select" onchange="changeAgentStatus(this.value)">
+          <option value="AVAILABLE">🟢 AVAILABLE</option>
+          <option value="BUSY">🔴 BUSY</option>
+          <option value="ON_BREAK">🟡 ON BREAK</option>
+          <option value="OFFLINE">⚪ OFFLINE</option>
+        </select>
+      </div>
+
+      <!-- ACD Queue Live Metrics -->
+      <div class="card-title" style="margin-top: 10px;">
+        <span>ACD Support Queue (Ext 1000)</span>
+        <span style="font-size: 0.75rem; color: var(--success-color);">Ring-All Strategy</span>
+      </div>
+
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div id="metric-waiting" class="metric-val">0</div>
+          <div class="metric-lbl">Waiting Callers</div>
+        </div>
+        <div class="metric-card">
+          <div id="metric-available" class="metric-val" style="color: var(--success-color)">2</div>
+          <div class="metric-lbl">Agents Ready</div>
+        </div>
+        <div class="metric-card">
+          <div id="metric-busy" class="metric-val" style="color: var(--danger-color)">1</div>
+          <div class="metric-lbl">Agents Busy</div>
+        </div>
+        <div class="metric-card">
+          <div id="metric-sl" class="metric-val" style="color: #c084fc">100%</div>
+          <div class="metric-lbl">Service Level</div>
+        </div>
+      </div>
+
+      <!-- Active Softphone Control -->
+      <div class="softphone-box">
+        <div style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary);">
+          ☎️ Linphone Softphone & Originate Controls
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div class="form-group">
+            <label>From Extension</label>
+            <input type="text" id="orig-from" value="1001" readonly />
+          </div>
+          <div class="form-group">
+            <label>To Destination (Ext / Queue 1000)</label>
+            <input type="text" id="orig-to" value="1002" placeholder="1002 or 1000" />
+          </div>
+        </div>
+
+        <button class="btn-primary" onclick="originateCall()">📞 Click-to-Dial / Originate Call</button>
+
+        <div id="active-call-bar" style="display: none; background: rgba(34, 197, 94, 0.1); border: 1px solid var(--success-color); border-radius: 8px; padding: 10px; text-align: center; margin-top: 6px;">
+          <div style="font-size: 0.85rem; font-weight: 700; color: var(--success-color);">LIVE CALL IN PROGRESS</div>
+          <div id="call-channel-id" style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px;">Channel: N/A</div>
+        </div>
+
+        <div class="btn-grid" style="margin-top: 6px;">
+          <button class="btn-warning" onclick="holdCall()">⏸️ Hold / Resume</button>
+          <button class="btn-secondary" onclick="muteCall()">🔇 Mute / Unmute</button>
+          <button class="btn-secondary" onclick="transferCall()">↗️ Transfer</button>
+          <button class="btn-secondary" onclick="toggleRecord()">🎙️ Record</button>
+        </div>
+
+        <button class="btn-danger" onclick="hangupCall()" style="margin-top: 4px;">🛑 Hangup Call</button>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN: Real-Time Event Stream Log -->
+    <div class="card">
+      <div class="card-title">
+        <span>Real-Time Event Stream</span>
+        <button class="btn-secondary" onclick="clearLogs()" style="padding: 4px 8px; font-size: 0.75rem;">Clear</button>
+      </div>
+
+      <div id="event-log-stream" class="log-stream">
+        <div class="log-entry"><span class="log-time">[00:00:00]</span> <span class="log-tag">SYSTEM</span> Subscribing to Socket.IO WebSocket stream...</div>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    // Hardcoded 5 Agent Credentials
+    const hardcodedAgents = [
+      { id: 'ag-1', name: 'Linphone Agent 1', ext: '1001', pass: 'password1001', status: 'AVAILABLE' },
+      { id: 'ag-2', name: 'Linphone Agent 2', ext: '1002', pass: 'password1002', status: 'AVAILABLE' },
+      { id: 'ag-3', name: 'Linphone Agent 3', ext: '1003', pass: 'password1003', status: 'BUSY' },
+      { id: 'ag-4', name: 'Linphone Agent 4', ext: '1004', pass: 'password1004', status: 'ON_BREAK' },
+      { id: 'ag-5', name: 'Linphone Agent 5', ext: '1005', pass: 'password1005', status: 'OFFLINE' }
+    ];
+
+    let selectedAgent = hardcodedAgents[0];
+    let currentChannelId = null;
+    let isRecording = false;
+    let isMuted = false;
+    let isOnHold = false;
+    let socket = null;
+
+    const API_BASE = 'http://localhost:3000/api/v1';
+    const API_KEY = 'demo-tenant-api-key-12345';
+
+    // Render 5 Agents List
+    function renderAgents() {
+      const container = document.getElementById('agents-list');
+      container.innerHTML = '';
+
+      let availableCount = 0;
+      let busyCount = 0;
+
+      hardcodedAgents.forEach(ag => {
+        if (ag.status === 'AVAILABLE') availableCount++;
+        if (ag.status === 'BUSY') busyCount++;
+
+        const div = document.createElement('div');
+        div.className = `agent-item ${ag.id === selectedAgent.id ? 'selected' : ''}`;
+        div.onclick = () => selectAgent(ag);
+        div.innerHTML = `
+          <div class="agent-info">
+            <div class="agent-name">${ag.name}</div>
+            <div class="agent-ext">Ext ${ag.ext} (Pass: ${ag.pass})</div>
+          </div>
+          <span class="presence-pill presence-${ag.status}">${ag.status}</span>
+        `;
+        container.appendChild(div);
+      });
+
+      document.getElementById('metric-available').innerText = availableCount;
+      document.getElementById('metric-busy').innerText = busyCount;
+    }
+
+    function selectAgent(ag) {
+      selectedAgent = ag;
+      document.getElementById('selected-agent-name').innerText = ag.name;
+      document.getElementById('selected-agent-ext').innerText = `Extension ${ag.ext} (SIP Password: ${ag.pass})`;
+      document.getElementById('orig-from').value = ag.ext;
+      document.getElementById('presence-select').value = ag.status;
+      document.getElementById('active-agent-title').innerText = `Ext ${ag.ext} selected`;
+      renderAgents();
+      logEvent('AGENT', `Switched active console view to ${ag.name} (Ext ${ag.ext})`);
+    }
+
+    function changeAgentStatus(newStatus) {
+      selectedAgent.status = newStatus;
+      renderAgents();
+      logEvent('PRESENCE', `Agent ${selectedAgent.ext} status changed to ${newStatus}`);
+
+      // Call API
+      fetch(`${API_BASE}/agents/${selectedAgent.id}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'X-API-Key': API_KEY },
+        body: JSON.stringify({ status: newStatus })
+      }).catch(() => {});
+    }
+
+    // Connect WebSocket
+    function connectSocket() {
+      socket = io('http://localhost:3000/events', {
+        query: { tenantId: API_KEY }
+      });
+
+      socket.on('connect', () => {
+        document.getElementById('socket-status').className = 'status-badge';
+        document.getElementById('socket-text').innerText = 'WS Live Connected';
+        logEvent('SOCKET', 'Connected to Socket.IO event gateway room tenant:demo-tenant-api-key-12345');
+      });
+
+      socket.on('disconnect', () => {
+        document.getElementById('socket-status').className = 'status-badge disconnected';
+        document.getElementById('socket-text').innerText = 'Disconnected';
+        logEvent('SOCKET', 'Disconnected from event gateway');
+      });
+
+      // Handle Telephony Events
+      const events = ['call.started', 'call.ringing', 'call.answered', 'call.ended', 'call.transferred', 'agent.status', 'queue.updated', 'recording.ready'];
+      events.forEach(evt => {
+        socket.on(evt, (data) => {
+          logEvent('EVENT', `[${evt}] ${JSON.stringify(data.data || data)}`);
+
+          if (evt === 'call.started' || evt === 'call.ringing') {
+            currentChannelId = data.data?.channelId || 'channel-live';
+            document.getElementById('active-call-bar').style.display = 'block';
+            document.getElementById('call-channel-id').innerText = `Channel ID: ${currentChannelId}`;
+          }
+
+          if (evt === 'call.ended') {
+            document.getElementById('active-call-bar').style.display = 'none';
+            currentChannelId = null;
+          }
+        });
+      });
+    }
+
+    // API Call Control Actions
+    async function originateCall() {
+      const from = document.getElementById('orig-from').value;
+      const to = document.getElementById('orig-to').value;
+      logEvent('API', `POST /calls -> Originate from ${from} to ${to}`);
+
+      try {
+        const res = await fetch(`${API_BASE}/calls`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-API-Key': API_KEY },
+          body: JSON.stringify({ from, to })
+        });
+        const json = await res.json();
+        logEvent('API_RES', JSON.stringify(json));
+      } catch (err) {
+        logEvent('ERROR', err.message);
+      }
+    }
+
+    async function hangupCall() {
+      const cid = currentChannelId || selectedAgent.ext;
+      logEvent('API', `POST /calls/${cid}/hangup`);
+      await fetch(`${API_BASE}/calls/${cid}/hangup`, {
+        method: 'POST',
+        headers: { 'X-API-Key': API_KEY }
+      });
+      document.getElementById('active-call-bar').style.display = 'none';
+    }
+
+    async function holdCall() {
+      const cid = currentChannelId || selectedAgent.ext;
+      const endpoint = isOnHold ? 'resume' : 'hold';
+      logEvent('API', `POST /calls/${cid}/${endpoint}`);
+      await fetch(`${API_BASE}/calls/${cid}/${endpoint}`, {
+        method: 'POST',
+        headers: { 'X-API-Key': API_KEY }
+      });
+      isOnHold = !isOnHold;
+    }
+
+    async function muteCall() {
+      const cid = currentChannelId || selectedAgent.ext;
+      const endpoint = isMuted ? 'unmute' : 'mute';
+      logEvent('API', `POST /calls/${cid}/${endpoint}`);
+      await fetch(`${API_BASE}/calls/${cid}/${endpoint}`, {
+        method: 'POST',
+        headers: { 'X-API-Key': API_KEY }
+      });
+      isMuted = !isMuted;
+    }
+
+    async function transferCall() {
+      const cid = currentChannelId || selectedAgent.ext;
+      const target = prompt('Enter transfer target extension (e.g. 1003):', '1003');
+      if (!target) return;
+
+      logEvent('API', `POST /calls/${cid}/transfer -> ${target}`);
+      await fetch(`${API_BASE}/calls/${cid}/transfer`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-API-Key': API_KEY },
+        body: JSON.stringify({ target, type: 'BLIND' })
+      });
+    }
+
+    async function toggleRecord() {
+      const cid = currentChannelId || selectedAgent.ext;
+      const endpoint = isRecording ? 'record/stop' : 'record';
+      logEvent('API', `POST /calls/${cid}/${endpoint}`);
+      await fetch(`${API_BASE}/calls/${cid}/${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-API-Key': API_KEY },
+        body: JSON.stringify({ name: `rec_${cid}` })
+      });
+      isRecording = !isRecording;
+    }
+
+    // Logger
+    function logEvent(tag, msg) {
+      const stream = document.getElementById('event-log-stream');
+      const time = new Date().toLocaleTimeString();
+      const div = document.createElement('div');
+      div.className = 'log-entry';
+      div.innerHTML = `<span class="log-time">[${time}]</span> <span class="log-tag">${tag}</span> ${msg}`;
+      stream.appendChild(div);
+      stream.scrollTop = stream.scrollHeight;
+    }
+
+    function clearLogs() {
+      document.getElementById('event-log-stream').innerHTML = '';
+    }
+
+    // Init
+    renderAgents();
+    connectSocket();
+  </script>
+</body>
+</html>

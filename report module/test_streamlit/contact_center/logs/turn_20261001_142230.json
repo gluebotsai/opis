@@ -1,0 +1,82 @@
+{
+  "question": "how many agents is ready right now",
+  "answer": "**0** agents are currently active.",
+  "trace": {
+    "question": "how many agents is ready right now",
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1006,
+      "role": "admin",
+      "queue_ids": [
+        1003,
+        1023,
+        1027,
+        1028,
+        1030,
+        1031,
+        1032
+      ]
+    },
+    "model": "worktual-gemma",
+    "tasks": [
+      {
+        "status": "ok",
+        "store": "sql",
+        "kpi_id": "active_agents",
+        "sql": "SELECT\n    COUNT(*)::bigint AS active_agents\nFROM ccass.agents a\nWHERE a.organization_id = 1003\n  AND a.status = 'active'\n\n",
+        "rows": [
+          {
+            "active_agents": 0
+          }
+        ],
+        "dimension": null,
+        "attempts": [
+          {
+            "raw": "```json\n{\"tool\": \"run_kpi\", \"kpi_id\": \"active_agents\"}\n```",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "active_agents"
+            }
+          }
+        ],
+        "time_echo": "today (UTC)",
+        "time_status": "bounded",
+        "tool": "run_kpi",
+        "requested_kpi": "active_agents",
+        "requested_dimension": null,
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "active_agents",
+          "dimension": null,
+          "goal": "Count of agents with active status right now",
+          "time": "today",
+          "scope": "org",
+          "answer_type": "kpi",
+          "depends_on": []
+        }
+      }
+    ],
+    "domain_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"quick\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"active_agents\",\n      \"dimension\": null,\n      \"goal\": \"Count of agents with active status right now\",\n      \"time\": \"today\",\n      \"scope\": \"org\",\n      \"answer_type\": \"kpi\",\n      \"depends_on\": []\n    }\n  ]\n}\n```",
+    "plan": {
+      "kind": "plan",
+      "depth": "quick",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "active_agents",
+          "dimension": null,
+          "goal": "Count of agents with active status right now",
+          "time": "today",
+          "scope": "org",
+          "answer_type": "kpi",
+          "depends_on": []
+        }
+      ]
+    },
+    "facts": "RESULT: active_agents = 0",
+    "grounded": true,
+    "briefing_raw": "**0** agents are currently active."
+  }
+}

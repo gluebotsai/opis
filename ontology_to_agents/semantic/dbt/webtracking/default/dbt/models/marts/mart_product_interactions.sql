@@ -1,0 +1,21 @@
+select
+    interaction_id,
+    page_view_id,
+    session_id,
+    visitor_id,
+    website_id,
+    organization_id,
+    product_id,
+    product_name,
+    product_category,
+    product_price,
+    currency,
+    product_sku,
+    product_brand,
+    section,
+    scroll_depth,
+    time_on_page_sec,
+    device,
+    country,
+    created_at
+from {{ ref('stg_product_interactions') }}

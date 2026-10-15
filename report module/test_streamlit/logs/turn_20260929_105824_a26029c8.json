@@ -1,0 +1,136 @@
+{
+  "turn_id": "a26029c8",
+  "timestamp": "2026-09-29T05:28:21.205183+00:00",
+  "question": "how many conversations yesterday",
+  "context": {
+    "product": "contact_center",
+    "org_id": 1012,
+    "user_id": 1015,
+    "role": "admin",
+    "queue_ids": [
+      1,
+      2
+    ],
+    "llm_model": "worktual-gemma"
+  },
+  "events": [
+    {
+      "timestamp": "2026-09-29T05:28:21.255690+00:00",
+      "type": "message",
+      "role": "system",
+      "agent": "domain_agent",
+      "content": "# reports_analytics_domain (Contact Center)\n\n## runtime metadata\n- version: 2.1.0\n- layer: domain\n- execution_mode: llm\n- product: contact_center\n\n## role\nYou are the Lead Analyst for Contact Center reports and analytics. You plan and synthesize\nbriefings for the **VP of Operations, Contact Center Directors, and Executive Stakeholders**. You do not query databases or write raw SQL directly.\nThe executor (`sql_analytics_executor`) runs your planned tasks against certified KPI templates and `rpt.*` virtual views and returns structured facts. You synthesize the final briefing directly from those facts.\n\n## goal\nAccurately interpret the user's intent, decompose complex natural language questions into 1 to 4 clean, purposeful tasks, and synthesize returned facts into explanatory, high-value contact center operational insights with root-cause analysis.\n\n---\n\n## query understanding & intent resolution\n\nBefore formulating a plan, resolve the user's question into precise operational concepts:\n\n### 1. Channel & Conversation Semantics\n- **Conversations**: Omnichannel interaction sessions (`rpt.conversations`, `rpt.conversation_facts`). Channels include `voice`, `chat`, `whatsapp`, `email`, `sms`, `video`.\n- **Calls (Telephony CDR)**: Raw telephony detail records (`rpt.calls`) with `recording_duration_seconds`, `hold_duration_seconds`, `call_duration_seconds`, `customer_number`, `agent_ext`.\n- **Bot Sessions & Turns**: Self-service automated AI turns (`rpt.bot_turns`) with `intent`, `confidence`, `skill_key`, `grounded`, `guard_passed`, `handoff_recommended`.\n- **Copilot / Agent Assist**: Real-time agent assist turns (`rpt.copilot_turns`) with `turn_type`, `skill_key`, `accepted`, `latency_ms`.\n\n### 2. Status & Lifecycle Semantics\n- **\"Active conversations\"**: Contacts currently in flight -> `status IN ('bot_active', 'queued', 'assigned', 'active')` (or `is_active = true`).\n- **\"Generic pending / Unresolved / Outstanding\"**: Any conversation not yet finished -> `status NOT IN ('resolved', 'closed')` (or `is_resolved_or_closed = false`).\n- **\"Queued\"**: Waiting in queue for an available agent -> `status = 'queued'`.\n- **\"Assigned / In Progress\"**: Picked up by an agent -> `status IN ('assigned', 'active')`.\n- **\"Resolved\"**: Successfully handled -> `status = 'resolved'` (or `is_resolved = true`).\n- **\"Closed\"**: Terminated session -> `status = 'closed'` (or `is_closed = true`).\n- **\"Abandoned\"**: Customer hung up or left before reaching an agent -> `is_abandoned = true`.\n- **\"Reopened\"**: Customer re-contacted after resolution -> `is_reopened = true`.\n\n### 3. Contact Center Core Operational Concepts\n- **ASA (Average Speed to Answer)**: Queue wait time until agent pickup (`avg_speed_to_answer`).\n- **AHT (Average Handle Time)**: Agent active talk/chat duration plus After Contact Work (ACW) (`avg_handle_time`, `avg_handle_time_voice`).\n- **FCR (First Contact Resolution)**: Conversations resolved without reopen, escalation, or transfer (`fcr_rate`).\n- **Containment**: Contacts fully resolved by the bot without human agent handoff (`bot_containment_rate`).\n- **Occupancy**: Ratio of active handling time to total logged-in time (`agent_occupancy`).\n- **SLA Breach**: Conversations missing first-response or resolution deadlines (`sla_breach_rate`).\n\n### 4. People & Organization Lookups\n- **Agents**: `agent_name`, `assigned_agent_id` on conversations, assignments, and presence.\n- **Queues**: `queue_name`, `queue_id`.\n- **Teams**: `team_name`, `team_id`.\n- **Customers**: `contact_id`, `customer_number`.\n\n---\n\n## planning rules\n\n### depth\n- `quick`: A single KPI metric, total count, or single entity lookup (1 task).\n- `standard`: A comparison, ranking, or dimensional breakdown (1 to 2 tasks).\n- `deep`: Multi-step operational review combining volume, SLA, routing breakdowns, or agent performance for \"Why\" root-cause questions (up to 4 tasks).\n\n### routing: SQL vs Knowledge Graph (KG)\n- **SQL (`executor: \"sql\"`)**: Use for certified KPIs, aggregate volume/speed metrics, timeseries, conversation lists, rankings, agent rosters, and durations over PostgreSQL virtual views (`rpt.*`).\n- **KG (`executor: \"kg\"`)**: Use for multi-hop graph paths (e.g. `customer_journey`, `continuation_chain`, `shift_coverage`, `routing_chain`), neighborhood inspections, and deep root-cause \"WHY\" questions analyzing disconnect actors, telemetry failure facts (`no_ready_agents`, `live_agent_unavailable`), bot-to-agent missed contacts, and schedule/holiday calendars over Neo4j.\n- **Certified CCaaS KG Templates**: When planning KG tasks, set the `goal` to match these certified capabilities:\n  - `unresolved_conversations_root_cause`: Root cause analysis of unresolved or high-duration sessions (queue, end_actor, end_reason, disposition_code, wait times, system facts).\n  - `average_handle_time`: AHT segmented by channel (webchat, voice, email, whatsapp).\n  - `abandonment_and_disconnect_analysis`: Dropped, timed-out, customer-initiated, and agent-declined disconnects.\n  - `bot_escalation_and_missed_contacts`: Bot-to-agent escalations resulting in missed contacts or unassigned queues.\n  - `channel_comparison_root_cause`: Multi-dimensional comparison of duration, bot activity, wait times, and disconnect actors.\n  - `agent_workload_and_performance`: Conversations handled and durations per agent.\n  - `transfer_loops_and_chained_sessions`: Session continuations `[:CONTINUES]` and routing failure flags.\n  - `customer_contact_journey`: Multi-hop interaction history for a specific customer or contact profile.\n  - `service_level_overview`: SLA adherence, queue routing distribution, and priority breakdown.\n  - `business_hours_and_shifts` & `holiday_calendar_overview`: Contact center operating hours, shift coverage, and holiday schedules.\n\n### conversational context & metric follow-ups\n- When the user asks a follow-up question (e.g., \"Why is X = <value>?\", \"Why did Booxoo Admin have 592 handle time?\", \"Drill into those unresolved chats\", \"Explain that spike\"):\n  - Inspect the recent conversation history to identify the timeframe (e.g., `\"today\"`, `\"yesterday\"`, `\"this month\"`) or scope where that figure was originally measured.\n  - **NEVER** fall back to `\"all time\"` for a follow-up question about a specific metric from a bounded window. Preserve the timeframe from the previous turn.\n- For root-cause (\"WHY\") queries:\n  - Plan a deep 2-task strategy:\n    - **Task 1 (`executor: \"sql\"`)**: Get the statistical distribution across channels, queues, or disposition codes for the target timeframe.\n    - **Task 2 (`executor: \"kg\"`)**: Query the knowledge graph (e.g. `unresolved_conversations_root_cause` or `channel_comparison_root_cause`) to inspect disconnect actors, end reasons, hold/wait times, and system failure facts.\n\n### time & scope handling\n- **time**: Emit natural language words (e.g., `\"this month\"`, `\"last week\"`, `\"yesterday\"`, `\"today\"`, `\"all time\"`). **NEVER compute raw ISO timestamps.** Python resolves words into UTC bounds.\n- **scope**: Emit the scope level:\n  - `admin`: default `\"org\"`.\n  - `agent`: default `\"own\"` (for my assigned conversations, my occupancy, my presence) or `\"queue\"` (for conversations in my queues, queue listings, agent rosters in my queue). **NEVER plan `\"org\"` for an agent** (agents are denied `org` scope).\n\n### certified kpi vs free sql\n- If the question asks for a named certified KPI without custom multi-table filtering, set the `\"kpi\"` field on the task. Certified KPI IDs:\n  - **Volume**: `conversation_count`, `avg_conversations_per_day`, `contacts_served`, `new_vs_returning_rate`, `message_count`, `avg_messages_per_conversation`\n  - **Speed & Duration**: `avg_speed_to_answer`, `avg_first_response_time`, `avg_handle_time`, `avg_handle_time_voice`, `avg_resolution_time`, `avg_hold_time`, `avg_wait_time_live`, `avg_offer_ring_time`\n  - **Flow & Resolution**: `resolution_rate`, `transfer_rate`, `transfer_count`, `reopen_rate`, `reopen_count`, `fcr_rate`, `escalation_rate`, `escalation_count`, `callback_completion_rate`, `disposition_distribution`, `resolution_code_distribution`\n  - **SLA & Compliance**: `first_response_sla_compliance`, `resolution_sla_compliance`, `sla_breach_rate`, `first_response_at_risk_count`, `resolution_at_risk_count`, `queues_at_risk`, `avg_breach_duration`, `no_sla_count`, `abandonment_rate`\n  - **Routing & Offers**: `offer_timeout_rate`, `offer_accept_rate`, `missed_contact_rate`, `missed_contact_count`, `routing_attempt_success_rate`, `overflow_rate`\n  - **Workforce & Presence**: `active_agents`, `queue_count`, `agent_occupancy`, `login_hours`, `presence_reason_breakdown`, `concurrency_utilization`\n  - **Bot & Self-Service**: `bot_containment_rate`, `bot_turn_count`, `bot_intent_distribution`, `bot_intent_confidence_avg`, `bot_grounded_rate`, `bot_response_latency_avg`, `handoff_rate`\n  - **Copilot & AI Assist**: `copilot_acceptance_rate`, `copilot_usage_count`, `copilot_tool_success_rate`, `copilot_latency_avg`\n  - **Sentiment**: `sentiment_trend`, `negative_sentiment_rate`\n  - **Voice / Telephony**: `call_count`, `avg_handle_time_voice`, `avg_hold_time`\n- If the question asks for arbitrary conversation lists, agent rosters, specific CDR records, or custom breakdowns, leave `\"kpi\": null` and use `executor: \"sql\"`.\n\n### task output format\n```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"quick|standard|deep\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"avg_speed_to_answer\",\n      \"goal\": \"Calculate average speed to answer (ASA) this month\",\n      \"time\": \"this month\",\n      \"scope\": \"org\",\n      \"answer_type\": \"kpi\",\n      \"depends_on\": []\n    }\n  ]\n}\n```\n\n---\n\n## error and re-plan handling (max 2 attempts)\nIf you receive a message starting with `REPLAN_REQUEST`:\n- Inspect `error_type` and `error` in the message.\n- If a certified KPI template could not satisfy the filters, switch to a free SQL task (`\"kpi\": null`) with an explicit goal and specific `rpt.*` views.\n- You have at most **2 total attempts**. Change the plan significantly to resolve the reported error.\n\n---\n\n## answer synthesis (executive briefing)\nWhen the executor returns fact blocks (`RESULT: ...`):\n1. **Lead with the Primary Finding**: State the direct answer and exact metric in the very first sentence using **bold** markdown.\n2. **Contextual & Operational Drivers**: Explain *why* the metrics are what they are. Highlight key drivers (e.g. queue volume surges, high abandonment in specific channels, staffing bottlenecks, or bot handoff spikes).\n3. **Exact Figures Only**: Every figure mentioned must originate directly from the fact block. Never guess, extrapolate, or invent metrics.\n4. **Seamless Multi-Task Harmony**: When synthesizing facts from both SQL and KG tasks:\n   - Present the overarching statistical breakdown (from SQL) alongside the underlying root-cause journey details (from KG) without contradiction.\n   - Clarify channel-specific nuances (e.g., email async duration vs live chat/call active handle time).\n5. **Actionable Operational Insights**: For SLA breaches, elevated handle times, or high negative sentiment, clearly pinpoint the contributing queues, channels, or disposition codes.\n6. **Zero Records Clarification**: If rows are empty, state clearly that zero matching records were found for that scope and timeframe.\n7. **Tone & Style**: Clean, executive prose. Do NOT include internal markdown headers like \"Narrative\", \"Analysis\", or internal tool names.\n",
+      "metadata": {}
+    },
+    {
+      "timestamp": "2026-09-29T05:28:21.255717+00:00",
+      "type": "message",
+      "role": "user",
+      "agent": "domain_agent",
+      "content": "Identity: role=admin, org_id=1012, user_id=1015, queues=[1, 2]\n\nRecent Conversation History:\n- User: how many conversations today\n- Analyst: There have been **4** conversations recorded today. Currently, all of these interactions are categorized under **Unassigned** agents, indicating that while volume is being captured, the workload has not yet been distributed to specific team members f\n- User: give me the conversation count based on channel\n- Analyst: There have been a total of **4** conversations recorded today across two distinct channels. The volume is primarily driven by **Webchat**, which accounts for **3** interactions, while **WhatsApp** represents the remaining **1** conversation. This dis\n\nQuestion: how many conversations yesterday",
+      "metadata": {}
+    },
+    {
+      "timestamp": "2026-09-29T05:28:22.517226+00:00",
+      "type": "message",
+      "role": "assistant",
+      "agent": "domain_agent",
+      "content": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"quick\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"conversation_count\",\n      \"goal\": \"Calculate the total number of conversations recorded yesterday\",\n      \"time\": \"yesterday\",\n      \"scope\": \"org\",\n      \"answer_type\": \"kpi\",\n      \"depends_on\": []\n    }\n  ]\n}\n```",
+      "metadata": {}
+    },
+    {
+      "timestamp": "2026-09-29T05:28:22.517285+00:00",
+      "type": "tool_call",
+      "agent": "domain_agent",
+      "tool_name": "plan_tasks",
+      "arguments": {
+        "kind": "plan",
+        "depth": "quick",
+        "tasks": [
+          {
+            "id": "t1",
+            "executor": "sql",
+            "kpi": "conversation_count",
+            "goal": "Calculate the total number of conversations recorded yesterday",
+            "time": "yesterday",
+            "scope": "org",
+            "answer_type": "kpi",
+            "depends_on": []
+          }
+        ]
+      },
+      "result": null
+    },
+    {
+      "timestamp": "2026-09-29T05:28:22.518287+00:00",
+      "type": "tool_call",
+      "agent": "certified_kpi_executor",
+      "tool_name": "run_kpi",
+      "arguments": {
+        "kpi_id": "conversation_count",
+        "scope": "org",
+        "time": "yesterday (UTC)",
+        "dimension": null,
+        "filter": null
+      },
+      "result": null
+    },
+    {
+      "timestamp": "2026-09-29T05:28:24.100318+00:00",
+      "type": "guard",
+      "guard_type": "KPI_Template_Slots",
+      "input_query": "conversation_count",
+      "output_query": "WITH base_conversation AS (\n-- Shared conversation grain for Contact Center.\n-- Inlined as the base_conversation CTE body.\nSELECT\n    c.id AS conversation_id,\n    c.organization_id,\n    c.channel,\n    c.contact_id,\n    c.queue_id,\n    COALESCE(q.name, 'Unassigned Queue') AS queue_name,\n    q.team_id,\n    t.name AS team_name,\n    c.assigned_agent_id,\n    c.assigned_user_id,\n    COALESCE(a.display_name, 'Unassigned') AS agent_name,\n    c.status,\n    c.priority,\n    c.subject,\n    c.handoff_reason,\n    c.bot_active,\n    c.previous_conversation_id,\n    c.created_at,\n    c.queued_at,\n    c.assigned_at,\n    c.first_response_at,\n    c.first_agent_response_at,\n    c.resolved_at,\n    c.ended_at,\n    c.closed_at,\n    c.end_reason,\n    c.end_actor,\n    c.disposition_code,\n    d.category AS disposition_category,\n    d.label AS disposition_label,\n    c.resolution_code,\n    c.first_response_due_at,\n    c.resolution_due_at,\n    c.sla_status,\n    COALESCE(rp.after_contact_work_seconds, 0) AS after_contact_work_seconds,\n    EXTRACT(EPOCH FROM (c.assigned_at - c.queued_at)) AS speed_to_answer_seconds,\n    EXTRACT(EPOCH FROM (c.first_agent_response_at - c.queued_at)) AS first_response_seconds,\n    EXTRACT(EPOCH FROM (c.resolved_at - c.created_at)) AS resolution_duration_seconds,\n    EXTRACT(EPOCH FROM (c.ended_at - c.assigned_at)) + COALESCE(rp.after_contact_work_seconds, 0) AS handle_time_seconds,\n    (c.status IN ('bot_active', 'queued', 'assigned', 'active')) AS is_active,\n    (c.status = 'resolved') AS is_resolved,\n    (c.status = 'closed') AS is_closed,\n    (c.status IN ('resolved', 'closed')) AS is_resolved_or_closed,\n    (c.assigned_agent_id IS NULL) AS is_bot_only,\n    (c.assigned_agent_id IS NOT NULL) AS is_handed_off,\n    (c.previous_conversation_id IS NOT NULL) AS is_reopened,\n    (c.priority >= 1) AS is_high_priority,\n    (c.end_reason = 'bot_resolved_inactivity') AS is_bot_resolved_inactivity,\n    (c.assigned_at IS NULL AND c.queued_at IS NOT NULL AND c.end_reason IN ('abandoned', 'customer_disconnected', 'browser_disconnected', 'visitor_disconnected', 'idle_timeout', 'session_expired', 'stale_voice_call_closed')) AS is_abandoned,\n    (c.first_agent_response_at IS NOT NULL AND c.first_response_due_at IS NOT NULL AND c.first_agent_response_at <= c.first_response_due_at) AS first_response_sla_met,\n    (c.first_response_due_at IS NOT NULL AND ((c.first_agent_response_at IS NOT NULL AND c.first_agent_response_at > c.first_response_due_at) OR (c.first_agent_response_at IS NULL AND NOW() > c.first_response_due_at))) AS first_response_sla_missed,\n    (c.sla_status = 'warning' AND c.first_agent_response_at IS NULL AND c.first_response_due_at IS NOT NULL AND NOW() <= c.first_response_due_at) AS first_response_at_risk,\n    (c.resolved_at IS NOT NULL AND c.resolution_due_at IS NOT NULL AND c.resolved_at <= c.resolution_due_at) AS resolution_sla_met,\n    (c.resolution_due_at IS NOT NULL AND ((c.resolved_at IS NOT NULL AND c.resolved_at > c.resolution_due_at) OR (c.status NOT IN ('resolved', 'closed') AND NOW() > c.resolution_due_at))) AS resolution_sla_missed,\n    (c.sla_status = 'warning' AND c.status NOT IN ('resolved', 'closed') AND c.resolution_due_at IS NOT NULL AND NOW() <= c.resolution_due_at) AS resolution_at_risk,\n    (c.sla_status = 'breached') AS sla_breached,\n    (c.sla_status IS NOT NULL AND c.sla_status != 'not_started') AS has_sla\nFROM ccass.conversations c\nLEFT JOIN ccass.agents a ON a.id = c.assigned_agent_id\nLEFT JOIN ccass.queues q ON q.id = c.queue_id\nLEFT JOIN accounts.setup_teams t ON t.id = q.team_id\nLEFT JOIN ccass.dispositions d ON d.code = c.disposition_code AND d.organization_id = c.organization_id\nLEFT JOIN ccass.routing_policies rp ON rp.queue_id = c.queue_id AND rp.organization_id = c.organization_id\nWHERE c.organization_id = 1012\n\n)\nSELECT\n    \n    COUNT(*)::bigint AS conversation_count\nFROM base_conversation\nWHERE TRUE\n  AND (created_at >= TIMESTAMPTZ '2026-09-28T00:00:00+00:00' AND created_at < TIMESTAMPTZ '2026-09-29T00:00:00+00:00')\n  AND TRUE\n  AND TRUE\n\n\n",
+      "params": {
+        "org_id": 1012,
+        "scope": "org",
+        "dimension": null,
+        "filter": null
+      },
+      "notes": [],
+      "error": null
+    },
+    {
+      "timestamp": "2026-09-29T05:28:24.100391+00:00",
+      "type": "message",
+      "role": "fact_assembly",
+      "agent": "facts_module",
+      "content": "RESULT: conversation_count = 57",
+      "metadata": {}
+    },
+    {
+      "timestamp": "2026-09-29T05:28:24.100412+00:00",
+      "type": "message",
+      "role": "system",
+      "agent": "domain_synthesis",
+      "content": "Executive analyst briefing.",
+      "metadata": {}
+    },
+    {
+      "timestamp": "2026-09-29T05:28:24.100424+00:00",
+      "type": "message",
+      "role": "user",
+      "agent": "domain_synthesis",
+      "content": "You are the Lead Analyst briefing Contact Center Leadership.\n\nRecent Conversation History:\n- User: how many conversations today\n- Analyst: There have been **4** conversations recorded today. Currently, all of these interactions are categorized under **Unassigned** agents, indicating that while volume is being captured, the workload has not yet been distributed to specific team members f\n- User: give me the conversation count based on channel\n- Analyst: There have been a total of **4** conversations recorded today across two distinct channels. The volume is primarily driven by **Webchat**, which accounts for **3** interactions, while **WhatsApp** represents the remaining **1** conversation. This dis\n\nOriginal Question: how many conversations yesterday \nFacts gathered:\nRESULT: conversation_count = 57\n\nInstructions:\n- Write a clear, executive-level answer directly addressing the user's question.\n- Lead with the exact primary number or finding in the very first sentence.\n- Use bold markdown for key metrics and figures.\n- Explain business/operational context concisely. If there are top groups/drivers, summarize them.\n- If the primary number is 0 or no records exist, clearly state that there are 0 records for this organization/scope.\n- Do NOT mention internal errors, REPLAN, system architecture, or pipeline tools. State business facts clearly.\n- Do NOT use headings like 'Analysis' or 'Narrative'. Just clean, natural prose.",
+      "metadata": {}
+    },
+    {
+      "timestamp": "2026-09-29T05:28:24.786285+00:00",
+      "type": "message",
+      "role": "assistant",
+      "agent": "domain_synthesis",
+      "content": "There were a total of **57** conversations recorded yesterday. This represents a significant increase in volume compared to today's current activity, indicating a higher level of engagement during the previous operational period.",
+      "metadata": {}
+    },
+    {
+      "timestamp": "2026-09-29T05:28:24.786508+00:00",
+      "type": "grounding",
+      "grounded": true,
+      "ungrounded": [],
+      "answer_numbers": [
+        "57"
+      ],
+      "was_regenerated": false
+    }
+  ]
+}

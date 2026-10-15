@@ -1,0 +1,24 @@
+sources:
+  - name: contact_center
+    schema: ccass
+    tables:
+      - name: conversations
+      - name: conversation_assignments
+      - name: conversation_sla_state
+      - name: agents
+      - name: agent_tasks
+      - name: conversation_dispositions
+      - name: dispositions
+      - name: conversation_transfers
+      - name: agent_capacity
+      - name: agent_presence_history
+      - name: copilot_turns
+      - name: copilot_skill_executions
+
+  - name: worktual
+    schema: accounts
+    tables:
+      - name: setup_users
+      - name: setup_ccaas_queues
+      - name: setup_ccaas_queue_agents
+      - name: setup_teams

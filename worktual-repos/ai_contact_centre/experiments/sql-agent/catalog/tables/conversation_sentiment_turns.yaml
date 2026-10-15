@@ -1,0 +1,18 @@
+name: ccass.conversation_sentiment_turns
+alias: st
+schema: ccass
+grain: message
+purpose: Per-turn customer and agent sentiment labels and scores.
+time_columns: [created_at]
+columns:
+  - { name: id, type: bigint, pk: true, description: Turn id }
+  - { name: organization_id, type: bigint, description: Tenant id }
+  - { name: conversation_id, type: bigint, fk: ccass.conversations.id, description: Conversation }
+  - { name: message_id, type: bigint, description: Trigger message }
+  - { name: customer_label, type: text, description: Customer sentiment label }
+  - { name: customer_score, type: int, description: Customer score }
+  - { name: agent_label, type: text, description: Agent sentiment label }
+  - { name: agent_score, type: int, description: Agent score }
+  - { name: created_at, type: timestamptz, description: Scored at }
+sample_rows:
+  - { id: 1, conversation_id: 101, message_id: 9001, customer_label: frustrated, customer_score: -1, agent_label: calm, agent_score: 1 }

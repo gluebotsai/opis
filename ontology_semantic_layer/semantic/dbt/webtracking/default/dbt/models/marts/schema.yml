@@ -1,0 +1,39 @@
+version: 2
+
+models:
+  - name: mart_web_sessions
+    description: >
+      Session grain analytical mart. Bounce, duration, and pageview_count come from
+      v_session_bounce (dashboard truth). exit_page is derived from fact_page_views
+      (argMax). is_online_flag marks activity in the last 5 minutes. Enrichment flags
+      (rage/dead/form/conversion) come from fact rollups. Period new/returning visitor
+      counts (≤1 / >1 sessions in window) are computed at query time — not from
+      is_first_session_flag (lifetime first-ever only).
+  - name: mart_web_visitors
+    description: "Visitor 360 profile mart with lifetime session, conversion, and loyalty indicators."
+  - name: mart_known_users
+    description: "Authenticated user ↔ visitor identity mart (email, phone, traits) from dim_known_users."
+  - name: mart_ecommerce
+    description: "Daily e-commerce KPI mart from ecommerce view (product views, cart, checkout, purchases, revenue)."
+  - name: mart_page_views
+    description: "Page load level analytical mart."
+  - name: mart_interaction_events
+    description: "Interaction event mart for clicks, rage clicks, dead clicks, and heatmaps."
+  - name: mart_form_events
+    description: "Form funnel mart with view, start, submit, success, failure, and abandon stages."
+  - name: mart_conversion_events
+    description: "Goal conversion and revenue mart."
+  - name: mart_product_interactions
+    description: "Ecommerce product interaction and browsing mart."
+  - name: mart_performance_events
+    description: "Core Web Vitals and frontend performance mart."
+  - name: mart_error_events
+    description: "Client-side runtime errors and stability mart."
+  - name: mart_cookie_operations
+    description: "Cookie consent choices and audit trail mart (future for chat agent)."
+  - name: mart_replay_chunks
+    description: "Session replay chunk index — out of scope for AnalyticsAgent chat."
+  - name: mart_web_sites
+    description: "Tracked website entity mart."
+  - name: mart_custom_events
+    description: "Custom business event mart for arbitrary events dispatched via WebtualAnalytics.track(), keyed by event_name."

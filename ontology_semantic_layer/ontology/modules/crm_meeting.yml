@@ -1,0 +1,34 @@
+# Meeting agents — brief, MoM, coach, assist
+module: crm_meeting
+layer: domain
+depends_on: [core, cdp, crm_deal]
+owned_by_spoke: crm
+usecase: Meetings linked to deals and contacts.
+
+classes:
+  - id: Meeting
+    extends: Event
+    definition: Scheduled or completed sales meeting.
+    properties: [title, scheduledAt]
+    relations:
+      attendees: Contact
+      aboutDeal: Deal
+
+  - id: MeetingTranscript
+    definition: Captured transcript for analysis or MoM.
+    relations:
+      of: Meeting
+
+relations:
+  - { from: Meeting, type: about, to: Deal }
+  - { from: Meeting, type: WITH, to: Contact }
+
+actions:
+  - id: action.meeting_brief
+    operates_on: [Meeting]
+    mutates: false
+  - id: action.analyze_transcript
+    operates_on: [MeetingTranscript]
+    mutates: false
+
+metric_ids: []

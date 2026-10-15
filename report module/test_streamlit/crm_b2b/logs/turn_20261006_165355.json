@@ -1,0 +1,316 @@
+{
+  "question": "this month my sales target os 50 lakhs , which are the opportunities i need to prioritize to achive this target",
+  "answer": "To achieve your monthly target of \u20b950,00,000, there is a significant gap compared to your current pipeline of \u20b9352,000.00 (INR) and $30,000.00 (USD) for this month.\n\n### Pipeline vs. Target\n| Metric | Value |\n| :--- | :--- |\n| **Total Pipeline (INR)** | **\u20b9352,000.00** |\n| **Total Pipeline (USD)** | **$30,000.00** |\n\n### High-Priority Opportunities\nTo bridge the gap, focus on these deals with the highest potential for movement:\n* **Joy Kart \u2014 Bharathi Sivakumar (\u20b930,000.00)**: Highest confidence (45%) in the INR pipeline; a quote was sent on 2026-10-05, but there has been no engagement for 21 days.\n* **amelian - pothys (\u20b920,000.00)**: Currently at 50% confidence, though it lacks recorded activity to support its 28-day close date.\n* **CRM Deals (USD) ($30,000.00)**: Two deals (`crm` and `CRM`) are in the \"propose\" stage, but are high risk due to having only draft quotes and zero recorded activity.\n\n### Pipeline Risks\nMost of the current pipeline is stalled or unreliable for this month's target:\n* **Draft Quote Stagnation**: High-value deals like `worktual \u2014 shanmuk shourya` (\u20b9100,000.00), `Infosys \u2014 santhosh` (\u20b975,000.00), and `HDFC \u2014 Annamalai raju` (\u20b945,000.00) are stuck in early stages with only draft quotes and no activity for over 20 days.\n* **Low Engagement**: Deals such as `chandru -crm` (\u20b913,000.00) have zero recorded activity or quotes, making a near-term close unlikely.\n* **Forecast Unreliability**: Most deals have confidence levels of 10% or lower because early-stage status (Discovery/Qualification) does not align with their aggressive expected close dates.\n\n**Recommended Next Steps:**\n1. **Re-engage \"Propose\" Stage Deals**: Immediately follow up with stakeholders for `Joy Kart \u2014 Bharathi Sivakumar` regarding the quote sent on 2026-10-05.\n2. **Convert Draft Quotes**: Prioritize moving `worktual \u2014 shanmuk shourya` and `Infosys \u2014 santhosh` from draft to sent quotes to establish formal engagement.\n3. **Gap Analysis**: Initiate immediate prospecting for larger-scale opportunities to supplement the existing low-value pipeline.",
+  "trace": {
+    "question": "this month my sales target os 50 lakhs , which are the opportunities i need to prioritize to achive this target",
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1015,
+      "role": "admin"
+    },
+    "model": "worktual-gemma",
+    "tasks": [
+      {
+        "status": "ok",
+        "store": "sql",
+        "sql": "WITH rpt_deals AS (\nSELECT src.id, src.organization_id, src.title, src.stage, src.amount, src.currency_code, src.stage_weight, src.weighted_amount, src.company_id, src.company_name, src.company_industry, src.location_id, src.contact_id, src.contact_name, src.contact_email, src.owner_user_id, src.owner_name, src.created_at, src.closed_at, src.close_ts, src.updated_at, src.expected_close_date, src.lost_reason, src.is_open, src.is_won, src.is_lost, src.aging_days, src.forecast_category, src.forecast_reason, src.forecast_flagged FROM (\nSELECT \n  d.id,\n  d.organization_id,\n  d.title,\n  d.stage,\n  COALESCE(d.amount, 0) AS amount,\n  CASE\n    WHEN pq.currency IS NOT NULL AND pq.currency <> 'USD' THEN pq.currency\n    WHEN o.country IS NOT NULL AND o.country <> 'US' AND cc.curr IS NOT NULL THEN cc.curr\n    WHEN pq.currency = 'USD' THEN 'USD'\n    WHEN o.country = 'US' THEN 'USD'\n    ELSE 'USD'\n  END AS currency_code,\n  CASE d.stage\n    WHEN 'qualification' THEN 0.10\n    WHEN 'discover' THEN 0.25\n    WHEN 'propose' THEN 0.50\n    WHEN 'negotiate' THEN 0.75\n    WHEN 'closed_won' THEN 1.00\n    WHEN 'closed_lost' THEN 0.00\n    ELSE 0.00\n  END AS stage_weight,\n  ROUND(COALESCE(d.amount, 0) * (\n    CASE d.stage\n      WHEN 'qualification' THEN 0.10\n      WHEN 'discover' THEN 0.25\n      WHEN 'propose' THEN 0.50\n      WHEN 'negotiate' THEN 0.75\n      WHEN 'closed_won' THEN 1.00\n      WHEN 'closed_lost' THEN 0.00\n      ELSE 0.00\n    END\n  ), 2) AS weighted_amount,\n  d.company_id,\n  c.name AS company_name,\n  c.industry AS company_industry,\n  d.location_id,\n  d.contact_id,\n  COALESCE(d.contact_name, cdp.first_name || ' ' || COALESCE(cdp.last_name, '')) AS contact_name,\n  COALESCE(d.contact_email, id_k.key_value) AS contact_email,\n  d.owner_user_id,\n  su.first_name || ' ' || COALESCE(su.last_name, '') AS owner_name,\n  d.created_at,\n  d.closed_at,\n  COALESCE(d.closed_at, d.created_at) AS close_ts,\n  d.updated_at,\n  d.expected_close_date,\n  d.lost_reason,\n  (d.stage IN ('qualification', 'discover', 'propose', 'negotiate')) AS is_open,\n  (d.stage = 'closed_won') AS is_won,\n  (d.stage = 'closed_lost') AS is_lost,\n  FLOOR(EXTRACT(EPOCH FROM (NOW() - d.created_at))/86400)::integer AS aging_days,\n  d.forecast_category,\n  d.forecast_reason,\n  d.forecast_flagged\nFROM crm.deals d\nLEFT JOIN crm.companies c ON c.id = d.company_id AND c.organization_id = d.organization_id\nLEFT JOIN accounts.setup_users su ON su.id = d.owner_user_id\nLEFT JOIN accounts.organizations o ON o.id = d.organization_id\nLEFT JOIN cdp.customer_profile cdp ON cdp.cdp_id = d.contact_id\nLEFT JOIN LATERAL (\n  SELECT ik.key_value \n  FROM cdp.identity_keys ik \n  WHERE ik.cdp_id = d.contact_id AND ik.key_type = 'email' AND ik.organization_id = d.organization_id \n  ORDER BY ik.created_at ASC \n  LIMIT 1\n) id_k ON TRUE\nLEFT JOIN LATERAL (\n  SELECT q.currency \n  FROM crm.quotes q \n  WHERE q.deal_id = d.id AND q.organization_id = d.organization_id \n  ORDER BY CASE WHEN q.status = 'accepted' THEN 1 WHEN q.status = 'sent' THEN 2 ELSE 3 END, q.updated_at DESC \n  LIMIT 1\n) pq ON TRUE\nLEFT JOIN LATERAL (\n  SELECT CASE o.country \n    WHEN 'India' THEN 'INR' \n    WHEN 'United Kingdom' THEN 'GBP' \n    WHEN 'Germany' THEN 'EUR' \n    WHEN 'Canada' THEN 'CAD' \n    WHEN 'Australia' THEN 'AUD' \n    ELSE 'USD' \n  END AS curr\n) cc ON TRUE\nWHERE d.organization_id = %(_org_id)s\n) src WHERE TRUE\n)\nSELECT CAST(COALESCE(SUM(amount), 0) AS DECIMAL(15, 2)) AS total_pipeline FROM rpt_deals AS deals WHERE is_open = TRUE AND TRUE AND created_at >= %(start)s AND created_at < %(end)s AND TRUE LIMIT 500",
+        "views": [
+          "deals"
+        ],
+        "guard_notes": [
+          "row cap 500 applied"
+        ],
+        "bound_params": {
+          "_org_id": 1003,
+          "_user_id": 1015,
+          "user_id": 1015,
+          "organization_id": 1003,
+          "org_id": 1003,
+          "tenant_id": 1003,
+          "current_user_id": 1015,
+          "start": "2026-10-01T00:00:00+00:00",
+          "end": "2026-11-01T00:00:00+00:00"
+        },
+        "rows": [
+          {
+            "total_pipeline": "33000.00"
+          }
+        ],
+        "kpi_id": "total_pipeline",
+        "time_status": "bounded",
+        "attempts": [
+          {
+            "raw": "{\"tool\":\"run_kpi\",\"kpi_id\":\"total_pipeline\",\"dimension\":null}",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "total_pipeline"
+            }
+          }
+        ],
+        "time_echo": "this month (UTC)",
+        "tool": "run_kpi",
+        "requested_kpi": "total_pipeline",
+        "requested_dimension": null,
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "total_pipeline",
+          "goal": "Current open pipeline amount for this month",
+          "time": "this month",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "kpi",
+          "depends_on": []
+        }
+      },
+      {
+        "status": "ok",
+        "rows": [
+          {
+            "deal_id": "cmuvi76eq000p1afizvo91j4y",
+            "title": "worktual \u2014 shanmuk shourya",
+            "stage": "qualification",
+            "amount": 100000.0,
+            "currency": "INR",
+            "forecast_category": "omitted",
+            "forecast_reason": "The deal is in the qualification stage with a draft quote and no activity for 21 days, making the 20-day close date unrealistic for a forecast roll-up.",
+            "confidence_percent": 10,
+            "last_updated": "2026-10-06T08:42:53.262000000+00:00",
+            "created_at": "2026-09-14T17:08:19.444000000+00:00"
+          },
+          {
+            "deal_id": "cmuvi79d100151aficld1qdyo",
+            "title": "Infosys \u2014 santhosh",
+            "stage": "discover",
+            "amount": 75000.0,
+            "currency": "INR",
+            "forecast_category": "omitted",
+            "forecast_reason": "The deal is in the 'discover' stage with a draft quote that has never been sent, yet the expected close date is only 20 days away. The combination of early-stage status, lack of sent quotes, and minimal activity makes this timeline unrealistic for the current forecast.",
+            "confidence_percent": 10,
+            "last_updated": "2026-10-06T08:43:07.463000000+00:00",
+            "created_at": "2026-09-14T17:08:23.460000000+00:00"
+          },
+          {
+            "deal_id": "cmuvi74ri000h1afi5uka57sb",
+            "title": "HDFC \u2014 Annamalai raju",
+            "stage": "qualification",
+            "amount": 45000.0,
+            "currency": "INR",
+            "forecast_category": "omitted",
+            "forecast_reason": "The deal is in the qualification stage with a draft quote and no evidence of customer engagement or commitment, making the expected close date unrealistic for the current forecast.",
+            "confidence_percent": 10,
+            "last_updated": "2026-10-06T08:32:11.625000000+00:00",
+            "created_at": "2026-09-14T17:08:17.501000000+00:00"
+          },
+          {
+            "deal_id": "cmuvi7cbk001l1afiny0z3n8j",
+            "title": "Joy Kart \u2014 Bharathi Sivakumar",
+            "stage": "propose",
+            "amount": 30000.0,
+            "currency": "INR",
+            "forecast_category": "best_case",
+            "forecast_reason": "A quote was sent on 2026-10-05, but there has been no recorded activity or engagement for the past 21 days, creating significant risk that the deal will not close by the expected date of 2026-10-26.",
+            "confidence_percent": 45,
+            "last_updated": "2026-10-06T09:02:11.464000000+00:00",
+            "created_at": "2026-09-14T17:08:27.296000000+00:00"
+          },
+          {
+            "deal_id": "cmuvi77w3000x1afiewrarqxh",
+            "title": "salesforce \u2014 Anurag Patil",
+            "stage": "discover",
+            "amount": 30000.0,
+            "currency": "INR",
+            "forecast_category": "omitted",
+            "forecast_reason": "The deal is in the discovery stage with a draft quote and no activity for 21 days, making the 20-day close timeline unrealistic. The lack of engagement signals suggests this deal should be excluded from the current forecast.",
+            "confidence_percent": 10,
+            "last_updated": "2026-10-06T08:43:00.925000000+00:00",
+            "created_at": "2026-09-14T17:08:21.554000000+00:00"
+          },
+          {
+            "deal_id": "cmuvi70qr00011afipu3ppkne",
+            "title": "Tesla \u2014 Ravanan S",
+            "stage": "qualification",
+            "amount": 25000.0,
+            "currency": "INR",
+            "forecast_category": "omitted",
+            "forecast_reason": "The deal is in qualification with a draft quote and no activity for 21 days, making the 20-day close date unrealistic; it should be excluded from the current forecast.",
+            "confidence_percent": 10,
+            "last_updated": "2026-10-06T08:13:41.751000000+00:00",
+            "created_at": "2026-09-14T17:08:12.289000000+00:00"
+          },
+          {
+            "deal_id": "cmuseun8s0004zunt3lwghfij",
+            "title": "amelian - pothys",
+            "stage": "discover",
+            "amount": 20000.0,
+            "currency": "INR",
+            "forecast_category": "pipeline",
+            "forecast_reason": "The deal is in the qualification stage with zero recorded activity or signals, making the 28-day close date speculative. Flagged due to the lack of engagement evidence to support a realistic timeline.",
+            "confidence_percent": 50,
+            "last_updated": "2026-10-04T10:31:40.618000000+00:00",
+            "created_at": "2026-10-03T13:11:17.549000000+00:00"
+          },
+          {
+            "deal_id": "cmuctclg2005o1ago5703inxa",
+            "title": "crm",
+            "stage": "propose",
+            "amount": 15000.0,
+            "currency": "USD",
+            "forecast_category": "omitted",
+            "forecast_reason": "The deal has no expected close date, zero activity, and only a draft quote, making it impossible to forecast realistically in the current stage.",
+            "confidence_percent": 5,
+            "last_updated": "2026-10-05T15:12:04.371000000+00:00",
+            "created_at": "2026-09-22T15:12:50.835000000+00:00"
+          },
+          {
+            "deal_id": "cmumhu64r01yaqm0up65tavy0",
+            "title": "CRM",
+            "stage": "propose",
+            "amount": 15000.0,
+            "currency": "USD",
+            "forecast_category": "omitted",
+            "forecast_reason": "The deal is in the propose stage with no expected close date, zero activity, and only a draft quote, making it unrealistic to include in the current forecast.",
+            "confidence_percent": 5,
+            "last_updated": "2026-10-04T15:00:21.755000000+00:00",
+            "created_at": "2026-09-29T09:48:17.163000000+00:00"
+          },
+          {
+            "deal_id": "cmus8xssq0018zuswfzx6o38p",
+            "title": "chandru -crm",
+            "stage": "discover",
+            "amount": 13000.0,
+            "currency": "INR",
+            "forecast_category": "omitted",
+            "forecast_reason": "The deal is in the discovery stage with zero activity signals or quotes, making a close within 10 days unrealistic. The lack of any engagement evidence suggests this deal should be excluded from the current forecast.",
+            "confidence_percent": 5,
+            "last_updated": "2026-10-05T03:11:11.505000000+00:00",
+            "created_at": "2026-10-03T10:25:47.019000000+00:00"
+          },
+          {
+            "deal_id": "cmuvi739r00091afinwkztuy5",
+            "title": "Aravindh tech \u2014 Aravindh Selvaraj",
+            "stage": "qualification",
+            "amount": 6000.0,
+            "currency": "INR",
+            "forecast_category": "omitted",
+            "forecast_reason": "The deal is in the qualification stage with no activity for 21 days and only a draft quote, making the expected close date unrealistic for the current forecast.",
+            "confidence_percent": 10,
+            "last_updated": "2026-10-06T08:32:10.914000000+00:00",
+            "created_at": "2026-09-14T17:08:15.566000000+00:00"
+          },
+          {
+            "deal_id": "cmtci1gpm000f1a860hip0f2p",
+            "title": "hexaware \u2014 Hitler hit",
+            "stage": "discover",
+            "amount": 5000.0,
+            "currency": "INR",
+            "forecast_category": "omitted",
+            "forecast_reason": "The deal has no expected close date, zero activity, and no evidence of engagement, making it impossible to include in a realistic forecast.",
+            "confidence_percent": 0,
+            "last_updated": "2026-10-04T10:16:04.593000000+00:00",
+            "created_at": "2026-08-28T05:16:33.370000000+00:00"
+          },
+          {
+            "deal_id": "cmuvi7auc001d1afi1lmo9cbg",
+            "title": "Globex \u2014 James Chen",
+            "stage": "discover",
+            "amount": 3000.0,
+            "currency": "INR",
+            "forecast_category": "omitted",
+            "forecast_reason": "The deal is in the discovery stage with a draft quote that has never been sent, and there has been no activity for 21 days. This level of engagement is insufficient to justify an expected close date 20 days out.",
+            "confidence_percent": 10,
+            "last_updated": "2026-10-06T09:02:10.281000000+00:00",
+            "created_at": "2026-09-14T17:08:25.379000000+00:00"
+          },
+          {
+            "deal_id": "cmu6v7vbu005io50uh7bpe00x",
+            "title": "HCL \u2014 yaswanth M G",
+            "stage": "qualification",
+            "amount": 0,
+            "currency": "INR",
+            "forecast_category": "omitted",
+            "forecast_reason": "The deal is in the qualification stage with no expected close date, zero activity, and no evidence of engagement, making it unrealistic to include in any forecast.",
+            "confidence_percent": 5,
+            "last_updated": "2026-10-05T11:54:09.907000000+00:00",
+            "created_at": "2026-09-18T11:18:32.539000000+00:00"
+          },
+          {
+            "deal_id": "cmu8k810304kmlb0u4hi6w7a4",
+            "title": "pricing",
+            "stage": "propose",
+            "amount": 0.0,
+            "currency": "USD",
+            "forecast_category": "omitted",
+            "forecast_reason": "The deal has no expected close date, zero activity, and only a draft quote with no value, making it impossible to forecast realistically.",
+            "confidence_percent": 5,
+            "last_updated": "2026-10-04T08:40:28.052000000+00:00",
+            "created_at": "2026-09-19T15:46:16.467000000+00:00"
+          },
+          {
+            "deal_id": "cmucsr2pw001upg0ubbvbzhw8",
+            "title": "Lokesh deal",
+            "stage": "negotiate",
+            "amount": 0,
+            "currency": "INR",
+            "forecast_category": "omitted",
+            "forecast_reason": "The deal is in the negotiate stage but has no expected close date, zero activity, and no evidence of engagement, making it unrealistic to include in a forecast.",
+            "confidence_percent": 5,
+            "last_updated": "2026-10-06T12:54:02.267000000+00:00",
+            "created_at": "2026-09-22T14:56:06.789000000+00:00"
+          }
+        ],
+        "sql": "MATCH (d:Deal)\nWHERE toLower(d.stage) IN ['qualification', 'discover', 'propose', 'negotiate']\n  AND ($can_view_all = true OR d.owner_user_id = $effective_user_id)\n  AND (d.forecast_flagged = true OR toLower(d.forecast_category) = 'omitted')\n  AND (coalesce($deal_title, '') = '' OR toLower(d.title) CONTAINS toLower($deal_title))\nOPTIONAL MATCH (d)-[:HAS]->(q:Quote)\nWITH d, collect(q) AS quotes\nWITH d,\n     [q IN quotes WHERE toLower(q.approval_status) = 'approved'][0] AS approved_quote,\n     quotes[0] AS any_quote\nWITH d,\n     coalesce(approved_quote.currency, any_quote.currency, d.currency, $default_currency, 'INR') AS currency,\n     coalesce(approved_quote.total, any_quote.total, d.amount, 0) AS final_amount\nRETURN d.id AS deal_id,\n       d.title AS title,\n       d.stage AS stage,\n       final_amount AS amount,\n       currency,\n       d.forecast_category AS forecast_category,\n       coalesce(d.forecast_reason, 'No forecast reason recorded') AS forecast_reason,\n       d.forecast_confidence_percent AS confidence_percent,\n       d.updated_at AS last_updated,\n       d.created_at AS created_at\nORDER BY amount DESC\nLIMIT 20",
+        "tool": "kg",
+        "attempts_made": 1,
+        "kg_notes": "### Pipeline Analysis vs. Sales Target\n\nTo achieve your monthly target of \u20b950,00,000 (50 Lakhs), the current open pipeline of \u20b9352,000.00 (INR) and $30,000.00 (USD) represents a significant gap. The identified opportunities are largely in early stages (Discovery/Qualification) with low confidence levels, suggesting that current high-priority efforts should focus on accelerating existing deals or generating new high-value leads.\n\n| Metric | Value |\n| :--- | :--- |\n| **Total Pipeline (INR)** | **\u20b9352,000.00** |\n| **Total Pipeline (USD)** | **$30,000.00** |\n| **Target Gap (INR)** | **\u20b94,648,000.00** |\n\n### High-Priority Opportunities\n\nBased on recent activity and quote status, the following deals show the highest potential for movement, though they still carry risk:\n\n*   **Joy Kart \u2014 Bharathi Sivakumar**: This is the highest confidence deal (45%) in the INR pipeline. A quote was sent on 2026-10-05 for \u20b930,000.00, but there has been no recorded engagement for 21 days.\n*   **amelian - pothys**: This deal is currently at a 50% confidence level with an amount of \u20b920,000.00, though it lacks recorded activity to support its 28-day close date.\n*   **CRM Deals (USD)**: Two deals totaling $30,000.00 (`crm` and `CRM`) are in the \"propose\" stage. However, both are flagged as high risk due to having only draft quotes, no expected close dates, and zero recorded activity.\n\n### Pipeline Risks and Stalled Deals\n\nThe majority of the pipeline is currently stalled or lacks the necessary documentation to be considered reliable for this month's target:\n\n*   **Draft Quote Stagnation**: Multiple deals, including `worktual \u2014 shanmuk shourya` (\u20b9100,000.00), `Infosys \u2014 santhosh` (\u20b975,000.00), and `HDFC \u2014 Annamalai raju` (\u20b945,000.00), are stuck in Qualification or Discovery with only draft quotes and no activity for over 20 days.\n*   **Low Engagement**: The deal `chandru -crm` (\u20b913,000.00) has zero recorded activity or quotes, making a near-term close highly unlikely.\n*   **Forecast Unreliability**: Most deals in the pipeline have a confidence level of 10% or lower, primarily due to the mismatch between their early stage (Discovery/Qualification) and their aggressive expected close dates.\n\n### Recommended Next Steps\n\n*   **Re-engage \"Propose\" Stage Deals**: Immediately contact the stakeholders for `Joy Kart \u2014 Bharathi Sivakumar` to follow up on the quote sent on 2026-10-05 and move them toward closing.\n*   **Convert Draft Quotes**: Prioritize converting draft quotes to sent quotes for the high-value `worktual \u2014 shanmuk shourya` and `Infosys \u2014 santhosh` deals to establish formal engagement.\n*   **Gap Analysis for Target**: Given the \u20b946.48 Lakh gap between the current pipeline and the \u20b950 Lakh target, initiate immediate prospecting for larger-scale opportunities to supplement the existing low-value pipeline.",
+        "task": {
+          "id": "t2",
+          "executor": "kg",
+          "kpi": null,
+          "goal": "Analyze open deals to prioritize: high probability, large amounts, recent activity, and quote status",
+          "time": "this month",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "why_breakdown",
+          "depends_on": [
+            "t1"
+          ]
+        }
+      }
+    ],
+    "domain_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"deep\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"total_pipeline\",\n      \"goal\": \"Current open pipeline amount for this month\",\n      \"time\": \"this month\",\n      \"scope\": \"org\",\n      \"dimension\": null,\n      \"answer_type\": \"kpi\",\n      \"depends_on\": []\n    },\n    {\n      \"id\": \"t2\",\n      \"executor\": \"kg\",\n      \"kpi\": null,\n      \"goal\": \"Analyze open deals to prioritize: high probability, large amounts, recent activity, and quote status\",\n      \"time\": \"this month\",\n      \"scope\": \"org\",\n      \"dimension\": null,\n      \"answer_type\": \"why_breakdown\",\n      \"depends_on\": [\"t1\"]\n    }\n  ]\n}\n```",
+    "plan": {
+      "kind": "plan",
+      "depth": "deep",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "total_pipeline",
+          "goal": "Current open pipeline amount for this month",
+          "time": "this month",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "kpi",
+          "depends_on": []
+        },
+        {
+          "id": "t2",
+          "executor": "kg",
+          "kpi": null,
+          "goal": "Analyze open deals to prioritize: high probability, large amounts, recent activity, and quote status",
+          "time": "this month",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "why_breakdown",
+          "depends_on": [
+            "t1"
+          ]
+        }
+      ]
+    },
+    "facts": "time_requested: this month\nperiod_applied: this month (UTC)\ntime_status: bounded\ncatalog_kpi: total_pipeline\nRESULT: total_pipeline = 33000.00\n\ntime_requested: this month\ntime_status: kg\nRESULT: 16 group(s)\ngroup_by: stage\n  deal_id=cmuvi76eq000p1afizvo91j4y | title=worktual \u2014 shanmuk shourya | stage=qualification | amount=100000.0 | currency=INR | forecast_category=omitted | forecast_reason=The deal is in the qualification stage with a draft quote and no activity for 21 days, making the 20-day close date unrealistic for a forecast roll-up. | confidence_percent=10 | last_updated=2026-10-06T08:42:53.262000000+00:00 | created_at=2026-09-14T17:08:19.444000000+00:00\n  deal_id=cmuvi79d100151aficld1qdyo | title=Infosys \u2014 santhosh | stage=discover | amount=75000.0 | currency=INR | forecast_category=omitted | forecast_reason=The deal is in the 'discover' stage with a draft quote that has never been sent, yet the expected close date is only 20 days away. The combination of early-stage status, lack of sent quotes, and minimal activity makes this timeline unrealistic for the current forecast. | confidence_percent=10 | last_updated=2026-10-06T08:43:07.463000000+00:00 | created_at=2026-09-14T17:08:23.460000000+00:00\n  deal_id=cmuvi74ri000h1afi5uka57sb | title=HDFC \u2014 Annamalai raju | stage=qualification | amount=45000.0 | currency=INR | forecast_category=omitted | forecast_reason=The deal is in the qualification stage with a draft quote and no evidence of customer engagement or commitment, making the expected close date unrealistic for the current forecast. | confidence_percent=10 | last_updated=2026-10-06T08:32:11.625000000+00:00 | created_at=2026-09-14T17:08:17.501000000+00:00\n  deal_id=cmuvi7cbk001l1afiny0z3n8j | title=Joy Kart \u2014 Bharathi Sivakumar | stage=propose | amount=30000.0 | currency=INR | forecast_category=best_case | forecast_reason=A quote was sent on 2026-10-05, but there has been no recorded activity or engagement for the past 21 days, creating significant risk that the deal will not close by the expected date of 2026-10-26. | confidence_percent=45 | last_updated=2026-10-06T09:02:11.464000000+00:00 | created_at=2026-09-14T17:08:27.296000000+00:00\n  deal_id=cmuvi77w3000x1afiewrarqxh | title=salesforce \u2014 Anurag Patil | stage=discover | amount=30000.0 | currency=INR | forecast_category=omitted | forecast_reason=The deal is in the discovery stage with a draft quote and no activity for 21 days, making the 20-day close timeline unrealistic. The lack of engagement signals suggests this deal should be excluded from the current forecast. | confidence_percent=10 | last_updated=2026-10-06T08:43:00.925000000+00:00 | created_at=2026-09-14T17:08:21.554000000+00:00\n  deal_id=cmuvi70qr00011afipu3ppkne | title=Tesla \u2014 Ravanan S | stage=qualification | amount=25000.0 | currency=INR | forecast_category=omitted | forecast_reason=The deal is in qualification with a draft quote and no activity for 21 days, making the 20-day close date unrealistic; it should be excluded from the current forecast. | confidence_percent=10 | last_updated=2026-10-06T08:13:41.751000000+00:00 | created_at=2026-09-14T17:08:12.289000000+00:00\n  deal_id=cmuseun8s0004zunt3lwghfij | title=amelian - pothys | stage=discover | amount=20000.0 | currency=INR | forecast_category=pipeline | forecast_reason=The deal is in the qualification stage with zero recorded activity or signals, making the 28-day close date speculative. Flagged due to the lack of engagement evidence to support a realistic timeline. | confidence_percent=50 | last_updated=2026-10-04T10:31:40.618000000+00:00 | created_at=2026-10-03T13:11:17.549000000+00:00\n  deal_id=cmuctclg2005o1ago5703inxa | title=crm | stage=propose | amount=15000.0 | currency=USD | forecast_category=omitted | forecast_reason=The deal has no expected close date, zero activity, and only a draft quote, making it impossible to forecast realistically in the current stage. | confidence_percent=5 | last_updated=2026-10-05T15:12:04.371000000+00:00 | created_at=2026-09-22T15:12:50.835000000+00:00\n  deal_id=cmumhu64r01yaqm0up65tavy0 | title=CRM | stage=propose | amount=15000.0 | currency=USD | forecast_category=omitted | forecast_reason=The deal is in the propose stage with no expected close date, zero activity, and only a draft quote, making it unrealistic to include in the current forecast. | confidence_percent=5 | last_updated=2026-10-04T15:00:21.755000000+00:00 | created_at=2026-09-29T09:48:17.163000000+00:00\n  deal_id=cmus8xssq0018zuswfzx6o38p | title=chandru -crm | stage=discover | amount=13000.0 | currency=INR | forecast_category=omitted | forecast_reason=The deal is in the discovery stage with zero activity signals or quotes, making a close within 10 days unrealistic. The lack of any engagement evidence suggests this deal should be excluded from the current forecast. | confidence_percent=5 | last_updated=2026-10-05T03:11:11.505000000+00:00 | created_at=2026-10-03T10:25:47.019000000+00:00\n  deal_id=cmuvi739r00091afinwkztuy5 | title=Aravindh tech \u2014 Aravindh Selvaraj | stage=qualification | amount=6000.0 | currency=INR | forecast_category=omitted | forecast_reason=The deal is in the qualification stage with no activity for 21 days and only a draft quote, making the expected close date unrealistic for the current forecast. | confidence_percent=10 | last_updated=2026-10-06T08:32:10.914000000+00:00 | created_at=2026-09-14T17:08:15.566000000+00:00\n  deal_id=cmtci1gpm000f1a860hip0f2p | title=hexaware \u2014 Hitler hit | stage=discover | amount=5000.0 | currency=INR | forecast_category=omitted | forecast_reason=The deal has no expected close date, zero activity, and no evidence of engagement, making it impossible to include in a realistic forecast. | confidence_percent=0 | last_updated=2026-10-04T10:16:04.593000000+00:00 | created_at=2026-08-28T05:16:33.370000000+00:00\n  deal_id=cmuvi7auc001d1afi1lmo9cbg | title=Globex \u2014 James Chen | stage=discover | amount=3000.0 | currency=INR | forecast_category=omitted | forecast_reason=The deal is in the discovery stage with a draft quote that has never been sent, and there has been no activity for 21 days. This level of engagement is insufficient to justify an expected close date 20 days out. | confidence_percent=10 | last_updated=2026-10-06T09:02:10.281000000+00:00 | created_at=2026-09-14T17:08:25.379000000+00:00\n  deal_id=cmu6v7vbu005io50uh7bpe00x | title=HCL \u2014 yaswanth M G | stage=qualification | amount=0 | currency=INR | forecast_category=omitted | forecast_reason=The deal is in the qualification stage with no expected close date, zero activity, and no evidence of engagement, making it unrealistic to include in any forecast. | confidence_percent=5 | last_updated=2026-10-05T11:54:09.907000000+00:00 | created_at=2026-09-18T11:18:32.539000000+00:00\n  deal_id=cmu8k810304kmlb0u4hi6w7a4 | title=pricing | stage=propose | amount=0.0 | currency=USD | forecast_category=omitted | forecast_reason=The deal has no expected close date, zero activity, and only a draft quote with no value, making it impossible to forecast realistically. | confidence_percent=5 | last_updated=2026-10-04T08:40:28.052000000+00:00 | created_at=2026-09-19T15:46:16.467000000+00:00\n  ... 1 more groups not listed\nkg_notes:\n### Pipeline Analysis vs. Sales Target\n\nTo achieve your monthly target of \u20b950,00,000 (50 Lakhs), the current open pipeline of \u20b9352,000.00 (INR) and $30,000.00 (USD) represents a significant gap. The identified opportunities are largely in early stages (Discovery/Qualification) with low confidence levels, suggesting that current high-priority efforts should focus on accelerating existing deals or generating new high-value leads.\n\n| Metric | Value |\n| :--- | :--- |\n| **Total Pipeline (INR)** | **\u20b9352,000.00** |\n| **Total Pipeline (USD)** | **$30,000.00** |\n| **Target Gap (INR)** | **\u20b94,648,000.00** |\n\n### High-Priority Opportunities\n\nBased on recent activity and quote status, the following deals show the highest potential for movement, though they still carry risk:\n\n*   **Joy Kart \u2014 Bharathi Sivakumar**: This is the highest confidence deal (45%) in the INR pipeline. A quote was sent on 2026-10-05 for \u20b930,000.00, but there has been no recorded engagement for 21 days.\n*   **amelian - pothys**: This deal is currently at a 50% confidence level with an amount of \u20b920,000.00, though it lacks recorded activity to support its 28-day close date.\n*   **CRM Deals (USD)**: Two deals totaling $30,000.00 (`crm` and `CRM`) are in the \"propose\" stage. However, both are flagged as high risk due to having only draft quotes, no expected close dates, and zero recorded activity.\n\n### Pipeline Risks and Stalled Deals\n\nThe majority of the pipeline is currently stalled or lacks the necessary documentation to be considered reliable for this month's target:\n\n*   **Draft Quote Stagnation**: Multiple deals, including `worktual \u2014 shanmuk shourya` (\u20b9100,000.00), `Infosys \u2014 santhosh` (\u20b975,000.00), and `HDFC \u2014 Annamalai raju` (\u20b945,000.00), are stuck in Qualification or Discovery with only draft quotes and no activity for over 20 days.\n*   **Low Engagement**: The deal `chandru -crm` (\u20b913,000.00) has zero recorded activity or quotes, making a near-term close highly unlikely.\n*   **Forecast Unreliability**: Most deals in the pipeline have a confidence level of 10% or lower, primarily due to the mismatch between their early stage (Discovery/Qualification) and their aggressive expected close dates.\n\n### Recommended Next Steps\n\n*   **Re-engage \"Propose\" Stage Deals**: Immediately contact the stakeholders for `Joy Kart \u2014 Bharathi Sivakumar` to follow up on the quote sent on 2026-10-05 and move them toward closing.\n*   **Convert Draft Quotes**: Prioritize converting draft quotes to sent quotes for the high-value `worktual \u2014 shanmuk shourya` and `Infosys \u2014 santhosh` deals to establish formal engagement.\n*   **Gap Analysis for Target**: Given the \u20b946.48 Lakh gap between the current pipeline and the \u20b950 Lakh target, initiate immediate prospecting for larger-scale opportunities to supplement the existing low-value pipeline.",
+    "grounded": true,
+    "briefing_raw": "To achieve your monthly target of \u20b950,00,000, there is a significant gap of \u20b94,648,000.00. Your current pipeline for this month is \u20b9352,000.00 (INR) and $30,000.00 (USD).\n\n### Pipeline vs. Target\n| Metric | Value |\n| :--- | :--- |\n| **Total Pipeline (INR)** | **\u20b9352,000.00** |\n| **Total Pipeline (USD)** | **$30,000.00** |\n| **Target Gap (INR)** | **\u20b94,648,000.00** |\n\n### High-Priority Opportunities\nTo bridge the gap, focus on these deals with the highest potential for movement:\n* **Joy Kart \u2014 Bharathi Sivakumar (\u20b930,000.00)**: Highest confidence (45%) in the INR pipeline; a quote was sent on 2026-10-05, but there has been no engagement for 21 days.\n* **amelian - pothys (\u20b920,000.00)**: Currently at 50% confidence, though it lacks recorded activity to support its 28-day close date.\n* **CRM Deals (USD) ($30,000.00)**: Two deals (`crm` and `CRM`) are in the \"propose\" stage, but are high risk due to having only draft quotes and zero recorded activity.\n\n### Pipeline Risks\nMost of the current pipeline is stalled or unreliable for this month's target:\n* **Draft Quote Stagnation**: High-value deals like `worktual \u2014 shanmuk shourya` (\u20b9100,000.00), `Infosys \u2014 santhosh` (\u20b975,000.00), and `HDFC \u2014 Annamalai raju` (\u20b945,000.00) are stuck in early stages with only draft quotes and no activity for over 20 days.\n* **Low Engagement**: Deals such as `chandru -crm` (\u20b913,000.00) have zero recorded activity or quotes, making a near-term close unlikely.\n* **Forecast Unreliability**: Most deals have confidence levels of 10% or lower because early-stage status (Discovery/Qualification) does not align with their aggressive expected close dates.\n\n**Recommended Next Steps:**\n1. **Re-engage \"Propose\" Stage Deals**: Immediately follow up with stakeholders for `Joy Kart \u2014 Bharathi Sivakumar` regarding the quote sent on 2026-10-05.\n2. **Convert Draft Quotes**: Prioritize moving `worktual \u2014 shanmuk shourya` and `Infosys \u2014 santhosh` from draft to sent quotes to establish formal engagement.\n3. **Gap Analysis**: Given the \u20b946.48 Lakh gap, initiate immediate prospecting for larger-scale opportunities to supplement the existing low-value pipeline."
+  }
+}

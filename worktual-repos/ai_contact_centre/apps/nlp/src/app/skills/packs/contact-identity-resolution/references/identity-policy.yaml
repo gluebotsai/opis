@@ -1,0 +1,5 @@
+policy:
+  idempotency_key: source_message_id
+  primary_keys: [primary_email, primary_phone]
+  secondary_keys: [secondary_phone]
+  merge_rules: preserve_non_null_fields

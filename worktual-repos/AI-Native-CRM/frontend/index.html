@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en" class="h-full w-full antialiased">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Worktual CRM</title>
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
+    />
+    <noscript>
+      <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet"
+      />
+    </noscript>
+    <style>
+      :root {
+        --font-inter: "Inter", ui-sans-serif, system-ui, sans-serif;
+      }
+      html,
+      body,
+      #root {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        background: #f3f4f6;
+      }
+      #crm-boot {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        background: #f3f4f6;
+        opacity: 0;
+        animation: crm-boot-show 1ms linear 160ms forwards;
+        font-family: var(--font-inter);
+      }
+      #crm-boot img {
+        width: 140px;
+        height: auto;
+        display: block;
+        margin: 0 auto;
+      }
+      .crm-boot-failure {
+        width: min(100%, 448px);
+        box-sizing: border-box;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        background: white;
+        padding: 24px;
+        box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+      }
+      .crm-boot-failure h1 {
+        margin: 0;
+        color: #171717;
+        font-size: 18px;
+      }
+      .crm-boot-failure p {
+        margin: 8px 0 0;
+        color: #b91c1c;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+      .crm-boot-failure button {
+        margin-top: 16px;
+        border: 0;
+        border-radius: 8px;
+        background: #171717;
+        color: white;
+        padding: 10px 16px;
+        font: inherit;
+        cursor: pointer;
+      }
+      @keyframes crm-boot-show {
+        to { opacity: 1; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #crm-boot {
+          animation: none;
+          opacity: 1;
+        }
+      }
+    </style>
+    <script>
+      (() => {
+        let ready = false;
+        let failed = false;
+        let timer = 0;
+        const boot = () => document.getElementById("crm-boot");
+        window.__crmBootReady = () => {
+          if (ready) return;
+          ready = true;
+          window.clearTimeout(timer);
+          boot()?.remove();
+        };
+        window.__crmBootFail = (message) => {
+          if (ready || failed) return;
+          failed = true;
+          window.clearTimeout(timer);
+          const el = boot();
+          if (!el) return;
+          el.style.opacity = "1";
+          el.style.animation = "none";
+          el.innerHTML =
+            '<section id="crm-boot-card" class="crm-boot-failure">' +
+            "<h1>Worktual CRM could not finish loading</h1>" +
+            "<p></p>" +
+            '<button type="button">Reload CRM</button>' +
+            "</section>";
+          const detail = el.querySelector("p");
+          if (detail) {
+            detail.textContent =
+              message || "Check your connection and try loading the CRM again.";
+          }
+          el.querySelector("button")?.addEventListener("click", () =>
+            window.location.reload(),
+          );
+        };
+        timer = window.setTimeout(
+          () => window.__crmBootFail?.(),
+          20000,
+        );
+      })();
+    </script>
+  </head>
+  <body class="h-full w-full font-sans text-text-primary">
+    <div id="root" class="h-full w-full"></div>
+    <div id="crm-boot" role="status" aria-live="polite" aria-label="Loading Worktual CRM">
+      <img src="/crm-boot-loader.gif" alt="" width="140" height="79" />
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

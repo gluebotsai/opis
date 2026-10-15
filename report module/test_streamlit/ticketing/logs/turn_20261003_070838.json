@@ -1,0 +1,289 @@
+{
+  "question": "why the tickets are more in this month when comapre  other months?",
+  "answer": "The total ticket count for this month is **13**. While the overall volume across all time is **20,050**, the current month shows a significant increase compared to previous months such as August 2026 with **3,066** tickets and July 2026 with **717** tickets. For this month, the highest volume is in the Returns & Refunds Support queue with **7** tickets, followed by Order Management & Fulfillment with **2** tickets and Product Support with **2** tickets. The most frequent categories include Damaged Item Return with **3** tickets and Damaged Item \u2013 Return & Refund with **1** ticket.",
+  "trace": {
+    "question": "why the tickets are more in this month when comapre  other months?",
+    "identity": {
+      "organization_id": 1012,
+      "user_id": 1038,
+      "role": "admin",
+      "queue_ids": [
+        1060,
+        1061,
+        1062,
+        1063,
+        1064,
+        1065,
+        1066,
+        1071,
+        1072,
+        1073,
+        1074,
+        1075,
+        1076
+      ]
+    },
+    "model": "worktual-gemma",
+    "tasks": [
+      {
+        "status": "ok",
+        "store": "sql",
+        "kpi_id": "ticket_count",
+        "sql": "WITH base_ticket AS (\n-- Shared ticket grain. Python inlines this as the base_ticket CTE body.\n-- No aggregations. Status rules use tickets.status only. Never is_terminal.\nSELECT\n    t.id AS ticket_id,\n    t.organization_id,\n    t.ticket_number,\n    t.status,\n    t.priority,\n    t.channel,\n    t.category,\n    t.customer_id,\n    t.customer_name,\n    t.assignee_id,\n    t.assignee_name,\n    t.resolver_id,\n    t.resolver_name,\n    t.queue_id,\n    t.queue_name,\n    t.created_by_id,\n    t.created_by_name,\n    t.due_at,\n    t.first_response_at,\n    t.resolved_at,\n    t.csat_score,\n    t.csat_rated_at,\n    t.created_at,\n    t.updated_at,\n    sp.resolution_hours AS sla_resolution_hours,\n    sp.first_response_hours AS sla_first_response_hours,\n    EXTRACT(EPOCH FROM (t.resolved_at - t.created_at)) / 3600.0 AS resolution_hours,\n    EXTRACT(EPOCH FROM (t.first_response_at - t.created_at)) / 3600.0 AS first_response_hours,\n    EXTRACT(EPOCH FROM (t.resolved_at - t.due_at)) / 3600.0 AS resolution_variance_hours,\n    EXTRACT(EPOCH FROM (COALESCE(t.resolved_at, NOW()) - t.due_at)) / 3600.0 AS overdue_hours_so_far,\n    (t.status = 'Open') AS is_status_open,\n    (t.status = 'Pending') AS is_status_pending_literal,\n    (t.status = 'Reopened') AS is_status_reopened,\n    (t.status = 'Overdue') AS is_status_overdue,\n    (t.status = 'Resolved') AS is_status_resolved,\n    (t.status = 'Closed') AS is_status_closed,\n    (t.status NOT IN ('Closed', 'Resolved')) AS is_pending_generic,\n    (t.assignee_id IS NULL) AS is_unassigned,\n    (t.priority = 'high') AS is_high_priority,\n    (t.due_at IS NOT NULL) AS has_resolution_due,\n    (sp.first_response_hours IS NOT NULL) AS has_first_response_policy,\n    (\n        t.resolved_at IS NOT NULL\n        AND t.due_at IS NOT NULL\n        AND t.resolved_at <= t.due_at\n    ) AS resolution_sla_met,\n    (\n        t.due_at IS NOT NULL\n        AND (\n            (t.resolved_at IS NOT NULL AND t.resolved_at > t.due_at)\n            OR (\n                t.status NOT IN ('Closed', 'Resolved')\n                AND NOW() > t.due_at\n            )\n            OR (\n                t.status IN ('Closed', 'Resolved')\n                AND t.resolved_at IS NULL\n                AND NOW() > t.due_at\n            )\n        )\n    ) AS resolution_sla_missed,\n    (\n        t.due_at IS NOT NULL\n        AND t.status NOT IN ('Closed', 'Resolved')\n        AND NOW() <= t.due_at\n        AND EXTRACT(EPOCH FROM (t.due_at - NOW()))\n            <= 0.20 * EXTRACT(EPOCH FROM (t.due_at - t.created_at))\n        AND EXTRACT(EPOCH FROM (t.due_at - t.created_at)) > 0\n    ) AS resolution_at_risk,\n    (t.due_at IS NULL) AS resolution_no_sla,\n    (\n        t.first_response_at IS NOT NULL\n        AND sp.first_response_hours IS NOT NULL\n        AND t.first_response_at <= t.created_at + (sp.first_response_hours * INTERVAL '1 hour')\n    ) AS first_response_sla_met,\n    (\n        sp.first_response_hours IS NOT NULL\n        AND (\n            (\n                t.first_response_at IS NOT NULL\n                AND t.first_response_at > t.created_at + (sp.first_response_hours * INTERVAL '1 hour')\n            )\n            OR (\n                t.first_response_at IS NULL\n                AND NOW() > t.created_at + (sp.first_response_hours * INTERVAL '1 hour')\n            )\n        )\n    ) AS first_response_sla_missed,\n    (\n        t.first_response_at IS NULL\n        AND sp.first_response_hours IS NOT NULL\n        AND t.status NOT IN ('Closed', 'Resolved')\n        AND NOW() <= t.created_at + (sp.first_response_hours * INTERVAL '1 hour')\n        AND EXTRACT(EPOCH FROM (\n            (t.created_at + (sp.first_response_hours * INTERVAL '1 hour'))\n            - NOW()\n        )) <= 0.20 * (sp.first_response_hours * 3600.0)\n    ) AS first_response_at_risk,\n    (sp.first_response_hours IS NULL) AS first_response_no_sla\nFROM ticketing.tickets t\nLEFT JOIN LATERAL (\n    SELECT sp.resolution_hours, sp.first_response_hours\n    FROM ticketing.sla_policies sp\n    WHERE sp.organization_id = t.organization_id\n      AND sp.priority = t.priority\n      AND sp.active = true\n    ORDER BY sp.id DESC\n    LIMIT 1\n) sp ON true\nWHERE t.organization_id = 1012\n\n)\nSELECT\n    DATE_TRUNC('month', created_at)::date AS month,\n    COUNT(*)::bigint AS ticket_count\nFROM base_ticket\nWHERE TRUE\n  AND TRUE\n  AND TRUE\n  AND TRUE\nGROUP BY DATE_TRUNC('month', created_at)::date ORDER BY 2 DESC NULLS LAST\n\n",
+        "rows": [
+          {
+            "month": "2026-09-01",
+            "ticket_count": 10370
+          },
+          {
+            "month": "2026-08-01",
+            "ticket_count": 3066
+          },
+          {
+            "month": "2026-07-01",
+            "ticket_count": 717
+          },
+          {
+            "month": "2025-12-01",
+            "ticket_count": 698
+          },
+          {
+            "month": "2026-06-01",
+            "ticket_count": 668
+          },
+          {
+            "month": "2026-01-01",
+            "ticket_count": 666
+          },
+          {
+            "month": "2025-11-01",
+            "ticket_count": 643
+          },
+          {
+            "month": "2026-04-01",
+            "ticket_count": 638
+          },
+          {
+            "month": "2026-05-01",
+            "ticket_count": 637
+          },
+          {
+            "month": "2026-03-01",
+            "ticket_count": 629
+          },
+          {
+            "month": "2025-10-01",
+            "ticket_count": 624
+          },
+          {
+            "month": "2026-02-01",
+            "ticket_count": 576
+          },
+          {
+            "month": "2025-09-01",
+            "ticket_count": 105
+          },
+          {
+            "month": "2026-10-01",
+            "ticket_count": 13
+          }
+        ],
+        "attempts": [
+          {
+            "raw": "```json\n{\"tool\": \"run_kpi\", \"kpi_id\": \"ticket_count\", \"dimension\": \"month\"}\n```",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "ticket_count",
+              "dimension": "month"
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "time_status": "all_time",
+        "tool": "run_kpi",
+        "requested_kpi": "ticket_count",
+        "requested_dimension": "month",
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "ticket_count",
+          "dimension": "month",
+          "goal": "Compare ticket volume by month to identify the trend for this month",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "breakdown"
+        }
+      },
+      {
+        "status": "ok",
+        "store": "sql",
+        "kpi_id": "ticket_count",
+        "sql": "WITH base_ticket AS (\n-- Shared ticket grain. Python inlines this as the base_ticket CTE body.\n-- No aggregations. Status rules use tickets.status only. Never is_terminal.\nSELECT\n    t.id AS ticket_id,\n    t.organization_id,\n    t.ticket_number,\n    t.status,\n    t.priority,\n    t.channel,\n    t.category,\n    t.customer_id,\n    t.customer_name,\n    t.assignee_id,\n    t.assignee_name,\n    t.resolver_id,\n    t.resolver_name,\n    t.queue_id,\n    t.queue_name,\n    t.created_by_id,\n    t.created_by_name,\n    t.due_at,\n    t.first_response_at,\n    t.resolved_at,\n    t.csat_score,\n    t.csat_rated_at,\n    t.created_at,\n    t.updated_at,\n    sp.resolution_hours AS sla_resolution_hours,\n    sp.first_response_hours AS sla_first_response_hours,\n    EXTRACT(EPOCH FROM (t.resolved_at - t.created_at)) / 3600.0 AS resolution_hours,\n    EXTRACT(EPOCH FROM (t.first_response_at - t.created_at)) / 3600.0 AS first_response_hours,\n    EXTRACT(EPOCH FROM (t.resolved_at - t.due_at)) / 3600.0 AS resolution_variance_hours,\n    EXTRACT(EPOCH FROM (COALESCE(t.resolved_at, NOW()) - t.due_at)) / 3600.0 AS overdue_hours_so_far,\n    (t.status = 'Open') AS is_status_open,\n    (t.status = 'Pending') AS is_status_pending_literal,\n    (t.status = 'Reopened') AS is_status_reopened,\n    (t.status = 'Overdue') AS is_status_overdue,\n    (t.status = 'Resolved') AS is_status_resolved,\n    (t.status = 'Closed') AS is_status_closed,\n    (t.status NOT IN ('Closed', 'Resolved')) AS is_pending_generic,\n    (t.assignee_id IS NULL) AS is_unassigned,\n    (t.priority = 'high') AS is_high_priority,\n    (t.due_at IS NOT NULL) AS has_resolution_due,\n    (sp.first_response_hours IS NOT NULL) AS has_first_response_policy,\n    (\n        t.resolved_at IS NOT NULL\n        AND t.due_at IS NOT NULL\n        AND t.resolved_at <= t.due_at\n    ) AS resolution_sla_met,\n    (\n        t.due_at IS NOT NULL\n        AND (\n            (t.resolved_at IS NOT NULL AND t.resolved_at > t.due_at)\n            OR (\n                t.status NOT IN ('Closed', 'Resolved')\n                AND NOW() > t.due_at\n            )\n            OR (\n                t.status IN ('Closed', 'Resolved')\n                AND t.resolved_at IS NULL\n                AND NOW() > t.due_at\n            )\n        )\n    ) AS resolution_sla_missed,\n    (\n        t.due_at IS NOT NULL\n        AND t.status NOT IN ('Closed', 'Resolved')\n        AND NOW() <= t.due_at\n        AND EXTRACT(EPOCH FROM (t.due_at - NOW()))\n            <= 0.20 * EXTRACT(EPOCH FROM (t.due_at - t.created_at))\n        AND EXTRACT(EPOCH FROM (t.due_at - t.created_at)) > 0\n    ) AS resolution_at_risk,\n    (t.due_at IS NULL) AS resolution_no_sla,\n    (\n        t.first_response_at IS NOT NULL\n        AND sp.first_response_hours IS NOT NULL\n        AND t.first_response_at <= t.created_at + (sp.first_response_hours * INTERVAL '1 hour')\n    ) AS first_response_sla_met,\n    (\n        sp.first_response_hours IS NOT NULL\n        AND (\n            (\n                t.first_response_at IS NOT NULL\n                AND t.first_response_at > t.created_at + (sp.first_response_hours * INTERVAL '1 hour')\n            )\n            OR (\n                t.first_response_at IS NULL\n                AND NOW() > t.created_at + (sp.first_response_hours * INTERVAL '1 hour')\n            )\n        )\n    ) AS first_response_sla_missed,\n    (\n        t.first_response_at IS NULL\n        AND sp.first_response_hours IS NOT NULL\n        AND t.status NOT IN ('Closed', 'Resolved')\n        AND NOW() <= t.created_at + (sp.first_response_hours * INTERVAL '1 hour')\n        AND EXTRACT(EPOCH FROM (\n            (t.created_at + (sp.first_response_hours * INTERVAL '1 hour'))\n            - NOW()\n        )) <= 0.20 * (sp.first_response_hours * 3600.0)\n    ) AS first_response_at_risk,\n    (sp.first_response_hours IS NULL) AS first_response_no_sla\nFROM ticketing.tickets t\nLEFT JOIN LATERAL (\n    SELECT sp.resolution_hours, sp.first_response_hours\n    FROM ticketing.sla_policies sp\n    WHERE sp.organization_id = t.organization_id\n      AND sp.priority = t.priority\n      AND sp.active = true\n    ORDER BY sp.id DESC\n    LIMIT 1\n) sp ON true\nWHERE t.organization_id = 1012\n\n)\nSELECT\n    category AS category,\n    COUNT(*)::bigint AS ticket_count\nFROM base_ticket\nWHERE TRUE\n  AND (created_at >= TIMESTAMPTZ '2026-10-01T00:00:00+00:00' AND created_at < TIMESTAMPTZ '2026-11-01T00:00:00+00:00')\n  AND TRUE\n  AND TRUE\nGROUP BY category ORDER BY 2 DESC NULLS LAST\n\n",
+        "rows": [
+          {
+            "category": "Damaged Item Return",
+            "ticket_count": 3
+          },
+          {
+            "category": "Damaged Item \u2013 Return & Refund",
+            "ticket_count": 1
+          },
+          {
+            "category": "Damaged Product",
+            "ticket_count": 1
+          },
+          {
+            "category": "Delivery",
+            "ticket_count": 1
+          },
+          {
+            "category": "Exchange",
+            "ticket_count": 1
+          },
+          {
+            "category": "Incorrect Item",
+            "ticket_count": 1
+          },
+          {
+            "category": "Order Inquiry",
+            "ticket_count": 1
+          },
+          {
+            "category": "Product Defect",
+            "ticket_count": 1
+          },
+          {
+            "category": "Refund",
+            "ticket_count": 1
+          },
+          {
+            "category": "Damaged Item Replacement",
+            "ticket_count": 1
+          },
+          {
+            "category": "Ticket Management",
+            "ticket_count": 1
+          }
+        ],
+        "attempts": [
+          {
+            "raw": "```json\n{\"tool\": \"run_kpi\", \"kpi_id\": \"ticket_count\", \"dimension\": \"category\"}\n```",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "ticket_count",
+              "dimension": "category"
+            }
+          }
+        ],
+        "time_echo": "this month (UTC)",
+        "time_status": "bounded",
+        "tool": "run_kpi",
+        "requested_kpi": "ticket_count",
+        "requested_dimension": "category",
+        "task": {
+          "id": "t2",
+          "executor": "sql",
+          "kpi": "ticket_count",
+          "dimension": "category",
+          "goal": "Identify which categories are driving the volume increase this month",
+          "time": "this month",
+          "scope": "org",
+          "answer_type": "breakdown"
+        }
+      },
+      {
+        "status": "ok",
+        "store": "sql",
+        "kpi_id": "ticket_count",
+        "sql": "WITH base_ticket AS (\n-- Shared ticket grain. Python inlines this as the base_ticket CTE body.\n-- No aggregations. Status rules use tickets.status only. Never is_terminal.\nSELECT\n    t.id AS ticket_id,\n    t.organization_id,\n    t.ticket_number,\n    t.status,\n    t.priority,\n    t.channel,\n    t.category,\n    t.customer_id,\n    t.customer_name,\n    t.assignee_id,\n    t.assignee_name,\n    t.resolver_id,\n    t.resolver_name,\n    t.queue_id,\n    t.queue_name,\n    t.created_by_id,\n    t.created_by_name,\n    t.due_at,\n    t.first_response_at,\n    t.resolved_at,\n    t.csat_score,\n    t.csat_rated_at,\n    t.created_at,\n    t.updated_at,\n    sp.resolution_hours AS sla_resolution_hours,\n    sp.first_response_hours AS sla_first_response_hours,\n    EXTRACT(EPOCH FROM (t.resolved_at - t.created_at)) / 3600.0 AS resolution_hours,\n    EXTRACT(EPOCH FROM (t.first_response_at - t.created_at)) / 3600.0 AS first_response_hours,\n    EXTRACT(EPOCH FROM (t.resolved_at - t.due_at)) / 3600.0 AS resolution_variance_hours,\n    EXTRACT(EPOCH FROM (COALESCE(t.resolved_at, NOW()) - t.due_at)) / 3600.0 AS overdue_hours_so_far,\n    (t.status = 'Open') AS is_status_open,\n    (t.status = 'Pending') AS is_status_pending_literal,\n    (t.status = 'Reopened') AS is_status_reopened,\n    (t.status = 'Overdue') AS is_status_overdue,\n    (t.status = 'Resolved') AS is_status_resolved,\n    (t.status = 'Closed') AS is_status_closed,\n    (t.status NOT IN ('Closed', 'Resolved')) AS is_pending_generic,\n    (t.assignee_id IS NULL) AS is_unassigned,\n    (t.priority = 'high') AS is_high_priority,\n    (t.due_at IS NOT NULL) AS has_resolution_due,\n    (sp.first_response_hours IS NOT NULL) AS has_first_response_policy,\n    (\n        t.resolved_at IS NOT NULL\n        AND t.due_at IS NOT NULL\n        AND t.resolved_at <= t.due_at\n    ) AS resolution_sla_met,\n    (\n        t.due_at IS NOT NULL\n        AND (\n            (t.resolved_at IS NOT NULL AND t.resolved_at > t.due_at)\n            OR (\n                t.status NOT IN ('Closed', 'Resolved')\n                AND NOW() > t.due_at\n            )\n            OR (\n                t.status IN ('Closed', 'Resolved')\n                AND t.resolved_at IS NULL\n                AND NOW() > t.due_at\n            )\n        )\n    ) AS resolution_sla_missed,\n    (\n        t.due_at IS NOT NULL\n        AND t.status NOT IN ('Closed', 'Resolved')\n        AND NOW() <= t.due_at\n        AND EXTRACT(EPOCH FROM (t.due_at - NOW()))\n            <= 0.20 * EXTRACT(EPOCH FROM (t.due_at - t.created_at))\n        AND EXTRACT(EPOCH FROM (t.due_at - t.created_at)) > 0\n    ) AS resolution_at_risk,\n    (t.due_at IS NULL) AS resolution_no_sla,\n    (\n        t.first_response_at IS NOT NULL\n        AND sp.first_response_hours IS NOT NULL\n        AND t.first_response_at <= t.created_at + (sp.first_response_hours * INTERVAL '1 hour')\n    ) AS first_response_sla_met,\n    (\n        sp.first_response_hours IS NOT NULL\n        AND (\n            (\n                t.first_response_at IS NOT NULL\n                AND t.first_response_at > t.created_at + (sp.first_response_hours * INTERVAL '1 hour')\n            )\n            OR (\n                t.first_response_at IS NULL\n                AND NOW() > t.created_at + (sp.first_response_hours * INTERVAL '1 hour')\n            )\n        )\n    ) AS first_response_sla_missed,\n    (\n        t.first_response_at IS NULL\n        AND sp.first_response_hours IS NOT NULL\n        AND t.status NOT IN ('Closed', 'Resolved')\n        AND NOW() <= t.created_at + (sp.first_response_hours * INTERVAL '1 hour')\n        AND EXTRACT(EPOCH FROM (\n            (t.created_at + (sp.first_response_hours * INTERVAL '1 hour'))\n            - NOW()\n        )) <= 0.20 * (sp.first_response_hours * 3600.0)\n    ) AS first_response_at_risk,\n    (sp.first_response_hours IS NULL) AS first_response_no_sla\nFROM ticketing.tickets t\nLEFT JOIN LATERAL (\n    SELECT sp.resolution_hours, sp.first_response_hours\n    FROM ticketing.sla_policies sp\n    WHERE sp.organization_id = t.organization_id\n      AND sp.priority = t.priority\n      AND sp.active = true\n    ORDER BY sp.id DESC\n    LIMIT 1\n) sp ON true\nWHERE t.organization_id = 1012\n\n)\nSELECT\n    queue_name AS queue,\n    COUNT(*)::bigint AS ticket_count\nFROM base_ticket\nWHERE TRUE\n  AND (created_at >= TIMESTAMPTZ '2026-10-01T00:00:00+00:00' AND created_at < TIMESTAMPTZ '2026-11-01T00:00:00+00:00')\n  AND TRUE\n  AND TRUE\nGROUP BY queue_name ORDER BY 2 DESC NULLS LAST\n\n",
+        "rows": [
+          {
+            "queue": "Returns & Refunds Support",
+            "ticket_count": 7
+          },
+          {
+            "queue": "Order Management & Fulfillment",
+            "ticket_count": 2
+          },
+          {
+            "queue": "Product Support",
+            "ticket_count": 2
+          },
+          {
+            "queue": "Customer Account & Access Support",
+            "ticket_count": 1
+          },
+          {
+            "queue": "Shipping & Delivery Support",
+            "ticket_count": 1
+          }
+        ],
+        "attempts": [
+          {
+            "raw": "```json\n{\"tool\": \"run_kpi\", \"kpi_id\": \"ticket_count\", \"dimension\": \"queue\"}\n```",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "ticket_count",
+              "dimension": "queue"
+            }
+          }
+        ],
+        "time_echo": "this month (UTC)",
+        "time_status": "bounded",
+        "tool": "run_kpi",
+        "requested_kpi": "ticket_count",
+        "requested_dimension": "queue",
+        "task": {
+          "id": "t3",
+          "executor": "sql",
+          "kpi": "ticket_count",
+          "dimension": "queue",
+          "goal": "Identify which queues are driving the volume increase this month",
+          "time": "this month",
+          "scope": "org",
+          "answer_type": "breakdown"
+        }
+      }
+    ],
+    "domain_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"deep\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"ticket_count\",\n      \"dimension\": \"month\",\n      \"goal\": \"Compare ticket volume by month to identify the trend for this month\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"answer_type\": \"breakdown\"\n    },\n    {\n      \"id\": \"t2\",\n      \"executor\": \"sql\",\n      \"kpi\": \"ticket_count\",\n      \"dimension\": \"category\",\n      \"goal\": \"Identify which categories are driving the volume increase this month\",\n      \"time\": \"this month\",\n      \"scope\": \"org\",\n      \"answer_type\": \"breakdown\"\n    },\n    {\n      \"id\": \"t3\",\n      \"executor\": \"sql\",\n      \"kpi\": \"ticket_count\",\n      \"dimension\": \"queue\",\n      \"goal\": \"Identify which queues are driving the volume increase this month\",\n      \"time\": \"this month\",\n      \"scope\": \"org\",\n      \"answer_type\": \"breakdown\"\n    }\n  ]\n}\n```",
+    "plan": {
+      "kind": "plan",
+      "depth": "deep",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "ticket_count",
+          "dimension": "month",
+          "goal": "Compare ticket volume by month to identify the trend for this month",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "breakdown"
+        },
+        {
+          "id": "t2",
+          "executor": "sql",
+          "kpi": "ticket_count",
+          "dimension": "category",
+          "goal": "Identify which categories are driving the volume increase this month",
+          "time": "this month",
+          "scope": "org",
+          "answer_type": "breakdown"
+        },
+        {
+          "id": "t3",
+          "executor": "sql",
+          "kpi": "ticket_count",
+          "dimension": "queue",
+          "goal": "Identify which queues are driving the volume increase this month",
+          "time": "this month",
+          "scope": "org",
+          "answer_type": "breakdown"
+        }
+      ]
+    },
+    "facts": "window: overall (no date filter, UTC)\nRESULT: 14 group(s)\ngroup_by: month\ntotal_ticket_count: 20050\n  2026-09-01: 10370\n  2026-08-01: 3066\n  2026-07-01: 717\n  2025-12-01: 698\n  2026-06-01: 668\n  ... 9 more groups not listed\n\nwindow: this month (UTC)\nRESULT: 11 group(s)\ngroup_by: category\ntotal_ticket_count: 13\n  Damaged Item Return: 3\n  Damaged Item \u2013 Return & Refund: 1\n  Damaged Product: 1\n  Delivery: 1\n  Exchange: 1\n  ... 6 more groups not listed\n\nwindow: this month (UTC)\nRESULT: 5 group(s)\ngroup_by: queue\ntotal_ticket_count: 13\n  Returns & Refunds Support: 7\n  Order Management & Fulfillment: 2\n  Product Support: 2\n  Customer Account & Access Support: 1\n  Shipping & Delivery Support: 1",
+    "grounded": true,
+    "briefing_raw": "The total ticket count for this month is **13**. While the overall volume across all time is **20,050**, the current month shows a significant increase compared to previous months such as August 2026 with **3,066** tickets and July 2026 with **717** tickets. For this month, the highest volume is in the Returns & Refunds Support queue with **7** tickets, followed by Order Management & Fulfillment with **2** tickets and Product Support with **2** tickets. The most frequent categories include Damaged Item Return with **3** tickets and Damaged Item \u2013 Return & Refund with **1** ticket."
+  }
+}

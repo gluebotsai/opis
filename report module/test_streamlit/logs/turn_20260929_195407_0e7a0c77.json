@@ -1,0 +1,159 @@
+{
+  "turn_id": "0e7a0c77",
+  "timestamp": "2026-09-29T14:24:01.334817+00:00",
+  "question": "how many deals are there",
+  "context": {
+    "product": "crm",
+    "org_id": 1003,
+    "user_id": 1017,
+    "role": "sales_rep",
+    "queue_ids": [
+      1062,
+      1065
+    ],
+    "llm_model": "worktual-gemma"
+  },
+  "events": [
+    {
+      "timestamp": "2026-09-29T14:24:01.385293+00:00",
+      "type": "message",
+      "role": "system",
+      "agent": "domain_agent",
+      "content": "# B2B CRM Domain Router & Orchestration Agent\n\n## Mission\nYou are the master analytical spoke orchestrator for B2B CRM reporting. You receive user natural language queries, understand business context, plan execution paths, invoke SQL and Knowledge Graph executors, and synthesize grounded responses.\n\n## Routing Principles\n- **Aggregation, Metrics, Lists, Lookups, Rankings, Tables** $\\rightarrow$ Dispatch to **SQL Executor**.\n- **Root-Cause (\"Why\"), Relationship Paths, Deal Touch Trajectories, Missing Activities** $\\rightarrow$ Dispatch to **Knowledge Graph Executor**.\n- **Compound Analytical Questions** (e.g., *\"What is our win rate and why did we lose deals this quarter?\"*) $\\rightarrow$ First dispatch to SQL Executor for verified metrics, then pass results to KG Executor for diagnostic evidence.\n\n## Grounding & Response Contract\n- Present answers in clean, professional markdown with tables and bullet points.\n- Every numerical figure must match the facts block exactly.\n- Always include currency labels on financial figures.\n- When sample size is small (< 5 decided deals for win rate), explicitly note the small sample size.\n",
+      "metadata": {}
+    },
+    {
+      "timestamp": "2026-09-29T14:24:01.385331+00:00",
+      "type": "message",
+      "role": "user",
+      "agent": "domain_agent",
+      "content": "Identity: role=sales_rep, org_id=1003, user_id=1017, queues=[1062, 1065]\n\nQuestion: how many deals are there",
+      "metadata": {}
+    },
+    {
+      "timestamp": "2026-09-29T14:24:02.355635+00:00",
+      "type": "message",
+      "role": "assistant",
+      "agent": "domain_agent",
+      "content": "**Routing Decision:** Dispatch to **SQL Executor** (Metric/Count request).\n\n***\n\n### Deal Count Summary\n\n| Metric | Value |\n| :--- | :--- |\n| **Total Active Deals** | [Pending SQL Execution] |\n\n*Note: Awaiting data retrieval from the SQL Executor to provide the exact count for `org_id: 1003`.*",
+      "metadata": {}
+    },
+    {
+      "timestamp": "2026-09-29T14:24:02.355827+00:00",
+      "type": "tool_call",
+      "agent": "domain_agent",
+      "tool_name": "plan_tasks",
+      "arguments": {},
+      "result": null
+    },
+    {
+      "timestamp": "2026-09-29T14:24:02.372205+00:00",
+      "type": "message",
+      "role": "system",
+      "agent": "sql_executor",
+      "content": "# SQL Executor Agent \u2014 B2B CRM Reports and Analytics\n\n## Role & Mission\nYou are the certified SQL Analytical Executor for B2B CRM. Your sole responsibility is translating reporting intents into structured JSON executor instructions (`run_kpi` or `free_sql`).\n\n## Operational Rules\n1. **Catalog First**: Whenever a query asks for a standard KPI metric (e.g. win rate, total pipeline, revenue, average deal size, overdue invoices), emit a `run_kpi` call. Never write free SQL for catalogued metrics.\n2. **Deterministic Arithmetic**: Never calculate ratios, win rates, or monetary sums in prompt text. Always rely on SQL aggregation and the facts engine.\n3. **Currency Grouping**: Deal revenue is always reported grouped by `currency_code`. Never add across distinct currencies (no mixed-currency sums).\n4. **Read-Only**: Queries must be single `SELECT` or `WITH` queries. DDL/DML operations are strictly blocked by AST guard.\n5. **No Direct Table Queries**: Query exclusively through `rpt.*` views or certified templates.\n6. **Refusals**:\n   - If a KPI is marked `unavailable` in the catalog (e.g. rep quota attainment, stage conversion), return a refusal JSON citing the missing input reason.\n   - If the user role does not have access to the metric or view (e.g. marketing querying deals, rep querying team pipeline), refuse with an access denial message.\n\n## Output Contract\nRespond with a JSON object:\n```json\n{\n  \"action\": \"run_kpi\" | \"free_sql\" | \"refuse\",\n  \"kpi_id\": \"<kpi_id if run_kpi>\",\n  \"time_window\": \"all_time\" | \"this_month\" | \"last_month\" | \"this_quarter\" | \"this_year\" | \"7d\" | \"30d\" | \"90d\",\n  \"sql\": \"<sql_query if free_sql>\",\n  \"reason\": \"<explanation if refuse>\"\n}\n```\n\n\n## Available rpt.* Virtual Views and Key Columns:\n\n### rpt.rpt.deals (Core sales opportunities with dynamically resolved currency, fixed stage weights, and aging days.):\n  - `id`: Unique deal identifier\n  - `organization_id`: Tenant organization identifier\n  - `title`: Commercial deal title\n  - `stage`: Lifecycle stage: qualification, discover, propose, negotiate, closed_won, closed_lost\n  - `amount`: Unweighted monetary transaction amount\n  - `currency_code`: Resolved ISO currency (accepted quote -> latest quote -> non-USD -> tenant country -> null)\n  - `weighted_amount`: Calculated weighted amount (amount * stage_weight)\n  - `stage_weight`: Deterministic probability weight: 0\n  - `company_id`: Associated client company ID\n  - `company_name`: Associated client company name\n  - `location_id`: Client branch location ID\n  - `contact_id`: Primary contact person ID\n  - `contact_name`: Primary contact full name\n  - `contact_email`: Primary contact business email\n  - `owner_user_id`: Assigned sales rep user ID\n  - `owner_name`: Assigned sales rep full name\n  - `closed_at`: Timestamp when deal closed\n  - `close_ts`: Effective close timestamp: coalesce(closed_at, created_at)\n  - `created_at`: Deal creation timestamp\n  - `updated_at`: Last modification timestamp\n  - `expected_close_date`: Targeted closing date\n  - `lost_reason`: Categorized reason for closed_lost status\n  - `is_open`: True if stage in (qualification, discover, propose, negotiate)\n  - `is_won`: True if stage = closed_won\n  - `is_lost`: True if stage = closed_lost\n  - `aging_days`: Whole days elapsed since created_at\n\n### rpt.rpt.deal_facts (Aggregated operational facts and activity metrics per deal.):\n  - `deal_id`: Deal identifier\n  - `organization_id`: Tenant organization identifier\n  - `title`: Commercial deal title\n  - `stage`: Lifecycle stage\n  - `amount`: Deal monetary amount\n  - `currency_code`: Resolved ISO currency\n  - `weighted_amount`: Weighted amount\n  - `company_id`: Company ID\n  - `company_name`: Company name\n  - `owner_user_id`: Owner user ID\n  - `owner_name`: Owner full name\n  - `created_at`: Deal creation timestamp\n  - `closed_at`: Deal closing timestamp\n  - `close_ts`: Effective close timestamp\n  - `aging_days`: Whole days since creation\n  - `total_activities`: Count of all logged activities on deal\n  - `total_calls`: Count of calls logged\n  - `total_meetings`: Count of meetings logged\n  - `total_emails`: Count of emails logged\n  - `days_since_last_touch`: Days since latest logged touch\n  - `quote_count`: Number of quotes created for deal\n  - `accepted_quote_total`: Total value of accepted quote\n  - `avg_discount_pct`: Average discount percent on quotes\n\n### rpt.rpt.companies (B2B client accounts, holding entities, franchise networks, and store branches.):\n  - `id`: Company ID\n  - `organization_id`: Tenant organization ID\n  - `name`: Company legal name\n  - `industry`: Industry sector\n  - `employee_count`: Number of employees\n  - `owner_user_id`: Assigned account owner user ID\n  - `owner_name`: Assigned account owner name\n  - `domain`: Corporate website domain\n  - `channel_role`: Channel classification: standard, franchise, owned_store, brand_hq\n  - `parent_company_id`: Parent corporate entity ID\n  - `parent_company_name`: Parent corporate entity name\n  - `is_channel_hub`: True if channel_role in (franchise, owned_store, brand_hq)\n  - `created_at`: Creation timestamp\n  - `updated_at`: Update timestamp\n\n### rpt.rpt.company_locations (Physical operating branches and headquarters addresses for companies.):\n  - `id`: Location ID\n  - `organization_id`: Tenant organization ID\n  - `company_id`: Company ID\n  - `location_type`: Location classification: hq, branch\n  - `city`: City\n  - `state`: State or province\n  - `country`: ISO country code\n\n### rpt.rpt.contacts (Business contacts, executives, and leads with CDP profile attributes.):\n  - `id`: Contact profile ID\n  - `organization_id`: Tenant organization ID\n  - `first_name`: First name\n  - `last_name`: Last name\n  - `full_name`: Contact full name\n  - `email`: Business email\n  - `phone`: Business phone number\n  - `company_id`: Associated company ID\n  - `company_name`: Associated company name\n  - `owner_user_id`: Assigned owner user ID\n  - `owner_name`: Assigned owner name\n  - `lead_source`: Inbound acquisition channel\n  - `lead_status`: Lead qualification state: new, contacted, qualified, disqualified, converted\n  - `crm_status`: Profile status (active)\n  - `disqualify_reason`: Reason for disqualification\n  - `bant_budget`: BANT qualification: budget confirmed\n  - `bant_authority`: BANT qualification: authority confirmed\n  - `bant_need`: BANT qualification: need confirmed\n  - `bant_timeline`: BANT qualification: timeline confirmed\n  - `converted_deal_id`: Deal ID created upon conversion\n  - `created_at`: Contact creation timestamp\n  - `updated_at`: Contact update timestamp\n  - `days_since_last_touch`: Days since latest contact activity\n\n### rpt.rpt.quotes (Formal commercial quotes and pricing proposals issued to clients.):\n  - `id`: Quote ID\n  - `organization_id`: Tenant organization ID\n  - `deal_id`: Associated deal ID\n  - `deal_title`: Associated deal title\n  - `number`: Quote reference number\n  - `version`: Quote revision version\n  - `status`: Quote status: draft, sent, accepted, rejected, void\n  - `currency`: Quote currency ISO code\n  - `subtotal`: Pre-discount amount\n  - `discount_pct`: Overall discount percentage\n  - `total`: Final quote total\n  - `valid_until`: Expiration timestamp\n  - `sent_at`: Timestamp sent to customer\n  - `accepted_at`: Timestamp accepted by customer\n  - `decision_ts`: Timestamp of acceptance or rejection (coalesce(accepted_at, updated_at))\n  - `created_by_user_id`: User ID who created quote\n  - `owner_user_id`: Deal owner user ID\n  - `owner_name`: Deal owner full name\n  - `created_at`: Creation timestamp\n  - `updated_at`: Update timestamp\n\n### rpt.rpt.quote_lines (Itemized line items quoted on pricing proposals.):\n  - `id`: Line item ID\n  - `organization_id`: Tenant organization ID\n  - `quote_id`: Parent quote ID\n  - `product_id`: Product SKU ID\n  - `product_name`: Product name\n  - `quantity`: Quoted quantity\n  - `unit_price`: Quoted unit price\n  - `amount`: Line total after line discount\n\n### rpt.rpt.orders (Confirmed sales orders originating from accepted quotes.):\n  - `id`: Sales order ID\n  - `organization_id`: Tenant organization ID\n  - `deal_id`: Deal ID\n  - `deal_title`: Deal title\n  - `quote_id`: Quote ID\n  - `company_id`: Company ID\n  - `company_name`: Company name\n  - `number`: Order reference number\n  - `status`: Order status: draft, confirmed, fulfilled, cancelled\n  - `currency`: Order currency code\n  - `total`: Order monetary total\n  - `confirmed_at`: Order confirmation timestamp\n  - `owner_user_id`: Deal owner user ID\n  - `owner_name`: Deal owner full name\n  - `created_at`: Creation timestamp\n\n### rpt.rpt.order_lines (Itemized product lines within confirmed sales orders.):\n  - `id`: Order line ID\n  - `organization_id`: Tenant organization ID\n  - `order_id`: Parent order ID\n  - `product_id`: Product SKU ID\n  - `product_name`: Product name\n  - `quantity`: Ordered quantity\n  - `unit_price`: Unit price\n  - `amount`: Line amount\n\n### rpt.rpt.invoices (Billing invoices, payment tracking, approval workflows, and collection aging.):\n  - `id`: Invoice ID\n  - `organization_id`: Tenant organization ID\n  - `order_id`: Associated order ID\n  - `company_id`: Associated company ID\n  - `company_name`: Associated company name\n  - `deal_id`: Associated deal ID\n  - `deal_title`: Associated deal title\n  - `number`: Invoice number\n  - `status`: Invoice status: draft, sent, paid, void, overdue\n  - `approval_status`: Approval state: drafting, pending_approval, approved\n  - `currency`: Invoice currency ISO code\n  - `total`: Invoice total monetary amount\n  - `discount_amount`: Discount applied\n  - `tax_amount`: Tax applied\n  - `due_at`: Payment due date\n  - `paid_at`: Timestamp payment was received\n  - `is_overdue`: True if status is overdue or (sent and due_at < now)\n  - `overdue_days`: Days past due date if unpaid\n  - `billing_kind`: Billing classification: standard, setup, subscription_start, renewal, amendment, adjustment, credit\n  - `payment_method`: Payment method: offline, manual, stripe, razorpay\n  - `owner_user_id`: Deal/Order owner user ID\n  - `owner_name`: Owner full name\n  - `created_at`: Creation timestamp\n  - `updated_at`: Update timestamp\n\n### rpt.rpt.invoice_lines (Product and add-on itemized charges on invoices.):\n  - `id`: Invoice line ID\n  - `organization_id`: Tenant organization ID\n  - `invoice_id`: Parent invoice ID\n  - `product_id`: Product SKU ID\n  - `product_name`: Product or item name\n  - `quantity`: Quantity invoiced\n  - `unit_price`: Unit price\n  - `tax_percent`: Tax percent applied\n  - `amount`: Total line charge\n\n### rpt.rpt.contracts (Active customer contracts, annualized contract value (ARR), and renewal schedules.):\n  - `id`: Contract ID\n  - `organization_id`: Tenant organization ID\n  - `company_id`: Associated company ID\n  - `company_name`: Associated company name\n  - `deal_id`: Associated deal ID\n  - `deal_title`: Associated deal title\n  - `title`: Contract agreement title\n  - `starts_at`: Contract start timestamp\n  - `ends_at`: Contract expiration timestamp\n  - `arr`: Annualized Recurring Revenue value\n  - `renew_deal_id`: Opportunity ID created for contract renewal\n  - `auto_renew`: True if auto-renewal is enabled\n  - `status`: Contract status: active, expired, cancelled\n  - `billing_frequency`: Frequency: monthly, quarterly, annual\n  - `owner_user_id`: Owner user ID\n  - `owner_name`: Owner full name\n  - `created_at`: Creation timestamp\n  - `updated_at`: Update timestamp\n\n### rpt.rpt.billing_schedule (Scheduled future billing milestones generated from active contracts.):\n  - `id`: Schedule record ID\n  - `organization_id`: Tenant organization ID\n  - `contract_id`: Contract ID\n  - `billing_kind`: Kind: standard, setup, subscription_start, renewal, amendment\n  - `scheduled_for`: Scheduled billing date\n  - `status`: Status: scheduled, generated, cancelled\n  - `invoice_id`: Generated invoice ID\n  - `amount`: Scheduled billing amount\n  - `currency`: Billing currency code\n\n### rpt.rpt.activities (Unified interaction log combining deal activities and contact activities with a source discriminator.):\n  - `id`: Activity log ID\n  - `organization_id`: Tenant organization ID\n  - `source`: Source table discriminator: deal_activity, contact_activity\n  - `activity_type`: Type: call, meeting, email, note, task, sms\n  - `subject`: Interaction subject or title\n  - `due_at`: Task due date\n  - `completed_at`: Completion timestamp\n  - `is_completed`: True if completed_at is not null or task_status = completed\n  - `is_overdue`: True if task is incomplete and due_at < now\n  - `created_by_user_id`: User ID who logged the activity\n  - `performer_name`: User name who logged the activity\n  - `deal_id`: Associated deal ID (if deal activity)\n  - `deal_title`: Associated deal title\n  - `contact_id`: Associated contact ID (if contact activity)\n  - `contact_name`: Associated contact full name\n  - `created_at`: Activity creation timestamp\n\n### rpt.rpt.appointments (Scheduled calendar meetings and product demonstrations.):\n  - `id`: Appointment ID\n  - `organization_id`: Tenant organization ID\n  - `contact_id`: Contact ID\n  - `contact_name`: Contact name\n  - `host_user_id`: Host sales user ID\n  - `host_name`: Host user name\n  - `source`: Source: crm_ui, ccaas_webchat, demo_agent\n  - `status`: Status: scheduled, canceled, completed, no_show\n  - `title`: Meeting title\n  - `starts_at`: Meeting start timestamp\n  - `ends_at`: Meeting end timestamp\n  - `created_at`: Creation timestamp\n\n### rpt.rpt.products (Master product and services catalog with pricing and billing types.):\n  - `id`: Product SKU identifier\n  - `organization_id`: Tenant organization ID\n  - `name`: Commercial product name\n  - `sku`: Product SKU code\n  - `category`: Product category\n  - `price`: Catalog standard price\n  - `currency`: Currency code\n  - `status`: Product status: draft, active, archived\n  - `billing_type`: Billing type: one_time, recurring\n  - `billing_frequency`: Frequency: monthly, quarterly, annual\n\n### rpt.rpt.users (System users, sales agents, account executives, and managers (PII and secrets removed).):\n  - `id`: User ID\n  - `organization_id`: Tenant organization ID\n  - `first_name`: First name\n  - `last_name`: Last name\n  - `full_name`: User full name\n  - `work_email`: Business work email\n  - `role`: Security role name\n  - `status`: User status\n\n### rpt.rpt.agent_jobs (Operational background jobs (enrichment, scoring, nurture, lifecycle).):\n  - `id`: Job ID\n  - `organization_id`: Tenant organization ID\n  - `job_type`: Job classification: enrichment, scoring, nurture, lifecycle, email_reply\n  - `status`: Job status: pending, running, enriched, scored, sent, failed, skipped\n  - `started_at`: Execution start timestamp\n  - `created_at`: Job creation timestamp\n\n## Few-Shot SQL Examples\n# Goal: List all my open deals with their stage and amount\n# answer_type: free_sql\n{{ _base_deal }}\nSELECT id, title, stage, amount, COALESCE(currency_code, 'USD') AS currency, company_name, aging_days\nFROM base_deals\nWHERE is_open = true\nORDER BY amount DESC;",
+      "metadata": {}
+    },
+    {
+      "timestamp": "2026-09-29T14:24:02.372236+00:00",
+      "type": "message",
+      "role": "user",
+      "agent": "sql_executor",
+      "content": "Task Goal: how many deals are there\ntime_params: start=2026-09-01T00:00:00+00:00, end=2026-10-01T00:00:00+00:00\nparams_available: :start, :end\nscope: own\nanswer_type: kpi",
+      "metadata": {}
+    },
+    {
+      "timestamp": "2026-09-29T14:24:03.503730+00:00",
+      "type": "message",
+      "role": "assistant",
+      "agent": "sql_executor",
+      "content": "```json\n{\n  \"action\": \"run_kpi\",\n  \"kpi_id\": \"total_deals\",\n  \"time_window\": \"all_time\",\n  \"reason\": \"The user requested a count of deals within a specific date range. While the time window is provided, the 'total_deals' KPI is the standard cataloged metric for this intent.\"\n}\n```",
+      "metadata": {}
+    },
+    {
+      "timestamp": "2026-09-29T14:24:03.504559+00:00",
+      "type": "tool_call",
+      "agent": "sql_executor",
+      "tool_name": "run_sql",
+      "arguments": {
+        "raw_sql": "```json\n{\n  \"action\": \"run_kpi\",\n  \"kpi_id\": \"total_deals\",\n  \"time_window\": \"all_time\",\n  \"reason\": \"The user requested a count of deals within a specific date range. While the time window is provided, the 'total_deals' KPI is the standard cataloged metric for this intent.\"\n}\n```"
+      },
+      "result": null
+    },
+    {
+      "timestamp": "2026-09-29T14:24:04.918400+00:00",
+      "type": "tool_call",
+      "agent": "sql_executor",
+      "tool_name": "run_sql_repair",
+      "arguments": {
+        "repaired_sql": "SELECT COUNT(id) AS total_deals FROM rpt.rpt.deals WHERE created_at >= '2026-09-01T00:00:00+00:00' AND created_at <= '2026-10-01T00:00:00+00:00'"
+      },
+      "result": null
+    },
+    {
+      "timestamp": "2026-09-29T14:24:06.486820+00:00",
+      "type": "guard",
+      "guard_type": "SQL_AST_Guard",
+      "input_query": "```json\n{\n  \"action\": \"run_kpi\",\n  \"kpi_id\": \"total_deals\",\n  \"time_window\": \"all_time\",\n  \"reason\": \"The user requested a count of deals within a specific date range. While the time window is provided, the 'total_deals' KPI is the standard cataloged metric for this intent.\"\n}\n```",
+      "output_query": "WITH rpt_deals AS (\nSELECT src.id, src.organization_id, src.title, src.stage, src.amount, src.currency_code, src.weighted_amount, src.stage_weight, src.company_id, src.company_name, src.location_id, src.contact_id, src.contact_name, src.contact_email, src.owner_user_id, src.owner_name, src.closed_at, src.close_ts, src.created_at, src.updated_at, src.expected_close_date, src.lost_reason, src.is_open, src.is_won, src.is_lost, src.aging_days FROM (\nSELECT \n  d.id,\n  d.organization_id,\n  d.title,\n  d.stage,\n  COALESCE(d.amount, 0) AS amount,\n  CASE\n    WHEN pq.currency IS NOT NULL AND pq.currency <> 'USD' THEN pq.currency\n    WHEN o.country IS NOT NULL AND o.country <> 'US' AND cc.curr IS NOT NULL THEN cc.curr\n    WHEN pq.currency = 'USD' THEN 'USD'\n    WHEN o.country = 'US' THEN 'USD'\n    ELSE NULL\n  END AS currency_code,\n  CASE d.stage\n    WHEN 'qualification' THEN 0.10\n    WHEN 'discover' THEN 0.25\n    WHEN 'propose' THEN 0.50\n    WHEN 'negotiate' THEN 0.75\n    WHEN 'closed_won' THEN 1.00\n    WHEN 'closed_lost' THEN 0.00\n    ELSE 0.00\n  END AS stage_weight,\n  ROUND(COALESCE(d.amount, 0) * (\n    CASE d.stage\n      WHEN 'qualification' THEN 0.10\n      WHEN 'discover' THEN 0.25\n      WHEN 'propose' THEN 0.50\n      WHEN 'negotiate' THEN 0.75\n      WHEN 'closed_won' THEN 1.00\n      WHEN 'closed_lost' THEN 0.00\n      ELSE 0.00\n    END\n  ), 2) AS weighted_amount,\n  d.company_id,\n  c.name AS company_name,\n  COALESCE(c.industry, 'Unknown') AS industry,\n  COALESCE(c.channel_role::text, 'standard') AS channel_role,\n  d.location_id,\n  d.contact_id,\n  COALESCE(d.contact_name, TRIM(CONCAT(cp_usr.first_name, ' ', cp_usr.last_name))) AS contact_name,\n  d.contact_email AS contact_email,\n  d.owner_user_id,\n  TRIM(CONCAT(u.first_name, ' ', u.last_name)) AS owner_name,\n  d.closed_at,\n  COALESCE(d.closed_at, d.created_at) AS close_ts,\n  d.created_at,\n  d.updated_at,\n  d.expected_close_date,\n  COALESCE(d.lost_reason, 'Unspecified') AS lost_reason,\n  (d.stage IN ('qualification', 'discover', 'propose', 'negotiate')) AS is_open,\n  (d.stage = 'closed_won') AS is_won,\n  (d.stage = 'closed_lost') AS is_lost,\n  GREATEST(0, EXTRACT(DAY FROM (%(_as_of_ts)s::timestamp - d.created_at)))::int AS aging_days,\n  (GREATEST(0, EXTRACT(DAY FROM (%(_as_of_ts)s::timestamp - d.created_at))) >= 14) AS is_stale,\n  TO_CHAR(d.created_at, 'YYYY-MM') AS created_month,\n  TO_CHAR(COALESCE(d.closed_at, d.created_at), 'YYYY-MM') AS close_month\nFROM crm.deals d\nJOIN accounts.organizations o ON d.organization_id = o.id\nLEFT JOIN crm.companies c ON d.company_id = c.id\nLEFT JOIN accounts.setup_users u ON d.owner_user_id = u.id\nLEFT JOIN cdp.customer_profile cp_usr ON d.contact_id = cp_usr.cdp_id\nLEFT JOIN (\n  SELECT DISTINCT ON (deal_id) deal_id, currency, status, updated_at\n  FROM crm.quotes\n  WHERE organization_id = %(_org_id)s\n  ORDER BY deal_id, (status = 'accepted') DESC, updated_at DESC\n) pq ON d.id = pq.deal_id\nLEFT JOIN (\n  SELECT * FROM (VALUES \n    ('GB', 'GBP'), ('IN', 'INR'), ('US', 'USD'), ('DE', 'EUR'), ('FR', 'EUR'),\n    ('IT', 'EUR'), ('ES', 'EUR'), ('NL', 'EUR'), ('IE', 'EUR'), ('AU', 'AUD'),\n    ('CA', 'CAD'), ('SG', 'SGD'), ('AE', 'AED'), ('SA', 'SAR'), ('ZA', 'ZAR'),\n    ('JP', 'JPY'), ('CH', 'CHF'), ('SE', 'SEK'), ('NO', 'NOK'), ('DK', 'DKK')\n  ) AS t(country, curr)\n) cc ON o.country = cc.country\nWHERE d.organization_id = %(_org_id)s\n) src WHERE owner_user_id = %(_user_id)s OR company_id IN (SELECT id FROM crm.companies WHERE organization_id = %(_org_id)s AND (owner_user_id = %(_user_id)s OR parent_company_id IN (SELECT id FROM crm.companies WHERE organization_id = %(_org_id)s AND owner_user_id = %(_user_id)s AND channel_role IN ('franchise', 'owned_store', 'brand_hq'))))\n)\nSELECT COUNT(id) AS total_deals FROM rpt_deals AS deals WHERE created_at >= '2026-09-01T00:00:00+00:00' AND created_at <= '2026-10-01T00:00:00+00:00' LIMIT 500",
+      "params": {
+        "_org_id": 1003,
+        "_user_id": 1017,
+        "_as_of_ts": "2026-09-29 14:24:05",
+        "user_id": 1017,
+        "organization_id": 1003,
+        "org_id": 1003,
+        "tenant_id": 1003,
+        "current_user_id": 1017,
+        "start": "2026-09-01T00:00:00+00:00",
+        "end": "2026-10-01T00:00:00+00:00"
+      },
+      "notes": [
+        "row cap 500 applied"
+      ],
+      "error": null
+    },
+    {
+      "timestamp": "2026-09-29T14:24:06.486916+00:00",
+      "type": "message",
+      "role": "fact_assembly",
+      "agent": "facts_module",
+      "content": "RESULT: total_deals = 2",
+      "metadata": {}
+    },
+    {
+      "timestamp": "2026-09-29T14:24:06.486951+00:00",
+      "type": "message",
+      "role": "system",
+      "agent": "domain_synthesis",
+      "content": "Executive analyst briefing.",
+      "metadata": {}
+    },
+    {
+      "timestamp": "2026-09-29T14:24:06.486969+00:00",
+      "type": "message",
+      "role": "user",
+      "agent": "domain_synthesis",
+      "content": "You are the Lead Analyst briefing the CEO.\n\nOriginal Question: how many deals are there\nFacts gathered:\nRESULT: total_deals = 2\n\nInstructions:\n- Write a clear, executive-level answer directly addressing the user's question.\n- Lead with the exact primary number or finding in the very first sentence.\n- Use bold markdown for key metrics and figures.\n- Explain business/operational context concisely. If there are top groups/drivers, summarize them.\n- If the primary number is 0 or no records exist, clearly state that there are 0 records for this organization/scope.\n- Do NOT mention internal errors, REPLAN, system architecture, or pipeline tools. State business facts clearly.\n- Do NOT use headings like 'Analysis' or 'Narrative'. Just clean, natural prose.",
+      "metadata": {}
+    },
+    {
+      "timestamp": "2026-09-29T14:24:07.071913+00:00",
+      "type": "message",
+      "role": "assistant",
+      "agent": "domain_synthesis",
+      "content": "There are currently **2** total deals in the pipeline. These transactions represent the entirety of our active deal volume for this specific scope.",
+      "metadata": {}
+    },
+    {
+      "timestamp": "2026-09-29T14:24:07.072340+00:00",
+      "type": "grounding",
+      "grounded": true,
+      "ungrounded": [],
+      "answer_numbers": [
+        "2"
+      ],
+      "was_regenerated": false
+    }
+  ]
+}

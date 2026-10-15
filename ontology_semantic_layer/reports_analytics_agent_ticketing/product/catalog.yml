@@ -1,0 +1,360 @@
+version: 1
+# Operational tables and allowlisted joins. Status rules never use is_terminal.
+
+entities:
+  tickets:
+    schema: ticketing
+    table: tickets
+    grain: one row is one ticket
+    tenant_column: organization_id
+    row_scope:
+      assignee_id: assignee_id
+      resolver_id: resolver_id
+      created_by_id: created_by_id
+      queue_id: queue_id
+    columns:
+      id: { type: bigint, groupable: false }
+      organization_id: { type: bigint, groupable: false }
+      ticket_number: { type: text, groupable: false }
+      subject: { type: text, groupable: false, personal_data: true }
+      description: { type: text, groupable: false, personal_data: true }
+      status: { type: text, groupable: true, filter_ops: [eq, in, neq, not_in] }
+      priority: { type: text, groupable: true, filter_ops: [eq, in] }
+      channel: { type: text, groupable: true, filter_ops: [eq, in] }
+      category: { type: text, groupable: true, filter_ops: [eq, in] }
+      skill: { type: text, groupable: true, filter_ops: [eq] }
+      customer_id: { type: bigint, groupable: true, filter_ops: [eq, in] }
+      customer_name: { type: text, groupable: false, personal_data: true, resolve_only: true }
+      customer_email: { type: text, groupable: false, personal_data: true, resolve_only: true }
+      customer_phone: { type: text, groupable: false, personal_data: true, resolve_only: true }
+      assignee_id: { type: bigint, groupable: true, filter_ops: [eq, in, is_null] }
+      assignee_name: { type: text, groupable: false, resolve_only: true }
+      resolver_id: { type: bigint, groupable: true, filter_ops: [eq, in, is_null] }
+      resolver_name: { type: text, groupable: false, resolve_only: true }
+      queue_id: { type: bigint, groupable: true, filter_ops: [eq, in] }
+      queue_name: { type: text, groupable: false, resolve_only: true }
+      due_at: { type: timestamptz, groupable: false, date_column: true }
+      first_response_at: { type: timestamptz, groupable: false, date_column: true }
+      resolved_at: { type: timestamptz, groupable: false, date_column: true }
+      csat_score: { type: integer, groupable: true, filter_ops: [eq, gte, lte] }
+      csat_rated_at: { type: timestamptz, groupable: false, date_column: true }
+      created_by_id: { type: bigint, groupable: true, filter_ops: [eq] }
+      created_by_name: { type: text, groupable: false, resolve_only: true }
+      created_at: { type: timestamptz, groupable: false, date_column: true }
+      updated_at: { type: timestamptz, groupable: false, date_column: true }
+
+  ticket_statuses:
+    schema: ticketing
+    table: ticket_statuses
+    grain: one allowed status name for an org
+    tenant_column: organization_id
+    purpose: list possible tickets.status values; never use is_terminal in SQL
+    columns:
+      status: { type: text, groupable: false }
+      display_name: { type: text, groupable: false }
+      active: { type: boolean, groupable: false }
+
+  agents:
+    schema: ticketing
+    table: agents
+    grain: one staff person in ticketing
+    tenant_column: organization_id
+    columns:
+      id: { type: bigint, groupable: true }
+      setup_user_id: { type: bigint, groupable: false }
+      support_email: { type: text, groupable: false, personal_data: true }
+      status: { type: text, groupable: true, filter_ops: [eq] }
+      role: { type: text, groupable: true, filter_ops: [eq, in] }
+      created_at: { type: timestamptz, date_column: true }
+
+  agent_queues:
+    schema: ticketing
+    table: agent_queues
+    grain: one queue
+    tenant_column: organization_id
+    columns:
+      id: { type: bigint, groupable: true }
+      queue_name: { type: text, groupable: false, resolve_only: true }
+      type: { type: text, groupable: true }
+      created_at: { type: timestamptz, date_column: true }
+
+  agent_queue_members:
+    schema: ticketing
+    table: agent_queue_members
+    grain: one membership of an agent in a queue
+    tenant_column: organization_id
+    columns:
+      queue_id: { type: bigint, groupable: true }
+      user_id: { type: bigint, groupable: true }
+      created_at: { type: timestamptz, date_column: true }
+
+  contact_profile:
+    schema: ticketing
+    table: contact_profile
+    grain: one ticketing contact (tickets.customer_id)
+    tenant_column: organization_id
+    columns:
+      id: { type: bigint, groupable: true }
+      cdp_id: { type: text, groupable: false }
+      status: { type: text, groupable: true, filter_ops: [eq] }
+      account_id: { type: bigint, groupable: true }
+      created_at: { type: timestamptz, date_column: true }
+
+  ticketing_accounts:
+    schema: ticketing
+    table: ticketing_accounts
+    grain: one B2B account in ticketing
+    tenant_column: organization_id
+    columns:
+      id: { type: bigint, groupable: true }
+      name: { type: text, groupable: false, resolve_only: true }
+      status: { type: text, groupable: true }
+      created_at: { type: timestamptz, date_column: true }
+
+  sla_policies:
+    schema: ticketing
+    table: sla_policies
+    grain: one SLA policy per priority for an org
+    tenant_column: organization_id
+    columns:
+      priority: { type: text, groupable: true }
+      resolution_hours: { type: integer, groupable: false }
+      first_response_hours: { type: integer, groupable: false }
+      active: { type: boolean, groupable: false }
+
+  ticket_notes:
+    schema: ticketing
+    table: ticket_notes
+    grain: one note on a ticket
+    tenant_column: organization_id
+    columns:
+      id: { type: bigint, groupable: false }
+      ticket_id: { type: bigint, groupable: true }
+      author_id: { type: bigint, groupable: true }
+      body: { type: text, personal_data: true, groupable: false }
+      created_at: { type: timestamptz, date_column: true }
+
+  audit_events:
+    schema: ticketing
+    table: audit_events
+    grain: one audit event
+    tenant_column: organization_id
+    columns:
+      id: { type: bigint, groupable: false }
+      ticket_id: { type: bigint, groupable: true }
+      action: { type: text, groupable: true, filter_ops: [eq, in] }
+      actor_id: { type: bigint, groupable: true }
+      meta: { type: jsonb, groupable: false }
+      created_at: { type: timestamptz, date_column: true }
+
+  notifications:
+    schema: ticketing
+    table: notifications
+    grain: one notification
+    tenant_column: organization_id
+    columns:
+      id: { type: bigint, groupable: false }
+      user_id: { type: bigint, groupable: true }
+      kind: { type: text, groupable: true }
+      is_read: { type: boolean, groupable: true }
+      created_at: { type: timestamptz, date_column: true }
+
+  kb_articles:
+    schema: ticketing
+    table: kb_articles
+    grain: one knowledge article
+    tenant_column: organization_id
+    columns:
+      id: { type: bigint, groupable: false }
+      title: { type: text, groupable: false }
+      status: { type: text, groupable: true }
+      category: { type: text, groupable: true }
+      views: { type: integer, groupable: false }
+      created_at: { type: timestamptz, date_column: true }
+
+  proactive_recommendations:
+    schema: ticketing
+    table: proactive_recommendations
+    grain: one recommendation
+    tenant_column: organization_id
+    columns:
+      id: { type: bigint, groupable: false }
+      ticket_id: { type: text, groupable: true }
+      agent_id: { type: text, groupable: true }
+      status: { type: text, groupable: true }
+      created_at: { type: timestamptz, date_column: true }
+
+  proactive_approvals:
+    schema: ticketing
+    table: proactive_approvals
+    grain: one approval request
+    tenant_column: organization_id
+    columns:
+      id: { type: bigint, groupable: false }
+      ticket_id: { type: text, groupable: true }
+      agent_id: { type: text, groupable: true }
+      status: { type: text, groupable: true }
+      tool_name: { type: text, groupable: true }
+      created_at: { type: timestamptz, date_column: true }
+
+  cdp_customer_profile:
+    schema: cdp
+    table: customer_profile
+    grain: one person in CDP
+    tenant_column: organization_id
+    columns:
+      cdp_id: { type: text, groupable: true }
+      first_name: { type: text, personal_data: true, resolve_only: true }
+      last_name: { type: text, personal_data: true, resolve_only: true }
+      contact_type: { type: text, groupable: true, filter_ops: [eq, in] }
+      created_at: { type: timestamptz, date_column: true }
+
+  active_products:
+    schema: accounts
+    table: active_products
+    grain: one purchased product for an org
+    tenant_column: organization_id
+    columns:
+      product_id: { type: text, groupable: true }
+      organization_id: { type: bigint, groupable: false }
+
+dimensions:
+  queue:
+    entity: tickets
+    key: queue_id
+    display_join: { entity: agent_queues, on: { queue_id: id }, label: queue_name }
+  agent:
+    entity: tickets
+    key: assignee_id
+    display_join: { entity: agents, on: { assignee_id: id }, label: support_email }
+  resolver:
+    entity: tickets
+    key: resolver_id
+    display_join: { entity: agents, on: { resolver_id: id }, label: support_email }
+  status:
+    entity: tickets
+    key: status
+  priority:
+    entity: tickets
+    key: priority
+  channel:
+    entity: tickets
+    key: channel
+  category:
+    entity: tickets
+    key: category
+  customer:
+    entity: tickets
+    key: customer_id
+    display_join: { entity: contact_profile, on: { customer_id: id } }
+
+relationships:
+  - from: tickets
+    to: contact_profile
+    cardinality: many_to_one
+    keys: { customer_id: id, organization_id: organization_id }
+  - from: tickets
+    to: agent_queues
+    cardinality: many_to_one
+    keys: { queue_id: id, organization_id: organization_id }
+  - from: tickets
+    to: agents
+    as: assignee
+    cardinality: many_to_one
+    keys: { assignee_id: id, organization_id: organization_id }
+  - from: tickets
+    to: agents
+    as: resolver
+    cardinality: many_to_one
+    keys: { resolver_id: id, organization_id: organization_id }
+  - from: tickets
+    to: sla_policies
+    cardinality: many_to_one
+    keys: { priority: priority, organization_id: organization_id }
+  - from: tickets
+    to: ticket_notes
+    cardinality: one_to_many
+    keys: { id: ticket_id, organization_id: organization_id }
+  - from: tickets
+    to: audit_events
+    cardinality: one_to_many
+    keys: { id: ticket_id, organization_id: organization_id }
+  - from: contact_profile
+    to: ticketing_accounts
+    cardinality: many_to_one
+    keys: { account_id: id, organization_id: organization_id }
+  - from: contact_profile
+    to: cdp_customer_profile
+    cardinality: many_to_one
+    keys: { cdp_id: cdp_id, organization_id: organization_id }
+  - from: agent_queues
+    to: agent_queue_members
+    cardinality: one_to_many
+    keys: { id: queue_id, organization_id: organization_id }
+
+entity_groups:
+  tickets: [tickets]
+  people: [agents]
+  queues: [agent_queues, agent_queue_members]
+  customers: [contact_profile, ticketing_accounts, cdp_customer_profile]
+  notes: [ticket_notes]
+  audit: [audit_events]
+  kb: [kb_articles]
+  notifications: [notifications]
+  ai: [proactive_recommendations, proactive_approvals]
+
+# Duration/score compares the Domain may put on filters. Python compiles these; it does not guess them from the question.
+compare_fields:
+  csat_score:
+    sql: "{a}csat_score"
+    aliases: [csat]
+  resolution_hours:
+    sql: "EXTRACT(EPOCH FROM ({a}resolved_at - {a}created_at)) / 3600.0"
+    extra: "{a}resolved_at IS NOT NULL"
+    aliases: [resolution_time, resolve_time, resolution]
+  first_response_hours:
+    sql: "EXTRACT(EPOCH FROM ({a}first_response_at - {a}created_at)) / 3600.0"
+    extra: "{a}first_response_at IS NOT NULL"
+    aliases: [first_response_time, response_time]
+  open_age_hours:
+    sql: "EXTRACT(EPOCH FROM (NOW() - {a}created_at)) / 3600.0"
+    aliases: [age_hours, ticket_age]
+  overdue_hours:
+    sql: "EXTRACT(EPOCH FROM (COALESCE({a}resolved_at, NOW()) - {a}due_at)) / 3600.0"
+    extra: "{a}due_at IS NOT NULL"
+    aliases: [overdue]
+
+# Roster lists read the entity table. Ticket volume ranking is a different job.
+rosters:
+  agents:
+    table: ticketing.agents
+    alias: a
+    columns: ["a.id AS agent_id", "(SELECT MAX(t.assignee_name) FROM ticketing.tickets t WHERE t.assignee_id = a.id AND t.organization_id = a.organization_id) AS name", "a.support_email AS email", "a.status", "a.role"]
+    order: a.support_email
+    aliases: [agent, staff, users]
+  queues:
+    table: ticketing.agent_queues
+    alias: q
+    columns: ["q.id AS queue_id", "q.queue_name", "q.type"]
+    order: q.queue_name
+    aliases: [queue]
+  customers:
+    table: ticketing.contact_profile
+    alias: c
+    columns: ["c.id AS customer_id", "c.status", "c.account_id"]
+    order: c.id
+    aliases: [customer, contacts]
+
+status_readings:
+  generic_pending:
+    sql: "status NOT IN ('Closed', 'Resolved')"
+  literal_pending:
+    sql: "status = 'Pending'"
+  open:
+    sql: "status = 'Open'"
+  reopened:
+    sql: "status = 'Reopened'"
+  overdue:
+    sql: "status = 'Overdue'"
+  resolved:
+    sql: "status = 'Resolved'"

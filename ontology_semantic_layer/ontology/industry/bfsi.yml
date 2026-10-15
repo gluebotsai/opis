@@ -1,0 +1,22 @@
+# BFSI overlay — labels + extra terms only. Do not fork Contact.
+pack: bfsi
+extends_ontology: cc
+businessTypes: [b2c, b2b, b2b2c]
+
+labels:
+  Contact: Client
+  Contact: Client contact
+  Ticket: Case
+  Appointment: Appointment
+
+taxonomy_adds:
+  intent:
+    - kyc
+    - dispute
+    - fraud_alert
+  ticket.category:
+    - kyc
+    - payments
+    - cards
+
+modules: []

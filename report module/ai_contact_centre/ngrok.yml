@@ -1,0 +1,15 @@
+# Single gateway tunnel → local reverse proxy (:8080).
+# Start with: npm run ngrok:gateway  (scripts/start-ngrok-gateway.sh)
+#
+# Domain must belong to the account behind NGROK_AUTHTOKEN / ngrok config.
+# Override at runtime:
+#   NGROK_DOMAIN=other.ngrok-free.dev npm run ngrok:gateway
+#   NGROK_DOMAIN=ephemeral npm run ngrok:gateway   # random *.ngrok-free.dev URL
+#   SKIP_NGROK=1 npm run dev:stack:restart         # skip tunnel (localhost:8080 only)
+version: "3"
+tunnels:
+  gateway:
+    addr: 8080
+    proto: http
+    domain: uninvited-skinless-eel.ngrok-free.dev
+    pooling_enabled: true

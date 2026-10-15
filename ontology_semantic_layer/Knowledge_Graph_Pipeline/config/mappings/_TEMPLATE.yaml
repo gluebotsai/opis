@@ -1,0 +1,49 @@
+# Per-organisation mapping overlay -- FORMAT REFERENCE. Ship unmodified.
+#
+# Filename MUST equal the Neo4j database name produced by
+# make_database_name(prefix, organization_id), e.g. orga1b2c3d4.yaml
+#
+# This file may ONLY ADD to core.yaml. It may not declare `key`, `label` or
+# `mode` -- those belong to core and define identity. Startup validation
+# rejects any file that does, with a non-zero exit code.
+#
+# NOTE: _TEMPLATE.yaml is excluded from startup validation on purpose; its
+# placeholder values (orgREPLACEME / "REPLACE-ME") are not a real database.
+
+version: 1
+layer: tenant
+database: orgREPLACEME
+organization_id: "REPLACE-ME"        # MUST be quoted -- see validation check 10
+industry: bfsi
+
+# Products this organisation has purchased. A core mapping that declares a
+# `product` is applied only if that product is listed here. Core mappings with
+# no `product` are always applied.
+products: [ccaas, crm, ticketing]
+
+extends:
+
+  crm.contacts:
+    extra_labels: [Customer, Policyholder]
+    custom_properties:
+      - {name: policy_number, type: string}
+      - {name: risk_score,    type: integer}
+      - {name: kyc_status,    type: string}
+      # Money read out of the JSONB blob needs a scale, same as a column would.
+      - {name: premium_paid,  type: decimal, scale: 2}
+    relationships:
+      - type: HOLDS
+        direction: out
+        target_label: Policy          # declared under core.yaml stub_labels
+        target_key: policy_id
+        from_column: policy_id
+
+  ticketing.tickets:
+    extra_labels: [ServiceRequest]
+    custom_properties:
+      - {name: sla_tier, type: string}
+
+# Escape hatch for the rare table the declarative format cannot express.
+# Raw Cypher must contain the token $batch and use `UNWIND $batch AS e`.
+raw:
+  # crm.odd_table: mappings/raw/crm.odd_table.cypher

@@ -1,0 +1,204 @@
+ontology:
+  name: ticketing_complete_ontology
+  purpose: >
+    Give the Ticketing super agent a complete and simple understanding of the
+    product so it can guide specialist agents and answer B2B and B2C support
+    questions accurately.
+
+  entities:
+    Tenant:
+      definition: The company that operates the ticketing system and supports its customers.
+      identifier: accounts.organizations.id
+
+    Customer:
+      definition: A person who raises or receives support for a ticket.
+      identifier: cdp.customer_profile.cdp_id
+
+    CustomerCompany:
+      definition: A customer's company whose contacts can raise support tickets.
+      identifier: ticketing.ticketing_accounts.id
+
+    CustomerIdentity:
+      definition: An email, phone number, or external identifier used to identify a customer.
+      identifier: [cdp.identity_keys.organization_id, cdp.identity_keys.cdp_id, cdp.identity_keys.key_type, cdp.identity_keys.key_value]
+
+    Staff:
+      definition: A person who works in the ticketing system as an admin, agent, resolver, or viewer.
+      identifier: ticketing.agents.id
+
+    Queue:
+      definition: A support team or routing group based on skills and responsible for a set of tickets.
+      identifier: ticketing.agent_queues.id
+
+    Ticket:
+      definition: A customer issue or service request tracked from creation to resolution.
+      identifier: ticketing.tickets.id
+
+    Note:
+      definition: A public reply or internal comment added to a ticket by staff.
+      identifier: ticketing.ticket_notes.id
+
+    SLA:
+      definition: The expected first-response and resolution time for a ticket priority.
+      identifier: ticketing.sla_policies.id
+
+    KnowledgeArticle:
+      definition: A help article containing information or instructions for resolving issues.
+      identifier: ticketing.kb_articles.id
+
+    Macro:
+      definition: A reusable reply template that contains resolution instructions used to respond to common ticket issues.
+      identifier: ticketing.macros.id
+
+    Notification:
+      definition: An in-app message that informs staff about ticketing activity.
+      identifier: ticketing.notifications.id
+
+    AutomationRule:
+      definition: An if-then rule that automatically evaluates ticket events and performs configured actions.
+      identifier: ticketing.automation_rules.id
+
+    Email:
+      definition: An inbound email reference or outbound email associated with a ticket.
+      identifier: [ticketing.email_message_refs.id, ticketing.outbound_email_log.id]
+
+    AuditEvent:
+      definition: A historical record of an important action or change made to a ticket.
+      identifier: ticketing.audit_events.id
+
+    AssistantSession:
+      definition: A conversation between a user and the ticketing assistant while completing a task.
+      identifier: ticketing.conversation_contexts.id
+
+    WorkflowEvent:
+      definition: An event recorded while an assistant workflow like create_ticket, resign_ticket, etc.
+      identifier: ticketing.workflow_events.id
+
+    Recommendation:
+      definition: A proactive AI suggestion intended to help staff manage or resolve a ticket.
+      identifier: ticketing.proactive_recommendations.id
+
+    Approval:
+      definition: A human decision to approve or reject a proposed high-risk action.
+      identifier: ticketing.proactive_approvals.id
+
+    ProactiveDecision:
+      definition: A record explaining why a proactive agent chose to execute or skip an action.
+      identifier: ticketing.proactive_audit.id
+
+    Product:
+      definition: A product or service supplied by the tenant and potentially supported through tickets.
+      identifier: inventory.products.id
+
+  relations:
+    - Tenant - has_customer -> Customer
+    - Tenant - has_company -> Company
+    - Tenant - has_staff -> Staff
+    - Tenant - has_queue -> Queue
+    - Tenant - has_ticket -> Ticket
+    - Tenant - has_sla -> SLA
+    - Tenant - has_article -> KnowledgeArticle
+    - Tenant - has_macro -> Macro
+    - Tenant - has_rule -> AutomationRule
+
+    - Customer - identified_by -> CustomerIdentity
+    - Customer - belongs_to -> Company
+    - Customer - raises -> Ticket
+    - Company - has_contact -> Customer
+
+    - Ticket - raised_by -> Customer
+    - Ticket - concerns -> Product
+    - Ticket - routed_to -> Queue
+    - Ticket - assigned_to -> Staff
+    - Ticket - has_resolver -> Staff
+    - Ticket - governed_by -> SLA
+    - Ticket - has_note -> Note
+    - Ticket - has_event -> AuditEvent
+    - Ticket - has_email -> Email
+
+    - Queue - has_member -> Staff
+    - Note - written_by -> Staff
+    - AuditEvent - performed_by -> Staff
+    - AuditEvent - about -> Ticket
+
+    - KnowledgeArticle - written_by -> Staff
+    - KnowledgeArticle - helps_with -> Ticket
+    - Macro - created_by -> Staff
+    - Macro - used_on -> Ticket
+
+    - Notification - sent_to -> Staff
+    - Notification - about -> Ticket
+
+    - AutomationRule - applies_to -> Ticket
+    - Email - about -> Ticket
+
+    - AssistantSession - used_by -> Staff
+    - AssistantSession - has_event -> WorkflowEvent
+    - WorkflowEvent - about -> Ticket
+
+    - Recommendation - about -> Ticket
+    - Recommendation - shown_to -> Staff
+    - Recommendation - needs -> Approval
+    - Approval - about -> Ticket
+    - Approval - decided_by -> Staff
+    - ProactiveDecision - about -> Ticket
+
+    - Product - documented_in -> KnowledgeArticle
+
+  synonyms:
+    Tenant: [organization, support_organization]
+    Customer: [contact, client, requester, end_user, consumer]
+    Company: [account, customer_account, client_account, business_account]
+    CustomerIdentity: [email, phone, contact_identity]
+    Staff: [staff_member, support_staff, employee]
+    Ticket: [case, issue, support_request, complaint, service_request]
+    Note: [reply, comment, ticket_entry, ticket_message]
+    Queue: [support_queue, support_team, team]
+    SLA: [service_level_agreement, service_level_policy]
+    KnowledgeArticle: [article, help_article, knowledge_base, kb]
+    Macro: [saved_reply, reply_template, canned_response, resolution_instructions, resolution_steps]
+    AuditEvent: [audit_log, ticket_event, change_history]
+    Recommendation: [suggestion, ai_suggestion]
+    Approval: [human_approval, authorization]
+    Product: [service, offering]
+    AssistantSession: [assistant_conversation, chat_session]
+
+  taxonomy:
+    tenant.business_type: [b2b, b2c]
+    customer.type: [customer, lead, prospect]
+    customer.status: [active, inactive]
+    company.status: [active, inactive]
+    staff.role: [admin, agent, resolver, viewer]
+    staff.status: [active, inactive]
+    ticket.status: [open, pending, reopened, resolved, overdue, custom]
+    ticket.priority: [urgent, high, medium, low]
+    ticket.channel: [email, chat, phone, web]
+    ticket.category: [billing, troubleshooting, accounts, general, database, testing, custom]
+    note.visibility: [internal, public]
+    queue.type: [private, shared]
+    queue.sla_status: [on_track, at_risk]
+    knowledge_article.status: [published, draft]
+    notification.type: [assignment, update, sla, security, product]
+    recommendation.status: [open, accepted, dismissed]
+    approval.status: [pending, approved, rejected]
+    proactive_decision.type: [execute, skip]
+    email.direction: [inbound, outbound]
+    email.status: [queued, sent, failed, skipped]
+
+  business_rules:
+    - Ticket is the only thing counted as a ticket. Notes, emails, events and notifications are not tickets.
+    - Customer is the person who raised or receives support. A company is never the customer.
+    - A person belongs to a company only when that link is recorded. Never guess it from an email domain.
+    - Customers and staff are different people and must never be swapped.
+    - Queue is where a ticket currently sits. Being in a queue does not mean a person owns its tickets.
+    - assigned_to is the L1 owner of the ticket. has_resolver is the L2 specialist. They are different jobs.
+    - Status says where a ticket stands. Priority says how urgent it is. Neither decides the other.
+    - First response and resolution are measured separately. A target is breached only after its deadline passes unmet.
+    - Internal notes are for staff only and are never shown to a customer.
+    - Only a published article can be given as guidance. A draft cannot.
+    - A macro is a reply template. It does not prove its steps were carried out.
+    - A recommendation is advice and an approval is permission. Neither proves the action happened.
+    - Say an action is done only when there is a recorded result showing it ran.
+    - Audit events describe the past. Current state always comes from the ticket itself.
+    - A ticket concerns a product only when the product is explicitly recorded, never from category or message text.
+    - All dates and times are given in the tenant timezone.

@@ -1,0 +1,151 @@
+# Few-shot examples for graph why / 360 / path. Domain sends the job; execute it.
+
+examples:
+  - question: "Why were our deals lost this quarter?"
+    intent: "root_cause_deal_loss"
+    reasoning: "User is asking for the root cause of lost deals. Route to deal_root_cause_loss."
+    output:
+      tool: "cypher"
+      template: "deal_root_cause_loss"
+      params: {}
+
+  - question: "Which deals are at risk of stalling or slipping out of the forecast?"
+    intent: "forecast_risk_and_stall"
+    reasoning: "User is investigating forecast flags and stall reasons. Use deal_forecast_risk_and_stall."
+    output:
+      tool: "cypher"
+      template: "deal_forecast_risk_and_stall"
+      params: {}
+
+  - question: "Why is Lokesh deal at risk or omitted?"
+    intent: "deal_forecast_risk_and_stall"
+    reasoning: "Named deal stall/forecast question. Use deal_forecast_risk_and_stall with deal_title."
+    output:
+      tool: "cypher"
+      template: "deal_forecast_risk_and_stall"
+      params:
+        deal_title: "Lokesh"
+
+  - question: "Tell me about the company orange and its deals"
+    intent: "customer_account_commercial_summary"
+    reasoning: "Account 360 commercial neighborhood. Use customer_account_commercial_summary."
+    output:
+      tool: "cypher"
+      template: "customer_account_commercial_summary"
+      params:
+        company_name: "orange"
+
+  - question: "What quotes and invoices sit on the E2E Expansion deal?"
+    intent: "dynamic_commercial_walk"
+    reasoning: "Named deal plus attached commercial objects. Walk Deal to Quote and Invoice."
+    output:
+      tool: "cypher"
+      template: "deal_commercial_path_walk"
+      params:
+        deal_title: "E2E Expansion"
+
+  - question: "why did our deals fail?"
+    intent: "root_cause_deal_loss"
+    reasoning: "Why deals failed maps to closed-lost empirical reasons."
+    output:
+      tool: "cypher"
+      template: "deal_root_cause_loss"
+      params: {}
+
+  - question: "which sales are in danger of slipping?"
+    intent: "forecast_risk_and_stall"
+    reasoning: "Slipping/danger maps to forecast risk flags."
+    output:
+      tool: "cypher"
+      template: "deal_forecast_risk_and_stall"
+      params: {}
+
+  - question: "What is the quota attainment percentage for sales rep 1000?"
+    intent: "unsupported_quota_attainment"
+    reasoning: "Quota targets are not in the graph schema."
+    output:
+      tool: "unsupported_request"
+      reason: "Monthly or quarterly quota targets per sales rep are not stored in the CRM schema. The system cannot compute quota attainment without rep target amounts."
+
+  - question: "Why are contracts not leading to invoices?"
+    intent: "contract_invoice_pipeline_traversal"
+    reasoning: "User is investigating why active contracts have not generated invoices. Dynamically traverse Contract to Deal, Invoice, and Account to inspect deal stages and invoice generation status."
+    output:
+      tool: "cypher"
+      cypher: "MATCH (c:Contract) OPTIONAL MATCH (d:Deal {id: c.deal_id}) OPTIONAL MATCH (i:Invoice {deal_id: c.deal_id}) OPTIONAL MATCH (a:Account {id: c.company_id}) RETURN coalesce(c.title, 'Contract — ' + coalesce(d.title, 'General')) AS contract_title, c.status AS contract_status, coalesce(d.title, 'Unlinked Deal') AS deal_title, coalesce(d.stage, 'No Stage') AS deal_stage, coalesce(a.name, 'Unlinked Account') AS account_name, count(DISTINCT i) AS invoice_count, collect(DISTINCT i.status) AS invoice_statuses"
+      params: {}
+
+  - question: "Why did the number of lost deals increase?"
+    intent: "root_cause_deal_loss"
+    reasoning: "User is asking for root causes and patterns of lost deals. Route to deal_root_cause_loss."
+    output:
+      tool: "cypher"
+      template: "deal_root_cause_loss"
+      params: {}
+
+
+  - question: "Why does Ragu have more deals and Divyansh have less deals?"
+    intent: "sales_rep_deal_breakdown"
+    reasoning: "User is comparing deals and pipeline across sales representatives. Route to sales_rep_deal_breakdown to inspect deal stages, accounts, and values."
+    output:
+      tool: "cypher"
+      template: "sales_rep_deal_breakdown"
+      params: {}
+
+  - question: "why ragu have more deals adn why divya ahve less deals?"
+    intent: "sales_rep_deal_breakdown"
+    reasoning: "User is asking for root causes and comparison between Raghu and Divya. Route to sales_rep_deal_breakdown template."
+    output:
+      tool: "cypher"
+      template: "sales_rep_deal_breakdown"
+      params: {}
+
+  - question: "Show deals and pipeline by sales rep"
+    intent: "pipeline_by_owner"
+    reasoning: "User wants active pipeline allocation across sales representatives."
+    output:
+      tool: "cypher"
+      template: "pipeline_by_owner"
+      params: {}
+
+  - question: "why email activities are more when compare to other activities?"
+    intent: "sales_activity_touchpoint_mix"
+    reasoning: "Execute Cypher on ContactActivity. Do not refuse as a warehouse KPI."
+    output:
+      tool: "cypher"
+      cypher: "MATCH (ca:ContactActivity) RETURN coalesce([l IN labels(ca) WHERE l <> 'ContactActivity' AND l <> 'Sales'][0], 'GeneralActivity') AS activity_type, count(ca) AS activity_count, count(DISTINCT ca.contact_id) AS contacts_reached ORDER BY activity_count DESC"
+      params: {}
+
+  - question: "why there are unassigned"
+    intent: "unassigned_contacts_walk"
+    reasoning: "Domain graph job on contacts with no owner. Query Contact nodes; do not unsupported_request."
+    output:
+      tool: "cypher"
+      cypher: "MATCH (c:Contact) WHERE c.owner_user_id IS NULL OR c.owner_user_id = 0 RETURN coalesce(c.lead_source, 'Unknown') AS lead_source, coalesce(c.lead_status, c.status, 'unknown') AS lead_status, count(c) AS contact_count ORDER BY contact_count DESC"
+      params: {}
+
+  - question: "Why are quotes not accepted?"
+    intent: "quote_status_walk"
+    reasoning: "Quote status mix on the graph. Execute, do not refuse."
+    output:
+      tool: "cypher"
+      cypher: "MATCH (q:Quote) OPTIONAL MATCH (d:Deal) WHERE d.id = q.deal_id RETURN coalesce(q.status, 'unknown') AS quote_status, count(q) AS quote_count, collect(DISTINCT d.title)[0..5] AS sample_deals ORDER BY quote_count DESC"
+      params: {}
+
+  - question: "Why is invoice outstanding zero?"
+    intent: "invoice_status_walk"
+    reasoning: "Invoice statuses explain AR. Execute Cypher."
+    output:
+      tool: "cypher"
+      cypher: "MATCH (i:Invoice) RETURN coalesce(i.status, 'unknown') AS invoice_status, count(i) AS invoice_count, sum(coalesce(i.total, 0)) AS total_amount ORDER BY invoice_count DESC"
+      params: {}
+
+  - question: "Why is pipeline only one deal with amount?"
+    intent: "open_deal_quote_lines"
+    reasoning: "Open deals and attached quotes/line items explain $0 amounts."
+    output:
+      tool: "cypher"
+      cypher: "MATCH (d:Deal) WHERE toLower(d.stage) IN ['qualification', 'discover', 'propose', 'negotiate'] OPTIONAL MATCH (d)-[:HAS]->(q:Quote) RETURN d.title AS title, d.stage AS stage, coalesce(d.amount, 0) AS amount, count(q) AS quote_count, collect(DISTINCT q.status) AS quote_statuses ORDER BY amount DESC LIMIT 25"
+      params: {}
+
+

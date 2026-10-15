@@ -1,0 +1,28 @@
+{
+  "conversations": [
+    {
+      "id": "assist-domain-to-contact",
+      "title": "Route contact work to the contact executor",
+      "turns": [
+        { "role": "user", "content": "Update Priya Sharma's email to priya.s@zifo.com" },
+        {
+          "role": "assistant",
+          "content": "",
+          "tools": ["route_to_agent"]
+        }
+      ]
+    },
+    {
+      "id": "assist-domain-to-inbox",
+      "title": "Route a reply request to inbox",
+      "turns": [
+        { "role": "user", "content": "Suggest a reply for this customer" },
+        {
+          "role": "assistant",
+          "content": "",
+          "tools": ["route_to_agent"]
+        }
+      ]
+    }
+  ]
+}

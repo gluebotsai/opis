@@ -1,0 +1,60 @@
+{
+  "turn_id": "44441713",
+  "timestamp": "2026-10-12T13:35:04.471635+00:00",
+  "question": "how many conversations are there in the month september 2026",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1036,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Total conversations in September 2026</strong></p>\n<p>There were <strong>187</strong> started conversations during the window of September 2026 (UTC).</p>\n<p>Would you like to see how these conversations were distributed across different channels?</p>",
+  "card": "card: kpi r1",
+  "facts": "result_id: r1\nwindow: September 2026 (UTC)\nkpi: total\ncertified: true\nunit: conversations\ntask_goal: Count the number of started conversations.\nanswer_type: number\nrow_count: 1\nrow 1: total=187",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1036,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "how many conversations are there in the month september 2026",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants to know the total number of started conversations in September 2026.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Count the number of started conversations.",
+          "time": "september 2026",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "total",
+        "row_count": 1
+      }
+    ],
+    "facts": "result_id: r1\nwindow: September 2026 (UTC)\nkpi: total\ncertified: true\nunit: conversations\ntask_goal: Count the number of started conversations.\nanswer_type: number\nrow_count: 1\nrow 1: total=187",
+    "grounded": true,
+    "card": "card: kpi r1"
+  },
+  "error": null
+}

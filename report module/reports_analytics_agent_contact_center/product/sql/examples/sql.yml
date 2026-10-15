@@ -1,0 +1,290 @@
+version: 1
+# Canonical SQL examples for contact center sql_analytics_executor.
+# All queries target virtual rpt.* views.
+# Runtime parameters use :name tokens or literals; Python pre-step supplies values.
+
+examples:
+  - id: kpi_conversation_count_all
+    goal: "How many conversations occurred this month?"
+    answer_type: kpi
+    kpi: conversation_count
+    views: [conversations]
+    sql: |
+      SELECT COUNT(*) AS conversation_count
+      FROM rpt.conversations
+      WHERE created_at >= :start AND created_at < :end
+
+  - id: kpi_avg_speed_to_answer
+    goal: "What is the average speed to answer (ASA)?"
+    answer_type: kpi
+    kpi: avg_speed_to_answer
+    views: [conversation_facts]
+    sql: |
+      SELECT ROUND(AVG(speed_to_answer_seconds)::numeric, 1) AS avg_speed_to_answer_seconds
+      FROM rpt.conversation_facts
+      WHERE speed_to_answer_seconds IS NOT NULL
+        AND created_at >= :start AND created_at < :end
+
+  - id: kpi_avg_handle_time
+    goal: "What is the average handle time (AHT) across all channels?"
+    answer_type: kpi
+    kpi: avg_handle_time
+    views: [conversation_facts]
+    sql: |
+      SELECT ROUND(AVG(handle_time_seconds)::numeric, 1) AS avg_handle_time_seconds
+      FROM rpt.conversation_facts
+      WHERE handle_time_seconds IS NOT NULL
+        AND created_at >= :start AND created_at < :end
+
+  - id: kpi_bot_containment_rate
+    goal: "What is the bot containment rate?"
+    answer_type: kpi
+    kpi: bot_containment_rate
+    views: [conversation_facts]
+    sql: |
+      SELECT
+        COUNT(*) AS total_conversations,
+        COUNT(*) FILTER (WHERE is_bot_only = true) AS contained_conversations,
+        ROUND(100.0 * COUNT(*) FILTER (WHERE is_bot_only = true) / NULLIF(COUNT(*), 0), 2) AS bot_containment_pct
+      FROM rpt.conversation_facts
+      WHERE created_at >= :start AND created_at < :end
+
+  - id: kpi_copilot_acceptance_rate
+    goal: "What is the copilot acceptance rate?"
+    answer_type: kpi
+    kpi: copilot_acceptance_rate
+    views: [copilot_turns]
+    sql: |
+      SELECT
+        COUNT(*) AS total_suggestions,
+        COUNT(*) FILTER (WHERE accepted = true) AS accepted_suggestions,
+        ROUND(100.0 * COUNT(*) FILTER (WHERE accepted = true) / NULLIF(COUNT(*), 0), 2) AS copilot_acceptance_pct
+      FROM rpt.copilot_turns
+      WHERE created_at >= :start AND created_at < :end
+
+  - id: kpi_sla_breach_rate
+    goal: "What is the overall SLA breach rate?"
+    answer_type: kpi
+    kpi: sla_breach_rate
+    views: [conversation_facts]
+    sql: |
+      SELECT
+        COUNT(*) FILTER (WHERE has_sla = true) AS conversations_with_sla,
+        COUNT(*) FILTER (WHERE sla_breached = true) AS breached_conversations,
+        ROUND(100.0 * COUNT(*) FILTER (WHERE sla_breached = true) / NULLIF(COUNT(*) FILTER (WHERE has_sla = true), 0), 2) AS sla_breach_pct
+      FROM rpt.conversation_facts
+      WHERE created_at >= :start AND created_at < :end
+
+  - id: kpi_active_agents
+    goal: "How many agents are currently active?"
+    answer_type: kpi
+    kpi: active_agents
+    views: [agents]
+    sql: |
+      SELECT COUNT(*) AS active_agents
+      FROM rpt.agents
+      WHERE is_active = true
+
+  - id: list_agents
+    goal: "List all agents or show active agents"
+    answer_type: list
+    views: [agents]
+    sql: |
+      SELECT id, display_name, email, is_active, max_concurrency
+      FROM rpt.agents
+      ORDER BY display_name ASC
+      LIMIT 50
+
+
+  - id: breakdown_by_queue
+    goal: "Show conversation volume by queue"
+    answer_type: breakdown
+    views: [conversation_facts]
+    sql: |
+      SELECT queue_name, COUNT(*) AS conversation_count
+      FROM rpt.conversation_facts
+      WHERE created_at >= :start AND created_at < :end
+      GROUP BY queue_name
+      ORDER BY conversation_count DESC
+      LIMIT 20
+
+  - id: breakdown_by_channel
+    goal: "Show contact volume breakdown by channel"
+    answer_type: breakdown
+    views: [conversations]
+    sql: |
+      SELECT channel, COUNT(*) AS conversation_count
+      FROM rpt.conversations
+      WHERE created_at >= :start AND created_at < :end
+      GROUP BY channel
+      ORDER BY conversation_count DESC
+
+  - id: breakdown_by_disposition_and_resolution
+    goal: "Identify top disposition codes or resolution codes associated with conversations"
+    answer_type: breakdown
+    views: [conversations]
+    sql: |
+      SELECT
+        COALESCE(disposition_code, 'none') AS disposition_code,
+        COALESCE(resolution_code, 'none') AS resolution_code,
+        COUNT(*) AS conversation_count
+      FROM rpt.conversations
+      GROUP BY 1, 2
+      ORDER BY conversation_count DESC
+      LIMIT 20
+
+  - id: handle_time_by_channel_and_queue
+    goal: "Break down average handle time by channel and queue"
+    answer_type: breakdown
+    views: [conversation_facts]
+    sql: |
+      SELECT
+        channel,
+        queue_name,
+        ROUND(AVG(handle_time_seconds)::numeric, 1) AS avg_handle_time_seconds,
+        COUNT(*) AS conversations_measured
+      FROM rpt.conversation_facts
+      WHERE handle_time_seconds IS NOT NULL
+      GROUP BY channel, queue_name
+      ORDER BY avg_handle_time_seconds DESC
+      LIMIT 20
+
+
+  - id: list_active_conversations
+    goal: "Show conversations with status active"
+    answer_type: list
+    views: [conversations]
+    sql: |
+      SELECT id AS conversation_id, channel, status, priority, agent_name, queue_name, created_at
+      FROM rpt.conversations
+      WHERE status = 'active'
+      ORDER BY created_at DESC
+      LIMIT 50
+
+  - id: list_pending_generic_conversations
+    goal: "Show all pending or unresolved conversations"
+    answer_type: list
+    views: [conversations]
+    sql: |
+      SELECT id AS conversation_id, channel, status, priority, agent_name, queue_name, created_at
+      FROM rpt.conversations
+      WHERE status NOT IN ('resolved', 'closed')
+      ORDER BY created_at DESC
+      LIMIT 50
+
+  - id: agent_presence_roster
+    goal: "Show agent presence states and logged in duration"
+    answer_type: list
+    views: [presence, agents]
+    sql: |
+      SELECT
+        p.agent_name,
+        p.state,
+        p.reason,
+        p.duration_seconds,
+        p.started_at
+      FROM rpt.presence p
+      ORDER BY p.started_at DESC
+      LIMIT 50
+
+  - id: call_cdr_summary
+    goal: "Show telephony call summary and average duration"
+    answer_type: breakdown
+    views: [calls]
+    sql: |
+      SELECT
+        queue_name,
+        COUNT(*) AS total_calls,
+        ROUND(AVG(recording_duration_seconds)::numeric, 1) AS avg_recording_seconds,
+        ROUND(AVG(hold_duration_seconds)::numeric, 1) AS avg_hold_seconds,
+        ROUND(AVG(call_duration_seconds)::numeric, 1) AS avg_call_seconds
+      FROM rpt.calls
+      WHERE session_start_time >= :start AND session_start_time < :end
+      GROUP BY queue_name
+      ORDER BY total_calls DESC
+      LIMIT 20
+
+  - id: disposition_summary
+    goal: "What are the top disposition codes used by agents?"
+    answer_type: breakdown
+    views: [conversation_facts]
+    sql: |
+      SELECT
+        COALESCE(disposition_code, 'Unspecified') AS disposition_code,
+        COALESCE(disposition_category, 'General') AS disposition_category,
+        COUNT(*) AS conversation_count
+      FROM rpt.conversation_facts
+      WHERE created_at >= :start AND created_at < :end
+      GROUP BY disposition_code, disposition_category
+      ORDER BY conversation_count DESC
+      LIMIT 20
+
+  - id: list_abandoned_conversations
+    goal: "List abandoned conversations"
+    answer_type: list
+    views: [conversation_facts]
+    sql: |
+      SELECT conversation_id, channel, queue_name, status, end_reason, created_at
+      FROM rpt.conversation_facts
+      WHERE is_abandoned = true
+      ORDER BY created_at DESC
+      LIMIT 50
+
+  - id: agent_occupancy_breakdown
+    goal: "Show agent occupancy rates"
+    answer_type: breakdown
+    views: [presence]
+    sql: |
+      SELECT
+        agent_name,
+        ROUND(
+          100.0 * SUM(duration_seconds) FILTER (WHERE state IN ('busy', 'after_contact_work'))::numeric
+          / NULLIF(SUM(duration_seconds) FILTER (WHERE state != 'offline'), 0),
+          2
+        ) AS occupancy_pct
+      FROM rpt.presence
+      WHERE started_at >= :start AND started_at < :end
+      GROUP BY agent_name
+      ORDER BY occupancy_pct DESC
+
+  - id: copilot_usage_and_acceptance
+    goal: "Show copilot assist usage and acceptance by skill"
+    answer_type: breakdown
+    views: [copilot_turns]
+    sql: |
+      SELECT
+        skill_key,
+        COUNT(*) AS total_suggestions,
+        COUNT(*) FILTER (WHERE accepted = true) AS accepted_count,
+        ROUND(100.0 * COUNT(*) FILTER (WHERE accepted = true) / NULLIF(COUNT(*), 0), 2) AS acceptance_rate_pct
+      FROM rpt.copilot_turns
+      WHERE created_at >= :start AND created_at < :end
+      GROUP BY skill_key
+      ORDER BY total_suggestions DESC
+
+  - id: transfers_summary
+    goal: "Show transfers from the last 7 days"
+    answer_type: list
+    views: [transfers]
+    sql: |
+      SELECT transfer_id, conversation_id, from_queue_name, to_queue_name, from_agent_name, to_agent_name, state, requested_at
+      FROM rpt.transfers
+      WHERE requested_at >= :start AND requested_at < :end
+      ORDER BY requested_at DESC
+      LIMIT 50
+
+  - id: sentiment_by_queue
+    goal: "Show negative sentiment by queue"
+    answer_type: breakdown
+    views: [sentiment, conversations]
+    sql: |
+      SELECT
+        c.queue_name,
+        COUNT(*) AS total_turns,
+        COUNT(*) FILTER (WHERE s.customer_label = 'negative') AS negative_turns,
+        ROUND(100.0 * COUNT(*) FILTER (WHERE s.customer_label = 'negative') / NULLIF(COUNT(*), 0), 2) AS negative_pct
+      FROM rpt.sentiment s
+      JOIN rpt.conversations c ON c.id = s.conversation_id
+      WHERE s.created_at >= :start AND s.created_at < :end
+      GROUP BY c.queue_name
+      ORDER BY negative_pct DESC

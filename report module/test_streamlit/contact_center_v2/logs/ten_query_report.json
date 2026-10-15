@@ -1,0 +1,292 @@
+[
+  {
+    "n": 1,
+    "question": "how many conversations are there totally?",
+    "log": "/home/vectone/Uday/report module/test_streamlit/contact_center_v2/logs/turn_20261009_104535_9dfd46d0.md",
+    "understanding": "The total count of all conversations for the organization.",
+    "ask_user": null,
+    "tasks": [
+      {
+        "goal": "Count the total number of conversations.",
+        "time": "all time",
+        "path": "free_sql",
+        "answer_type": "number"
+      }
+    ],
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": false,
+        "kpi_id": null,
+        "row_count": 1
+      }
+    ],
+    "card": "card: table r1",
+    "error": null,
+    "answer": "<p><strong>Total conversations</strong></p><p>There are <strong>621</strong> conversations in total for all time.</p><p>Would you like to see these conversations broken down by channel?</p>",
+    "facts_head": "result_id: r1\nwindow: all time\ncertified: false\ntask_goal: Count the total number of conversations.\nanswer_type: number\nrow_count: 1\nrow 1: count=621"
+  },
+  {
+    "n": 2,
+    "question": "how many were handled in the last 7 days?",
+    "log": "/home/vectone/Uday/report module/test_streamlit/contact_center_v2/logs/turn_20261009_104553_e12b7be9.md",
+    "understanding": "The user wants to know the total number of handled conversations over the last 7 days.",
+    "ask_user": null,
+    "tasks": [
+      {
+        "goal": "Count the number of handled conversations.",
+        "time": "last 7 days",
+        "path": "certified_metric",
+        "answer_type": "number"
+      }
+    ],
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "handled",
+        "row_count": 1
+      }
+    ],
+    "card": "card: kpi r1",
+    "error": null,
+    "answer": "<p><strong>Handled conversations</strong></p><p>There were <strong>336</strong> handled conversations in the past 7 days (UTC).</p><p>Would you like to see how this compares to the previous 7-day period?</p>",
+    "facts_head": "result_id: r1\nwindow: past 7 days (UTC)\nkpi: handled\ncertified: true\ntask_goal: Count the number of handled conversations.\nanswer_type: number\nrow_count: 1\nrow 1: handled=336"
+  },
+  {
+    "n": 3,
+    "question": "how many calls this week?",
+    "log": "/home/vectone/Uday/report module/test_streamlit/contact_center_v2/logs/turn_20261009_104611_51bc2fc3.md",
+    "understanding": "The user wants to know the total number of calls received during the current week.",
+    "ask_user": null,
+    "tasks": [
+      {
+        "goal": "Count the total number of calls received this week.",
+        "time": "this week",
+        "path": "certified_metric",
+        "answer_type": "number"
+      }
+    ],
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "call_count",
+        "row_count": 1
+      }
+    ],
+    "card": "card: kpi r1",
+    "error": null,
+    "answer": "<p><strong>Call volume for this week</strong></p><p>There were <strong>177</strong> calls this week (Monday\u2013Sunday UTC).</p><p>Would you like to see how this compares to last week?</p>",
+    "facts_head": "result_id: r1\nwindow: this week Monday\u2013Sunday (UTC)\nkpi: call_count\ncertified: true\ntask_goal: Count the total number of calls received this week.\nanswer_type: number\nrow_count: 1\nrow 1: call_count=177"
+  },
+  {
+    "n": 4,
+    "question": "how many conversations are waiting right now?",
+    "log": "/home/vectone/Uday/report module/test_streamlit/contact_center_v2/logs/turn_20261009_104629_dbea46ac.md",
+    "understanding": "The user wants to know the current count of conversations waiting in queue.",
+    "ask_user": null,
+    "tasks": [
+      {
+        "goal": "Count the number of conversations currently waiting in queue.",
+        "time": "now",
+        "path": "certified_metric",
+        "answer_type": "number"
+      }
+    ],
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "waiting",
+        "row_count": 1
+      }
+    ],
+    "card": "card: none",
+    "error": null,
+    "answer": "<p><strong>Current waiting conversations</strong></p><p>There are <strong>0</strong> conversations waiting right now.</p><p>Would you like to see the average wait time for these conversations?</p>",
+    "facts_head": "result_id: r1\nwindow: now (live)\nkpi: waiting\ncertified: true\ntask_goal: Count the number of conversations currently waiting in queue.\nanswer_type: number\nrow_count: 1\nrow 1: waiting=0"
+  },
+  {
+    "n": 5,
+    "question": "show handled conversations by channel for the last 7 days",
+    "log": "/home/vectone/Uday/report module/test_streamlit/contact_center_v2/logs/turn_20261009_104634_6cdd9b1b.md",
+    "understanding": "A breakdown of handled conversations by channel over the last 7 days.",
+    "ask_user": null,
+    "tasks": [
+      {
+        "goal": "List the number of handled conversations split by channel for the last 7 days.",
+        "time": "the last 7 days",
+        "path": "free_sql",
+        "answer_type": "list"
+      }
+    ],
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "error",
+        "error_type": "REPLAN",
+        "certified": null,
+        "kpi_id": null,
+        "row_count": 0
+      }
+    ],
+    "card": "card: none",
+    "error": null,
+    "answer": "json\n{\"kind\":\"plan\",\"understanding\":\"A breakdown of handled conversations by channel for the last 7 days.\",\"tasks\":[{\"id\":\"t1\",\"executor\":\"sql\",\"path\":\"free_sql\",\"goal\":\"List the number of handled conversations split by channel for the last 7 days.\",\"time\":\"the last 7 days\",\"scope\":\"org\",\"slice\":[\"channel\"],\"answer_type\":\"list\"}]}",
+    "facts_head": "result_id: r1\ntask_goal: List the number of handled conversations split by channel for the last 7 days.\nEXECUTION_ERROR\nerror_type: REPLAN\nmessage: unsupported time expression: 'the last 7 days'"
+  },
+  {
+    "n": 6,
+    "question": "what is the abandonment rate last 30 days?",
+    "log": "/home/vectone/Uday/report module/test_streamlit/contact_center_v2/logs/turn_20261009_104652_c05850a7.md",
+    "understanding": "The abandonment rate for the last 30 days.",
+    "ask_user": null,
+    "tasks": [
+      {
+        "goal": "Calculate the abandonment rate for the last 30 days.",
+        "time": "last 30 days",
+        "path": "certified_metric",
+        "answer_type": "percentage"
+      }
+    ],
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "abandonment_rate",
+        "row_count": 1
+      }
+    ],
+    "card": "card: kpi r1",
+    "error": null,
+    "answer": "<p><strong>Abandonment rate for the past 30 days</strong></p>\n<p>The abandonment rate for the past 30 days (UTC) was <strong>0%</strong>.</p>\n<p>Would you like to see this rate broken down by queue?</p>",
+    "facts_head": "result_id: r1\nwindow: past 30 days (UTC)\nkpi: abandonment_rate\ncertified: true\ntask_goal: Calculate the abandonment rate for the last 30 days.\nanswer_type: percentage\nrow_count: 1\nrow 1: abandoned_n=0; queued_finished_n=37; rate_pct=0"
+  },
+  {
+    "n": 7,
+    "question": "how many agents are ready now?",
+    "log": "/home/vectone/Uday/report module/test_streamlit/contact_center_v2/logs/turn_20261009_104719_a7297ae7.md",
+    "understanding": "The user wants to know the current count of agents in a ready state.",
+    "ask_user": null,
+    "tasks": [
+      {
+        "goal": "List the number of agents currently in a ready state",
+        "time": "now",
+        "path": "free_sql",
+        "answer_type": "number"
+      }
+    ],
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": false,
+        "kpi_id": null,
+        "row_count": 1
+      }
+    ],
+    "card": "card: none",
+    "error": null,
+    "answer": "<p><strong>Current agent status</strong></p><p>There is <strong>1</strong> agent ready <strong>now</strong>.</p><p>Would you like to see which specific agents are currently ready?</p>",
+    "facts_head": "result_id: r1\nwindow: now (live)\ncertified: false\ntask_goal: List the number of agents currently in a ready state\nanswer_type: number\nrow_count: 1\nrow 1: count=1"
+  },
+  {
+    "n": 8,
+    "question": "what is the average handle time last 7 days?",
+    "log": "/home/vectone/Uday/report module/test_streamlit/contact_center_v2/logs/turn_20261009_104737_37010524.md",
+    "understanding": "The user wants to know the average handle time for the last 7 days.",
+    "ask_user": null,
+    "tasks": [
+      {
+        "goal": "Calculate the average handle time for all conversations.",
+        "time": "last 7 days",
+        "path": "certified_metric",
+        "answer_type": "number"
+      }
+    ],
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "avg_handle_time",
+        "row_count": 1
+      }
+    ],
+    "card": "card: kpi r1",
+    "error": null,
+    "answer": "<p><strong>Average Handle Time</strong></p><p>The average handle time for the past 7 days (UTC) was <strong>3566.86</strong> seconds.</p><p>Would you like to see this broken down by queue or agent?</p>",
+    "facts_head": "result_id: r1\nwindow: past 7 days (UTC)\nkpi: avg_handle_time\ncertified: true\ntask_goal: Calculate the average handle time for all conversations.\nanswer_type: number\nrow_count: 1\nrow 1: avg_handle_time=3566.8623600357142857"
+  },
+  {
+    "n": 9,
+    "question": "what is the first reply SLA last 7 days?",
+    "log": "/home/vectone/Uday/report module/test_streamlit/contact_center_v2/logs/turn_20261009_104755_d9fc19ce.md",
+    "understanding": "The user wants to know the first reply SLA for the last 7 days.",
+    "ask_user": null,
+    "tasks": [
+      {
+        "goal": "Calculate the first reply SLA for the last 7 days.",
+        "time": "last 7 days",
+        "path": "certified_metric",
+        "answer_type": "number"
+      }
+    ],
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "first_reply_sla",
+        "row_count": 1
+      }
+    ],
+    "card": "card: kpi r1",
+    "error": null,
+    "answer": "<p><strong>First reply SLA for the past 7 days</strong></p><p>The first reply SLA for the <strong>past 7 days (UTC)</strong> was <strong>85.7%</strong>.</p><p>Would you like to see this SLA broken down by queue?</p>",
+    "facts_head": "result_id: r1\nwindow: past 7 days (UTC)\nkpi: first_reply_sla\ncertified: true\ntask_goal: Calculate the first reply SLA for the last 7 days.\nanswer_type: number\nrow_count: 1\nrow 1: sla_n=6; replies_n=7; rate_pct=85.7"
+  },
+  {
+    "n": 10,
+    "question": "how many conversations were transferred last 7 days?",
+    "log": "/home/vectone/Uday/report module/test_streamlit/contact_center_v2/logs/turn_20261009_104812_aa653016.md",
+    "understanding": "Count the total number of conversations that were transferred in the last 7 days.",
+    "ask_user": null,
+    "tasks": [
+      {
+        "goal": "Count the number of conversations that were transferred in the last 7 days.",
+        "time": "last 7 days",
+        "path": "certified_metric",
+        "answer_type": "number"
+      }
+    ],
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "transferred",
+        "row_count": 1
+      }
+    ],
+    "card": "card: none",
+    "error": null,
+    "answer": "<p><strong>Transferred conversations</strong></p><p>There were <strong>0</strong> transferred conversations in the past 7 days (UTC).</p><p>Would you like to see which queues had the most transfers during this period?</p>",
+    "facts_head": "result_id: r1\nwindow: past 7 days (UTC)\nkpi: transferred\ncertified: true\ntask_goal: Count the number of conversations that were transferred in the last 7 days.\nanswer_type: number\nrow_count: 1\nrow 1: transferred=0"
+  }
+]

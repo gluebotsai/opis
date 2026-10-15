@@ -1,0 +1,120 @@
+# Classification trees (SKOS-style). Not entities.
+# Classes CLASSIFIED_BY a taxonomy axis. Instance data stores a Term id, not a new Class.
+
+taxonomies:
+  businessType:
+    terms: [b2b, b2c, b2b2c]
+
+  industry:
+    terms: [saas, healthcare, bfsi, ecommerce, telecom]
+    narrower:
+      healthcare: [provider, payer]
+
+  channel:
+    classified_classes: [Conversation, Callback, DispatchAction]
+    terms: [voice, web, email, whatsapp, instagram, facebook, social, push]
+
+  lifecycle:
+    classified_classes: [Contact]
+    terms: [lead, mql, trial, customer, expansion, churn_risk, churned]
+
+  intent:
+    classified_classes: [Conversation]
+    terms:
+      - billing_dispute
+      - status_request
+      - sales
+      - booking
+      - cancel
+      - how_to
+      - complaint
+      - identity_update
+      - live_agent_request
+
+  sentiment:
+    classified_classes: [Sentiment]
+    terms: [positive, neutral, frustrated, angry]
+
+  ticket.priority:
+    classified_classes: [Ticket]
+    terms: [urgent, high, medium, low]
+    # Internal P1/P2/P3 maps to these display names in semantic layer.
+
+  ticket.category:
+    classified_classes: [Ticket]
+    terms: [billing, onboarding, integration, bug, feature_request, service]
+
+  ticket.status:
+    classified_classes: [Ticket]
+    terms: [open, pending, escalated, resolved, closed, reopened]
+
+  ticket.assignee_role:
+    classified_classes: [Ticket]
+    terms: [agent, resolver]
+    # L1 assignee vs L2 resolver — never swapped (mas-agents-guide.md reassign).
+
+  staff.role:
+    classified_classes: [Agent]
+    terms: [admin, agent, resolver]
+    # Org scope role on ticketing.agents / setup_roles — not a graph label.
+
+  user.kind:
+    classified_classes: [User]
+    terms: [employee]
+    # Vocabulary only — not a graph label. Never contractor or system.
+
+  asga.outcome:
+    classified_classes: [Approval]
+    terms: [run_now, confirm, recommend, reject]
+
+  conversation.direction:
+    terms: [inbound, outbound]
+
+  disposition:
+    classified_classes: [Disposition]
+    terms: [resolved, transferred, callback_promised, abandoned, spam, no_action]
+
+  presence:
+    classified_classes: [AgentPresence]
+    terms: [ready, not_ready, on_call, after_call_work, offline, logged_out]
+
+  queue.status:
+    classified_classes: [Queue]
+    terms: [active, inactive]
+
+  staffingMode:
+    terms: [specific, all, skip]
+
+  callback.due:
+    terms: [1h, 4h, eod]
+
+  anomaly.severity:
+    classified_classes: [Anomaly]
+    terms: [low, medium, high, critical]
+
+  knowledge.module:
+    classified_classes: [KnowledgeArticle]
+    terms: [business, product, support, sales, service]
+
+  hub.scenario:
+    classified_classes: [HubRequest]
+    terms: [spoke_query, ops_anomaly, engagement_anomaly, customer_event]
+
+  action.family:
+    terms: [service, engagement, growth]
+
+  identity.source_system:
+    classified_classes: [IdentityKey]
+    terms: [crm, ccass, ticketing, webtracking, email, phone, whatsapp]
+
+  deal.stage:
+    classified_classes: [Deal]
+    terms: [prospect, qualified, proposal, negotiation, won, lost]
+
+  campaign.goal:
+    classified_classes: [Campaign]
+    terms: [awareness, engagement, conversion, retention]
+
+  campaign.status:
+    classified_classes: [Campaign]
+    terms: [draft, scheduled, running, paused, completed, cancelled]

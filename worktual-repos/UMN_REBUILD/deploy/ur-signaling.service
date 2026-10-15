@@ -1,0 +1,23 @@
+[Unit]
+Description=ur-signaling (merged SGW + Interrogator)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Adjust WorkingDirectory / ExecStart for the install host path.
+WorkingDirectory=/home/worktual/UMN_REBUILD/SGW_IGR/ur-signaling
+ExecStart=/home/worktual/UMN_REBUILD/SGW_IGR/ur-signaling/build/ur-signaling configs/ur-signaling.staging.conf.json
+Restart=on-failure
+RestartSec=3
+LimitNOFILE=65535
+# SIP :5060 typically needs root (or setcap). Prefer a dedicated user + capabilities in prod.
+User=root
+# Deploy writes drop-ins: sip-host.conf, optional udp-only.conf, sofia-debug.conf
+# (SOFIA_DEBUG + StandardError → logs/sofia.err). Do not force UDP-only here.
+# Optional Redis env overrides (never commit secrets into the unit file):
+# Environment=UR_REDIS_PUBSUB_HOST=10.180.2.106
+# Environment=UR_REDIS_STORE_HOST=10.180.2.109
+
+[Install]
+WantedBy=multi-user.target

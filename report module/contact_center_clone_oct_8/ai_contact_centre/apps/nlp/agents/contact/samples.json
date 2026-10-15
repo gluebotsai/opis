@@ -1,0 +1,82 @@
+{
+  "conversations": [
+    {
+      "id": "contact-search",
+      "title": "Find a contact by name",
+      "turns": [
+        { "role": "user", "content": "Find Priya Sharma" },
+        {
+          "role": "assistant",
+          "content": "<p>I found <strong>Priya Sharma</strong> — priya.sharma@zifo.com. Open this profile?</p>",
+          "tools": ["list_contacts"]
+        }
+      ]
+    },
+    {
+      "id": "contact-create-happy-path",
+      "title": "Create a contact after confirmation",
+      "turns": [
+        { "role": "user", "content": "Add a contact named Rahul Nair, email rahul.nair@zifo.com" },
+        {
+          "role": "assistant",
+          "content": "<p>I can create <strong>Rahul Nair</strong> with rahul.nair@zifo.com. WhatsApp number, or skip?</p>",
+          "tools": ["update_skill_in_system", "stage_contact_draft"]
+        },
+        { "role": "user", "content": "Skip the rest and save" },
+        {
+          "role": "assistant",
+          "content": "<p>Created <strong>Rahul Nair</strong> and opened the profile.</p>",
+          "tools": ["stage_contact_draft", "create_contact"]
+        }
+      ]
+    },
+    {
+      "id": "contact-create-no-agent-type",
+      "title": "Create contact without customer vs agent question",
+      "turns": [
+        { "role": "user", "content": "can i create contact" },
+        {
+          "role": "assistant",
+          "content": "<p>I can help you create a customer contact. What is the first name?</p>",
+          "tools": ["update_skill_in_system", "stage_contact_draft"]
+        },
+        { "role": "user", "content": "an internal agent" },
+        {
+          "role": "assistant",
+          "content": "<p>Contacts here are customers in the directory — not internal agents. What is the customer's first name?</p>",
+          "tools": ["stage_contact_draft"]
+        }
+      ]
+    },
+    {
+      "id": "contact-update-phone",
+      "title": "Update phone after confirmation",
+      "turns": [
+        { "role": "user", "content": "Change this contact's mobile to 9876543210" },
+        {
+          "role": "assistant",
+          "content": "<p>Ready to update primary phone to <strong>9876543210</strong>. Save this change?</p>",
+          "tools": ["get_contact", "update_skill_in_system", "stage_contact_draft"]
+        },
+        { "role": "user", "content": "Yes, save" },
+        {
+          "role": "assistant",
+          "content": "<p>Updated the primary phone to <strong>9876543210</strong>.</p>",
+          "tools": ["update_contact"]
+        }
+      ]
+    },
+    {
+      "id": "contact-created-count",
+      "title": "Count contacts created yesterday",
+      "turns": [
+        { "role": "user", "content": "How many contacts were created yesterday?" },
+        {
+          "role": "assistant",
+          "content": "<p><strong>17 contacts</strong> were created yesterday.</p>",
+          "tools": ["update_skill_in_system", "count_contacts_created"]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,897 @@
+version: 1
+# Certified Contact Center KPIs (V2 architecture).
+
+kpis:
+  conversation_count:
+    label: Conversation count
+    family: volume
+    aggregation: count
+    unit: conversations
+    direction: none
+    default_time_column: created_at
+    allowed_date_columns: [created_at, resolved_at, ended_at, closed_at]
+    allowed_scope_levels: [org, own, queue, agent]
+    allowed_dimensions: [queue, agent, channel, priority, status, disposition_category, disposition_code, hour_of_day, day_of_week, month, week, day]
+    synonyms: [how many conversations, conversation volume, number of contacts, contact volume]
+    definition:
+      numerator: COUNT of conversations in scope
+      denominator: none
+      includes: every conversation row matching tenant, scope, time, segment, filters
+      excludes: none
+    segments:
+      all: "no extra status filter"
+      active: "status = 'active'"
+      resolved: "status = 'resolved'"
+      closed: "status = 'closed'"
+      bot_only: "assigned_agent_id IS NULL"
+      handed_off: "assigned_agent_id IS NOT NULL"
+      high_priority: "priority >= 1"
+
+  avg_conversations_per_day:
+    label: Average conversations per day
+    family: volume
+    aggregation: ratio
+    unit: conversations_per_day
+    direction: none
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, queue, agent]
+    allowed_dimensions: [queue, agent, channel, priority]
+    definition:
+      numerator: COUNT of conversations created in the window (or all history if no window)
+      denominator: number of UTC calendar days in the window; if no window, days from min(created_at) to now UTC inclusive
+
+  contacts_served:
+    label: Contacts served
+    family: volume
+    aggregation: count_distinct
+    unit: contacts
+    direction: none
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, queue]
+    allowed_dimensions: [queue, channel]
+    definition:
+      numerator: COUNT DISTINCT contact_id among conversations in the window
+      excludes: conversations with contact_id NULL (unresolved identity)
+
+  new_vs_returning_rate:
+    label: New vs returning contact rate
+    family: volume
+    aggregation: rate
+    unit: ratio
+    direction: none
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, queue]
+    allowed_dimensions: [queue, channel]
+    definition:
+      new: "contact had no conversation before the window start (all-time: more than one conversation)"
+      returning: "contact already seen before the window (all-time: more than one conversation)"
+      numerator: COUNT of distinct contacts that are new (and separately returning)
+      denominator: COUNT of distinct contacts in the window with contact_id NOT NULL
+    segments:
+      new: "no prior conversation for this contact_id"
+      returning: "at least one prior conversation for this contact_id"
+
+  message_count:
+    label: Message count
+    family: volume
+    aggregation: count
+    unit: messages
+    direction: none
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, queue, agent]
+    allowed_dimensions: [channel, direction, sender_type]
+    definition:
+      numerator: COUNT conversation_messages in scope
+    segments:
+      inbound: "direction = 'inbound'"
+      outbound: "direction = 'outbound'"
+      customer_visible: "visibility = 'customer'"
+      internal: "visibility = 'internal'"
+
+  avg_messages_per_conversation:
+    label: Average messages per conversation
+    family: volume
+    aggregation: ratio
+    unit: messages
+    direction: none
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, queue, agent]
+    allowed_dimensions: [channel, queue, agent]
+    definition:
+      numerator: COUNT conversation_messages in window
+      denominator: COUNT DISTINCT conversation_id in window
+
+  resolution_rate:
+    label: Resolution rate
+    family: flow
+    aggregation: rate
+    unit: ratio
+    direction: higher_is_better
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, queue, agent]
+    allowed_dimensions: [queue, agent, channel, priority]
+    definition:
+      numerator: conversations in window whose status is resolved or closed AND end_reason is not bot_resolved_inactivity
+      denominator: conversations in window excluding end_reason = bot_resolved_inactivity
+      excludes: bot_resolved_inactivity (neutral). Rate is never greater than 1.
+
+  transfer_rate:
+    label: Transfer rate
+    family: flow
+    aggregation: rate
+    unit: ratio
+    direction: lower_is_better
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, queue, agent]
+    allowed_dimensions: [queue, agent, channel, priority]
+    definition:
+      numerator: DISTINCT conversations in window with at least one conversation_transfers row
+      denominator: conversations created in window
+
+  transfer_count:
+    label: Transfer count
+    family: flow
+    aggregation: count
+    unit: conversations
+    direction: none
+    default_time_column: requested_at
+    allowed_date_columns: [requested_at, completed_at]
+    allowed_scope_levels: [org, queue, agent]
+    allowed_dimensions: [from_queue, to_queue, state, outcome_reason]
+    definition:
+      numerator: COUNT DISTINCT conversation_id on conversation_transfers (same grain as transfer_rate)
+
+  reopen_rate:
+    label: Reopen rate
+    family: flow
+    aggregation: rate
+    unit: ratio
+    direction: lower_is_better
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, queue, agent]
+    allowed_dimensions: [queue, agent, channel, priority]
+    definition:
+      numerator: COUNT conversations WHERE previous_conversation_id IS NOT NULL
+      denominator: conversations created in window
+
+  reopen_count:
+    label: Reopen count
+    family: flow
+    aggregation: count
+    unit: conversations
+    direction: none
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, queue, agent]
+    allowed_dimensions: [queue, agent, channel]
+    definition:
+      numerator: COUNT conversations WHERE previous_conversation_id IS NOT NULL
+
+  fcr_rate:
+    label: First contact resolution rate
+    family: flow
+    aggregation: rate
+    unit: ratio
+    direction: higher_is_better
+    default_time_column: resolved_at
+    allowed_date_columns: [resolved_at]
+    allowed_scope_levels: [org, own, queue, agent]
+    allowed_dimensions: [queue, agent, channel, priority]
+    definition:
+      population: conversations resolved in window
+      not_fcr: same contact_id has a later conversation with the same disposition_category
+               within 24h (realtime channels) or 72h (email)
+      numerator: population minus not_fcr
+      denominator: population
+      excludes: conversations with no disposition set
+
+  escalation_rate:
+    label: Escalation rate
+    family: flow
+    aggregation: rate
+    unit: ratio
+    direction: none
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, queue]
+    allowed_dimensions: [queue, channel]
+    definition:
+      numerator: DISTINCT conversations with at least one agent_tasks row WHERE task_type = 'escalation'
+      denominator: conversations created in window
+
+  escalation_count:
+    label: Escalation count
+    family: flow
+    aggregation: count
+    unit: conversations
+    direction: none
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, queue, agent]
+    allowed_dimensions: [queue, agent, status]
+    definition:
+      numerator: COUNT DISTINCT conversation_id on agent_tasks WHERE task_type = 'escalation'
+
+  callback_completion_rate:
+    label: Callback completion rate
+    family: flow
+    aggregation: rate
+    unit: ratio
+    direction: higher_is_better
+    default_time_column: created_at
+    allowed_date_columns: [created_at, completed_at]
+    allowed_scope_levels: [org, own, agent]
+    allowed_dimensions: [agent, channel]
+    definition:
+      numerator: COUNT agent_tasks WHERE task_type = 'callback' AND status = 'completed'
+      denominator: COUNT agent_tasks WHERE task_type = 'callback'
+
+  disposition_distribution:
+    label: Disposition distribution
+    family: flow
+    aggregation: count
+    unit: conversations
+    direction: none
+    default_time_column: created_at
+    allowed_date_columns: [created_at, resolved_at]
+    allowed_scope_levels: [org, own, queue, agent]
+    allowed_dimensions: [queue, agent, channel, disposition_category, disposition_code]
+    definition:
+      numerator: COUNT conversation_dispositions GROUP BY disposition_category (or disposition_code, per dimension chosen)
+      denominator: none
+
+  resolution_code_distribution:
+    label: Resolution code distribution
+    family: flow
+    aggregation: count
+    unit: conversations
+    direction: none
+    default_time_column: resolved_at
+    allowed_date_columns: [resolved_at]
+    allowed_scope_levels: [org, queue, agent]
+    allowed_dimensions: [queue, agent, channel]
+    definition:
+      numerator: COUNT conversations GROUP BY resolution_code
+      excludes: resolution_code IS NULL
+
+  avg_first_response_time:
+    label: Average first response time
+    family: speed
+    aggregation: avg
+    unit: minutes
+    direction: lower_is_better
+    default_time_column: created_at
+    allowed_date_columns: [created_at, first_agent_response_at]
+    allowed_scope_levels: [org, own, queue, agent]
+    allowed_dimensions: [queue, agent, channel, priority]
+    definition:
+      numerator: SUM of minutes(first_agent_response_at - queued_at)
+      denominator: COUNT of conversations with first_agent_response_at NOT NULL
+      includes: human agent's first reply only — bot replies never count
+
+  avg_speed_to_answer:
+    label: Average speed to answer (ASA)
+    family: speed
+    aggregation: avg
+    unit: minutes
+    direction: lower_is_better
+    default_time_column: created_at
+    allowed_date_columns: [created_at, assigned_at]
+    allowed_scope_levels: [org, own, queue, agent]
+    allowed_dimensions: [queue, agent, channel, priority]
+    definition:
+      numerator: SUM of minutes(assigned_at - queued_at)
+      denominator: COUNT of conversations with assigned_at NOT NULL
+      excludes: bot-only conversations (assigned_at IS NULL)
+
+  avg_wait_time_live:
+    label: Average wait time (live queue)
+    family: speed
+    aggregation: avg
+    unit: minutes
+    direction: lower_is_better
+    default_time_column: queued_at
+    allowed_date_columns: [queued_at]
+    allowed_scope_levels: [org, queue]
+    allowed_dimensions: [queue, channel]
+    definition:
+      numerator: SUM of minutes(NOW() - queued_at)
+      denominator: COUNT conversations WHERE status = 'queued' right now
+      includes: real-time snapshot in minutes, not a historical average — use avg_wait_time for history
+
+  avg_wait_time:
+    label: Average wait time (historical)
+    family: speed
+    aggregation: avg
+    unit: minutes
+    direction: lower_is_better
+    default_time_column: created_at
+    allowed_date_columns: [created_at, queued_at]
+    allowed_scope_levels: [org, own, queue, agent]
+    allowed_dimensions: [queue, channel]
+    definition:
+      numerator: SUM of minutes(COALESCE(assigned_at, ended_at) - queued_at)
+      denominator: conversations that entered queue and then assigned or ended
+      includes: historical wait; answered and abandoned. Different from live queue snapshot.
+
+  avg_resolution_time:
+    label: Average time to resolution
+    family: speed
+    aggregation: avg
+    unit: minutes
+    direction: lower_is_better
+    default_time_column: created_at
+    allowed_date_columns: [created_at, resolved_at]
+    allowed_scope_levels: [org, own, queue, agent]
+    allowed_dimensions: [queue, agent, channel, priority]
+    definition:
+      numerator: SUM of minutes(resolved_at - created_at)
+      denominator: COUNT of conversations with resolved_at NOT NULL
+
+  avg_offer_ring_time:
+    label: Average offer ring time
+    family: speed
+    aggregation: avg
+    unit: minutes
+    direction: lower_is_better
+    default_time_column: offered_at
+    allowed_date_columns: [offered_at]
+    allowed_scope_levels: [org, queue, agent]
+    allowed_dimensions: [queue, agent]
+    definition:
+      numerator: SUM of minutes(accepted_at - offered_at)
+      denominator: COUNT conversation_assignments WHERE accepted_at NOT NULL
+
+  avg_handle_time:
+    label: Average handle time (non-voice)
+    family: speed
+    aggregation: avg
+    unit: minutes
+    direction: lower_is_better
+    default_time_column: created_at
+    allowed_date_columns: [created_at, assigned_at, ended_at]
+    allowed_scope_levels: [org, own, queue, agent]
+    allowed_dimensions: [queue, agent, channel, priority]
+    definition:
+      numerator: SUM of (minutes(ended_at - assigned_at) + after_contact_work_seconds/60 for that queue)
+      denominator: COUNT of conversations with assigned_at AND ended_at NOT NULL
+      includes: webchat, email, whatsapp, instagram, facebook
+      excludes: voice (see avg_handle_time_voice)
+
+  avg_handle_time_voice:
+    label: Average handle time (voice)
+    family: speed
+    aggregation: avg
+    unit: minutes
+    direction: lower_is_better
+    default_time_column: session_start_time
+    allowed_date_columns: [session_start_time]
+    allowed_scope_levels: [org, queue, agent]
+    allowed_dimensions: [queue, agent]
+    definition:
+      numerator: SUM of (recording_duration in milliseconds / 60000 + after_contact_work_seconds/60)
+      denominator: COUNT of CDR rows
+      caveat: >-
+        recording_duration is milliseconds. Time filter uses session_start_time (epoch ms).
+        call_cdr is not 1:1 with conversation rows.
+
+  avg_hold_time:
+    label: Average hold time (voice)
+    family: speed
+    aggregation: avg
+    unit: minutes
+    direction: lower_is_better
+    default_time_column: session_start_time
+    allowed_date_columns: [session_start_time]
+    allowed_scope_levels: [org, queue, agent]
+    allowed_dimensions: [queue, agent]
+    definition:
+      numerator: SUM of agent_hold_duration milliseconds / 60000
+      denominator: COUNT of CDR rows
+      includes: standalone metric, not folded into AHT
+
+  first_response_sla_compliance:
+    label: First-response SLA compliance
+    family: sla
+    aggregation: rate
+    unit: ratio
+    direction: higher_is_better
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, queue, agent]
+    allowed_dimensions: [queue, agent, channel, priority]
+    definition:
+      met: first_agent_response_at IS NOT NULL AND first_agent_response_at <= first_response_due_at
+      missed: reply after that instant, or no reply yet and now UTC > first_response_due_at
+      numerator: decided conversations that met
+      denominator: decided conversations (met + missed)
+      excludes: no first_response_due_at set
+
+  resolution_sla_compliance:
+    label: Resolution SLA compliance
+    family: sla
+    aggregation: rate
+    unit: ratio
+    direction: higher_is_better
+    default_time_column: created_at
+    allowed_date_columns: [created_at, resolved_at]
+    allowed_scope_levels: [org, own, queue, agent]
+    allowed_dimensions: [queue, agent, channel, priority]
+    definition:
+      met: resolved_at IS NOT NULL AND resolved_at <= resolution_due_at
+      missed: resolved_at > resolution_due_at, OR still unresolved AND now UTC > resolution_due_at
+      numerator: decided conversations that met
+      denominator: decided conversations
+      excludes: no resolution_due_at set
+
+  sla_breach_rate:
+    label: SLA breach rate
+    family: sla
+    aggregation: rate
+    unit: ratio
+    direction: lower_is_better
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, queue, agent]
+    allowed_dimensions: [queue, agent, channel, priority]
+    definition:
+      numerator: COUNT conversations WHERE sla_status = 'breached' OR breached_at IS NOT NULL
+      denominator: conversations with sla_status NOT NULL
+      note: compliance + breach = 1 on the same decided set
+
+  first_response_at_risk_count:
+    label: First-response at-risk count
+    family: sla
+    aggregation: count
+    unit: conversations
+    direction: lower_is_better
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, queue]
+    allowed_dimensions: [queue, priority]
+    definition:
+      includes: sla_status = 'warning' AND first_agent_response_at IS NULL AND now UTC <= first_response_due_at
+      excludes: already-breached conversations (those count under sla_breach_rate, not at-risk)
+
+  resolution_at_risk_count:
+    label: Resolution at-risk count
+    family: sla
+    aggregation: count
+    unit: conversations
+    direction: lower_is_better
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, queue]
+    allowed_dimensions: [queue, priority]
+    definition:
+      includes: sla_status = 'warning' AND status NOT IN ('resolved','closed') AND now UTC <= resolution_due_at
+      excludes: already-breached conversations
+
+  queues_at_risk:
+    label: Queues at risk
+    family: sla
+    aggregation: count_distinct
+    unit: queues
+    direction: lower_is_better
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org]
+    allowed_dimensions: []
+    definition:
+      numerator: COUNT DISTINCT queue_id with at least one resolution_at_risk conversation
+
+  avg_breach_duration:
+    label: Average breach duration
+    family: sla
+    aggregation: avg
+    unit: minutes
+    direction: lower_is_better
+    default_time_column: resolution_due_at
+    allowed_date_columns: [resolution_due_at, created_at, resolved_at]
+    allowed_scope_levels: [org, queue, agent]
+    allowed_dimensions: [queue, agent, priority]
+    definition:
+      population: sla_status = 'breached'
+      per_conversation: minutes(COALESCE(resolved_at, NOW()) - resolution_due_at)
+      metric: AVG of per_conversation
+      echo: still-open breached conversations keep growing until resolved
+
+  no_sla_count:
+    label: Conversations with no SLA
+    family: sla
+    aggregation: count
+    unit: conversations
+    direction: none
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, queue]
+    allowed_dimensions: [queue, channel]
+    definition:
+      includes: sla_status = 'not_started' or no policy attached
+
+  abandonment_rate:
+    label: Abandonment rate
+    family: sla
+    aggregation: rate
+    unit: ratio
+    direction: lower_is_better
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, queue, agent]
+    allowed_dimensions: [queue, channel, priority]
+    definition:
+      numerator: >-
+        queued conversations that ended without an agent assignment, excluding
+        agent-ended rows, bot inactivity, test cleanup, and superseded voice calls
+      denominator: COUNT conversations WHERE queued_at IS NOT NULL
+      excludes: >-
+        end_actor = agent, superseded_by_new_voice_call, test_cleanup, bot_resolved_inactivity
+
+  offer_timeout_rate:
+    label: Offer timeout rate
+    family: routing
+    aggregation: rate
+    unit: ratio
+    direction: lower_is_better
+    default_time_column: offered_at
+    allowed_date_columns: [offered_at]
+    allowed_scope_levels: [org, queue, agent]
+    allowed_dimensions: [queue, agent]
+    definition:
+      numerator: COUNT conversation_assignments WHERE state = 'expired'
+      denominator: COUNT conversation_assignments in window
+
+  offer_accept_rate:
+    label: Offer accept rate
+    family: routing
+    aggregation: rate
+    unit: ratio
+    direction: higher_is_better
+    default_time_column: offered_at
+    allowed_date_columns: [offered_at]
+    allowed_scope_levels: [org, queue, agent]
+    allowed_dimensions: [queue, agent]
+    definition:
+      numerator: COUNT conversation_assignments WHERE state = 'accepted'
+      denominator: COUNT conversation_assignments in window
+
+  missed_contact_rate:
+    label: Missed contact rate
+    family: routing
+    aggregation: rate
+    unit: ratio
+    direction: lower_is_better
+    default_time_column: missed_at
+    allowed_date_columns: [missed_at]
+    allowed_scope_levels: [org, own, queue, agent]
+    allowed_dimensions: []
+    definition:
+      numerator: COUNT agent_missed_contacts in window
+      denominator: COUNT missed + COUNT accepted assignments in the same window and same agent/queue scope
+
+  missed_contact_count:
+    label: Missed contact count
+    family: routing
+    aggregation: count
+    unit: contacts
+    direction: none
+    default_time_column: missed_at
+    allowed_date_columns: [missed_at]
+    allowed_scope_levels: [org, queue, agent]
+    allowed_dimensions: [queue, agent, reason, channel]
+    definition:
+      numerator: COUNT agent_missed_contacts in scope
+
+  routing_attempt_success_rate:
+    label: Routing attempt success rate
+    family: routing
+    aggregation: rate
+    unit: ratio
+    direction: higher_is_better
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, queue]
+    allowed_dimensions: [queue]
+    definition:
+      numerator: COUNT routing_attempts WHERE outcome = 'assigned'
+      denominator: COUNT routing_attempts in window
+
+  overflow_rate:
+    label: Overflow rate
+    family: routing
+    aggregation: rate
+    unit: ratio
+    direction: lower_is_better
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, queue]
+    allowed_dimensions: [queue]
+    definition:
+      numerator: COUNT routing_attempts whose queue_id is some policy's overflow_queue_id
+      denominator: COUNT routing_attempts in window
+
+  active_agents:
+    label: Active agents
+    family: workforce
+    aggregation: count
+    unit: people
+    direction: none
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org]
+    allowed_dimensions: []
+    definition:
+      numerator: COUNT ccass.agents WHERE status = 'active' (roster flag, not live presence)
+
+  queue_count:
+    label: Queue count
+    family: workforce
+    aggregation: count
+    unit: queues
+    direction: none
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org]
+    allowed_dimensions: []
+    definition:
+      numerator: COUNT ccass.queues WHERE status = 'active'
+
+  agent_occupancy:
+    label: Agent occupancy
+    family: workforce
+    aggregation: rate
+    unit: ratio
+    direction: higher_is_better
+    default_time_column: started_at
+    allowed_date_columns: [started_at]
+    allowed_scope_levels: [org, own, agent]
+    allowed_dimensions: [agent]
+    definition:
+      numerator: SUM seconds(ended_at - started_at) WHERE presence_state IN ('busy','after_contact_work')
+      denominator: SUM seconds(ended_at - started_at) WHERE presence_state != 'offline'
+      excludes: no roster hours available — occupancy, not utilization
+
+  login_hours:
+    label: Login hours
+    family: workforce
+    aggregation: sum
+    unit: hours
+    direction: none
+    default_time_column: started_at
+    allowed_date_columns: [started_at]
+    allowed_scope_levels: [org, own, agent]
+    allowed_dimensions: [agent]
+    definition:
+      numerator: SUM seconds(ended_at - started_at) WHERE presence_state != 'offline', divided by 3600
+
+  presence_reason_breakdown:
+    label: Time by presence reason code
+    family: workforce
+    aggregation: sum
+    unit: minutes
+    direction: none
+    default_time_column: started_at
+    allowed_date_columns: [started_at]
+    allowed_scope_levels: [org, own, agent]
+    allowed_dimensions: [agent, reason_code]
+    definition:
+      numerator: SUM seconds(ended_at - started_at) GROUP BY reason_code
+      includes: break, training, and other not_ready reasons from presence_reason_codes
+
+  concurrency_utilization:
+    label: Concurrency utilization (live)
+    family: workforce
+    aggregation: rate
+    unit: ratio
+    direction: none
+    default_time_column: updated_at
+    allowed_date_columns: [updated_at]
+    allowed_scope_levels: [org, own, agent]
+    allowed_dimensions: [agent, channel]
+    definition:
+      numerator: active_count (live snapshot from agent_capacity)
+      denominator: max_concurrency
+      includes: real-time snapshot metric, not a historical average
+
+  handoff_rate:
+    label: Bot-to-agent handoff rate
+    family: bot
+    aggregation: rate
+    unit: ratio
+    direction: none
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, queue]
+    allowed_dimensions: [queue, channel, handoff_reason]
+    definition:
+      numerator: COUNT conversations WHERE handoff_reason IS NOT NULL
+      denominator: conversations created in window
+
+  bot_containment_rate:
+    label: Bot containment rate
+    family: bot
+    aggregation: rate
+    unit: ratio
+    direction: higher_is_better
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, queue]
+    allowed_dimensions: [queue, channel]
+    definition:
+      numerator: COUNT conversations WHERE handoff_reason IS NULL AND end_reason != 'bot_resolved_inactivity'
+      denominator: conversations created in window, EXCLUDING end_reason = 'bot_resolved_inactivity'
+
+  bot_turn_count:
+    label: Bot turn count
+    family: bot
+    aggregation: count
+    unit: turns
+    direction: none
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, queue]
+    allowed_dimensions: [intent, skill_key, channel]
+    definition:
+      numerator: COUNT nlp_turns in scope
+
+  bot_intent_distribution:
+    label: Bot intent distribution
+    family: bot
+    aggregation: count
+    unit: turns
+    direction: none
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, queue]
+    allowed_dimensions: [channel]
+    definition:
+      numerator: COUNT nlp_turns GROUP BY intent
+      excludes: intent IS NULL
+
+  bot_intent_confidence_avg:
+    label: Average bot intent confidence
+    family: bot
+    aggregation: avg
+    unit: score
+    direction: higher_is_better
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, queue]
+    allowed_dimensions: [queue, channel, intent]
+    definition:
+      numerator: SUM(nlp_turns.confidence)
+      denominator: COUNT nlp_turns with confidence NOT NULL
+
+  bot_grounded_rate:
+    label: Bot grounded response rate
+    family: bot
+    aggregation: rate
+    unit: ratio
+    direction: higher_is_better
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, queue]
+    allowed_dimensions: [queue, skill_key]
+    definition:
+      numerator: COUNT nlp_turns WHERE grounded = true
+      denominator: COUNT nlp_turns WHERE grounded IS NOT NULL
+
+  bot_response_latency_avg:
+    label: Average bot response latency
+    family: bot
+    aggregation: avg
+    unit: ms
+    direction: lower_is_better
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, queue]
+    allowed_dimensions: [queue, intent, skill_key]
+    definition:
+      numerator: SUM(nlp_turns.latency_ms)
+      denominator: COUNT nlp_turns with latency_ms NOT NULL
+
+  copilot_acceptance_rate:
+    label: Copilot suggestion acceptance rate
+    family: ai
+    aggregation: rate
+    unit: ratio
+    direction: higher_is_better
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, agent]
+    allowed_dimensions: [agent, skill_key, turn_type]
+    definition:
+      numerator: COUNT copilot_turns WHERE accepted = true
+      denominator: COUNT copilot_turns WHERE accepted IS NOT NULL
+
+  copilot_usage_count:
+    label: Copilot usage count
+    family: ai
+    aggregation: count
+    unit: turns
+    direction: none
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, agent]
+    allowed_dimensions: [agent, skill_key, turn_type]
+    definition:
+      numerator: COUNT copilot_turns in scope
+
+  copilot_tool_success_rate:
+    label: Copilot tool/skill execution success rate
+    family: ai
+    aggregation: rate
+    unit: ratio
+    direction: higher_is_better
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, agent]
+    allowed_dimensions: [skill_key, agent]
+    definition:
+      numerator: COUNT copilot_skill_executions WHERE outcome = 'success'
+      denominator: COUNT copilot_skill_executions in scope
+
+  copilot_latency_avg:
+    label: Average copilot latency
+    family: ai
+    aggregation: avg
+    unit: ms
+    direction: lower_is_better
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, agent]
+    allowed_dimensions: [agent, skill_key]
+    definition:
+      numerator: SUM(copilot_turns.latency_ms)
+      denominator: COUNT copilot_turns with latency_ms NOT NULL
+
+  sentiment_trend:
+    label: Customer sentiment trend
+    family: sentiment
+    aggregation: avg
+    unit: score
+    direction: higher_is_better
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, queue, agent]
+    allowed_dimensions: [queue, agent, channel, day, week, month]
+    definition:
+      numerator: SUM(conversation_sentiment_turns.customer_score)
+      denominator: COUNT rows with customer_score NOT NULL
+
+  negative_sentiment_rate:
+    label: Negative sentiment rate
+    family: sentiment
+    aggregation: rate
+    unit: ratio
+    direction: lower_is_better
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, queue, agent]
+    allowed_dimensions: [queue, agent, channel]
+    definition:
+      numerator: COUNT conversation_sentiment_turns WHERE customer_label indicates negative (org-defined label set — confirm exact label values)
+      denominator: COUNT conversation_sentiment_turns with customer_label NOT NULL
+      note: needs the actual distinct customer_label values from your data before this SQL can be finalized — same treatment as the end_reason list
+
+  call_count:
+    label: Call count
+    family: voice
+    aggregation: count
+    unit: conversations
+    direction: none
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, queue, agent]
+    allowed_dimensions: [queue, agent, channel]
+    definition:
+      numerator: COUNT conversations WHERE channel IN ('call', 'voice')
+

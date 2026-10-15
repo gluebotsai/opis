@@ -1,0 +1,451 @@
+[
+  {
+    "id": "label_chatsession",
+    "type": "node_label",
+    "name": "ChatSession",
+    "agent_id": "wt:ChatSession",
+    "description": "Canonical Knowledge Graph node label ChatSession (Agent ID: wt:ChatSession)",
+    "category": "ccaas",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "conversation_id",
+      "webchat_id",
+      "visitor_id",
+      "page_origin",
+      "page_url",
+      "created_at",
+      "updated_at",
+      "ended_at",
+      "end_reason",
+      "ended_by"
+    ],
+    "relationships_out": [],
+    "relationships_in": [
+      {
+        "type": "HAS_CHAT_SESSION",
+        "from": "Conversation"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "ChatSession node. Canonical Knowledge Graph node label ChatSession (Agent ID: wt:ChatSession) Agent vocabulary: wt:ChatSession.",
+    "domain": "ccaas"
+  },
+  {
+    "id": "label_contact",
+    "type": "node_label",
+    "name": "Contact",
+    "agent_id": "wt:Customer",
+    "description": "Individual human person (lead, prospect, customer, or patient).; primary key property: cdp_id (Agent ID: wt:Customer)",
+    "category": "platform",
+    "key_property": "cdp_id",
+    "properties": [
+      "cdp_id",
+      "organization_id",
+      "first_name",
+      "last_name",
+      "gender",
+      "date_of_birth",
+      "company",
+      "city",
+      "region",
+      "country",
+      "language",
+      "timezone",
+      "contact_type",
+      "acquisition_channel",
+      "acquisition_date",
+      "first_referrer",
+      "first_seen_at",
+      "last_seen_at",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [],
+    "relationships_in": [],
+    "synonyms": [
+      "Contact",
+      "Patient",
+      "Shopper / Customer",
+      "Client",
+      "Client / Prospect"
+    ],
+    "search_text": "Contact node. Individual human person (lead, prospect, customer, or patient).; primary key property: cdp_id (Agent ID: wt:Customer) Agent vocabulary: wt:Customer. Display aliases: Contact, Patient, Shopper / Customer, Client, Client / Prospect.",
+    "domain": "platform"
+  },
+  {
+    "id": "label_knowledgearticle",
+    "type": "node_label",
+    "name": "KnowledgeArticle",
+    "agent_id": "wt:KnowledgeArticle",
+    "description": "Canonical Knowledge Graph node label KnowledgeArticle (Agent ID: wt:KnowledgeArticle)",
+    "category": "ticketing",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "external_id",
+      "title",
+      "content",
+      "category",
+      "author_name",
+      "author_id",
+      "status",
+      "views",
+      "attachments",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [
+      {
+        "type": "WRITTEN_BY",
+        "to": "StaffRole"
+      }
+    ],
+    "relationships_in": [
+      {
+        "type": "HAS_KNOWLEDGE_ARTICLE",
+        "from": "SupportHub"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "KnowledgeArticle node. Canonical Knowledge Graph node label KnowledgeArticle (Agent ID: wt:KnowledgeArticle) Agent vocabulary: wt:KnowledgeArticle. Outgoing: [:WRITTEN_BY]->StaffRole.",
+    "domain": "ticketing"
+  },
+  {
+    "id": "label_notification",
+    "type": "node_label",
+    "name": "Notification",
+    "agent_id": "wt:Notification",
+    "description": "Canonical Knowledge Graph node label Notification; primary key property: uid (Agent ID: wt:Notification)",
+    "category": "platform",
+    "key_property": "uid",
+    "properties": [
+      "id",
+      "organization_id",
+      "recipient_user_id",
+      "actor_user_id",
+      "kind",
+      "title",
+      "body",
+      "href",
+      "entity_type",
+      "entity_id",
+      "contact_id",
+      "read_at",
+      "created_at"
+    ],
+    "relationships_out": [],
+    "relationships_in": [],
+    "synonyms": [],
+    "search_text": "Notification node. Canonical Knowledge Graph node label Notification; primary key property: uid (Agent ID: wt:Notification) Agent vocabulary: wt:Notification.",
+    "domain": "platform"
+  },
+  {
+    "id": "label_proactivedecision",
+    "type": "node_label",
+    "name": "ProactiveDecision",
+    "agent_id": "wt:ProactiveDecision",
+    "description": "Canonical Knowledge Graph node label ProactiveDecision (Agent ID: wt:ProactiveDecision)",
+    "category": "ticketing",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "agent_id",
+      "ticket_id",
+      "event_id",
+      "decision",
+      "reason",
+      "tool_name",
+      "created_at"
+    ],
+    "relationships_out": [
+      {
+        "type": "DECIDED_ON",
+        "to": "SupportSignal"
+      }
+    ],
+    "relationships_in": [],
+    "synonyms": [],
+    "search_text": "ProactiveDecision node. Canonical Knowledge Graph node label ProactiveDecision (Agent ID: wt:ProactiveDecision) Agent vocabulary: wt:ProactiveDecision. Outgoing: [:DECIDED_ON]->SupportSignal.",
+    "domain": "ticketing"
+  },
+  {
+    "id": "rel_assigned_to_ticket_agent",
+    "type": "relationship",
+    "name": "assigned_to",
+    "description": "SupportCase connects to StaffRole via ASSIGNED_TO",
+    "from_label": "Ticket",
+    "to_label": "Agent",
+    "pattern": "(SupportCase)-[:ASSIGNED_TO]->(StaffRole)",
+    "synonyms": [],
+    "search_text": "assigned_to relationship. (:Ticket)-[:assigned_to]->(:Agent) connects a support ticket to the assigned agent.",
+    "domain": "ticketing"
+  },
+  {
+    "id": "rel_has_sla_ticket_sla",
+    "type": "relationship",
+    "name": "has_sla",
+    "description": "SupportCase connects to ServiceLevelPolicy via GOVERNED_BY",
+    "from_label": "Ticket",
+    "to_label": "SLA",
+    "pattern": "(SupportCase)-[:GOVERNED_BY]->(ServiceLevelPolicy)",
+    "synonyms": [],
+    "search_text": "has_sla relationship. (:Ticket)-[:has_sla]->(:SLA) links a ticket to its SLA policy.",
+    "domain": "ticketing"
+  },
+  {
+    "id": "rel_in_queue_ticket_queue",
+    "type": "relationship",
+    "name": "in_queue",
+    "description": "SupportCase connects to SupportQueue via IN_QUEUE",
+    "from_label": "Ticket",
+    "to_label": "Queue",
+    "pattern": "(SupportCase)-[:IN_QUEUE]->(SupportQueue)",
+    "synonyms": [],
+    "search_text": "in_queue relationship. (:Ticket)-[:in_queue]->(:Queue) connects a support ticket to its designated support queue.",
+    "domain": "ticketing"
+  },
+  {
+    "id": "rel_resolved_by_ticket_agent",
+    "type": "relationship",
+    "name": "resolved_by",
+    "description": "SupportCase connects to StaffRole via RESOLVED_BY",
+    "from_label": "Ticket",
+    "to_label": "Agent",
+    "pattern": "(SupportCase)-[:RESOLVED_BY]->(StaffRole)",
+    "synonyms": [],
+    "search_text": "resolved_by relationship. (:Ticket)-[:resolved_by]->(:Agent) connects a support ticket to the resolving agent.",
+    "domain": "ticketing"
+  },
+  {
+    "id": "label_ticket",
+    "type": "node_label",
+    "name": "Ticket",
+    "agent_id": "wt:Ticket",
+    "description": "Customer service inquiry, support ticket, or case. Labeled :Ticket in graph.",
+    "category": "ticketing",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "ticket_number",
+      "subject",
+      "description",
+      "status",
+      "priority",
+      "customer_id",
+      "customer_name",
+      "customer_email",
+      "customer_phone",
+      "channel",
+      "assignee_id",
+      "assignee_name",
+      "resolver_id",
+      "resolver_name",
+      "queue_id",
+      "queue_name",
+      "attachments",
+      "due_at",
+      "first_response_at",
+      "resolved_at",
+      "csat_score",
+      "csat_rated_at",
+      "category",
+      "skill",
+      "ai_summary",
+      "created_by_id",
+      "created_by_name",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [
+      {
+        "type": "in_queue",
+        "to": "Queue"
+      },
+      {
+        "type": "assigned_to",
+        "to": "Agent"
+      },
+      {
+        "type": "resolved_by",
+        "to": "Agent"
+      },
+      {
+        "type": "has_sla",
+        "to": "SLA"
+      },
+      {
+        "type": "has_note",
+        "to": "Note"
+      },
+      {
+        "type": "raised_by",
+        "to": "Contact"
+      }
+    ],
+    "relationships_in": [],
+    "synonyms": [
+      "Ticket",
+      "Support Case",
+      "Case",
+      "Support Ticket"
+    ],
+    "search_text": "Ticket node. Customer service inquiry, support ticket, or case. Labeled :Ticket in graph. Relationships: [:in_queue]->Queue, [:assigned_to]->Agent, [:resolved_by]->Agent, [:has_sla]->SLA, [:has_note]->Note.",
+    "domain": "ticketing",
+    "extra_labels": [
+      {
+        "label": "BreachedCase",
+        "when_status": "Overdue"
+      },
+      {
+        "label": "ResolvedCase",
+        "when_status": "Resolved"
+      }
+    ],
+    "status_rules": {
+      "open": "t.status = 'Open'",
+      "generic_pending": "t.status NOT IN ['Closed', 'Resolved']",
+      "literal_pending": "t.status = 'Pending'",
+      "reopened": "t.status = 'Reopened'",
+      "overdue": "t.status = 'Overdue'",
+      "resolved": "t.status = 'Resolved'"
+    }
+  },
+  {
+    "id": "label_queue",
+    "type": "node_label",
+    "name": "Queue",
+    "source": "Knowledge_Graph_Pipeline/config/mappings/core.yaml ticketing.agent_queues",
+    "key_property": "id",
+    "domain": "ticketing",
+    "properties": [
+      "id",
+      "organization_id",
+      "external_id",
+      "queue_name",
+      "description",
+      "type",
+      "open_tickets",
+      "assigned",
+      "sla_status",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [
+      {
+        "type": "staffed_by",
+        "to": "Agent"
+      }
+    ],
+    "relationships_in": [
+      {
+        "type": "in_queue",
+        "from": "Ticket"
+      },
+      {
+        "type": "has_support_queue",
+        "from": "SupportHub"
+      }
+    ]
+  },
+  {
+    "id": "label_agent",
+    "type": "node_label",
+    "name": "Agent",
+    "source": "core.yaml ticketing.agents",
+    "key_property": "id",
+    "domain": "ticketing",
+    "properties": [
+      "id",
+      "organization_id",
+      "setup_user_id",
+      "support_email",
+      "support_phone",
+      "status",
+      "role",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [
+      {
+        "type": "role_of",
+        "to": "User"
+      }
+    ],
+    "relationships_in": [
+      {
+        "type": "assigned_to",
+        "from": "Ticket"
+      },
+      {
+        "type": "resolved_by",
+        "from": "Ticket"
+      },
+      {
+        "type": "staffed_by",
+        "from": "Queue"
+      }
+    ]
+  },
+  {
+    "id": "label_note",
+    "type": "node_label",
+    "name": "Note",
+    "source": "core.yaml ticketing.ticket_notes",
+    "key_property": "id",
+    "domain": "ticketing",
+    "properties": [
+      "id",
+      "organization_id",
+      "ticket_id",
+      "author_id",
+      "author_name",
+      "body",
+      "visibility",
+      "created_at"
+    ],
+    "relationships_out": [
+      {
+        "type": "written_by",
+        "to": "Agent"
+      }
+    ],
+    "relationships_in": [
+      {
+        "type": "has_note",
+        "from": "Ticket"
+      }
+    ]
+  },
+  {
+    "id": "label_sla",
+    "type": "node_label",
+    "name": "SLA",
+    "source": "core.yaml ticketing.sla_policies",
+    "key_property": "id",
+    "domain": "ticketing",
+    "properties": [
+      "id",
+      "organization_id",
+      "priority",
+      "resolution_hours",
+      "first_response_hours",
+      "display_name",
+      "is_system",
+      "sort_order",
+      "active",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_in": [
+      {
+        "type": "has_sla",
+        "from": "Ticket"
+      }
+    ]
+  }
+]

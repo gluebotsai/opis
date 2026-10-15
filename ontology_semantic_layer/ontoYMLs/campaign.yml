@@ -1,0 +1,179 @@
+ontology:
+  name: campaign_ontology
+  purpose: Help the Campaign super agent understand the product and answer staff correctly.
+
+  entities:
+    Tenant:
+      definition: The company that uses Worktual AI Campaign Management to run campaigns.
+      identifier: accounts.organizations.id
+  
+    Staff:
+      definition: A person from the tenant who creates campaigns and adds contacts.
+      identifier: accounts.setup_users.id
+
+    Contact:
+      definition: A person who can receive campaigns.
+      identifier: cdp.customer_profile.cdp_id
+
+    TemporaryContact:
+      definition: A contact uploaded for one campaign only. Not saved permanently.
+      identifier: campaign.campaign_session_temp_contacts.id
+
+    WebsiteVisitor:
+      definition: A person who visited the tenant's website.
+      identifier: campaign.website_contacts.id
+
+    Campaign:
+      definition: A marketing message sent to a group of people through one or more channels.
+      identifier: campaign.campaigns.id
+
+    Goal:
+      definition: It defines the main purpose of a campaign to achieve it.
+      identifier: campaign.campaigns.goal
+
+    CampaignSession:
+      definition: A chat between staff and the campaign assistant.
+      identifier: campaign.campaign_agent_sessions.id
+
+    Channel:
+      definition: A platform used to send a campaign.
+      identifier: campaign.campaign_channels.id
+
+    Audience:
+      definition: The group of people chosen to receive a campaign.
+      identifier: [campaign.campaign_audience.campaign_id, campaign.campaign_audience.contact_id]
+
+    Template:
+      definition: The message content made for one or more channels of a campaign.
+      identifier: campaign.campaign_channel_templates.id
+
+    LibraryTemplate:
+      definition: A ready-made template for a channel and purpose that staff can reuse.
+      identifier: campaign.campaign_library_templates.id
+
+    ApprovalTemplate:
+      definition: An SMS or WhatsApp template that must be approved by an outside authority before it can be sent (DLT for SMS, Meta for WhatsApp).
+      identifier: campaign.regulated_channel_templates.id
+
+    Recommendation:
+      definition: An AI-suggested campaign idea with a channel and purpose.
+      identifier: campaign.campaign_recommendations.id
+
+    ChannelSetup:
+      definition: The settings a channel needs before it can send, like a sender email or SMS provider.
+      identifier: campaign.channel_sending_profiles.id
+
+    Delivery:
+      definition: OOne attempt to send a campaign message to one person or device, with its result based on opens and clicks.
+      identifier: campaign.campaign_send_recipients.id
+
+    Unsubscribe:
+      definition: A contact who has unsubscribed from a campaign channel, to avoid receiving campaigns from that channel.
+      identifier: campaign.email_suppressions.id
+
+    Form:
+      definition: A page the tenant shares to collect replies from people.
+      identifier: campaign.campaign_opportunity_events.id
+
+    Notification:
+      definition: An in-app message for staff, about a reminder, note or approval update.
+      identifier: campaign.app_notifications.id
+
+  relations:
+    - Tenant - has -> Staff
+    - Tenant - has -> Contact
+    - Tenant - has -> WebsiteVisitor
+    - Tenant - has -> LibraryTemplate
+    - Tenant - has -> ApprovalTemplate
+    - Tenant - has -> ChannelSetup
+    - Tenant - has -> Form
+    - Staff - has -> CampaignSession
+    - Staff - creates -> Campaign
+    - Staff - creates -> Contact
+    - Staff - creates -> Form
+    - Staff - creates -> Template
+    - Staff - receives -> Notification
+    - CampaignSession - has -> TemporaryContact
+    - CampaignSession - uses -> Template
+    - Campaign - has -> Goal
+    - Campaign - has -> Audience
+    - Campaign - has -> Channel
+    - Campaign - has -> Delivery (flag)
+    - Campaign - starts_from -> LibraryTemplate
+    - Campaign - starts_from -> Recommendation
+    - Audience - contains -> Contact
+    - Audience - contains -> TemporaryContact
+    - Channel - uses -> Template
+    - Channel - needs -> ChannelSetup
+    - Channel - needs -> ApprovalTemplate
+    - ApprovalTemplate - made_for -> Campaign
+    - LibraryTemplate - made_for -> Channel
+    - Recommendation - suggests -> Channel
+    - Recommendation - suggests -> Goal
+    - Recommendation - notified to -> Staff
+    - Delivery - sent_to -> Contact
+    - Delivery - through -> Channel
+    - WebsiteVisitor - becomes -> Contact
+    - Unsubscribe - excludes -> Contact
+    - Notification - about -> Campaign
+    - Notification - about -> ApprovalTemplate
+
+  synonyms:
+    Tenant: [organization, company, business]
+    Staff: [user, marketer, team member]
+    Contact: [customer, lead, recipient, subscriber, Prospect]
+    TemporaryContact: [uploaded contact, sheet contact]
+    WebsiteVisitor: [site visitor, web visitor, anonymous visitor, visitor]
+    Campaign: [broadcast, blast, promotion, ad]
+    Goal: [purpose]
+    Channel: [platform, medium]
+    Audience: [segment, list, recipients, target audience, targeted contacts]
+    LibraryTemplate: [saved template, ready-made template]
+    ApprovalTemplate: [DLT template, WhatsApp template, Meta template]
+    Recommendation: [suggestion, AI suggestion, idea]
+    Delivery: [send, sent message, attempt]
+    Unsubscribe: [opt-out, do not send list]
+    Notification: [alert, reminder, tip]
+    email: [mail, email campaign, newsletter]
+    whatsapp: [WA, WhatsApp message]
+    sms: [text, text message, SMS message]
+    push: [app push, mobile push, app notification]
+    web: [web push, browser push, browser notification]
+    ppc: [paid ads, pay per click, Google ads, search ads]
+
+  taxonomy:
+    staff.status: [active, inactive]
+    role.name: [admin, marketing, marketing rep]
+    campaign.status: [draft, scheduled, live, completed, cancelled]
+    campaign_session.status: [in_progress, draft, completed]
+    channel.type: [email, whatsapp, sms, push, web, ppc]
+    channel.status: [ready, paused]
+    approval_template.channel: [sms, whatsapp]
+    approval_template.status: [draft, pending, approved, rejected, paused, disabled]
+    recommendation.status: [open, used, dismissed]
+    delivery.status: [pending, queued, sending, sent, delivered, failed, cancelled, skipped, bounced, hard_bounce, soft_bounce, stub, stub_sent]
+    delivery.ab_variant: [a, b, holdout, winner]
+    delivery.platform: [ios, android, web]
+    unsubscribe.reason: [unsubscribe, hard_bounce, complaint]
+    form.status: [draft, launched]
+    notification.type: [approval, activity, tip, reminder, note]
+
+  business_rules:
+    - Only a Campaign counts as a campaign. Sessions, templates and recommendations are not campaigns.
+    - A recommendation is only a suggestion. Nothing is sent until staff launch a campaign.
+    - Contacts and staff are different people. Never mix them.
+    - A temp contact is used for one campaign only and is never saved.
+    - A website visitor joins an audience only after they become a contact.
+    - Never guess a contact's company from their email.
+    - Admins see all campaigns. Other staff see only their own.
+    - Never show one tenant's data to another.
+    - After launching the campaign, the audience stays the same. Contact changes made later do not affect it.
+    - A channel can send only when its setup is ready.
+    - SMS and WhatsApp can send only with an approved template.
+    - Never send to anyone who has unsubscribed, even if they are in the audience.
+    - Big sends go out in batches because of sending limits. A delay is not a failure.
+    - Results come only from deliveries. Sent does not mean opened.
+    - stub and stub_sent are test deliveries, not real sends.
+    - Give the recorded reason for a failure or rejection. Never guess.
+    - Say something is done only when there is a record showing it happened.
+    - Never share passwords, keys or tokens.

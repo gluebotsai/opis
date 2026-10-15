@@ -1,0 +1,28 @@
+-- Initialize schemas for worktual_db (single DB, multiple schemas)
+CREATE SCHEMA IF NOT EXISTS platform;
+CREATE SCHEMA IF NOT EXISTS cc;
+CREATE SCHEMA IF NOT EXISTS chat;
+CREATE SCHEMA IF NOT EXISTS call;
+CREATE SCHEMA IF NOT EXISTS social;
+
+-- Dev roles (simplified — tighten in production)
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'cc_app') THEN
+    CREATE ROLE cc_app LOGIN PASSWORD 'cc_app';
+  END IF;
+  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'platform_app') THEN
+    CREATE ROLE platform_app LOGIN PASSWORD 'platform_app';
+  END IF;
+END
+$$;
+
+GRANT USAGE ON SCHEMA cc TO cc_app;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA cc TO cc_app;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA cc TO cc_app;
+ALTER DEFAULT PRIVILEGES IN SCHEMA cc GRANT ALL ON TABLES TO cc_app;
+ALTER DEFAULT PRIVILEGES IN SCHEMA cc GRANT ALL ON SEQUENCES TO cc_app;
+
+GRANT USAGE ON SCHEMA platform TO platform_app;
+GRANT SELECT ON ALL TABLES IN SCHEMA platform TO platform_app;
+ALTER DEFAULT PRIVILEGES IN SCHEMA platform GRANT SELECT ON TABLES TO platform_app;

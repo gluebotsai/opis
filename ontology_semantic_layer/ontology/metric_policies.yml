@@ -1,0 +1,3302 @@
+# Agent-facing metric policy — compact prompt lines + semantic query validation.
+# Formulas live in MetricFlow YAML under semantic/dbt/.
+
+version: 2026.09.1
+
+metrics:
+  won_deal_rate:
+    label: Win Rate
+    "on": "wt:Deal"
+    dims: [business_type, stage, deal_status_proxy, lost_reason, owner_name, owner_team_id]
+    when: "Period or owner win rate — not this deal's stage."
+    not_for: Single deal fields — use deal tools.
+    via: ask_semantic
+    scope: owner_or_team
+    scope_entity: deal__owner
+
+  open_pipeline_value:
+    label: Open Pipeline
+    "on": "wt:Deal"
+    dims: [business_type, stage, deal_status_proxy, lost_reason, owner_name, owner_team_id]
+    when: Aggregate open pipeline value for a period or owner.
+    not_for: One deal amount — use deal record.
+    via: ask_semantic
+    scope: owner_or_team
+    scope_entity: deal__owner
+
+  deal_volume:
+    label: Deal Volume
+    "on": "wt:Deal"
+    dims: [business_type, stage, deal_status_proxy, lost_reason, owner_name, owner_team_id]
+    when: Count deals created or active in a period.
+    not_for: Listing deals — use spoke_query.
+    via: ask_semantic
+    scope: owner_or_team
+    scope_entity: deal__owner
+
+  mql_rate:
+    label: MQL Rate
+    "on": "wt:Customer"
+    dims: [business_type, lifecycle_stage, lead_source, lead_status, owner_name, lead_score, lead_band]
+    when: Marketing-qualified rate over contacts in a period.
+    not_for: "One contact's score — use contact tools."
+    via: ask_semantic
+    scope: org
+
+  customer_conversion_rate:
+    label: Customer Conversion Rate
+    "on": "wt:Customer"
+    dims: [business_type, lifecycle_stage, lead_source, lead_status, owner_name, lead_score, lead_band]
+    when: Contact-to-customer conversion over a period.
+    not_for: Single contact lifecycle — use contact record.
+    via: ask_semantic
+    scope: org
+
+  delivery_rate:
+    label: Delivery Rate
+    "on": "wt:MessageDelivery"
+    dims: [channel, campaign_name]
+    when: Send proxy (sent ÷ touches) for a period — no delivered status in source.
+    not_for: One message status — use delivery tools.
+    via: ask_semantic
+    scope: org
+
+  open_rate:
+    label: Open Rate
+    "on": "wt:MessageDelivery"
+    dims: [channel, campaign_name]
+    when: Email/message open rate for a period.
+    not_for: One recipient open event — use delivery record.
+    via: ask_semantic
+    scope: org
+
+  click_rate:
+    label: Click Rate
+    "on": "wt:MessageDelivery"
+    dims: [channel, campaign_name]
+    when: Click-through rate for a period.
+    not_for: One click event — use delivery record.
+    via: ask_semantic
+    scope: org
+
+  campaign_attributed_session_rate:
+    label: Attributed Session Rate
+    "on": "wt:PerformanceReport"
+    dims: [website_id, session_id, visitor_id, user_id, wt_campaign_id, wt_contact_id, device, browser, browser_version, platform, country, city, region, utm_source, utm_medium, utm_campaign, utm_term, utm_content, referrer, referrer_domain, entry_page, exit_page, is_bounce_flag, is_engaged_flag, is_online_flag, is_first_session_flag, has_rage_clicks, has_dead_clicks, has_deep_scroll, has_conversion, has_purchase, has_checkout_start, has_cart_add, has_product_view, has_form_start, has_form_submit, has_form_failure, has_form_abandon, has_search, has_error, is_campaign_attributed, is_identified]
+    when: Web sessions attributed to campaigns in a period.
+    not_for: One session — use webtracking spoke_query.
+    via: ask_semantic
+    scope: org
+
+  missed_contact_rate:
+    label: Missed Contact Rate
+    "on": "wt:Interaction"
+    dims: [channel, direction, queue_name, agent_name, state, reason, is_completed_leg]
+    when: Missed-contact rate for assigned legs in a period (CCaaS assignment grain).
+    not_for: One interaction outcome — use interaction record.
+    via: ask_semantic
+    scope: assignee_or_team
+    scope_entity: assignment__agent
+
+  sla_breach_rate:
+    label: SLA Breach Rate
+    "on": "wt:Ticket"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: "TK: breached ÷ SLA-eligible tickets. CC: conversation SLA breach ÷ tracked conversations."
+    not_for: One ticket SLA timer — use ticket record.
+    via: ask_semantic
+    scope: assignee_or_team
+    scope_entity: ticket__assignee
+    products:
+      ccaas:
+        "on": "wt:Interaction"
+        dims: [channel, direction, queue_name, priority]
+        scope: org
+
+  open_tickets_metric:
+    label: Open Tickets
+    "on": "wt:Ticket"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Count open tickets (status=open only) at a point in time or period end.
+    not_for: Ticket list — use spoke_query.
+    via: ask_semantic
+    scope: assignee_or_team
+    scope_entity: ticket__assignee
+
+  high_priority_ticket_volume:
+    label: High-Priority Ticket Volume
+    "on": "wt:Ticket"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: "Count high/urgent priority tickets; filter by status (open, resolved, etc.) via dims."
+    not_for: One ticket record — use spoke_query.
+    via: ask_semantic
+    scope: assignee_or_team
+    scope_entity: ticket__assignee
+
+  open_conversations:
+    label: Open Conversations
+    "on": "wt:Interaction"
+    dims: [channel, direction, queue_name, assigned_agent_name, status, lifecycle_state, sla_status, disposition_code, resolution_code, priority, had_handoff, is_ai_only_completed, is_handled, is_resolved, is_open]
+    when: Queue depth / open conversation snapshot (includes unassigned queued work).
+    not_for: One conversation transcript — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  average_handle_time:
+    label: Average Handle Time
+    "on": "wt:Interaction"
+    dims: [channel, direction, queue_name, agent_name, state, reason, is_completed_leg]
+    when: Period AHT on completed assignment legs — not one call duration field.
+    not_for: Single interaction duration — use interaction record.
+    via: ask_semantic
+    scope: assignee_or_team
+    scope_entity: assignment__agent
+
+  average_resolution_time_hours:
+    label: Average Resolution Time
+    "on": "wt:Ticket"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Mean hours to resolve over a period.
+    not_for: One ticket resolution timestamp — use ticket record.
+    via: ask_semantic
+    scope: assignee_or_team
+    scope_entity: ticket__assignee
+
+  average_csat_score:
+    label: Average CSAT
+    "on": "wt:Ticket"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Mean satisfaction score over a period.
+    not_for: One survey response — use ticket record.
+    via: ask_semantic
+    scope: assignee_or_team
+    scope_entity: ticket__assignee
+
+  reopen_rate:
+    label: Reopen Rate
+    "on": "wt:Ticket"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Share of tickets reopened in a period.
+    not_for: One ticket reopen flag — use ticket record.
+    via: ask_semantic
+    scope: assignee_or_team
+    scope_entity: ticket__assignee
+
+  total_conversations:
+    label: Total Conversations
+    "on": "wt:Interaction"
+    dims: [channel, direction, queue_name, assigned_agent_name, status, lifecycle_state, sla_status, disposition_code, resolution_code, priority, had_handoff, is_ai_only_completed, is_handled, is_resolved, is_open]
+    when: Conversation volume for a period; use group_by channel or direction instead of channel clones.
+    not_for: One conversation — use spoke_query.
+    via: ask_semantic
+    scope: assignee_or_team
+    scope_entity: conversation__agent
+
+  resolution_rate:
+    label: Resolution Rate
+    "on": "wt:Ticket"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Resolved share over tickets in a period.
+    not_for: One ticket status — use ticket record.
+    via: ask_semantic
+    scope: assignee_or_team
+    scope_entity: ticket__assignee
+    products:
+      ccaas:
+        "on": "wt:Interaction"
+        dims: [channel, direction, queue_name, assigned_agent_name, status, lifecycle_state, sla_status, disposition_code, resolution_code, priority, had_handoff, is_ai_only_completed, is_handled, is_resolved, is_open]
+        scope: org
+
+  handled_volume:
+    label: Handled Conversations
+    "on": "wt:Interaction"
+    dims: [channel, direction, queue_name, assigned_agent_name, status, lifecycle_state, sla_status, disposition_code, resolution_code, priority, had_handoff, is_ai_only_completed, is_handled, is_resolved, is_open]
+    when: Conversations handled by human or AI in a period.
+    not_for: One conversation — use spoke_query.
+    via: ask_semantic
+    scope: assignee_or_team
+    scope_entity: conversation__agent
+
+  ai_containment_rate:
+    label: AI Containment Rate
+    "on": "wt:Interaction"
+    dims: [channel, direction, queue_name, assigned_agent_name, status, lifecycle_state, sla_status, disposition_code, resolution_code, priority, had_handoff, is_ai_only_completed, is_handled, is_resolved, is_open]
+    when: AI-only completion share over all conversations in a period.
+    not_for: One conversation containment — use interaction record.
+    via: ask_semantic
+    scope: org
+
+  average_speed_of_answer:
+    label: Average Speed of Answer
+    "on": "wt:Interaction"
+    dims: [channel, direction, queue_name, assigned_agent_name, status, lifecycle_state, sla_status, disposition_code, resolution_code, priority, had_handoff, is_ai_only_completed, is_handled, is_resolved, is_open]
+    when: Mean queue-to-assign seconds over conversations in a period.
+    not_for: One conversation wait time — use interaction record.
+    via: ask_semantic
+    scope: org
+
+  average_first_response_time:
+    label: Average First Response Time
+    "on": "wt:Interaction"
+    dims: [channel, direction, queue_name, assigned_agent_name, status, lifecycle_state, sla_status, disposition_code, resolution_code, priority, had_handoff, is_ai_only_completed, is_handled, is_resolved, is_open]
+    when: Mean create-to-first-response seconds in a period.
+    not_for: One conversation response time — use interaction record.
+    via: ask_semantic
+    scope: org
+
+  callback_tasks:
+    label: Callback Tasks
+    "on": "wt:Task"
+    dims: [task_type, status, priority, channel]
+    when: Open callback task count or backlog for a period.
+    not_for: One task record — use spoke_query.
+    via: ask_semantic
+    scope: assignee_or_team
+    scope_entity: task__assigned_user
+
+  open_agent_tasks:
+    label: Open Agent Tasks
+    "on": "wt:Task"
+    dims: [task_type, status, priority, channel]
+    when: Open agent task count at period end or over window.
+    not_for: One task — use spoke_query.
+    via: ask_semantic
+    scope: assignee_or_team
+    scope_entity: task__assigned_user
+
+  human_agent_occupancy_rate_presence:
+    label: Human Agent Occupancy Rate (presence)
+    "on": "wt:WorkforceAgent"
+    dims: [new_state, is_handling_or_wrap, is_logged_in_eligible]
+    when: Time-based occupancy from presence history in a period.
+    not_for: Real-time agent state — use presence tools.
+    via: ask_semantic
+    scope: org
+
+  total_queues_configured:
+    label: Total Configured Queues
+    "on": "wt:Queue"
+    dims: [status, queue_name]
+    when: Count of configured queues for org setup reporting.
+    not_for: Live queue depth — use open_conversations.
+    via: ask_semantic
+    scope: org
+
+  resolved_dispositions:
+    label: Resolved Dispositions
+    "on": "wt:Disposition"
+    dims: [resolution_code, is_final]
+    when: Count of resolved disposition entries in a period.
+    not_for: One disposition — use interaction record.
+    via: ask_semantic
+    scope: org
+
+  agent_assist_adoption_rate:
+    label: Agent Assist Adoption Rate
+    "on": "wt:Interaction"
+    dims: [suggestion_disposition, skill_key]
+    when: Share of suggestions accepted or modified in a period.
+    not_for: One suggestion — use conversation context.
+    via: ask_semantic
+    scope: assignee_or_team
+    scope_entity: suggestion__agent
+
+  agent_assist_modification_rate:
+    label: Agent Assist Modification Rate
+    "on": "wt:Interaction"
+    dims: [suggestion_disposition, skill_key]
+    when: Share of accepted suggestions that were modified before send.
+    not_for: One suggestion — use conversation context.
+    via: ask_semantic
+    scope: assignee_or_team
+    scope_entity: suggestion__agent
+
+  ticket_volume:
+    label: Ticket Volume
+    "on": "wt:Ticket"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Ticket count created in a period.
+    not_for: Ticket list — use spoke_query.
+    via: ask_semantic
+    scope: assignee_or_team
+    scope_entity: ticket__assignee
+
+  tickets_created_by_me:
+    label: Tickets Created By Me
+    "on": "wt:Ticket"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Count of tickets the current user created (created_by_id = caller). Filter/group by queue, priority, status, channel, assignee.
+    not_for: Tickets assigned to me — use assigned_tickets_metric or dataScope=mine. Ticket list — use spoke_query.
+    via: ask_semantic
+    scope: created_by
+    scope_entity: ticket__created_by
+
+  sla_at_risk_tickets_metric:
+    label: SLA At-Risk Tickets
+    "on": "wt:Ticket"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Tickets due soon / at SLA risk snapshot.
+    not_for: One ticket SLA timer — use ticket record.
+    via: ask_semantic
+    scope: assignee_or_team
+    scope_entity: ticket__assignee
+
+  unanswered_tickets_metric:
+    label: Unanswered Tickets
+    "on": "wt:Ticket"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Tickets with no first response yet.
+    not_for: One ticket thread — use spoke_query.
+    via: ask_semantic
+    scope: assignee_or_team
+    scope_entity: ticket__assignee
+
+  active_agents:
+    label: Active Agents
+    "on": "wt:WorkforceAgent"
+    dims: [status, agent_name]
+    when: Period aggregate for active agents.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  active_agents_setup:
+    label: Active Agents Setup
+    "on": "wt:PerformanceReport"
+    dims: [status, primary_language, user_name]
+    when: Period aggregate for active agents setup.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  agent_assist_accepted_or_modified:
+    label: Agent Assist Accepted Or Modified
+    "on": "wt:PerformanceReport"
+    dims: [suggestion_disposition, skill_key]
+    when: Period aggregate for agent assist accepted or modified.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  agent_assist_modified:
+    label: Agent Assist Modified
+    "on": "wt:PerformanceReport"
+    dims: [suggestion_disposition, skill_key]
+    when: Period aggregate for agent assist modified.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  agent_assist_suggestions_total:
+    label: Agent Assist Suggestions Total
+    "on": "wt:PerformanceReport"
+    dims: [suggestion_disposition, skill_key]
+    when: Period aggregate for agent assist suggestions total.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  agents_assigned_callback:
+    label: Agents Assigned Callback
+    "on": "wt:Task"
+    dims: [task_type, status, priority, channel]
+    when: Period aggregate for agents assigned callback.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: assignee_or_team
+    scope_entity: task__assigned_user
+
+  ai_handover_rate:
+    label: Ai Handover Rate
+    "on": "wt:Interaction"
+    dims: [channel, direction, queue_name, assigned_agent_name, status, lifecycle_state, sla_status, disposition_code, resolution_code, priority, had_handoff, is_ai_only_completed, is_handled, is_resolved, is_open]
+    when: Period aggregate for ai handover rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: assignee_or_team
+    scope_entity: conversation__agent
+
+  ai_only_completed_conversations:
+    label: Ai Only Completed Conversations
+    "on": "wt:Interaction"
+    dims: [channel, direction, queue_name, assigned_agent_name, status, lifecycle_state, sla_status, disposition_code, resolution_code, priority, had_handoff, is_ai_only_completed, is_handled, is_resolved, is_open]
+    when: Period aggregate for ai only completed conversations.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: assignee_or_team
+    scope_entity: conversation__agent
+
+  breached_sla_count:
+    label: Breached Sla Count
+    "on": "wt:PerformanceReport"
+    dims: [channel, direction, queue_name, priority]
+    when: Period aggregate for breached sla count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  call_volume:
+    label: Call Volume
+    "on": "wt:Interaction"
+    dims: [channel, direction, queue_name, assigned_agent_name, status, lifecycle_state, sla_status, disposition_code, resolution_code, priority, had_handoff, is_ai_only_completed, is_handled, is_resolved, is_open]
+    when: Period aggregate for call volume.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: assignee_or_team
+    scope_entity: conversation__agent
+
+  chat_volume:
+    label: Chat Volume
+    "on": "wt:Interaction"
+    dims: [channel, direction, queue_name, assigned_agent_name, status, lifecycle_state, sla_status, disposition_code, resolution_code, priority, had_handoff, is_ai_only_completed, is_handled, is_resolved, is_open]
+    when: Period aggregate for chat volume.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: assignee_or_team
+    scope_entity: conversation__agent
+
+  completed_leg_count:
+    label: Completed Leg Count
+    "on": "wt:Interaction"
+    dims: [channel, direction, queue_name, agent_name, state, reason, is_completed_leg]
+    when: Period aggregate for completed leg count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: assignee_or_team
+    scope_entity: conversation__agent
+
+  email_volume:
+    label: Email Volume
+    "on": "wt:Interaction"
+    dims: [channel, direction, queue_name, assigned_agent_name, status, lifecycle_state, sla_status, disposition_code, resolution_code, priority, had_handoff, is_ai_only_completed, is_handled, is_resolved, is_open]
+    when: Period aggregate for email volume.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: assignee_or_team
+    scope_entity: conversation__agent
+
+  facebook_volume:
+    label: Facebook Volume
+    "on": "wt:Interaction"
+    dims: [channel, direction, queue_name, assigned_agent_name, status, lifecycle_state, sla_status, disposition_code, resolution_code, priority, had_handoff, is_ai_only_completed, is_handled, is_resolved, is_open]
+    when: Period aggregate for facebook volume.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: assignee_or_team
+    scope_entity: conversation__agent
+
+  follow_up_tasks:
+    label: Follow Up Tasks
+    "on": "wt:Task"
+    dims: [task_type, status, priority, channel]
+    when: Period aggregate for follow up tasks.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: assignee_or_team
+    scope_entity: task__assigned_user
+
+  handling_or_wrap_seconds:
+    label: Handling Or Wrap Seconds
+    "on": "wt:WorkforceAgent"
+    dims: [new_state, is_handling_or_wrap, is_logged_in_eligible]
+    when: Period aggregate for handling or wrap seconds.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  handoff_conversations:
+    label: Handoff Conversations
+    "on": "wt:Interaction"
+    dims: [channel, direction, queue_name, assigned_agent_name, status, lifecycle_state, sla_status, disposition_code, resolution_code, priority, had_handoff, is_ai_only_completed, is_handled, is_resolved, is_open]
+    when: Period aggregate for handoff conversations.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: assignee_or_team
+    scope_entity: conversation__agent
+
+  handover_rate:
+    label: Handover Rate
+    "on": "wt:Interaction"
+    dims: [state, resolution_code, channel, direction, queue_name, assigned_agent_name, status, lifecycle_state, sla_status, disposition_code, priority, had_handoff, is_ai_only_completed, is_handled, is_resolved, is_open]
+    when: Period aggregate for handover rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: assignee_or_team
+    scope_entity: conversation__agent
+
+  human_agent_occupancy_rate_capacity:
+    label: Human Agent Occupancy Rate Capacity
+    "on": "wt:PerformanceReport"
+    dims: [channel]
+    when: Period aggregate for human agent occupancy rate capacity.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  human_handle_seconds_sum:
+    label: Human Handle Seconds Sum
+    "on": "wt:Interaction"
+    dims: [channel, direction, queue_name, agent_name, state, reason, is_completed_leg]
+    when: Period aggregate for human handle seconds sum.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: assignee_or_team
+    scope_entity: conversation__agent
+
+  instagram_volume:
+    label: Instagram Volume
+    "on": "wt:Interaction"
+    dims: [channel, direction, queue_name, assigned_agent_name, status, lifecycle_state, sla_status, disposition_code, resolution_code, priority, had_handoff, is_ai_only_completed, is_handled, is_resolved, is_open]
+    when: Period aggregate for instagram volume.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: assignee_or_team
+    scope_entity: conversation__agent
+
+  logged_in_eligible_seconds:
+    label: Logged In Eligible Seconds
+    "on": "wt:WorkforceAgent"
+    dims: [new_state, is_handling_or_wrap, is_logged_in_eligible]
+    when: Period aggregate for logged in eligible seconds.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  missed_assignments:
+    label: Missed Assignments
+    "on": "wt:Interaction"
+    dims: [channel, direction, queue_name, agent_name, state, reason, is_completed_leg]
+    when: Period aggregate for missed assignments.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: assignee_or_team
+    scope_entity: conversation__agent
+
+  resolved_conversations_count:
+    label: Resolved Conversations Count
+    "on": "wt:Interaction"
+    dims: [channel, direction, queue_name, assigned_agent_name, status, lifecycle_state, sla_status, disposition_code, resolution_code, priority, had_handoff, is_ai_only_completed, is_handled, is_resolved, is_open]
+    when: Period aggregate for resolved conversations count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: assignee_or_team
+    scope_entity: conversation__agent
+
+  social_media_volume:
+    label: Social Media Volume
+    "on": "wt:Interaction"
+    dims: [channel, direction, queue_name, assigned_agent_name, status, lifecycle_state, sla_status, disposition_code, resolution_code, priority, had_handoff, is_ai_only_completed, is_handled, is_resolved, is_open]
+    when: Period aggregate for social media volume.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: assignee_or_team
+    scope_entity: conversation__agent
+
+  suggestion_tasks:
+    label: Suggestion Tasks
+    "on": "wt:Task"
+    dims: [task_type, status, priority, channel]
+    when: Period aggregate for suggestion tasks.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: assignee_or_team
+    scope_entity: task__assigned_user
+
+  tool_executions_succeeded:
+    label: Tool Executions Succeeded
+    "on": "wt:PerformanceReport"
+    dims: [execution_status, tool_key]
+    when: Period aggregate for tool executions succeeded.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  tool_executions_total:
+    label: Tool Executions Total
+    "on": "wt:PerformanceReport"
+    dims: [execution_status, tool_key]
+    when: Period aggregate for tool executions total.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  tool_success_rate:
+    label: Tool Success Rate
+    "on": "wt:PerformanceReport"
+    dims: [execution_status, tool_key]
+    when: Period aggregate for tool success rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  total_active_agent_count:
+    label: Total Active Agent Count
+    "on": "wt:PerformanceReport"
+    dims: [channel]
+    when: Period aggregate for total active agent count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  total_agent_capacity:
+    label: Total Agent Capacity
+    "on": "wt:PerformanceReport"
+    dims: [channel]
+    when: Period aggregate for total agent capacity.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  total_agents:
+    label: Total Agents
+    "on": "wt:WorkforceAgent"
+    dims: [status, agent_name]
+    when: Period aggregate for total agents.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  total_agents_setup:
+    label: Total Agents Setup
+    "on": "wt:PerformanceReport"
+    dims: [status, primary_language, user_name]
+    when: Period aggregate for total agents setup.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  total_assignments:
+    label: Total Assignments
+    "on": "wt:Interaction"
+    dims: [channel, direction, queue_name, agent_name, state, reason, is_completed_leg]
+    when: Period aggregate for total assignments.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: assignee_or_team
+    scope_entity: conversation__agent
+
+  total_queue_agent_assignments:
+    label: Total Queue Agent Assignments
+    "on": "wt:PerformanceReport"
+    dims: [shift_type, call_type, handles_calls, handles_email, handles_chat, handles_whatsapp]
+    when: Period aggregate for total queue agent assignments.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  total_sla_states:
+    label: Total Sla States
+    "on": "wt:PerformanceReport"
+    dims: [channel, direction, queue_name, priority]
+    when: Period aggregate for total sla states.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  total_teams:
+    label: Total Teams
+    "on": "wt:PerformanceReport"
+    dims: [status, team_name]
+    when: Period aggregate for total teams.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  total_transfers:
+    label: Total Transfers
+    "on": "wt:PerformanceReport"
+    dims: [state, resolution_code]
+    when: Period aggregate for total transfers.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  unique_contacts_handled:
+    label: Unique Contacts Handled
+    "on": "wt:Interaction"
+    dims: [channel, direction, queue_name, assigned_agent_name, status, lifecycle_state, sla_status, disposition_code, resolution_code, priority, had_handoff, is_ai_only_completed, is_handled, is_resolved, is_open]
+    when: Period aggregate for unique contacts handled.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: assignee_or_team
+    scope_entity: conversation__agent
+
+  webchat_volume:
+    label: Webchat Volume
+    "on": "wt:Interaction"
+    dims: [channel, direction, queue_name, assigned_agent_name, status, lifecycle_state, sla_status, disposition_code, resolution_code, priority, had_handoff, is_ai_only_completed, is_handled, is_resolved, is_open]
+    when: Period aggregate for webchat volume.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: assignee_or_team
+    scope_entity: conversation__agent
+
+  whatsapp_volume:
+    label: Whatsapp Volume
+    "on": "wt:Interaction"
+    dims: [channel, direction, queue_name, assigned_agent_name, status, lifecycle_state, sla_status, disposition_code, resolution_code, priority, had_handoff, is_ai_only_completed, is_handled, is_resolved, is_open]
+    when: Period aggregate for whatsapp volume.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: assignee_or_team
+    scope_entity: conversation__agent
+
+  accepted_recommendations_metric:
+    label: Accepted Recommendations Metric
+    "on": "wt:PerformanceReport"
+    dims: [agent_id, status, ticket_priority, ticket_status, queue_name]
+    when: Period aggregate for accepted recommendations metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  accounts_served:
+    label: Accounts Served
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for accounts served.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  active_agents_metric:
+    label: Active Agents Metric
+    "on": "wt:PerformanceReport"
+    dims: [role, status]
+    when: Period aggregate for active agents metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  active_customers_metric:
+    label: Active Customers Metric
+    "on": "wt:PerformanceReport"
+    dims: [status]
+    when: Period aggregate for active customers metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  active_tickets_metric:
+    label: Active Tickets Metric
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for active tickets metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  approval_rate:
+    label: Approval Rate
+    "on": "wt:PerformanceReport"
+    dims: [agent_id, status, tool_name, ticket_priority, ticket_status, queue_name]
+    when: Period aggregate for approval rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  approval_volume:
+    label: Approval Volume
+    "on": "wt:PerformanceReport"
+    dims: [agent_id, status, tool_name, ticket_priority, ticket_status, queue_name]
+    when: Period aggregate for approval volume.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  approved_metric:
+    label: Approved Metric
+    "on": "wt:PerformanceReport"
+    dims: [agent_id, status, tool_name, ticket_priority, ticket_status, queue_name]
+    when: Period aggregate for approved metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  assigned_tickets_metric:
+    label: Assigned Tickets Metric
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for assigned tickets metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  assignment_rate:
+    label: Assignment Rate
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for assignment rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  audit_event_volume:
+    label: Audit Event Volume
+    "on": "wt:PerformanceReport"
+    dims: [action, ticket_priority, ticket_status, queue_name, assignee_name, actor_name]
+    when: Period aggregate for audit event volume.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  average_decision_hours:
+    label: Average Decision Hours
+    "on": "wt:PerformanceReport"
+    dims: [agent_id, status, tool_name, ticket_priority, ticket_status, queue_name]
+    when: Period aggregate for average decision hours.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  average_first_response_hours:
+    label: Average First Response Hours
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for average first response hours.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  average_first_response_minutes:
+    label: Average First Response Minutes
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for average first response minutes.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  average_notes_per_ticket:
+    label: Average Notes Per Ticket
+    "on": "wt:PerformanceReport"
+    dims: [visibility, is_internal_note, ticket_priority, ticket_status, queue_name, assignee_name, author_name, status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_role, resolver_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for average notes per ticket.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  average_open_ticket_age_days:
+    label: Average Open Ticket Age Days
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for average open ticket age days.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  average_overdue_hours:
+    label: Average Overdue Hours
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for average overdue hours.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  average_resolution_hours_variance:
+    label: Average Resolution Hours Variance
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for average resolution hours variance.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  average_tickets_per_day:
+    label: Average Tickets Per Day
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for average tickets per day.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  breached_tickets_metric:
+    label: Breached Tickets Metric
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for breached tickets metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  closed_tickets_metric:
+    label: Closed Tickets Metric
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for closed tickets metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  csat_detractor_metric:
+    label: Csat Detractor Metric
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for csat detractor metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  csat_detractor_rate:
+    label: Csat Detractor Rate
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for csat detractor rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  csat_neutral_metric:
+    label: Csat Neutral Metric
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for csat neutral metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  csat_promoter_metric:
+    label: Csat Promoter Metric
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for csat promoter metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  csat_promoter_rate:
+    label: Csat Promoter Rate
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for csat promoter rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  csat_rated_metric:
+    label: Csat Rated Metric
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for csat rated metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  csat_response_rate:
+    label: Csat Response Rate
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for csat response rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  csat_score_total:
+    label: Csat Score Total
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for csat score total.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  current_overdue_tickets_metric:
+    label: Current Overdue Tickets Metric
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for current overdue tickets metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  customer_reply_volume:
+    label: Customer Reply Volume
+    "on": "wt:PerformanceReport"
+    dims: [visibility, is_internal_note, ticket_priority, ticket_status, queue_name, assignee_name, author_name]
+    when: Period aggregate for customer reply volume.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  customers_served:
+    label: Customers Served
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for customers served.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  days_since_last_ticket:
+    label: Days Since Last Ticket
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for days since last ticket.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  decided_approvals_metric:
+    label: Decided Approvals Metric
+    "on": "wt:PerformanceReport"
+    dims: [agent_id, status, tool_name, ticket_priority, ticket_status, queue_name]
+    when: Period aggregate for decided approvals metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  decision_hours_total:
+    label: Decision Hours Total
+    "on": "wt:PerformanceReport"
+    dims: [agent_id, status, tool_name, ticket_priority, ticket_status, queue_name]
+    when: Period aggregate for decision hours total.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  dismissed_recommendations_metric:
+    label: Dismissed Recommendations Metric
+    "on": "wt:PerformanceReport"
+    dims: [agent_id, status, ticket_priority, ticket_status, queue_name]
+    when: Period aggregate for dismissed recommendations metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  distinct_agents_in_queues:
+    label: Distinct Agents In Queues
+    "on": "wt:PerformanceReport"
+    dims: [queue_name, queue_type, sla_status, user_name, user_role, myaccount_team_name, team_supports_ticketing]
+    when: Period aggregate for distinct agents in queues.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  distinct_queues_covered:
+    label: Distinct Queues Covered
+    "on": "wt:PerformanceReport"
+    dims: [queue_name, queue_type, sla_status, user_name, user_role, myaccount_team_name, team_supports_ticketing]
+    when: Period aggregate for distinct queues covered.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  due_today_tickets_metric:
+    label: Due Today Tickets Metric
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for due today tickets metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  escalation_rate:
+    label: Escalation Rate
+    "on": "wt:PerformanceReport"
+    dims: [action, ticket_priority, ticket_status, queue_name, assignee_name, actor_name, status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_role, resolver_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for escalation rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  escalation_volume:
+    label: Escalation Volume
+    "on": "wt:PerformanceReport"
+    dims: [action, ticket_priority, ticket_status, queue_name, assignee_name, actor_name]
+    when: Period aggregate for escalation volume.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  first_response_coverage_rate:
+    label: First Response Coverage Rate
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for first response coverage rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  first_response_hours_total:
+    label: First Response Hours Total
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for first response hours total.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  first_response_sla_compliance_rate:
+    label: First Response Sla Compliance Rate
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for first response sla compliance rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  first_response_sla_met_metric:
+    label: First Response Sla Met Metric
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for first response sla met metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  internal_note_ratio:
+    label: Internal Note Ratio
+    "on": "wt:PerformanceReport"
+    dims: [visibility, is_internal_note, ticket_priority, ticket_status, queue_name, assignee_name, author_name]
+    when: Period aggregate for internal note ratio.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  internal_note_volume:
+    label: Internal Note Volume
+    "on": "wt:PerformanceReport"
+    dims: [visibility, is_internal_note, ticket_priority, ticket_status, queue_name, assignee_name, author_name]
+    when: Period aggregate for internal note volume.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  kb_article_volume:
+    label: Kb Article Volume
+    "on": "wt:PerformanceReport"
+    dims: [category, status, author_name]
+    when: Period aggregate for kb article volume.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  kb_published_article_metric:
+    label: Kb Published Article Metric
+    "on": "wt:PerformanceReport"
+    dims: [category, status, author_name]
+    when: Period aggregate for kb published article metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  kb_views_total:
+    label: Kb Views Total
+    "on": "wt:PerformanceReport"
+    dims: [category, status, author_name]
+    when: Period aggregate for kb views total.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  macro_volume:
+    label: Macro Volume
+    "on": "wt:PerformanceReport"
+    dims: []
+    when: Period aggregate for macro volume.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  note_volume:
+    label: Note Volume
+    "on": "wt:PerformanceReport"
+    dims: [visibility, is_internal_note, ticket_priority, ticket_status, queue_name, assignee_name, author_name]
+    when: Period aggregate for note volume.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  notification_volume:
+    label: Notification Volume
+    "on": "wt:PerformanceReport"
+    dims: [kind, is_read]
+    when: Period aggregate for notification volume.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  open_recommendations_metric:
+    label: Open Recommendations Metric
+    "on": "wt:PerformanceReport"
+    dims: [agent_id, status, ticket_priority, ticket_status, queue_name]
+    when: Period aggregate for open recommendations metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  open_ticket_age_days_total:
+    label: Open Ticket Age Days Total
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for open ticket age days total.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  outbound_email_volume:
+    label: Outbound Email Volume
+    "on": "wt:PerformanceReport"
+    dims: [kind, status]
+    when: Period aggregate for outbound email volume.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  pending_approvals_metric:
+    label: Pending Approvals Metric
+    "on": "wt:PerformanceReport"
+    dims: [agent_id, status, tool_name, ticket_priority, ticket_status, queue_name]
+    when: Period aggregate for pending approvals metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  pending_tickets_metric:
+    label: Pending Tickets Metric
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for pending tickets metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  proactive_audit_volume:
+    label: Proactive Audit Volume
+    "on": "wt:PerformanceReport"
+    dims: [agent_id, decision]
+    when: Period aggregate for proactive audit volume.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  queue_count:
+    label: Queue Count
+    "on": "wt:PerformanceReport"
+    dims: [queue_name, queue_type, sla_status]
+    when: Period aggregate for queue count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  queue_coverage_count:
+    label: Queue Coverage Count
+    "on": "wt:PerformanceReport"
+    dims: [queue_name, queue_type, sla_status, user_name, user_role, myaccount_team_name, team_supports_ticketing]
+    when: Period aggregate for queue coverage count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  queues_at_risk_metric:
+    label: Queues At Risk Metric
+    "on": "wt:PerformanceReport"
+    dims: [queue_name, queue_type, sla_status]
+    when: Period aggregate for queues at risk metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  reassignment_volume:
+    label: Reassignment Volume
+    "on": "wt:PerformanceReport"
+    dims: [action, ticket_priority, ticket_status, queue_name, assignee_name, actor_name]
+    when: Period aggregate for reassignment volume.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  recommendation_acceptance_rate:
+    label: Recommendation Acceptance Rate
+    "on": "wt:PerformanceReport"
+    dims: [agent_id, status, ticket_priority, ticket_status, queue_name]
+    when: Period aggregate for recommendation acceptance rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  recommendation_volume:
+    label: Recommendation Volume
+    "on": "wt:PerformanceReport"
+    dims: [agent_id, status, ticket_priority, ticket_status, queue_name]
+    when: Period aggregate for recommendation volume.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  rejected_metric:
+    label: Rejected Metric
+    "on": "wt:PerformanceReport"
+    dims: [agent_id, status, tool_name, ticket_priority, ticket_status, queue_name]
+    when: Period aggregate for rejected metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  reopened_tickets_metric:
+    label: Reopened Tickets Metric
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for reopened tickets metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  resolution_hours_total:
+    label: Resolution Hours Total
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for resolution hours total.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  resolution_hours_variance_total:
+    label: Resolution Hours Variance Total
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for resolution hours variance total.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  resolution_sla_compliance_rate:
+    label: Resolution Sla Compliance Rate
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for resolution sla compliance rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  resolution_sla_met_metric:
+    label: Resolution Sla Met Metric
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for resolution sla met metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  resolved_for_avg:
+    label: Resolved For Avg
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for resolved for avg.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  resolved_tickets_metric:
+    label: Resolved Tickets Metric
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for resolved tickets metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  tickets_created_today_metric:
+    label: Tickets Created Today Metric
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for tickets created today metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  tickets_last_30_days:
+    label: Tickets Last 30 Days
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for tickets last 30 days.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  tickets_last_7_days:
+    label: Tickets Last 7 Days
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for tickets last 7 days.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  tickets_with_first_response_metric:
+    label: Tickets With First Response Metric
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for tickets with first response metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  tickets_with_first_response_sla_target_metric:
+    label: Tickets With First Response Sla Target Metric
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for tickets with first response sla target metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  tickets_with_resolution_sla_target_metric:
+    label: Tickets With Resolution Sla Target Metric
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for tickets with resolution sla target metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  tickets_with_resolver_metric:
+    label: Tickets With Resolver Metric
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for tickets with resolver metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  tickets_with_sla_target_metric:
+    label: Tickets With Sla Target Metric
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for tickets with sla target metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  tickets_without_resolver_metric:
+    label: Tickets Without Resolver Metric
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for tickets without resolver metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  unassigned_tickets_metric:
+    label: Unassigned Tickets Metric
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for unassigned tickets metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  unassignment_rate:
+    label: Unassignment Rate
+    "on": "wt:PerformanceReport"
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for unassignment rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  unread_notifications_metric:
+    label: Unread Notifications Metric
+    "on": "wt:PerformanceReport"
+    dims: [kind, is_read]
+    when: Period aggregate for unread notifications metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  account_volume:
+    label: Account Volume
+    "on": "wt:PerformanceReport"
+    dims: [business_type, company_industry, channel_role, owner_name, parent_company_name]
+    when: Period aggregate for account volume.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  active_arr:
+    label: Active Arr
+    "on": "wt:PerformanceReport"
+    dims: [business_type, channel_role]
+    when: Period aggregate for active arr.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  average_closed_deal:
+    label: Average Closed Deal
+    "on": "wt:PerformanceReport"
+    dims: [business_type]
+    when: Period aggregate for average closed deal.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  average_contact_volume:
+    label: Average Contact Volume
+    "on": "wt:PerformanceReport"
+    dims: [business_type]
+    when: Period aggregate for average contact volume.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  average_customer_contact_count:
+    label: Average Customer Contact Count
+    "on": "wt:PerformanceReport"
+    dims: [business_type]
+    when: Period aggregate for average customer contact count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  average_customer_conversion_rate:
+    label: Average Customer Conversion Rate
+    "on": "wt:PerformanceReport"
+    dims: [business_type]
+    when: Period aggregate for average customer conversion rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  average_deal_lost:
+    label: Average Deal Lost
+    "on": "wt:PerformanceReport"
+    dims: [business_type]
+    when: Period aggregate for average deal lost.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  average_deal_value:
+    label: Average Deal Value
+    "on": "wt:PerformanceReport"
+    dims: [business_type, stage, deal_status_proxy, lost_reason, owner_name, owner_team_id]
+    when: Period aggregate for average deal value.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  average_deal_volume:
+    label: Average Deal Volume
+    "on": "wt:PerformanceReport"
+    dims: [business_type]
+    when: Period aggregate for average deal volume.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  average_deal_won_rate:
+    label: Average Deal Won Rate
+    "on": "wt:PerformanceReport"
+    dims: [business_type]
+    when: Period aggregate for average deal won rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  average_deals_won:
+    label: Average Deals Won
+    "on": "wt:PerformanceReport"
+    dims: [business_type]
+    when: Period aggregate for average deals won.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  average_distinct_product_sold_count:
+    label: Average Distinct Product Sold Count
+    "on": "wt:PerformanceReport"
+    dims: [business_type]
+    when: Period aggregate for average distinct product sold count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  average_eligible_lead_count:
+    label: Average Eligible Lead Count
+    "on": "wt:PerformanceReport"
+    dims: [business_type]
+    when: Period aggregate for average eligible lead count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  average_loss_rate:
+    label: Average Loss Rate
+    "on": "wt:PerformanceReport"
+    dims: [business_type]
+    when: Period aggregate for average loss rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  average_mql_contact_count:
+    label: Average Mql Contact Count
+    "on": "wt:PerformanceReport"
+    dims: [business_type]
+    when: Period aggregate for average mql contact count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  average_mql_rate:
+    label: Average Mql Rate
+    "on": "wt:PerformanceReport"
+    dims: [business_type]
+    when: Period aggregate for average mql rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  average_new_lead_volume:
+    label: Average New Lead Volume
+    "on": "wt:PerformanceReport"
+    dims: [business_type]
+    when: Period aggregate for average new lead volume.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  average_open_pipeline_value:
+    label: Average Open Pipeline Value
+    "on": "wt:PerformanceReport"
+    dims: [business_type]
+    when: Period aggregate for average open pipeline value.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  average_order_value:
+    label: Average Order Value
+    "on": "wt:PerformanceReport"
+    dims: [business_type, order_status, contact_lifecycle_stage, created_by_name]
+    when: Period aggregate for average order value.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+    products:
+      webtracking:
+        dims: [website_id, conversion_id, product_id, page_view_id, session_id, visitor_id, conversion_type, currency, utm_source, utm_campaign, device, country]
+
+  average_product_revenue:
+    label: Average Product Revenue
+    "on": "wt:PerformanceReport"
+    dims: [business_type]
+    when: Period aggregate for average product revenue.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  average_proposal_acceptance_rate:
+    label: Average Proposal Acceptance Rate
+    "on": "wt:PerformanceReport"
+    dims: [business_type]
+    when: Period aggregate for average proposal acceptance rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  average_proposal_accepted:
+    label: Average Proposal Accepted
+    "on": "wt:PerformanceReport"
+    dims: [business_type]
+    when: Period aggregate for average proposal accepted.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  average_proposal_sent:
+    label: Average Proposal Sent
+    "on": "wt:PerformanceReport"
+    dims: [business_type]
+    when: Period aggregate for average proposal sent.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  average_sales_cycle_days:
+    label: Average Sales Cycle Days
+    "on": "wt:PerformanceReport"
+    dims: [business_type, stage, deal_status_proxy, lost_reason, owner_name, owner_team_id]
+    when: Period aggregate for average sales cycle days.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  average_selling_price:
+    label: Average Selling Price
+    "on": "wt:PerformanceReport"
+    dims: [business_type, order_status, product_name, product_sku, product_category, product_subcategory, product_brand, product_billing_type]
+    when: Period aggregate for average selling price.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  average_units_sold:
+    label: Average Units Sold
+    "on": "wt:PerformanceReport"
+    dims: [business_type]
+    when: Period aggregate for average units sold.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  average_win_rate_of_the_agent:
+    label: Average Win Rate Of The Agent
+    "on": "wt:PerformanceReport"
+    dims: [business_type, owner_name]
+    when: Period aggregate for average win rate of the agent.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  closed_deals_metric:
+    label: Closed Deals Metric
+    "on": "wt:PerformanceReport"
+    dims: [business_type, stage, deal_status_proxy, lost_reason, owner_name, owner_team_id]
+    when: Period aggregate for closed deals metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  completed_deal_activities_metric:
+    label: Completed Deal Activities Metric
+    "on": "wt:PerformanceReport"
+    dims: [business_type, activity_type, owner_name, deal_stage]
+    when: Period aggregate for completed deal activities metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  contact_activity_volume:
+    label: Contact Activity Volume
+    "on": "wt:PerformanceReport"
+    dims: [business_type, activity_type, folder, contact_lifecycle_stage]
+    when: Period aggregate for contact activity volume.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  contact_volume:
+    label: Contact Volume
+    "on": "wt:PerformanceReport"
+    dims: [business_type, lifecycle_stage, lead_source, lead_status, owner_name, lead_score, lead_band]
+    when: Period aggregate for contact volume.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  contacts_with_orders_metric:
+    label: Contacts With Orders Metric
+    "on": "wt:PerformanceReport"
+    dims: []
+    when: Period aggregate for contacts with orders metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  contract_renewal_rate:
+    label: Contract Renewal Rate
+    "on": "wt:PerformanceReport"
+    dims: [business_type, channel_role]
+    when: Period aggregate for contract renewal rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  contract_volume:
+    label: Contract Volume
+    "on": "wt:PerformanceReport"
+    dims: [business_type, channel_role]
+    when: Period aggregate for contract volume.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  contracts_due_for_renewal:
+    label: Contracts Due For Renewal
+    "on": "wt:PerformanceReport"
+    dims: [business_type, channel_role]
+    when: Period aggregate for contracts due for renewal.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  customer_contact_count:
+    label: Customer Contact Count
+    "on": "wt:PerformanceReport"
+    dims: [business_type, lifecycle_stage, lead_source, lead_status, owner_name, lead_score, lead_band]
+    when: Period aggregate for customer contact count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  customer_lifetime_value:
+    label: Customer Lifetime Value
+    "on": "wt:PerformanceReport"
+    dims: []
+    when: Period aggregate for customer lifetime value.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  days_sales_outstanding:
+    label: Days Sales Outstanding
+    "on": "wt:PerformanceReport"
+    dims: [business_type, invoice_status, created_by_name]
+    when: Period aggregate for days sales outstanding.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  days_to_pay_total:
+    label: Days To Pay Total
+    "on": "wt:PerformanceReport"
+    dims: [business_type, invoice_status, created_by_name]
+    when: Period aggregate for days to pay total.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  deal_activity_completion_rate:
+    label: Deal Activity Completion Rate
+    "on": "wt:PerformanceReport"
+    dims: [business_type, activity_type, owner_name, deal_stage]
+    when: Period aggregate for deal activity completion rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  deal_activity_volume:
+    label: Deal Activity Volume
+    "on": "wt:PerformanceReport"
+    dims: [business_type, activity_type, owner_name, deal_stage]
+    when: Period aggregate for deal activity volume.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  deals_with_quote_metric:
+    label: Deals With Quote Metric
+    "on": "wt:PerformanceReport"
+    dims: [business_type, quote_status, deal_stage, owner_name]
+    when: Period aggregate for deals with quote metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  distinct_products_sold_count:
+    label: Distinct Products Sold Count
+    "on": "wt:PerformanceReport"
+    dims: [business_type, order_status, product_name, product_sku, product_category, product_subcategory, product_brand, product_billing_type]
+    when: Period aggregate for distinct products sold count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  eligible_lead_contact_count:
+    label: Eligible Lead Contact Count
+    "on": "wt:PerformanceReport"
+    dims: [business_type, lifecycle_stage, lead_source, lead_status, owner_name, lead_score, lead_band]
+    when: Period aggregate for eligible lead contact count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  franchise_node_volume:
+    label: Franchise Node Volume
+    "on": "wt:PerformanceReport"
+    dims: [business_type, company_industry, channel_role, owner_name, parent_company_name]
+    when: Period aggregate for franchise node volume.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  funnel_eligible_contact_count:
+    label: Funnel Eligible Contact Count
+    "on": "wt:PerformanceReport"
+    dims: [business_type, lifecycle_stage, lead_source, lead_status, owner_name, lead_score, lead_band]
+    when: Period aggregate for funnel eligible contact count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  invoice_outstanding_amount:
+    label: Invoice Outstanding Amount
+    "on": "wt:PerformanceReport"
+    dims: [business_type, invoice_status, created_by_name]
+    when: Period aggregate for invoice outstanding amount.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  invoiced_product_revenue:
+    label: Invoiced Product Revenue
+    "on": "wt:PerformanceReport"
+    dims: [business_type, invoice_status, line_kind, product_name, product_category]
+    when: Period aggregate for invoiced product revenue.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  lifetime_order_value_total:
+    label: Lifetime Order Value Total
+    "on": "wt:PerformanceReport"
+    dims: []
+    when: Period aggregate for lifetime order value total.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  loss_rate:
+    label: Loss Rate
+    "on": "wt:PerformanceReport"
+    dims: [business_type, stage, deal_status_proxy, lost_reason, owner_name, owner_team_id]
+    when: Period aggregate for loss rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  lost_deal_amount_total:
+    label: Lost Deal Amount Total
+    "on": "wt:PerformanceReport"
+    dims: [business_type, stage, deal_status_proxy, lost_reason, owner_name, owner_team_id]
+    when: Period aggregate for lost deal amount total.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  lost_deals_metric:
+    label: Lost Deals Metric
+    "on": "wt:PerformanceReport"
+    dims: [business_type, stage, deal_status_proxy, lost_reason, owner_name, owner_team_id]
+    when: Period aggregate for lost deals metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  mql_contact_count:
+    label: Mql Contact Count
+    "on": "wt:PerformanceReport"
+    dims: [business_type, lifecycle_stage, lead_source, lead_status, owner_name, lead_score, lead_band]
+    when: Period aggregate for mql contact count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  new_lead_volume:
+    label: New Lead Volume
+    "on": "wt:PerformanceReport"
+    dims: [business_type, lifecycle_stage, lead_source, lead_status, owner_name, lead_score, lead_band]
+    when: Period aggregate for new lead volume.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  open_task_volume:
+    label: Open Task Volume
+    "on": "wt:PerformanceReport"
+    dims: [business_type, activity_type, folder, contact_lifecycle_stage]
+    when: Period aggregate for open task volume.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  order_gmv:
+    label: Order Gmv
+    "on": "wt:PerformanceReport"
+    dims: [business_type, order_status, contact_lifecycle_stage, created_by_name]
+    when: Period aggregate for order gmv.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  order_volume:
+    label: Order Volume
+    "on": "wt:PerformanceReport"
+    dims: [business_type, order_status, contact_lifecycle_stage, created_by_name]
+    when: Period aggregate for order volume.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  paid_invoices_metric:
+    label: Paid Invoices Metric
+    "on": "wt:PerformanceReport"
+    dims: [business_type, invoice_status, created_by_name]
+    when: Period aggregate for paid invoices metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  pipeline_coverage_ratio:
+    label: Pipeline Coverage Ratio
+    "on": "wt:PerformanceReport"
+    dims: [business_type, stage, deal_status_proxy, lost_reason, owner_name, owner_team_id]
+    when: Period aggregate for pipeline coverage ratio.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  product_revenue:
+    label: Product Revenue
+    "on": "wt:PerformanceReport"
+    dims: [business_type, order_status, product_name, product_sku, product_category, product_subcategory, product_brand, product_billing_type]
+    when: Period aggregate for product revenue.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  product_revenue_total:
+    label: Product Revenue Total
+    "on": "wt:PerformanceReport"
+    dims: [business_type, order_status, product_name, product_sku, product_category, product_subcategory, product_brand, product_billing_type]
+    when: Period aggregate for product revenue total.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  proposal_acceptance_rate:
+    label: Proposal Acceptance Rate
+    "on": "wt:PerformanceReport"
+    dims: [business_type, proposal_status, owner_name]
+    when: Period aggregate for proposal acceptance rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  proposal_accepted_metric:
+    label: Proposal Accepted Metric
+    "on": "wt:PerformanceReport"
+    dims: [business_type, proposal_status, owner_name]
+    when: Period aggregate for proposal accepted metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  proposal_sent_metric:
+    label: Proposal Sent Metric
+    "on": "wt:PerformanceReport"
+    dims: [business_type, proposal_status, owner_name]
+    when: Period aggregate for proposal sent metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  quote_to_close_rate:
+    label: Quote To Close Rate
+    "on": "wt:PerformanceReport"
+    dims: [business_type, quote_status, deal_stage, owner_name]
+    when: Period aggregate for quote to close rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  quoted_product_revenue:
+    label: Quoted Product Revenue
+    "on": "wt:PerformanceReport"
+    dims: [business_type, quote_status, product_name, product_category, owner_name]
+    when: Period aggregate for quoted product revenue.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  renewed_contracts_metric:
+    label: Renewed Contracts Metric
+    "on": "wt:PerformanceReport"
+    dims: [business_type, channel_role]
+    when: Period aggregate for renewed contracts metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  repeat_customers_metric:
+    label: Repeat Customers Metric
+    "on": "wt:PerformanceReport"
+    dims: []
+    when: Period aggregate for repeat customers metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  repurchase_rate:
+    label: Repurchase Rate
+    "on": "wt:PerformanceReport"
+    dims: []
+    when: Period aggregate for repurchase rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  sales_agent_win_rate:
+    label: Sales Agent Win Rate
+    "on": "wt:PerformanceReport"
+    dims: [business_type, stage, deal_status_proxy, lost_reason, owner_name, owner_team_id]
+    when: Period aggregate for sales agent win rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  sales_cycle_days_total:
+    label: Sales Cycle Days Total
+    "on": "wt:PerformanceReport"
+    dims: [business_type, stage, deal_status_proxy, lost_reason, owner_name, owner_team_id]
+    when: Period aggregate for sales cycle days total.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  total_account_locations:
+    label: Total Account Locations
+    "on": "wt:PerformanceReport"
+    dims: [business_type, company_industry, channel_role, owner_name, parent_company_name]
+    when: Period aggregate for total account locations.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  units_sold:
+    label: Units Sold
+    "on": "wt:PerformanceReport"
+    dims: [business_type, order_status, product_name, product_sku, product_category, product_subcategory, product_brand, product_billing_type]
+    when: Period aggregate for units sold.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  won_deal_amount_total:
+    label: Won Deal Amount Total
+    "on": "wt:PerformanceReport"
+    dims: [business_type, stage, deal_status_proxy, lost_reason, owner_name, owner_team_id]
+    when: Period aggregate for won deal amount total.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  won_deals_for_avg:
+    label: Won Deals For Avg
+    "on": "wt:PerformanceReport"
+    dims: [business_type, stage, deal_status_proxy, lost_reason, owner_name, owner_team_id]
+    when: Period aggregate for won deals for avg.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  won_deals_metric:
+    label: Won Deals Metric
+    "on": "wt:PerformanceReport"
+    dims: [business_type, stage, deal_status_proxy, lost_reason, owner_name, owner_team_id]
+    when: Period aggregate for won deals metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  won_deals_with_accepted_quote_metric:
+    label: Won Deals With Accepted Quote Metric
+    "on": "wt:PerformanceReport"
+    dims: [business_type, quote_status, deal_stage, owner_name]
+    when: Period aggregate for won deals with accepted quote metric.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  approved_template_count:
+    label: Approved Template Count
+    "on": "wt:PerformanceReport"
+    dims: [channel_name]
+    when: Period aggregate for approved template count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  audience_reached:
+    label: Audience Reached
+    "on": "wt:PerformanceReport"
+    dims: [campaign_status, source_channel, campaign_name, is_live_flag, is_scheduled_flag]
+    when: Period aggregate for audience reached.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  avg_attempt_count:
+    label: Avg Attempt Count
+    "on": "wt:PerformanceReport"
+    dims: []
+    when: Period aggregate for avg attempt count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  avg_batch_processing_seconds:
+    label: Avg Batch Processing Seconds
+    "on": "wt:PerformanceReport"
+    dims: [channel_name]
+    when: Period aggregate for avg batch processing seconds.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  avg_planned_duration_seconds:
+    label: Avg Planned Duration Seconds
+    "on": "wt:PerformanceReport"
+    dims: [campaign_status, source_channel, campaign_name, is_live_flag, is_scheduled_flag]
+    when: Period aggregate for avg planned duration seconds.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  avg_seconds_open_to_click:
+    label: Avg Seconds Open To Click
+    "on": "wt:PerformanceReport"
+    dims: []
+    when: Period aggregate for avg seconds open to click.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  avg_seconds_to_open:
+    label: Avg Seconds To Open
+    "on": "wt:PerformanceReport"
+    dims: []
+    when: Period aggregate for avg seconds to open.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  batch_count:
+    label: Batch Count
+    "on": "wt:PerformanceReport"
+    dims: [channel_name]
+    when: Period aggregate for batch count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  batch_failure_rate:
+    label: Batch Failure Rate
+    "on": "wt:PerformanceReport"
+    dims: [channel_name]
+    when: Period aggregate for batch failure rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  bounce_share_of_suppressions:
+    label: Bounce Share Of Suppressions
+    "on": "wt:PerformanceReport"
+    dims: []
+    when: Period aggregate for bounce share of suppressions.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  bounce_suppressed_count:
+    label: Bounce Suppressed Count
+    "on": "wt:PerformanceReport"
+    dims: []
+    when: Period aggregate for bounce suppressed count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  campaign_volume:
+    label: Campaign Volume
+    "on": "wt:PerformanceReport"
+    dims: [campaign_status, source_channel, campaign_name, is_live_flag, is_scheduled_flag]
+    when: Period aggregate for campaign volume.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  clicked_touch_count:
+    label: Clicked Touch Count
+    "on": "wt:PerformanceReport"
+    dims: []
+    when: Period aggregate for clicked touch count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  complaint_share_of_suppressions:
+    label: Complaint Share Of Suppressions
+    "on": "wt:PerformanceReport"
+    dims: []
+    when: Period aggregate for complaint share of suppressions.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  complaint_suppressed_count:
+    label: Complaint Suppressed Count
+    "on": "wt:PerformanceReport"
+    dims: []
+    when: Period aggregate for complaint suppressed count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  engaged_contact_count:
+    label: Engaged Contact Count
+    "on": "wt:PerformanceReport"
+    dims: []
+    when: Period aggregate for engaged contact count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  failed_batch_count:
+    label: Failed Batch Count
+    "on": "wt:PerformanceReport"
+    dims: [channel_name]
+    when: Period aggregate for failed batch count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  failed_touch_count:
+    label: Failed Touch Count
+    "on": "wt:PerformanceReport"
+    dims: []
+    when: Period aggregate for failed touch count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  failure_rate:
+    label: Failure Rate
+    "on": "wt:PerformanceReport"
+    dims: []
+    when: Period aggregate for failure rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  frequency_per_contact:
+    label: Frequency Per Contact
+    "on": "wt:PerformanceReport"
+    dims: []
+    when: Period aggregate for frequency per contact.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  opened_touch_count:
+    label: Opened Touch Count
+    "on": "wt:PerformanceReport"
+    dims: []
+    when: Period aggregate for opened touch count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  rejected_template_count:
+    label: Rejected Template Count
+    "on": "wt:PerformanceReport"
+    dims: [channel_name, rejected_reason]
+    when: Period aggregate for rejected template count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  sent_touch_count:
+    label: Sent Touch Count
+    "on": "wt:PerformanceReport"
+    dims: []
+    when: Period aggregate for sent touch count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  suppressed_email_count:
+    label: Suppressed Email Count
+    "on": "wt:PerformanceReport"
+    dims: []
+    when: Period aggregate for suppressed email count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  suppression_rate:
+    label: Suppression Rate
+    "on": "wt:PerformanceReport"
+    dims: []
+    when: Period aggregate for suppression rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  template_approval_rate:
+    label: Template Approval Rate
+    "on": "wt:PerformanceReport"
+    dims: [channel_name]
+    when: Period aggregate for template approval rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  template_count:
+    label: Template Count
+    "on": "wt:PerformanceReport"
+    dims: [channel_name]
+    when: Period aggregate for template count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  touch_count:
+    label: Touch Count
+    "on": "wt:PerformanceReport"
+    dims: []
+    when: Period aggregate for touch count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  unique_contacts_touched:
+    label: Unique Contacts Touched
+    "on": "wt:PerformanceReport"
+    dims: []
+    when: Period aggregate for unique contacts touched.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  unsubscribe_rate:
+    label: Unsubscribe Rate
+    "on": "wt:PerformanceReport"
+    dims: []
+    when: Period aggregate for unsubscribe rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  unsubscribed_contact_count:
+    label: Unsubscribed Contact Count
+    "on": "wt:PerformanceReport"
+    dims: []
+    when: Period aggregate for unsubscribed contact count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  variant_click_rate:
+    label: Variant Click Rate
+    "on": "wt:PerformanceReport"
+    dims: [ab_variant, recipient_platform]
+    when: Period aggregate for variant click rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  variant_clicked_touch_count:
+    label: Variant Clicked Touch Count
+    "on": "wt:PerformanceReport"
+    dims: [ab_variant, recipient_platform]
+    when: Period aggregate for variant clicked touch count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  variant_open_rate:
+    label: Variant Open Rate
+    "on": "wt:PerformanceReport"
+    dims: [ab_variant, recipient_platform]
+    when: Period aggregate for variant open rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  variant_opened_touch_count:
+    label: Variant Opened Touch Count
+    "on": "wt:PerformanceReport"
+    dims: [ab_variant, recipient_platform]
+    when: Period aggregate for variant opened touch count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  variant_sent_touch_count:
+    label: Variant Sent Touch Count
+    "on": "wt:PerformanceReport"
+    dims: [ab_variant, recipient_platform]
+    when: Period aggregate for variant sent touch count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  variant_touch_count:
+    label: Variant Touch Count
+    "on": "wt:PerformanceReport"
+    dims: [ab_variant, recipient_platform]
+    when: Period aggregate for variant touch count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  average_session_duration:
+    label: Average Session Duration
+    "on": "wt:PerformanceReport"
+    dims: [website_id, session_id, visitor_id, user_id, wt_campaign_id, wt_contact_id, device, browser, browser_version, platform, country, city, region, utm_source, utm_medium, utm_campaign, utm_term, utm_content, referrer, referrer_domain, entry_page, exit_page, is_bounce_flag, is_engaged_flag, is_online_flag, is_first_session_flag, has_rage_clicks, has_dead_clicks, has_deep_scroll, has_conversion, has_purchase, has_checkout_start, has_cart_add, has_product_view, has_form_start, has_form_submit, has_form_failure, has_form_abandon, has_search, has_error, is_campaign_attributed, is_identified]
+    when: Period aggregate for average session duration.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  avg_cls:
+    label: Avg Cls
+    "on": "wt:PerformanceReport"
+    dims: [website_id, event_id, page_view_id, session_id, visitor_id, metric_name, rating, page_path, device]
+    when: Period aggregate for avg cls.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  avg_fcp_ms:
+    label: Avg Fcp Ms
+    "on": "wt:PerformanceReport"
+    dims: [website_id, event_id, page_view_id, session_id, visitor_id, metric_name, rating, page_path, device]
+    when: Period aggregate for avg fcp ms.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  avg_inp_ms:
+    label: Avg Inp Ms
+    "on": "wt:PerformanceReport"
+    dims: [website_id, event_id, page_view_id, session_id, visitor_id, metric_name, rating, page_path, device]
+    when: Period aggregate for avg inp ms.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  avg_lcp_ms:
+    label: Avg Lcp Ms
+    "on": "wt:PerformanceReport"
+    dims: [website_id, event_id, page_view_id, session_id, visitor_id, metric_name, rating, page_path, device]
+    when: Period aggregate for avg lcp ms.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  avg_scroll_depth:
+    label: Avg Scroll Depth
+    "on": "wt:PerformanceReport"
+    dims: [website_id, page_view_id, session_id, visitor_id, page_path, page_title, referrer, device, country, utm_source, utm_medium, utm_campaign]
+    when: Period aggregate for avg scroll depth.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  avg_time_on_page_seconds:
+    label: Avg Time On Page Seconds
+    "on": "wt:PerformanceReport"
+    dims: [website_id, page_view_id, session_id, visitor_id, page_path, page_title, referrer, device, country, utm_source, utm_medium, utm_campaign]
+    when: Period aggregate for avg time on page seconds.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  avg_ttfb_ms:
+    label: Avg Ttfb Ms
+    "on": "wt:PerformanceReport"
+    dims: [website_id, event_id, page_view_id, session_id, visitor_id, metric_name, rating, page_path, device]
+    when: Period aggregate for avg ttfb ms.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  bounce_count:
+    label: Bounce Count
+    "on": "wt:PerformanceReport"
+    dims: [website_id, session_id, visitor_id, user_id, wt_campaign_id, wt_contact_id, device, browser, browser_version, platform, country, city, region, utm_source, utm_medium, utm_campaign, utm_term, utm_content, referrer, referrer_domain, entry_page, exit_page, is_bounce_flag, is_engaged_flag, is_online_flag, is_first_session_flag, has_rage_clicks, has_dead_clicks, has_deep_scroll, has_conversion, has_purchase, has_checkout_start, has_cart_add, has_product_view, has_form_start, has_form_submit, has_form_failure, has_form_abandon, has_search, has_error, is_campaign_attributed, is_identified]
+    when: Period aggregate for bounce count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  bounce_rate:
+    label: Bounce Rate
+    "on": "wt:PerformanceReport"
+    dims: [website_id, session_id, visitor_id, user_id, wt_campaign_id, wt_contact_id, device, browser, browser_version, platform, country, city, region, utm_source, utm_medium, utm_campaign, utm_term, utm_content, referrer, referrer_domain, entry_page, exit_page, is_bounce_flag, is_engaged_flag, is_online_flag, is_first_session_flag, has_rage_clicks, has_dead_clicks, has_deep_scroll, has_conversion, has_purchase, has_checkout_start, has_cart_add, has_product_view, has_form_start, has_form_submit, has_form_failure, has_form_abandon, has_search, has_error, is_campaign_attributed, is_identified]
+    when: Period aggregate for bounce rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  online_visitors:
+    label: Online Visitors
+    "on": "wt:PerformanceReport"
+    dims: [website_id, session_id, visitor_id, user_id, device, browser, platform, country, city, region, is_online_flag]
+    when: Distinct visitors active in the last 5 minutes (mart is_online_flag).
+    not_for: Historical period KPIs — use unique_visitors.
+    via: ask_semantic
+    scope: org
+
+  campaign_attributed_sessions:
+    label: Campaign Attributed Sessions
+    "on": "wt:PerformanceReport"
+    dims: [website_id, session_id, visitor_id, user_id, wt_campaign_id, wt_contact_id, device, browser, browser_version, platform, country, city, region, utm_source, utm_medium, utm_campaign, utm_term, utm_content, referrer, referrer_domain, entry_page, exit_page, is_bounce_flag, is_engaged_flag, is_online_flag, is_first_session_flag, has_rage_clicks, has_dead_clicks, has_deep_scroll, has_conversion, has_purchase, has_checkout_start, has_cart_add, has_product_view, has_form_start, has_form_submit, has_form_failure, has_form_abandon, has_search, has_error, is_campaign_attributed, is_identified]
+    when: Period aggregate for campaign attributed sessions.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  cart_add_count:
+    label: Cart Add Count
+    "on": "wt:PerformanceReport"
+    dims: [website_id, conversion_id, product_id, page_view_id, session_id, visitor_id, conversion_type, currency, utm_source, utm_campaign, device, country]
+    when: Period aggregate for cart add count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  cart_add_rate:
+    label: Cart Add Rate
+    "on": "wt:PerformanceReport"
+    dims: [website_id, session_id, visitor_id, user_id, wt_campaign_id, wt_contact_id, device, browser, browser_version, platform, country, city, region, utm_source, utm_medium, utm_campaign, utm_term, utm_content, referrer, referrer_domain, entry_page, exit_page, is_bounce_flag, is_engaged_flag, is_online_flag, is_first_session_flag, has_rage_clicks, has_dead_clicks, has_deep_scroll, has_conversion, has_purchase, has_checkout_start, has_cart_add, has_product_view, has_form_start, has_form_submit, has_form_failure, has_form_abandon, has_search, has_error, is_campaign_attributed, is_identified]
+    when: Period aggregate for cart add rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  checkout_conversion_rate:
+    label: Checkout Conversion Rate
+    "on": "wt:PerformanceReport"
+    dims: [website_id, conversion_id, product_id, page_view_id, session_id, visitor_id, conversion_type, currency, utm_source, utm_campaign, device, country]
+    when: Period aggregate for checkout conversion rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  checkout_start_count:
+    label: Checkout Start Count
+    "on": "wt:PerformanceReport"
+    dims: [website_id, conversion_id, product_id, page_view_id, session_id, visitor_id, conversion_type, currency, utm_source, utm_campaign, device, country]
+    when: Period aggregate for checkout start count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  checkout_start_rate:
+    label: Checkout Start Rate
+    "on": "wt:PerformanceReport"
+    dims: [website_id, session_id, visitor_id, user_id, wt_campaign_id, wt_contact_id, device, browser, browser_version, platform, country, city, region, utm_source, utm_medium, utm_campaign, utm_term, utm_content, referrer, referrer_domain, entry_page, exit_page, is_bounce_flag, is_engaged_flag, is_online_flag, is_first_session_flag, has_rage_clicks, has_dead_clicks, has_deep_scroll, has_conversion, has_purchase, has_checkout_start, has_cart_add, has_product_view, has_form_start, has_form_submit, has_form_failure, has_form_abandon, has_search, has_error, is_campaign_attributed, is_identified]
+    when: Period aggregate for checkout start rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  clicks_per_session:
+    label: Clicks Per Session
+    "on": "wt:PerformanceReport"
+    dims: [website_id, event_id, page_view_id, session_id, visitor_id, event_type, element, element_type, element_text, page_path, device, country, reason, user_id, wt_campaign_id, wt_contact_id, browser, browser_version, platform, city, region, utm_source, utm_medium, utm_campaign, utm_term, utm_content, referrer, referrer_domain, entry_page, exit_page, is_bounce_flag, is_engaged_flag, is_online_flag, is_first_session_flag, has_rage_clicks, has_dead_clicks, has_deep_scroll, has_conversion, has_purchase, has_checkout_start, has_cart_add, has_product_view, has_form_start, has_form_submit, has_form_failure, has_form_abandon, has_search, has_error, is_campaign_attributed, is_identified]
+    when: Period aggregate for clicks per session.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  consent_action_count:
+    label: Consent Action Count
+    "on": "wt:PerformanceReport"
+    dims: [website_id, event_id, session_id, visitor_id, action, cookie_name, page_path]
+    when: Period aggregate for consent action count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  conversion_rate:
+    label: Conversion Rate
+    "on": "wt:PerformanceReport"
+    dims: [website_id, session_id, visitor_id, user_id, wt_campaign_id, wt_contact_id, device, browser, browser_version, platform, country, city, region, utm_source, utm_medium, utm_campaign, utm_term, utm_content, referrer, referrer_domain, entry_page, exit_page, is_bounce_flag, is_engaged_flag, is_online_flag, is_first_session_flag, has_rage_clicks, has_dead_clicks, has_deep_scroll, has_conversion, has_purchase, has_checkout_start, has_cart_add, has_product_view, has_form_start, has_form_submit, has_form_failure, has_form_abandon, has_search, has_error, is_campaign_attributed, is_identified]
+    when: Period aggregate for conversion rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  custom_event_session_count:
+    label: Custom Event Session Count
+    "on": "wt:PerformanceReport"
+    dims: [website_id, event_id, page_view_id, session_id, visitor_id, event_name, device, country]
+    when: Period aggregate for custom event session count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  custom_event_session_rate:
+    label: Custom Event Session Rate
+    "on": "wt:PerformanceReport"
+    dims: [website_id, event_id, page_view_id, session_id, visitor_id, event_name, device, country, user_id, wt_campaign_id, wt_contact_id, browser, browser_version, platform, city, region, utm_source, utm_medium, utm_campaign, utm_term, utm_content, referrer, referrer_domain, entry_page, exit_page, is_bounce_flag, is_engaged_flag, is_online_flag, is_first_session_flag, has_rage_clicks, has_dead_clicks, has_deep_scroll, has_conversion, has_purchase, has_checkout_start, has_cart_add, has_product_view, has_form_start, has_form_submit, has_form_failure, has_form_abandon, has_search, has_error, is_campaign_attributed, is_identified]
+    when: Period aggregate for custom event session rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  dead_click_rate:
+    label: Dead Click Rate
+    "on": "wt:PerformanceReport"
+    dims: [website_id, session_id, visitor_id, user_id, wt_campaign_id, wt_contact_id, device, browser, browser_version, platform, country, city, region, utm_source, utm_medium, utm_campaign, utm_term, utm_content, referrer, referrer_domain, entry_page, exit_page, is_bounce_flag, is_engaged_flag, is_online_flag, is_first_session_flag, has_rage_clicks, has_dead_clicks, has_deep_scroll, has_conversion, has_purchase, has_checkout_start, has_cart_add, has_product_view, has_form_start, has_form_submit, has_form_failure, has_form_abandon, has_search, has_error, is_campaign_attributed, is_identified]
+    when: Period aggregate for dead click rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  dead_clicks:
+    label: Dead Clicks
+    "on": "wt:PerformanceReport"
+    dims: [website_id, event_id, page_view_id, session_id, visitor_id, event_type, element, element_type, element_text, page_path, device, country, reason]
+    when: Period aggregate for dead clicks.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  distinct_custom_event_types:
+    label: Distinct Custom Event Types
+    "on": "wt:PerformanceReport"
+    dims: [website_id, event_id, page_view_id, session_id, visitor_id, event_name, device, country]
+    when: Period aggregate for distinct custom event types.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  engaged_session_count:
+    label: Engaged Session Count
+    "on": "wt:PerformanceReport"
+    dims: [website_id, session_id, visitor_id, user_id, wt_campaign_id, wt_contact_id, device, browser, browser_version, platform, country, city, region, utm_source, utm_medium, utm_campaign, utm_term, utm_content, referrer, referrer_domain, entry_page, exit_page, is_bounce_flag, is_engaged_flag, is_online_flag, is_first_session_flag, has_rage_clicks, has_dead_clicks, has_deep_scroll, has_conversion, has_purchase, has_checkout_start, has_cart_add, has_product_view, has_form_start, has_form_submit, has_form_failure, has_form_abandon, has_search, has_error, is_campaign_attributed, is_identified]
+    when: Period aggregate for engaged session count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  engagement_rate:
+    label: Engagement Rate
+    "on": "wt:PerformanceReport"
+    dims: [website_id, session_id, visitor_id, user_id, wt_campaign_id, wt_contact_id, device, browser, browser_version, platform, country, city, region, utm_source, utm_medium, utm_campaign, utm_term, utm_content, referrer, referrer_domain, entry_page, exit_page, is_bounce_flag, is_engaged_flag, is_online_flag, is_first_session_flag, has_rage_clicks, has_dead_clicks, has_deep_scroll, has_conversion, has_purchase, has_checkout_start, has_cart_add, has_product_view, has_form_start, has_form_submit, has_form_failure, has_form_abandon, has_search, has_error, is_campaign_attributed, is_identified]
+    when: Period aggregate for engagement rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  error_count:
+    label: Error Count
+    "on": "wt:PerformanceReport"
+    dims: [website_id, event_id, page_view_id, session_id, visitor_id, error_type, message, page_path, device, browser]
+    when: Period aggregate for error count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  error_session_count:
+    label: Error Session Count
+    "on": "wt:PerformanceReport"
+    dims: [website_id, session_id, visitor_id, user_id, wt_campaign_id, wt_contact_id, device, browser, browser_version, platform, country, city, region, utm_source, utm_medium, utm_campaign, utm_term, utm_content, referrer, referrer_domain, entry_page, exit_page, is_bounce_flag, is_engaged_flag, is_online_flag, is_first_session_flag, has_rage_clicks, has_dead_clicks, has_deep_scroll, has_conversion, has_purchase, has_checkout_start, has_cart_add, has_product_view, has_form_start, has_form_submit, has_form_failure, has_form_abandon, has_search, has_error, is_campaign_attributed, is_identified]
+    when: Period aggregate for error session count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  error_session_rate:
+    label: Error Session Rate
+    "on": "wt:PerformanceReport"
+    dims: [website_id, session_id, visitor_id, user_id, wt_campaign_id, wt_contact_id, device, browser, browser_version, platform, country, city, region, utm_source, utm_medium, utm_campaign, utm_term, utm_content, referrer, referrer_domain, entry_page, exit_page, is_bounce_flag, is_engaged_flag, is_online_flag, is_first_session_flag, has_rage_clicks, has_dead_clicks, has_deep_scroll, has_conversion, has_purchase, has_checkout_start, has_cart_add, has_product_view, has_form_start, has_form_submit, has_form_failure, has_form_abandon, has_search, has_error, is_campaign_attributed, is_identified]
+    when: Period aggregate for error session rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  events_per_session:
+    label: Events Per Session
+    "on": "wt:PerformanceReport"
+    dims: [website_id, event_id, page_view_id, session_id, visitor_id, event_type, element, element_type, element_text, page_path, device, country, reason, user_id, wt_campaign_id, wt_contact_id, browser, browser_version, platform, city, region, utm_source, utm_medium, utm_campaign, utm_term, utm_content, referrer, referrer_domain, entry_page, exit_page, is_bounce_flag, is_engaged_flag, is_online_flag, is_first_session_flag, has_rage_clicks, has_dead_clicks, has_deep_scroll, has_conversion, has_purchase, has_checkout_start, has_cart_add, has_product_view, has_form_start, has_form_submit, has_form_failure, has_form_abandon, has_search, has_error, is_campaign_attributed, is_identified]
+    when: Period aggregate for events per session.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  form_abandon_rate:
+    label: Form Abandon Rate
+    "on": "wt:PerformanceReport"
+    dims: [website_id, event_id, form_id, page_view_id, session_id, visitor_id, event_type, form_name, field_name, page_path, device, country]
+    when: Period aggregate for form abandon rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  form_abandons:
+    label: Form Abandons
+    "on": "wt:PerformanceReport"
+    dims: [website_id, event_id, form_id, page_view_id, session_id, visitor_id, event_type, form_name, field_name, page_path, device, country]
+    when: Period aggregate for form abandons.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  form_failures:
+    label: Form Failures
+    "on": "wt:PerformanceReport"
+    dims: [website_id, event_id, form_id, page_view_id, session_id, visitor_id, event_type, form_name, field_name, page_path, device, country]
+    when: Period aggregate for form failures.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  form_starts:
+    label: Form Starts
+    "on": "wt:PerformanceReport"
+    dims: [website_id, event_id, form_id, page_view_id, session_id, visitor_id, event_type, form_name, field_name, page_path, device, country]
+    when: Period aggregate for form starts.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  form_submit_rate:
+    label: Form Submit Rate
+    "on": "wt:PerformanceReport"
+    dims: [website_id, event_id, form_id, page_view_id, session_id, visitor_id, event_type, form_name, field_name, page_path, device, country]
+    when: Period aggregate for form submit rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  form_submits:
+    label: Form Submits
+    "on": "wt:PerformanceReport"
+    dims: [website_id, event_id, form_id, page_view_id, session_id, visitor_id, event_type, form_name, field_name, page_path, device, country]
+    when: Period aggregate for form submits.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  form_success_rate:
+    label: Form Success Rate
+    "on": "wt:PerformanceReport"
+    dims: [website_id, event_id, form_id, page_view_id, session_id, visitor_id, event_type, form_name, field_name, page_path, device, country]
+    when: Period aggregate for form success rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  form_successes:
+    label: Form Successes
+    "on": "wt:PerformanceReport"
+    dims: [website_id, event_id, form_id, page_view_id, session_id, visitor_id, event_type, form_name, field_name, page_path, device, country]
+    when: Period aggregate for form successes.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  form_views:
+    label: Form Views
+    "on": "wt:PerformanceReport"
+    dims: [website_id, event_id, form_id, page_view_id, session_id, visitor_id, event_type, form_name, field_name, page_path, device, country]
+    when: Period aggregate for form views.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  identified_session_count:
+    label: Identified Session Count
+    "on": "wt:PerformanceReport"
+    dims: [website_id, session_id, visitor_id, user_id, wt_campaign_id, wt_contact_id, device, browser, browser_version, platform, country, city, region, utm_source, utm_medium, utm_campaign, utm_term, utm_content, referrer, referrer_domain, entry_page, exit_page, is_bounce_flag, is_engaged_flag, is_online_flag, is_first_session_flag, has_rage_clicks, has_dead_clicks, has_deep_scroll, has_conversion, has_purchase, has_checkout_start, has_cart_add, has_product_view, has_form_start, has_form_submit, has_form_failure, has_form_abandon, has_search, has_error, is_campaign_attributed, is_identified]
+    when: Period aggregate for identified session count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  identified_session_rate:
+    label: Identified Session Rate
+    "on": "wt:PerformanceReport"
+    dims: [website_id, session_id, visitor_id, user_id, wt_campaign_id, wt_contact_id, device, browser, browser_version, platform, country, city, region, utm_source, utm_medium, utm_campaign, utm_term, utm_content, referrer, referrer_domain, entry_page, exit_page, is_bounce_flag, is_engaged_flag, is_online_flag, is_first_session_flag, has_rage_clicks, has_dead_clicks, has_deep_scroll, has_conversion, has_purchase, has_checkout_start, has_cart_add, has_product_view, has_form_start, has_form_submit, has_form_failure, has_form_abandon, has_search, has_error, is_campaign_attributed, is_identified]
+    when: Period aggregate for identified session rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  identified_visitor_count:
+    label: Identified Visitor Count
+    "on": "wt:PerformanceReport"
+    dims: [website_id, visitor_id, user_id, anonymous_id, country, is_identified_flag, is_returning_visitor]
+    when: Period aggregate for identified visitor count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  landing_page_conversion_rate:
+    label: Landing Page Conversion Rate
+    "on": "wt:PerformanceReport"
+    dims: [website_id, conversion_id, product_id, page_view_id, session_id, visitor_id, conversion_type, currency, utm_source, utm_campaign, device, country, user_id, wt_campaign_id, wt_contact_id, browser, browser_version, platform, city, region, utm_medium, utm_term, utm_content, referrer, referrer_domain, entry_page, exit_page, is_bounce_flag, is_engaged_flag, is_online_flag, is_first_session_flag, has_rage_clicks, has_dead_clicks, has_deep_scroll, has_conversion, has_purchase, has_checkout_start, has_cart_add, has_product_view, has_form_start, has_form_submit, has_form_failure, has_form_abandon, has_search, has_error, is_campaign_attributed, is_identified]
+    when: Period aggregate for landing page conversion rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  lifetime_new_visitor_count:
+    label: Lifetime New Visitor Count
+    "on": "wt:PerformanceReport"
+    dims: [website_id, visitor_id, user_id, anonymous_id, country, is_identified_flag, is_returning_visitor]
+    when: Period aggregate for lifetime new visitor count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  lifetime_returning_visitor_count:
+    label: Lifetime Returning Visitor Count
+    "on": "wt:PerformanceReport"
+    dims: [website_id, visitor_id, user_id, anonymous_id, country, is_identified_flag, is_returning_visitor]
+    when: Period aggregate for lifetime returning visitor count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  new_visitor_count:
+    label: New Visitor Count
+    "on": "wt:PerformanceReport"
+    dims: [website_id, session_id, visitor_id, user_id, wt_campaign_id, wt_contact_id, device, browser, browser_version, platform, country, city, region, utm_source, utm_medium, utm_campaign, utm_term, utm_content, referrer, referrer_domain, entry_page, exit_page, is_bounce_flag, is_engaged_flag, is_online_flag, is_first_session_flag, has_rage_clicks, has_dead_clicks, has_deep_scroll, has_conversion, has_purchase, has_checkout_start, has_cart_add, has_product_view, has_form_start, has_form_submit, has_form_failure, has_form_abandon, has_search, has_error, is_campaign_attributed, is_identified]
+    when: Period aggregate for new visitor count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  new_visitor_rate:
+    label: New Visitor Rate
+    "on": "wt:PerformanceReport"
+    dims: [website_id, session_id, visitor_id, user_id, wt_campaign_id, wt_contact_id, device, browser, browser_version, platform, country, city, region, utm_source, utm_medium, utm_campaign, utm_term, utm_content, referrer, referrer_domain, entry_page, exit_page, is_bounce_flag, is_engaged_flag, is_online_flag, is_first_session_flag, has_rage_clicks, has_dead_clicks, has_deep_scroll, has_conversion, has_purchase, has_checkout_start, has_cart_add, has_product_view, has_form_start, has_form_submit, has_form_failure, has_form_abandon, has_search, has_error, is_campaign_attributed, is_identified]
+    when: Period aggregate for new visitor rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  page_views:
+    label: Page Views
+    "on": "wt:PerformanceReport"
+    dims: [website_id, page_view_id, session_id, visitor_id, page_path, page_title, referrer, device, country, utm_source, utm_medium, utm_campaign]
+    when: Period aggregate for page views.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  pages_per_session:
+    label: Pages Per Session
+    "on": "wt:PerformanceReport"
+    dims: [website_id, page_view_id, session_id, visitor_id, page_path, page_title, referrer, device, country, utm_source, utm_medium, utm_campaign, user_id, wt_campaign_id, wt_contact_id, browser, browser_version, platform, city, region, utm_term, utm_content, referrer_domain, entry_page, exit_page, is_bounce_flag, is_engaged_flag, is_online_flag, is_first_session_flag, has_rage_clicks, has_dead_clicks, has_deep_scroll, has_conversion, has_purchase, has_checkout_start, has_cart_add, has_product_view, has_form_start, has_form_submit, has_form_failure, has_form_abandon, has_search, has_error, is_campaign_attributed, is_identified]
+    when: Period aggregate for pages per session.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  performance_event_count:
+    label: Performance Event Count
+    "on": "wt:PerformanceReport"
+    dims: [website_id, event_id, page_view_id, session_id, visitor_id, metric_name, rating, page_path, device]
+    when: Period aggregate for performance event count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  poor_vitals_event_count:
+    label: Poor Vitals Event Count
+    "on": "wt:PerformanceReport"
+    dims: [website_id, event_id, page_view_id, session_id, visitor_id, metric_name, rating, page_path, device]
+    when: Period aggregate for poor vitals event count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  poor_vitals_rate:
+    label: Poor Vitals Rate
+    "on": "wt:PerformanceReport"
+    dims: [website_id, event_id, page_view_id, session_id, visitor_id, metric_name, rating, page_path, device]
+    when: Period aggregate for poor vitals rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  product_interaction_count:
+    label: Product Interaction Count
+    "on": "wt:PerformanceReport"
+    dims: [website_id, interaction_id, product_id, product_sku, product_name, product_category, product_brand, currency, section, device, country]
+    when: Period aggregate for product interaction count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  product_view_rate:
+    label: Product View Rate
+    "on": "wt:PerformanceReport"
+    dims: [website_id, session_id, visitor_id, user_id, wt_campaign_id, wt_contact_id, device, browser, browser_version, platform, country, city, region, utm_source, utm_medium, utm_campaign, utm_term, utm_content, referrer, referrer_domain, entry_page, exit_page, is_bounce_flag, is_engaged_flag, is_online_flag, is_first_session_flag, has_rage_clicks, has_dead_clicks, has_deep_scroll, has_conversion, has_purchase, has_checkout_start, has_cart_add, has_product_view, has_form_start, has_form_submit, has_form_failure, has_form_abandon, has_search, has_error, is_campaign_attributed, is_identified]
+    when: Period aggregate for product view rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  purchase_count:
+    label: Purchase Count
+    "on": "wt:PerformanceReport"
+    dims: [website_id, conversion_id, product_id, page_view_id, session_id, visitor_id, conversion_type, currency, utm_source, utm_campaign, device, country]
+    when: Period aggregate for purchase count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  rage_click_rate:
+    label: Rage Click Rate
+    "on": "wt:PerformanceReport"
+    dims: [website_id, session_id, visitor_id, user_id, wt_campaign_id, wt_contact_id, device, browser, browser_version, platform, country, city, region, utm_source, utm_medium, utm_campaign, utm_term, utm_content, referrer, referrer_domain, entry_page, exit_page, is_bounce_flag, is_engaged_flag, is_online_flag, is_first_session_flag, has_rage_clicks, has_dead_clicks, has_deep_scroll, has_conversion, has_purchase, has_checkout_start, has_cart_add, has_product_view, has_form_start, has_form_submit, has_form_failure, has_form_abandon, has_search, has_error, is_campaign_attributed, is_identified]
+    when: Period aggregate for rage click rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  rage_click_session_count:
+    label: Rage Click Session Count
+    "on": "wt:PerformanceReport"
+    dims: [website_id, session_id, visitor_id, user_id, wt_campaign_id, wt_contact_id, device, browser, browser_version, platform, country, city, region, utm_source, utm_medium, utm_campaign, utm_term, utm_content, referrer, referrer_domain, entry_page, exit_page, is_bounce_flag, is_engaged_flag, is_online_flag, is_first_session_flag, has_rage_clicks, has_dead_clicks, has_deep_scroll, has_conversion, has_purchase, has_checkout_start, has_cart_add, has_product_view, has_form_start, has_form_submit, has_form_failure, has_form_abandon, has_search, has_error, is_campaign_attributed, is_identified]
+    when: Period aggregate for rage click session count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  rage_clicks:
+    label: Rage Clicks
+    "on": "wt:PerformanceReport"
+    dims: [website_id, event_id, page_view_id, session_id, visitor_id, event_type, element, element_type, element_text, page_path, device, country, reason]
+    when: Period aggregate for rage clicks.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  returning_visitor_count:
+    label: Returning Visitor Count
+    "on": "wt:PerformanceReport"
+    dims: [website_id, session_id, visitor_id, user_id, wt_campaign_id, wt_contact_id, device, browser, browser_version, platform, country, city, region, utm_source, utm_medium, utm_campaign, utm_term, utm_content, referrer, referrer_domain, entry_page, exit_page, is_bounce_flag, is_engaged_flag, is_online_flag, is_first_session_flag, has_rage_clicks, has_dead_clicks, has_deep_scroll, has_conversion, has_purchase, has_checkout_start, has_cart_add, has_product_view, has_form_start, has_form_submit, has_form_failure, has_form_abandon, has_search, has_error, is_campaign_attributed, is_identified]
+    when: Period aggregate for returning visitor count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  returning_visitor_rate:
+    label: Returning Visitor Rate
+    "on": "wt:PerformanceReport"
+    dims: [website_id, session_id, visitor_id, user_id, wt_campaign_id, wt_contact_id, device, browser, browser_version, platform, country, city, region, utm_source, utm_medium, utm_campaign, utm_term, utm_content, referrer, referrer_domain, entry_page, exit_page, is_bounce_flag, is_engaged_flag, is_online_flag, is_first_session_flag, has_rage_clicks, has_dead_clicks, has_deep_scroll, has_conversion, has_purchase, has_checkout_start, has_cart_add, has_product_view, has_form_start, has_form_submit, has_form_failure, has_form_abandon, has_search, has_error, is_campaign_attributed, is_identified]
+    when: Period aggregate for returning visitor rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  scroll_engagement_rate:
+    label: Scroll Engagement Rate
+    "on": "wt:PerformanceReport"
+    dims: [website_id, session_id, visitor_id, user_id, wt_campaign_id, wt_contact_id, device, browser, browser_version, platform, country, city, region, utm_source, utm_medium, utm_campaign, utm_term, utm_content, referrer, referrer_domain, entry_page, exit_page, is_bounce_flag, is_engaged_flag, is_online_flag, is_first_session_flag, has_rage_clicks, has_dead_clicks, has_deep_scroll, has_conversion, has_purchase, has_checkout_start, has_cart_add, has_product_view, has_form_start, has_form_submit, has_form_failure, has_form_abandon, has_search, has_error, is_campaign_attributed, is_identified]
+    when: Period aggregate for scroll engagement rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  search_session_count:
+    label: Search Session Count
+    "on": "wt:PerformanceReport"
+    dims: [website_id, session_id, visitor_id, user_id, wt_campaign_id, wt_contact_id, device, browser, browser_version, platform, country, city, region, utm_source, utm_medium, utm_campaign, utm_term, utm_content, referrer, referrer_domain, entry_page, exit_page, is_bounce_flag, is_engaged_flag, is_online_flag, is_first_session_flag, has_rage_clicks, has_dead_clicks, has_deep_scroll, has_conversion, has_purchase, has_checkout_start, has_cart_add, has_product_view, has_form_start, has_form_submit, has_form_failure, has_form_abandon, has_search, has_error, is_campaign_attributed, is_identified]
+    when: Period aggregate for search session count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  search_usage_rate:
+    label: Search Usage Rate
+    "on": "wt:PerformanceReport"
+    dims: [website_id, session_id, visitor_id, user_id, wt_campaign_id, wt_contact_id, device, browser, browser_version, platform, country, city, region, utm_source, utm_medium, utm_campaign, utm_term, utm_content, referrer, referrer_domain, entry_page, exit_page, is_bounce_flag, is_engaged_flag, is_online_flag, is_first_session_flag, has_rage_clicks, has_dead_clicks, has_deep_scroll, has_conversion, has_purchase, has_checkout_start, has_cart_add, has_product_view, has_form_start, has_form_submit, has_form_failure, has_form_abandon, has_search, has_error, is_campaign_attributed, is_identified]
+    when: Period aggregate for search usage rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  sessions_with_cart_add:
+    label: Sessions With Cart Add
+    "on": "wt:PerformanceReport"
+    dims: [website_id, session_id, visitor_id, user_id, wt_campaign_id, wt_contact_id, device, browser, browser_version, platform, country, city, region, utm_source, utm_medium, utm_campaign, utm_term, utm_content, referrer, referrer_domain, entry_page, exit_page, is_bounce_flag, is_engaged_flag, is_online_flag, is_first_session_flag, has_rage_clicks, has_dead_clicks, has_deep_scroll, has_conversion, has_purchase, has_checkout_start, has_cart_add, has_product_view, has_form_start, has_form_submit, has_form_failure, has_form_abandon, has_search, has_error, is_campaign_attributed, is_identified]
+    when: Period aggregate for sessions with cart add.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  sessions_with_checkout_start:
+    label: Sessions With Checkout Start
+    "on": "wt:PerformanceReport"
+    dims: [website_id, session_id, visitor_id, user_id, wt_campaign_id, wt_contact_id, device, browser, browser_version, platform, country, city, region, utm_source, utm_medium, utm_campaign, utm_term, utm_content, referrer, referrer_domain, entry_page, exit_page, is_bounce_flag, is_engaged_flag, is_online_flag, is_first_session_flag, has_rage_clicks, has_dead_clicks, has_deep_scroll, has_conversion, has_purchase, has_checkout_start, has_cart_add, has_product_view, has_form_start, has_form_submit, has_form_failure, has_form_abandon, has_search, has_error, is_campaign_attributed, is_identified]
+    when: Period aggregate for sessions with checkout start.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  sessions_with_conversions:
+    label: Sessions With Conversions
+    "on": "wt:PerformanceReport"
+    dims: [website_id, session_id, visitor_id, user_id, wt_campaign_id, wt_contact_id, device, browser, browser_version, platform, country, city, region, utm_source, utm_medium, utm_campaign, utm_term, utm_content, referrer, referrer_domain, entry_page, exit_page, is_bounce_flag, is_engaged_flag, is_online_flag, is_first_session_flag, has_rage_clicks, has_dead_clicks, has_deep_scroll, has_conversion, has_purchase, has_checkout_start, has_cart_add, has_product_view, has_form_start, has_form_submit, has_form_failure, has_form_abandon, has_search, has_error, is_campaign_attributed, is_identified]
+    when: Period aggregate for sessions with conversions.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  sessions_with_deep_scroll:
+    label: Sessions With Deep Scroll
+    "on": "wt:PerformanceReport"
+    dims: [website_id, session_id, visitor_id, user_id, wt_campaign_id, wt_contact_id, device, browser, browser_version, platform, country, city, region, utm_source, utm_medium, utm_campaign, utm_term, utm_content, referrer, referrer_domain, entry_page, exit_page, is_bounce_flag, is_engaged_flag, is_online_flag, is_first_session_flag, has_rage_clicks, has_dead_clicks, has_deep_scroll, has_conversion, has_purchase, has_checkout_start, has_cart_add, has_product_view, has_form_start, has_form_submit, has_form_failure, has_form_abandon, has_search, has_error, is_campaign_attributed, is_identified]
+    when: Period aggregate for sessions with deep scroll.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  sessions_with_product_views:
+    label: Sessions With Product Views
+    "on": "wt:PerformanceReport"
+    dims: [website_id, session_id, visitor_id, user_id, wt_campaign_id, wt_contact_id, device, browser, browser_version, platform, country, city, region, utm_source, utm_medium, utm_campaign, utm_term, utm_content, referrer, referrer_domain, entry_page, exit_page, is_bounce_flag, is_engaged_flag, is_online_flag, is_first_session_flag, has_rage_clicks, has_dead_clicks, has_deep_scroll, has_conversion, has_purchase, has_checkout_start, has_cart_add, has_product_view, has_form_start, has_form_submit, has_form_failure, has_form_abandon, has_search, has_error, is_campaign_attributed, is_identified]
+    when: Period aggregate for sessions with product views.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  signup_count:
+    label: Signup Count
+    "on": "wt:PerformanceReport"
+    dims: [website_id, conversion_id, product_id, page_view_id, session_id, visitor_id, conversion_type, currency, utm_source, utm_campaign, device, country]
+    when: Period aggregate for signup count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  total_clicks:
+    label: Total Clicks
+    "on": "wt:PerformanceReport"
+    dims: [website_id, event_id, page_view_id, session_id, visitor_id, event_type, element, element_type, element_text, page_path, device, country, reason]
+    when: Period aggregate for total clicks.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  total_conversions:
+    label: Total Conversions
+    "on": "wt:PerformanceReport"
+    dims: [website_id, conversion_id, product_id, page_view_id, session_id, visitor_id, conversion_type, currency, utm_source, utm_campaign, device, country]
+    when: Period aggregate for total conversions.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  total_custom_events:
+    label: Total Custom Events
+    "on": "wt:PerformanceReport"
+    dims: [website_id, event_id, page_view_id, session_id, visitor_id, event_name, device, country]
+    when: Period aggregate for total custom events.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  total_events:
+    label: Total Events
+    "on": "wt:PerformanceReport"
+    dims: [website_id, event_id, page_view_id, session_id, visitor_id, event_type, element, element_type, element_text, page_path, device, country, reason]
+    when: Period aggregate for total events.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  total_revenue:
+    label: Total Revenue
+    "on": "wt:PerformanceReport"
+    dims: [website_id, conversion_id, product_id, page_view_id, session_id, visitor_id, conversion_type, currency, utm_source, utm_campaign, device, country]
+    when: Period aggregate for total revenue.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  tracking_consent_denied_count:
+    label: Tracking Consent Denied Count
+    "on": "wt:PerformanceReport"
+    dims: [website_id, event_id, session_id, visitor_id, action, cookie_name, page_path]
+    when: Period aggregate for tracking consent denied count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  tracking_consent_grant_rate:
+    label: Tracking Consent Grant Rate
+    "on": "wt:PerformanceReport"
+    dims: [website_id, event_id, session_id, visitor_id, action, cookie_name, page_path]
+    when: Period aggregate for tracking consent grant rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  tracking_consent_granted_count:
+    label: Tracking Consent Granted Count
+    "on": "wt:PerformanceReport"
+    dims: [website_id, event_id, session_id, visitor_id, action, cookie_name, page_path]
+    when: Period aggregate for tracking consent granted count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  unique_visitors:
+    label: Unique Visitors
+    "on": "wt:PerformanceReport"
+    dims: [website_id, session_id, visitor_id, user_id, wt_campaign_id, wt_contact_id, device, browser, browser_version, platform, country, city, region, utm_source, utm_medium, utm_campaign, utm_term, utm_content, referrer, referrer_domain, entry_page, exit_page, is_bounce_flag, is_engaged_flag, is_online_flag, is_first_session_flag, has_rage_clicks, has_dead_clicks, has_deep_scroll, has_conversion, has_purchase, has_checkout_start, has_cart_add, has_product_view, has_form_start, has_form_submit, has_form_failure, has_form_abandon, has_search, has_error, is_campaign_attributed, is_identified]
+    when: Period aggregate for unique visitors.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  visitor_identification_rate:
+    label: Visitor Identification Rate
+    "on": "wt:PerformanceReport"
+    dims: [website_id, visitor_id, user_id, anonymous_id, country, is_identified_flag, is_returning_visitor, session_id, wt_campaign_id, wt_contact_id, device, browser, browser_version, platform, city, region, utm_source, utm_medium, utm_campaign, utm_term, utm_content, referrer, referrer_domain, entry_page, exit_page, is_bounce_flag, is_engaged_flag, is_online_flag, is_first_session_flag, has_rage_clicks, has_dead_clicks, has_deep_scroll, has_conversion, has_purchase, has_checkout_start, has_cart_add, has_product_view, has_form_start, has_form_submit, has_form_failure, has_form_abandon, has_search, has_error, is_campaign_attributed, is_identified]
+    when: Period aggregate for visitor identification rate.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  web_session_volume:
+    label: Web Session Volume
+    "on": "wt:PerformanceReport"
+    dims: [website_id, session_id, visitor_id, user_id, wt_campaign_id, wt_contact_id, device, browser, browser_version, platform, country, city, region, utm_source, utm_medium, utm_campaign, utm_term, utm_content, referrer, referrer_domain, entry_page, exit_page, is_bounce_flag, is_engaged_flag, is_online_flag, is_first_session_flag, has_rage_clicks, has_dead_clicks, has_deep_scroll, has_conversion, has_purchase, has_checkout_start, has_cart_add, has_product_view, has_form_start, has_form_submit, has_form_failure, has_form_abandon, has_search, has_error, is_campaign_attributed, is_identified]
+    when: Period aggregate for web session volume.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  ticket_active_days:
+    label: Ticket Active Days
+    "on": Ticket
+    dims: [status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue]
+    when: Period aggregate for ticket active days.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: assignee_or_team
+    scope_entity: ticket__assignee
+
+  dead_click_session_count:
+    label: Dead Click Session Count
+    "on": PerformanceReport
+    dims: [website_id, session_id, visitor_id, user_id, wt_campaign_id, wt_contact_id, device, browser, browser_version, platform, country, city, region, utm_source, utm_medium, utm_campaign, utm_term, utm_content, referrer, referrer_domain, entry_page, exit_page, is_bounce_flag, is_engaged_flag, is_online_flag, is_first_session_flag, has_rage_clicks, has_dead_clicks, has_deep_scroll, has_conversion, has_purchase, has_checkout_start, has_cart_add, has_product_view, has_form_start, has_form_submit, has_form_failure, has_form_abandon, has_search, has_error, is_campaign_attributed, is_identified]
+    when: Period aggregate for dead click session count.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  online_visitors:
+    label: Online Visitors
+    "on": PerformanceReport
+    dims: [website_id, session_id, visitor_id, user_id, wt_campaign_id, wt_contact_id, device, browser, browser_version, platform, country, city, region, utm_source, utm_medium, utm_campaign, utm_term, utm_content, referrer, referrer_domain, entry_page, exit_page, is_bounce_flag, is_engaged_flag, is_online_flag, is_first_session_flag, has_rage_clicks, has_dead_clicks, has_deep_scroll, has_conversion, has_purchase, has_checkout_start, has_cart_add, has_product_view, has_form_start, has_form_submit, has_form_failure, has_form_abandon, has_search, has_error, is_campaign_attributed, is_identified]
+    when: Period aggregate for online visitors.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org
+
+  total_conversion_value:
+    label: Total Conversion Value
+    "on": PerformanceReport
+    dims: [website_id, conversion_id, product_id, page_view_id, session_id, visitor_id, conversion_type, currency, utm_source, utm_campaign, device, country]
+    when: Period aggregate for total conversion value.
+    not_for: Row-level lookup — use spoke_query.
+    via: ask_semantic
+    scope: org

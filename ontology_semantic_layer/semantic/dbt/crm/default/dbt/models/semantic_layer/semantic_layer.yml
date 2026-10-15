@@ -1,0 +1,1357 @@
+version: 2
+
+# ---------------------------------------------------------------------------
+# Standing rule: every semantic model carries `organization_id` as a
+# categorical dimension. ALWAYS filter/group by it in queries — this is the
+# multi-tenancy isolation boundary. Metrics below list it first in
+# allowed dimensions as a reminder; it is not optional.
+# ---------------------------------------------------------------------------
+
+semantic_models:
+
+  - name: deal
+    description: "One row per CRM deal (worktual_bigint.crm.deals), owner name denormalized."
+    model: ref('mart_deals')
+    defaults:
+      agg_time_dimension: created_at
+    entities:
+      - name: deal
+        type: primary
+        expr: deal_id
+      - name: contact
+        type: foreign
+        expr: contact_id
+      - name: company
+        type: foreign
+        expr: company_id
+      - name: owner
+        type: foreign
+        expr: owner_user_id
+    dimensions:
+      - name: organization_id
+        type: categorical
+      - name: business_type
+        type: categorical
+      - name: created_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: closed_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: stage
+        type: categorical
+      - name: deal_status_proxy
+        type: categorical
+      - name: lost_reason
+        type: categorical
+      - name: owner_name
+        type: categorical
+      - name: owner_team_id
+        type: categorical
+    measures:
+      - name: open_pipeline_amount
+        agg: sum
+        expr: "case when is_open then amount else 0 end"
+      - name: deal_count
+        agg: count_distinct
+        expr: deal_id
+      - name: deal_amount_sum
+        agg: sum
+        expr: amount
+      - name: won_deal_count
+        agg: count
+        expr: "case when is_won then deal_id end"
+      - name: lost_deal_count
+        agg: count
+        expr: "case when is_lost then deal_id end"
+      - name: closed_deal_count
+        agg: count
+        expr: "case when is_closed then deal_id end"
+      - name: sales_cycle_days_sum
+        agg: sum
+        expr: sales_cycle_days
+      - name: won_deal_count_for_avg
+        agg: count
+        expr: "case when is_won then deal_id end"
+      - name: won_deal_amount_sum
+        agg: sum
+        expr: "case when is_won then amount else 0 end"
+      - name: lost_deal_amount_sum
+        agg: sum
+        expr: "case when is_lost then amount else 0 end"
+
+
+
+  - name: contact
+    description: "One row per CRM contact profile (mart_contacts), owner name denormalized."
+    model: ref('mart_contacts')
+    defaults:
+      agg_time_dimension: created_at
+    entities:
+      - name: contact
+        type: primary
+        expr: contact_id
+      - name: company
+        type: foreign
+        expr: company_id
+      - name: owner
+        type: foreign
+        expr: owner_user_id
+    dimensions:
+      - name: organization_id
+        type: categorical
+      - name: business_type
+        type: categorical
+      - name: created_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: lifecycle_stage
+        type: categorical
+      - name: lead_source
+        type: categorical
+      - name: lead_status
+        type: categorical
+      - name: owner_name
+        type: categorical
+      - name: lead_score
+        type: categorical    # numeric (integer 0-100+); use for filters/comparisons e.g. lead_score < 40
+      - name: lead_band
+        type: categorical    # hot / warm / cold, gate typically >= 40
+    measures:
+      - name: contact_count
+        agg: count_distinct
+        expr: contact_id
+      - name: new_lead_count
+        agg: count
+        expr: "case when lifecycle_stage in ('lead','subscriber') then contact_id end"
+      - name: mql_proxy_count
+        agg: count
+        expr: "case when is_mql_proxy then contact_id end"
+      - name: eligible_lead_count
+        agg: count
+        expr: "case when lifecycle_stage in ('lead','mql','prospect','customer') then contact_id end"
+      - name: customer_count
+        agg: count
+        expr: "case when lifecycle_stage = 'customer' then contact_id end"
+      - name: funnel_eligible_count
+        agg: count
+        expr: "case when lifecycle_stage in ('lead','mql','prospect','customer','subscriber') then contact_id end"
+
+  - name: quote
+    description: "One row per quote, parent deal stage/owner denormalized."
+    model: ref('mart_quotes')
+    defaults:
+      agg_time_dimension: created_at
+    entities:
+      - name: quote
+        type: primary
+        expr: quote_id
+      - name: deal
+        type: foreign
+        expr: deal_id
+    dimensions:
+      - name: organization_id
+        type: categorical
+      - name: business_type
+        type: categorical
+      - name: created_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: quote_status
+        type: categorical
+      - name: deal_stage
+        type: categorical
+      - name: owner_name
+        type: categorical
+    measures:
+      - name: quote_count
+        agg: count_distinct
+        expr: quote_id
+      - name: deals_with_quote_count
+        agg: count_distinct
+        expr: deal_id
+      - name: won_deals_with_accepted_quote_count
+        agg: count_distinct
+        expr: "case when is_accepted and deal_is_won then deal_id end"
+
+  - name: proposal
+    description: "One row per proposal, parent deal owner denormalized."
+    model: ref('mart_proposals')
+    defaults:
+      agg_time_dimension: created_at
+    entities:
+      - name: proposal
+        type: primary
+        expr: proposal_id
+      - name: deal
+        type: foreign
+        expr: deal_id
+    dimensions:
+      - name: organization_id
+        type: categorical
+      - name: business_type
+        type: categorical
+      - name: created_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: proposal_status
+        type: categorical
+      - name: owner_name
+        type: categorical
+    measures:
+      - name: proposal_sent_count
+        agg: count
+        expr: "case when is_sent then proposal_id end"
+      - name: proposal_accepted_count
+        agg: count
+        expr: "case when is_accepted then proposal_id end"
+
+  - name: order
+    description: "One row per sales order, contact lifecycle stage and creator name denormalized."
+    model: ref('mart_orders')
+    defaults:
+      agg_time_dimension: created_at
+    entities:
+      - name: order
+        type: primary
+        expr: order_id
+      - name: contact
+        type: foreign
+        expr: contact_id
+      - name: company
+        type: foreign
+        expr: company_id
+      - name: deal
+        type: foreign
+        expr: deal_id
+    dimensions:
+      - name: organization_id
+        type: categorical
+      - name: business_type
+        type: categorical
+      - name: created_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: order_status
+        type: categorical
+      - name: contact_lifecycle_stage
+        type: categorical
+      - name: created_by_name
+        type: categorical
+    measures:
+      - name: order_count
+        agg: count_distinct
+        expr: order_id
+      - name: order_total_sum
+        agg: sum
+        expr: total
+
+  - name: order_by_contact
+    description: "One row per contact who has placed at least one order. Avoids order-grain fan-out for contacts_with_orders / repeat_customer_count / customer_lifetime_value."
+    model: ref('mart_contact_order_summary')
+    defaults:
+      agg_time_dimension: first_order_at
+    entities:
+      - name: contact
+        type: primary
+        expr: contact_id
+    dimensions:
+      - name: first_order_at
+        type: time
+        type_params:
+          time_granularity: day
+    measures:
+      - name: contacts_with_orders
+        agg: count_distinct
+        expr: contact_id
+      - name: lifetime_order_value_sum
+        agg: sum
+        expr: lifetime_order_value
+      - name: repeat_customer_count
+        agg: count_distinct
+        expr: "case when is_repeat_customer then contact_id end"
+
+  - name: invoice
+    description: "One row per invoice, creator name denormalized."
+    model: ref('mart_invoices')
+    defaults:
+      agg_time_dimension: issue_date
+    entities:
+      - name: invoice
+        type: primary
+        expr: invoice_id
+      - name: deal
+        type: foreign
+        expr: deal_id
+    dimensions:
+      - name: organization_id
+        type: categorical
+      - name: business_type
+        type: categorical
+      - name: issue_date
+        type: time
+        type_params:
+          time_granularity: day
+      - name: invoice_status
+        type: categorical
+      - name: created_by_name
+        type: categorical
+    measures:
+      - name: outstanding_invoice_amount
+        agg: sum
+        expr: "case when is_outstanding then total else 0 end"
+      - name: paid_invoice_count
+        agg: count
+        expr: "case when is_paid then invoice_id end"
+      - name: days_to_pay_sum
+        agg: sum
+        expr: days_to_pay
+
+  # ---------------------------------------------------------------------
+  # Product / line-item models.
+  # order_line is universal (B2B/B2C/B2B2C). quote_line and invoice_line
+  # are B2B/B2B2C only — always filter/segment by business_type when
+  # comparing across tenants of different motions.
+  # ---------------------------------------------------------------------
+
+  - name: order_line
+    description: "One row per sales-order line item (mart_order_lines). Universal across B2B, B2C, B2B2C."
+    model: ref('mart_order_lines')
+    defaults:
+      agg_time_dimension: created_at
+    entities:
+      - name: order_line
+        type: primary
+        expr: order_line_id
+      - name: order
+        type: foreign
+        expr: order_id
+      - name: product
+        type: foreign
+        expr: product_id
+      - name: contact
+        type: foreign
+        expr: contact_id
+      - name: company
+        type: foreign
+        expr: company_id
+    dimensions:
+      - name: organization_id
+        type: categorical
+      - name: created_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: business_type
+        type: categorical
+      - name: order_status
+        type: categorical
+      - name: product_name
+        type: categorical
+      - name: product_sku
+        type: categorical
+      - name: product_category
+        type: categorical
+      - name: product_subcategory
+        type: categorical
+      - name: product_brand
+        type: categorical
+      - name: product_billing_type
+        type: categorical
+    measures:
+      - name: order_line_count
+        agg: count_distinct
+        expr: order_line_id
+      - name: units_sold_sum
+        agg: sum
+        expr: quantity
+      - name: order_line_revenue_sum
+        agg: sum
+        expr: line_amount
+      - name: distinct_products_sold
+        agg: count_distinct
+        expr: product_id
+
+  - name: quote_line
+    description: "One row per quote line item (mart_quote_lines). B2B / B2B2C only."
+    model: ref('mart_quote_lines')
+    defaults:
+      agg_time_dimension: created_at
+    entities:
+      - name: quote_line
+        type: primary
+        expr: quote_line_id
+      - name: quote
+        type: foreign
+        expr: quote_id
+      - name: product
+        type: foreign
+        expr: product_id
+      - name: deal
+        type: foreign
+        expr: deal_id
+    dimensions:
+      - name: organization_id
+        type: categorical
+      - name: created_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: business_type
+        type: categorical
+      - name: quote_status
+        type: categorical
+      - name: product_name
+        type: categorical
+      - name: product_category
+        type: categorical
+      - name: owner_name
+        type: categorical
+    measures:
+      - name: quote_line_count
+        agg: count_distinct
+        expr: quote_line_id
+      - name: quoted_units_sum
+        agg: sum
+        expr: quantity
+      - name: quote_line_revenue_sum
+        agg: sum
+        expr: line_amount
+
+  - name: invoice_line
+    description: "One row per invoice line item (mart_invoice_lines). B2B / B2B2C only — B2C never enables Finance."
+    model: ref('mart_invoice_lines')
+    defaults:
+      agg_time_dimension: created_at
+    entities:
+      - name: invoice_line
+        type: primary
+        expr: invoice_line_id
+      - name: invoice
+        type: foreign
+        expr: invoice_id
+      - name: product
+        type: foreign
+        expr: product_id
+    dimensions:
+      - name: organization_id
+        type: categorical
+      - name: created_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: business_type
+        type: categorical
+      - name: invoice_status
+        type: categorical
+      - name: line_kind
+        type: categorical
+      - name: product_name
+        type: categorical
+      - name: product_category
+        type: categorical
+    measures:
+      - name: invoice_line_count
+        agg: count_distinct
+        expr: invoice_line_id
+      - name: invoiced_units_sum
+        agg: sum
+        expr: quantity
+      - name: invoice_line_revenue_sum
+        agg: sum
+        expr: line_amount
+
+  # ---------------------------------------------------------------------
+  # Account / franchise (B2B, B2B2C) and activity models.
+  # company and contract are B2B/B2B2C only. contact_activity is universal.
+  # ---------------------------------------------------------------------
+
+  - name: company
+    description: "One row per B2B account (mart_companies), incl. B2B2C franchise-tree fields. B2B/B2B2C only."
+    model: ref('mart_companies')
+    defaults:
+      agg_time_dimension: created_at
+    entities:
+      - name: company
+        type: primary
+        expr: company_id
+      - name: parent_company
+        type: foreign
+        expr: parent_company_id
+      - name: owner
+        type: foreign
+        expr: owner_user_id
+    dimensions:
+      - name: organization_id
+        type: categorical
+      - name: created_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: business_type
+        type: categorical
+      - name: company_industry
+        type: categorical
+      - name: channel_role
+        type: categorical
+      - name: owner_name
+        type: categorical
+      - name: parent_company_name
+        type: categorical
+    measures:
+      - name: company_count
+        agg: count_distinct
+        expr: company_id
+      - name: franchise_node_count
+        agg: count
+        expr: "case when is_franchise_node then company_id end"
+      - name: total_location_count
+        agg: sum
+        expr: location_count
+
+  - name: contract
+    description: "One row per subscription/ARR contract (mart_contracts). B2B/B2B2C only."
+    model: ref('mart_contracts')
+    defaults:
+      agg_time_dimension: starts_at
+    entities:
+      - name: contract
+        type: primary
+        expr: contract_id
+      - name: company
+        type: foreign
+        expr: company_id
+      - name: deal
+        type: foreign
+        expr: deal_id
+    dimensions:
+      - name: organization_id
+        type: categorical
+      - name: starts_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: business_type
+        type: categorical
+      - name: channel_role
+        type: categorical
+    measures:
+      - name: contract_count
+        agg: count_distinct
+        expr: contract_id
+      - name: arr_sum
+        agg: sum
+        expr: arr
+      - name: expired_contract_count
+        agg: count
+        expr: "case when is_expired then contract_id end"
+      - name: renewal_due_90d_count
+        agg: count
+        expr: "case when is_renewal_due_90d then contract_id end"
+      - name: renewed_contract_count
+        agg: count
+        expr: "case when is_renewed then contract_id end"
+
+  - name: deal_activity
+    description: "One row per deal-level activity (mart_deal_activities). B2B/B2B2C only."
+    model: ref('mart_deal_activities')
+    defaults:
+      agg_time_dimension: created_at
+    entities:
+      - name: deal_activity
+        type: primary
+        expr: deal_activity_id
+      - name: deal
+        type: foreign
+        expr: deal_id
+    dimensions:
+      - name: organization_id
+        type: categorical
+      - name: created_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: business_type
+        type: categorical
+      - name: activity_type
+        type: categorical
+      - name: owner_name
+        type: categorical
+      - name: deal_stage
+        type: categorical
+    measures:
+      - name: deal_activity_count
+        agg: count_distinct
+        expr: deal_activity_id
+      - name: completed_deal_activity_count
+        agg: count
+        expr: "case when is_completed then deal_activity_id end"
+
+  - name: contact_activity
+    description: "One row per contact-timeline / Inbox activity (mart_contact_activities). Universal across B2B, B2C, B2B2C."
+    model: ref('mart_contact_activities')
+    defaults:
+      agg_time_dimension: created_at
+    entities:
+      - name: contact_activity
+        type: primary
+        expr: contact_activity_id
+      - name: contact
+        type: foreign
+        expr: contact_id
+    dimensions:
+      - name: organization_id
+        type: categorical
+      - name: created_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: business_type
+        type: categorical
+      - name: activity_type
+        type: categorical
+      - name: folder
+        type: categorical
+      - name: contact_lifecycle_stage
+        type: categorical
+    measures:
+      - name: contact_activity_count
+        agg: count_distinct
+        expr: contact_activity_id
+      - name: completed_task_count
+        agg: count
+        expr: "case when is_task and is_completed then contact_activity_id end"
+      - name: open_task_count
+        agg: count
+        expr: "case when is_task and not is_completed then contact_activity_id end"
+
+  # ---------------------------------------------------------------------
+  # Period-average models.
+  # Pre-aggregated to day grain so `agg: average` measures correctly
+  # average per-period values when rolled up to week/month/quarter/year
+  # (native MetricFlow grains only — half-yearly/custom need a calendar
+  # spine, not yet built). Do NOT confuse these with the volume totals
+  # above: `deal_count` here is "average deals per day/week/month", not
+  # "total deals".
+  # ---------------------------------------------------------------------
+
+  - name: deal_daily
+    description: "One row per organization_id x day, deal counts and win/loss rate pre-aggregated for period averages."
+    model: ref('mart_deal_daily_summary')
+    defaults:
+      agg_time_dimension: period_date
+    entities:
+      - name: deal_daily
+        type: primary
+        expr: "organization_id || '-' || day"
+    dimensions:
+      - name: organization_id
+        type: categorical
+      - name: business_type
+        type: categorical
+      - name: period_date
+        type: time
+        type_params:
+          time_granularity: day
+        expr: day
+    measures:
+      - name: avg_deal_count
+        agg: average
+        expr: deal_count
+      - name: avg_open_pipeline_amount
+        agg: average
+        expr: open_pipeline_amount
+      - name: avg_won_deal_count
+        agg: average
+        expr: won_deal_count
+      - name: avg_lost_deal_count
+        agg: average
+        expr: lost_deal_count
+      - name: avg_closed_deal_count
+        agg: average
+        expr: closed_deal_count
+      - name: avg_daily_win_rate
+        agg: average
+        expr: daily_win_rate
+      - name: avg_daily_loss_rate
+        agg: average
+        expr: daily_loss_rate
+
+  - name: deal_owner_daily
+    description: "One row per organization_id x owner_user_id x day, for per-agent average win rate."
+    model: ref('mart_deal_owner_daily_summary')
+    defaults:
+      agg_time_dimension: period_date
+    entities:
+      - name: deal_owner_daily
+        type: primary
+        expr: "organization_id || '-' || owner_user_id || '-' || day"
+      - name: owner
+        type: foreign
+        expr: owner_user_id
+    dimensions:
+      - name: organization_id
+        type: categorical
+      - name: business_type
+        type: categorical
+      - name: owner_name
+        type: categorical
+      - name: period_date
+        type: time
+        type_params:
+          time_granularity: day
+        expr: day
+    measures:
+      - name: avg_agent_win_rate
+        agg: average
+        expr: daily_agent_win_rate
+
+  - name: contact_daily
+    description: "One row per organization_id x day, funnel counts and daily rates pre-aggregated for period averages."
+    model: ref('mart_contact_daily_summary')
+    defaults:
+      agg_time_dimension: period_date
+    entities:
+      - name: contact_daily
+        type: primary
+        expr: "organization_id || '-' || day"
+    dimensions:
+      - name: organization_id
+        type: categorical
+      - name: business_type
+        type: categorical
+      - name: period_date
+        type: time
+        type_params:
+          time_granularity: day
+        expr: day
+    measures:
+      - name: avg_contact_count
+        agg: average
+        expr: contact_count
+      - name: avg_new_lead_count
+        agg: average
+        expr: new_lead_count
+      - name: avg_mql_proxy_count
+        agg: average
+        expr: mql_proxy_count
+      - name: avg_eligible_lead_count
+        agg: average
+        expr: eligible_lead_count
+      - name: avg_customer_count
+        agg: average
+        expr: customer_count
+      - name: avg_funnel_eligible_count
+        agg: average
+        expr: funnel_eligible_count
+      - name: avg_daily_mql_rate
+        agg: average
+        expr: daily_mql_rate
+      - name: avg_daily_customer_conversion_rate
+        agg: average
+        expr: daily_customer_conversion_rate
+
+  - name: proposal_daily
+    description: "One row per organization_id x day, proposal counts and daily acceptance rate pre-aggregated for period averages."
+    model: ref('mart_proposal_daily_summary')
+    defaults:
+      agg_time_dimension: period_date
+    entities:
+      - name: proposal_daily
+        type: primary
+        expr: "organization_id || '-' || day"
+    dimensions:
+      - name: organization_id
+        type: categorical
+      - name: business_type
+        type: categorical
+      - name: period_date
+        type: time
+        type_params:
+          time_granularity: day
+        expr: day
+    measures:
+      - name: avg_proposal_sent_count
+        agg: average
+        expr: proposal_sent_count
+      - name: avg_proposal_accepted_count
+        agg: average
+        expr: proposal_accepted_count
+      - name: avg_daily_proposal_acceptance_rate
+        agg: average
+        expr: daily_proposal_acceptance_rate
+
+  - name: order_line_daily
+    description: "One row per organization_id x day, units/revenue/distinct-product counts pre-aggregated for period averages."
+    model: ref('mart_order_line_daily_summary')
+    defaults:
+      agg_time_dimension: period_date
+    entities:
+      - name: order_line_daily
+        type: primary
+        expr: "organization_id || '-' || day"
+    dimensions:
+      - name: organization_id
+        type: categorical
+      - name: business_type
+        type: categorical
+      - name: period_date
+        type: time
+        type_params:
+          time_granularity: day
+        expr: day
+    measures:
+      - name: avg_units_sold_sum
+        agg: average
+        expr: units_sold_sum
+      - name: avg_order_line_revenue_sum
+        agg: average
+        expr: order_line_revenue_sum
+      - name: avg_distinct_products_sold
+        agg: average
+        expr: distinct_products_sold
+
+metrics:
+
+  # ---- Period averages (deal domain) ----
+  - name: average_deal_volume
+    type: simple
+    label: "Average Deal Volume (per day/week/month/quarter/year)"
+    type_params:
+      measure: avg_deal_count
+
+  - name: average_open_pipeline_value
+    type: simple
+    label: "Average Open Pipeline Value (per day/week/month/quarter/year)"
+    type_params:
+      measure: avg_open_pipeline_amount
+
+  - name: average_deals_won
+    type: simple
+    label: "Average Deals Won (per day/week/month/quarter/year)"
+    type_params:
+      measure: avg_won_deal_count
+
+  - name: average_deal_lost
+    type: simple
+    label: "Average Deals Lost (per day/week/month/quarter/year)"
+    type_params:
+      measure: avg_lost_deal_count
+
+  - name: average_closed_deal
+    type: simple
+    label: "Average Closed Deals (per day/week/month/quarter/year)"
+    type_params:
+      measure: avg_closed_deal_count
+
+  - name: average_deal_won_rate
+    type: simple
+    label: "Average Win Rate (average of each period's win rate, not recomputed over the range)"
+    type_params:
+      measure: avg_daily_win_rate
+
+  - name: average_loss_rate
+    type: simple
+    label: "Average Loss Rate (average of each period's loss rate)"
+    type_params:
+      measure: avg_daily_loss_rate
+
+  - name: average_win_rate_of_the_agent
+    type: simple
+    label: "Average Win Rate Of The Agent (group by deal_owner_daily__owner_name)"
+    type_params:
+      measure: avg_agent_win_rate
+
+  # ---- Period averages (funnel/contact domain) ----
+  - name: average_contact_volume
+    type: simple
+    label: "Average Contact Volume (per day/week/month/quarter/year)"
+    type_params:
+      measure: avg_contact_count
+
+  - name: average_new_lead_volume
+    type: simple
+    label: "Average New Lead Volume (per day/week/month/quarter/year)"
+    type_params:
+      measure: avg_new_lead_count
+
+  - name: average_mql_contact_count
+    type: simple
+    label: "Average MQL Contact Count (proxy, per day/week/month/quarter/year)"
+    type_params:
+      measure: avg_mql_proxy_count
+
+  - name: average_eligible_lead_count
+    type: simple
+    label: "Average Eligible Lead Count (per day/week/month/quarter/year)"
+    type_params:
+      measure: avg_eligible_lead_count
+
+  - name: average_customer_contact_count
+    type: simple
+    label: "Average Customer Contact Count (per day/week/month/quarter/year)"
+    type_params:
+      measure: avg_customer_count
+
+  - name: average_mql_rate
+    type: simple
+    label: "Average MQL Rate (average of each period's rate, proxy)"
+    type_params:
+      measure: avg_daily_mql_rate
+
+  - name: average_customer_conversion_rate
+    type: simple
+    label: "Average Customer Conversion Rate (average of each period's rate)"
+    type_params:
+      measure: avg_daily_customer_conversion_rate
+
+  # ---- Period averages (proposal domain) ----
+  - name: average_proposal_sent
+    type: simple
+    label: "Average Proposal Sent (per day/week/month/quarter/year)"
+    type_params:
+      measure: avg_proposal_sent_count
+
+  - name: average_proposal_accepted
+    type: simple
+    label: "Average Proposal Accepted (per day/week/month/quarter/year)"
+    type_params:
+      measure: avg_proposal_accepted_count
+
+  - name: average_proposal_acceptance_rate
+    type: simple
+    label: "Average Proposal Acceptance Rate (average of each period's rate)"
+    type_params:
+      measure: avg_daily_proposal_acceptance_rate
+
+  # ---- Period averages (product domain) ----
+  - name: average_units_sold
+    type: simple
+    label: "Average Units Sold (per day/week/month/quarter/year)"
+    type_params:
+      measure: avg_units_sold_sum
+
+  - name: average_product_revenue
+    type: simple
+    label: "Average Product Revenue (per day/week/month/quarter/year)"
+    type_params:
+      measure: avg_order_line_revenue_sum
+
+  - name: average_distinct_product_sold_count
+    type: simple
+    label: "Average Distinct Products Sold Count (per day/week/month/quarter/year)"
+    type_params:
+      measure: avg_distinct_products_sold
+
+  # ---- Funnel / contact ----
+  - name: contact_volume
+    type: simple
+    label: "Contact Volume"
+    type_params:
+      measure: contact_count
+
+  - name: new_lead_volume
+    type: simple
+    label: "New Lead Volume"
+    type_params:
+      measure: new_lead_count
+
+  - name: mql_rate
+    type: ratio
+    label: "MQL Rate (proxy: all 4 BANT flags true)"
+    type_params:
+      numerator: mql_contact_count
+      denominator: eligible_lead_contact_count
+
+  - name: mql_contact_count
+    type: simple
+    label: "MQL Contact Count (proxy)"
+    type_params:
+      measure: mql_proxy_count
+
+  - name: eligible_lead_contact_count
+    type: simple
+    label: "Eligible Lead Contact Count"
+    type_params:
+      measure: eligible_lead_count
+
+  - name: customer_conversion_rate
+    type: ratio
+    label: "Customer Conversion Rate"
+    type_params:
+      numerator: customer_contact_count
+      denominator: funnel_eligible_contact_count
+
+  - name: customer_contact_count
+    type: simple
+    label: "Customer Contact Count"
+    type_params:
+      measure: customer_count
+
+  - name: funnel_eligible_contact_count
+    type: simple
+    label: "Funnel Eligible Contact Count"
+    type_params:
+      measure: funnel_eligible_count
+
+  # ---- Deals / pipeline ----
+  - name: deal_volume
+    type: simple
+    label: "Deal Volume"
+    type_params:
+      measure: deal_count
+
+  - name: open_pipeline_value
+    type: simple
+    label: "Open Pipeline Value"
+    type_params:
+      measure: open_pipeline_amount
+
+  - name: won_deal_rate
+    type: ratio
+    label: "Win Rate"
+    type_params:
+      numerator: won_deals_metric
+      denominator: closed_deals_metric
+
+  - name: won_deals_metric
+    type: simple
+    label: "Won Deal Count"
+    type_params:
+      measure: won_deal_count
+
+  - name: closed_deals_metric
+    type: simple
+    label: "Closed Deal Count"
+    type_params:
+      measure: closed_deal_count
+
+  - name: loss_rate
+    type: ratio
+    label: "Loss Rate"
+    type_params:
+      numerator: lost_deals_metric
+      denominator: closed_deals_metric
+
+  - name: lost_deals_metric
+    type: simple
+    label: "Lost Deal Count"
+    type_params:
+      measure: lost_deal_count
+
+  - name: average_sales_cycle_days
+    type: derived
+    label: "Average Sales Cycle Length (days)"
+    type_params:
+      expr: sales_cycle_days_total / nullif(won_deals_for_avg, 0)
+      metrics:
+        - name: sales_cycle_days_total
+        - name: won_deals_for_avg
+
+  - name: sales_cycle_days_total
+    type: simple
+    label: "Sales Cycle Days (sum)"
+    type_params:
+      measure: sales_cycle_days_sum
+
+  - name: won_deals_for_avg
+    type: simple
+    label: "Won Deal Count (for averages)"
+    type_params:
+      measure: won_deal_count_for_avg
+
+  - name: average_deal_value
+    type: derived
+    label: "Average Deal Value (won deals)"
+    type_params:
+      expr: won_deal_amount_total / nullif(won_deals_for_avg, 0)
+      metrics:
+        - name: won_deal_amount_total
+        - name: won_deals_for_avg
+
+  - name: won_deal_amount_total
+    type: simple
+    label: "Won Deal Amount (sum)"
+    type_params:
+      measure: won_deal_amount_sum
+
+  - name: lost_deal_amount_total
+    type: simple
+    label: "Lost Deal Amount (sum)"
+    type_params:
+      measure: lost_deal_amount_sum
+
+  - name: pipeline_coverage_ratio
+    type: derived
+    label: "Pipeline Coverage Ratio (open value / won value, same period)"
+    type_params:
+      expr: open_pipeline_value / nullif(won_deal_amount_total, 0)
+      metrics:
+        - name: open_pipeline_value
+        - name: won_deal_amount_total
+
+  - name: sales_agent_win_rate
+    type: ratio
+    label: "Sales Agent Win Rate (group by deal__owner_name)"
+    type_params:
+      numerator: won_deals_metric
+      denominator: closed_deals_metric
+
+  # ---- Quotes / proposals ----
+  - name: quote_to_close_rate
+    type: ratio
+    label: "Quote-to-Close Rate"
+    type_params:
+      numerator: won_deals_with_accepted_quote_metric
+      denominator: deals_with_quote_metric
+
+  - name: won_deals_with_accepted_quote_metric
+    type: simple
+    label: "Won Deals With Accepted Quote Count"
+    type_params:
+      measure: won_deals_with_accepted_quote_count
+
+  - name: deals_with_quote_metric
+    type: simple
+    label: "Deals With Quote Count"
+    type_params:
+      measure: deals_with_quote_count
+
+  - name: proposal_acceptance_rate
+    type: ratio
+    label: "Proposal Acceptance Rate"
+    type_params:
+      numerator: proposal_accepted_metric
+      denominator: proposal_sent_metric
+
+  - name: proposal_accepted_metric
+    type: simple
+    label: "Proposal Accepted Count"
+    type_params:
+      measure: proposal_accepted_count
+
+  - name: proposal_sent_metric
+    type: simple
+    label: "Proposal Sent Count"
+    type_params:
+      measure: proposal_sent_count
+
+  # ---- Orders / commerce ----
+  - name: order_volume
+    type: simple
+    label: "Order Volume"
+    type_params:
+      measure: order_count
+
+  - name: order_gmv
+    type: simple
+    label: "Gross Merchandise Value"
+    type_params:
+      measure: order_total_sum
+
+  - name: average_order_value
+    type: derived
+    label: "Average Order Value"
+    type_params:
+      expr: order_gmv / nullif(order_volume, 0)
+      metrics:
+        - name: order_gmv
+        - name: order_volume
+
+  - name: repurchase_rate
+    type: ratio
+    label: "Repurchase Rate (contacts with 2+ orders / contacts with 1+ orders)"
+    type_params:
+      numerator: repeat_customers_metric
+      denominator: contacts_with_orders_metric
+
+  - name: repeat_customers_metric
+    type: simple
+    label: "Repeat Customer Count (2+ orders)"
+    type_params:
+      measure: repeat_customer_count
+
+  - name: contacts_with_orders_metric
+    type: simple
+    label: "Contacts With Orders Count"
+    type_params:
+      measure: contacts_with_orders
+
+  - name: customer_lifetime_value
+    type: derived
+    label: "Customer Lifetime Value (observed, customers only)"
+    type_params:
+      expr: lifetime_order_value_total / nullif(contacts_with_orders_metric, 0)
+      metrics:
+        - name: lifetime_order_value_total
+        - name: contacts_with_orders_metric
+
+  - name: lifetime_order_value_total
+    type: simple
+    label: "Lifetime Order Value (sum)"
+    type_params:
+      measure: lifetime_order_value_sum
+
+  # ---- Finance ----
+  - name: invoice_outstanding_amount
+    type: simple
+    label: "Invoice Outstanding Amount"
+    type_params:
+      measure: outstanding_invoice_amount
+
+  - name: days_sales_outstanding
+    type: derived
+    label: "Days Sales Outstanding"
+    type_params:
+      expr: days_to_pay_total / nullif(paid_invoices_metric, 0)
+      metrics:
+        - name: days_to_pay_total
+        - name: paid_invoices_metric
+
+  - name: days_to_pay_total
+    type: simple
+    label: "Days To Pay (sum)"
+    type_params:
+      measure: days_to_pay_sum
+
+  - name: paid_invoices_metric
+    type: simple
+    label: "Paid Invoice Count"
+    type_params:
+      measure: paid_invoice_count
+
+  # ---- Products (order_line: universal B2B/B2C/B2B2C) ----
+  - name: units_sold
+    type: simple
+    label: "Units Sold (group by order_line__product_name for top sellers)"
+    type_params:
+      measure: units_sold_sum
+
+  - name: product_revenue
+    type: simple
+    label: "Product Revenue (group by order_line__product_category / product_name)"
+    type_params:
+      measure: order_line_revenue_sum
+
+  - name: average_selling_price
+    type: derived
+    label: "Average Selling Price"
+    type_params:
+      expr: product_revenue_total / nullif(units_sold, 0)
+      metrics:
+        - name: product_revenue_total
+        - name: units_sold
+
+  - name: product_revenue_total
+    type: simple
+    label: "Product Revenue (sum, for averages)"
+    type_params:
+      measure: order_line_revenue_sum
+
+  - name: distinct_products_sold_count
+    type: simple
+    label: "Distinct Products Sold"
+    type_params:
+      measure: distinct_products_sold
+
+  # ---- Products (quote_line / invoice_line: B2B / B2B2C only) ----
+  - name: quoted_product_revenue
+    type: simple
+    label: "Quoted Product Revenue (B2B/B2B2C only)"
+    type_params:
+      measure: quote_line_revenue_sum
+
+  - name: invoiced_product_revenue
+    type: simple
+    label: "Invoiced Product Revenue (B2B/B2B2C only)"
+    type_params:
+      measure: invoice_line_revenue_sum
+
+  # ---- Accounts / franchise (B2B, B2B2C only) ----
+  - name: account_volume
+    type: simple
+    label: "Account (Company) Volume"
+    type_params:
+      measure: company_count
+
+  - name: franchise_node_volume
+    type: simple
+    label: "Franchise Node Count (B2B2C: franchise / owned_store / brand_hq)"
+    type_params:
+      measure: franchise_node_count
+
+  - name: total_account_locations
+    type: simple
+    label: "Total Account Locations"
+    type_params:
+      measure: total_location_count
+
+  # ---- Contracts / ARR (B2B, B2B2C only) ----
+  - name: active_arr
+    type: simple
+    label: "Active ARR (sum, group by company__channel_role for franchise cut)"
+    type_params:
+      measure: arr_sum
+
+  - name: contract_renewal_rate
+    type: ratio
+    label: "Contract Renewal Rate"
+    type_params:
+      numerator: renewed_contracts_metric
+      denominator: contract_volume
+
+  - name: renewed_contracts_metric
+    type: simple
+    label: "Renewed Contract Count"
+    type_params:
+      measure: renewed_contract_count
+
+  - name: contract_volume
+    type: simple
+    label: "Contract Volume"
+    type_params:
+      measure: contract_count
+
+  - name: contracts_due_for_renewal
+    type: simple
+    label: "Contracts Due For Renewal (next 90 days)"
+    type_params:
+      measure: renewal_due_90d_count
+
+  # ---- Activities / engagement ----
+  - name: deal_activity_volume
+    type: simple
+    label: "Deal Activity Volume (B2B/B2B2C only)"
+    type_params:
+      measure: deal_activity_count
+
+  - name: deal_activity_completion_rate
+    type: ratio
+    label: "Deal Activity Completion Rate (B2B/B2B2C only)"
+    type_params:
+      numerator: completed_deal_activities_metric
+      denominator: deal_activity_volume
+
+  - name: completed_deal_activities_metric
+    type: simple
+    label: "Completed Deal Activity Count"
+    type_params:
+      measure: completed_deal_activity_count
+
+  - name: contact_activity_volume
+    type: simple
+    label: "Contact Activity Volume (universal: B2B, B2C, B2B2C)"
+    type_params:
+      measure: contact_activity_count
+
+  - name: open_task_volume
+    type: simple
+    label: "Open Task Volume (universal: B2B, B2C, B2B2C)"
+    type_params:
+      measure: open_task_count

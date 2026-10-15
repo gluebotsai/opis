@@ -1,0 +1,76 @@
+/**
+ * Admin — Customer portal users
+ * Extends admin-users-light.css patterns; page-specific KPI accents + column widths.
+ */
+
+.admin-cpu-page .admin-cpu-kpi-card__icon--companies {
+  background: color-mix(in srgb, #653ae0 12%, #fff);
+  color: #653ae0;
+}
+
+.admin-cpu-page .admin-users-panel__table-wrap {
+  overflow-x: auto;
+}
+
+.admin-cpu-page .admin-cpu-table {
+  /* Data cols + sticky Actions (56px); forces scroll instead of crushing ⋯ */
+  min-width: 960px;
+  table-layout: fixed;
+  width: 100%;
+}
+
+/* Percentages for data cols only — leave room for sticky Actions (last / 56px). */
+.admin-cpu-page .admin-cpu-table th:nth-child(1),
+.admin-cpu-page .admin-cpu-table td:nth-child(1) {
+  width: 18%;
+}
+
+.admin-cpu-page .admin-cpu-table th:nth-child(2),
+.admin-cpu-page .admin-cpu-table td:nth-child(2) {
+  width: 16%;
+}
+
+.admin-cpu-page .admin-cpu-table th:nth-child(3),
+.admin-cpu-page .admin-cpu-table td:nth-child(3) {
+  width: 20%;
+}
+
+.admin-cpu-page .admin-cpu-table th:nth-child(4),
+.admin-cpu-page .admin-cpu-table td:nth-child(4) {
+  width: 12%;
+}
+
+.admin-cpu-page .admin-cpu-table th:nth-child(5),
+.admin-cpu-page .admin-cpu-table td:nth-child(5) {
+  width: 12%;
+}
+
+.admin-cpu-page .admin-cpu-table th:nth-child(6),
+.admin-cpu-page .admin-cpu-table td:nth-child(6) {
+  width: 14%;
+}
+
+.admin-cpu-page .admin-cpu-table th:last-child,
+.admin-cpu-page .admin-cpu-table td:last-child {
+  min-width: 56px;
+  width: 56px;
+}
+
+/* Open menu above following rows / footer */
+.admin-cpu-page .admin-cpu-table .admin-users-row-menu {
+  z-index: 120;
+}
+
+@media (max-width: 1360px), (max-height: 720px) {
+  /* Hide Branch + Last updated only — never Actions (last). */
+  .admin-cpu-page .admin-cpu-table th:nth-child(4),
+  .admin-cpu-page .admin-cpu-table td:nth-child(4),
+  .admin-cpu-page .admin-cpu-table th:nth-child(6),
+  .admin-cpu-page .admin-cpu-table td:nth-child(6) {
+    display: none;
+  }
+
+  .admin-cpu-page .admin-cpu-table {
+    min-width: 720px;
+  }
+}

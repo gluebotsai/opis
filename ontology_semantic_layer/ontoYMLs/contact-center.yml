@@ -1,0 +1,203 @@
+ontology:
+  name: contact_center_complete_ontology
+  purpose: >
+    Give the Contact Center super agent a complete and simple understanding of
+    the Worktual AI Contact Center product so it can guide specialist agents and
+    answer questions from tenants, staff, and supervisors accurately.
+
+  entities:
+    Tenant:
+      definition: The company that uses Worktual AI Contact Center to talk with and support their customers.
+      identifier: accounts.organizations.id
+
+    Staff:
+      definition: A person from the tenant who works in the contact center, such as an agent, supervisor, or admin.
+      identifier: [accounts.setup_users.id, ccass.agents.id]
+
+    Team:
+      definition: A group of staff members put together based on their skill.
+      identifier: accounts.setup_teams.id
+
+    Contact:
+      definition: A person who reaches the tenant through a channel to ask something or get something done.
+      identifier: cdp.customer_profile.cdp_id
+
+    ContactIdentity:
+      definition: An email address, phone number, or social account that tells us which contact is reaching out.
+      identifier: cdp.identity_keys.identity_id
+
+    BusinessHours:
+      definition: The days and times when the tenant is open for support, including holidays when it is closed.
+      identifier: accounts.setup_business_hours.id
+
+    Shift:
+      definition: A working period in the day for staff, such as Morning, Evening, or Night.
+      identifier: accounts.setup_business_hour_shifts.id
+
+    Channel:
+      definition: A platform that connects the tenant with contacts
+      identifier: accounts.setup_channel_configs.id
+
+    Queue:
+      definition: A support team or routing group, based on skills, where conversations wait until a staff member takes them.
+      identifier: [accounts.setup_ccaas_queues.id, ccass.queues.id]
+
+    Skill:
+      definition: A competency a staff member needs to handle certain conversations, such as billing or a language.
+      identifier: ccass.skills.id
+
+    RoutingStyle:
+      definition: The one way the tenant matches conversations to staff, such as longest wait, same agent as before, or best skill match.
+      identifier: accounts.routing_profile_types.id
+
+    Availability:
+      definition: Whether a staff member can take new work right now, such as Ready, Busy, on Break, or Offline.
+      identifier: ccass.agent_presence.id
+
+    WorkCapacity:
+      definition: How many conversations a staff member can handle at the same time on each channel.
+      identifier: ccass.agent_capacity.id
+
+    Conversation:
+      definition: One support session between a contact and the tenant on one channel, from the first message or call until it ends.
+      identifier: ccass.conversations.id
+
+    Message:
+      definition: One turn in a conversation, sent by the contact, a staff member, the bot, or the system.
+      identifier: ccass.conversation_messages.id
+
+    Offer:
+      definition: A request to a staff member to take a waiting conversation, which they can accept, reject, or let expire.
+      identifier: ccass.conversation_assignments.id
+
+    Transfer:
+      definition: Moving a conversation from one staff member or queue to another.
+      identifier: ccass.conversation_transfers.id
+
+    MissedContact:
+      definition: A conversation a staff member did not take because no one was free or it was rejected.
+      identifier: ccass.agent_missed_contacts.id
+
+    Handoff:
+      definition: The moment the bot passes a conversation to a queue so a person can help.
+      identifier: ccass.conversations.id
+
+    Note:
+      definition: An internal comment a staff member adds to a conversation, visible only to staff.
+      identifier: ccass.conversation_notes.id
+
+    Task:
+      definition: An item in a staff member's to-do list, such as a callback, follow-up, or escalation.
+      identifier: ccass.agent_tasks.id
+
+    SLA:
+      definition: The expected time for the first reply and for resolving a conversation.
+      identifier: ccass.sla_policies.id
+
+    Coworker:
+      definition: The AI assistant that helps staff by suggesting replies, summarising, and doing tasks.
+      identifier: ccass.copilot_sessions.id
+
+    KnowledgeDocument:
+      definition: A file the tenant uploads so the bot and co-worker can give correct answers.
+      identifier: accounts.setup_knowledge_documents.id
+
+  relations:
+    - Tenant - has_staff -> Staff
+    - Tenant - has_contact -> Contact
+    - Tenant - has_channel -> Channel
+    - Tenant - has_queue -> Queue
+    - Tenant - uses_routing_style -> RoutingStyle
+
+    - Staff - belongs_to -> Team
+    - Staff - member_of -> Queue
+    - Staff - has_skill -> Skill
+    - Staff - works_shift -> Shift
+    - Staff - has_availability -> Availability
+    - Staff - has_capacity -> WorkCapacity
+    - Staff - owns -> Task
+
+    - Team - owns -> Queue
+    - Queue - requires -> Skill
+    - Queue - follows -> BusinessHours
+    - Queue - overflows_to -> Queue
+
+    - Channel - routes_to -> Queue
+
+    - Contact - identified_by -> ContactIdentity
+    - Contact - starts -> Conversation
+
+    - Conversation - on -> Channel
+    - Conversation - waits_in -> Queue
+    - Conversation - assigned_to -> Staff
+    - Conversation - has_message -> Message
+    - Conversation - has_note -> Note
+    - Conversation - has_offer -> Offer
+    - Conversation - has_transfer -> Transfer
+    - Conversation - has_handoff -> Handoff
+    - Conversation - governed_by -> SLA
+
+    - Offer - sent_to -> Staff
+    - Offer - becomes -> MissedContact
+    - Transfer - to -> Queue
+    - Transfer - to -> Staff
+    - MissedContact - may_create -> Task
+    - Task - about -> Conversation
+    - Note - written_by -> Staff
+
+    - Coworker - uses -> KnowledgeDocument
+    - Coworker - suggests -> Task
+
+  synonyms:
+    Tenant: [organization, company, business]
+    Staff: [agent, supervisor, admin, user, employee]
+    Team: [department, group]
+    Contact: [customer, caller, visitor, client, end_user]
+    ContactIdentity: [email, phone, whatsapp_number, social_id]
+    BusinessHours: [working_hours, opening_hours, holidays]
+    Channel: [platform, medium]
+    Queue: [support_queue, routing_group]
+    RoutingStyle: [routing_type, routing_method]
+    Availability: [presence, status, agent_status]
+    WorkCapacity: [concurrency, capacity]
+    Conversation: [chat, call, session, interaction, email_thread]
+    Message: [reply, chat_message]
+    Offer: [assignment, ring]
+    MissedContact: [missed_chat, missed_call]
+    Handoff: [bot_handoff, live_agent_request]
+    Note: [internal_note]
+    Task: [callback, follow_up, to_do]
+    SLA: [service_level_agreement, response_target]
+    Coworker: [copilot, agent_assist]
+    KnowledgeDocument: [knowledge_base, kb]
+
+  taxonomy:
+    staff.status: [active, inactive]
+    shift.type: [morning, evening, night, regular]
+    channel.type: [web_chat, email, whatsapp, instagram, facebook, voice]
+    routing_style.type: [long_wait, sticky, skill]
+    availability.state: [offline, ready, not_ready, break, away, busy, after_contact_work]
+    conversation.status: [bot_active, queued, assigned, active, resolved, closed]
+    conversation.sla_status: [not_started, on_track, warning, breached, met, stopped]
+    message.sender: [customer, agent, bot, system]
+    message.visibility: [customer, internal, system]
+    offer.status: [offered, accepted, rejected, expired, ended]
+    transfer.status: [requested, offered, accepted, completed, cancelled]
+    missed_contact.reason: [offer_timeout, manual_reject, no_agent_available, routing_exhausted, handoff_failure]
+    task.type: [callback, follow_up, escalation, suggestion]
+    task.status: [open, completed, dismissed]
+    task.priority: [low, normal, high, critical]
+
+  business_rules:
+    - Never guess who a contact is. Match only through a recorded email, phone, or social account.
+    - Contacts and staff are different people and must never be swapped.
+    - A conversation belongs to a staff member only after they accept the offer. Being in a queue does not mean owning its conversations.
+    - A missed contact does not mean the contact was lost. Another staff member may have handled it.
+    - Messages, notes, and tasks are not conversations and must never be counted as one.
+    - Internal notes and internal messages are never shown to a contact.
+    - Bot replies do not count as the first reply for SLA. A target is breached only after its deadline passes unmet.
+    - Say an action is done only when there is a recorded result. Suggestions and tasks do not prove it happened.
+    - Answer only from the tenant's knowledge documents and recorded data. If something is not recorded, say it is unknown.
+    - Use only the values listed in this ontology. Never invent statuses, reasons, or categories.
+    - Current state always comes from the live conversation or staff member, not from past records.
+    - All dates and times are given in the tenant timezone.

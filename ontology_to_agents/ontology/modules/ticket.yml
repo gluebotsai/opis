@@ -1,0 +1,104 @@
+# Ticketing spoke — SupportCase maps here (one id: Ticket).
+# Grounded in mas-agents-guide.md: create (customer+issue; enrich fills rest), reassign L1/L2, escalate.
+module: ticket
+layer: domain
+depends_on: [core, identity]
+owned_by_spoke: ticketing
+readable_by: [contact_centre, hub]
+source:
+  semantic: semantic/dbt/ticketing/default/dbt/models/semantic_layer mart_tickets
+  agents: mas-agents-guide.md A1 Tickets Specialist
+usecase: >
+  One customer issue tracked to resolution. CC may create or link a conversation;
+  Ticketing owns lifecycle, L1 assignee, L2 resolver, SLA. Do not fork Case.
+
+classes:
+  - id: Ticket
+    extends: WorkItem
+    definition: Support case — customer issue with priority, team, L1 agent and L2 resolver.
+    properties: [number, subject, description, category, channel]
+    classified_by: [ticket.priority, ticket.category, ticket.status, ticket.assignee_role, channel]
+    relations:
+      customer: Contact
+      account: Organization
+      relatedInteraction: Conversation
+      hasSla: SLA
+      assignedL1: Agent
+      resolverL2: Agent
+      ownedByTeam: Team
+      inQueue: Queue
+      notes: Note
+
+  - id: SLA
+    definition: Time commitment (first response or resolution hours by priority).
+    properties: [dueAt, firstResponseDueAt, breached, atRisk]
+    relations:
+      of: Ticket
+
+  - id: Note
+    definition: Internal or customer-visible note on a ticket.
+    properties: [body, internal]
+    relations:
+      of: Ticket
+
+  - id: TicketDraft
+    definition: Staged create before confirm. User supplies customer + issue only.
+    properties: [customerName, contact, issue, nextField]
+
+relations:
+  - { from: Ticket, type: raised_by, to: Contact }
+  - { from: Ticket, type: belongs_to, to: Organization }
+  - { from: Ticket, type: related_to, to: Conversation }
+  - { from: Ticket, type: has_sla, to: SLA }
+  - { from: Ticket, type: assigned_to, to: Agent }
+  - { from: Ticket, type: resolved_by, to: Agent }
+  - { from: Ticket, type: owned_by_team, to: Team }
+  - { from: Contact, type: has, to: Ticket }
+  - { from: Note, type: of, to: Ticket }
+
+actions:
+  - id: action.create_ticket
+    operates_on: [Ticket]
+    requires: [identityResolved]
+    definition: >
+      Collect customer+issue; enrich sets subject, priority, team, L1, L2.
+      Ticketing chat specialist confirms before Express save; CC bot may create after identityResolved.
+    maps_to_tools: [CREATE_TICKET, tk.ticket.create]
+    spoke_targets: [ticketing, contact_centre]
+
+  - id: action.get_ticket_status
+    operates_on: [Ticket]
+    mutates: false
+    requires: [identityResolved]
+    maps_to_tools: [GET_TICKET_STATUS, tk.ticket.read]
+
+  - id: action.verify_contact_for_ticket
+    operates_on: [Contact, Ticket]
+    maps_to_tools: [VERIFY_CONTACT_FOR_TICKET, SEND_OTP, VERIFY_OTP]
+
+  - id: action.reassign_ticket
+    operates_on: [Ticket]
+    requires: [userConfirmed]
+    definition: Change L1 agent or L2 resolver — never swap the two roles.
+    maps_to_tools: [tk.ticket.reassign]
+
+  - id: action.escalate_ticket
+    operates_on: [Ticket]
+    requires: [identityResolved]
+    definition: Hand to L2 resolver with optional note.
+    maps_to_tools: [tk.ticket.escalate]
+    spoke_targets: [ticketing]
+
+  - id: action.enrich_ticket
+    operates_on: [Ticket]
+    mutates: false
+    definition: Triage + ITRA — subject, priority, team, L1, L2 from issue text.
+
+metric_ids:
+  - open_tickets_metric
+  - high_priority_ticket_volume
+  - sla_breach_rate
+  - average_resolution_time_hours
+  - average_first_response_hours
+  - average_csat_score
+  - reopen_rate

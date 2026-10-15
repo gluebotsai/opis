@@ -1,0 +1,107 @@
+{
+  "question": "show  me the revenue by products",
+  "answer": "\n\nFor overall (no date filter, UTC), revenue by product is 2200000.00 for Analytics, 2185000.00 for CRM Platform, 2155000.00 for Voice Assist, and 1960000.00 for Inbox, across 20 invoices.\n\n| Product | Revenue | Invoices |\n|---|---:|---:|\n| Analytics | 2200000.00 | 5 |\n| CRM Platform | 2185000.00 | 5 |\n| Voice Assist | 2155000.00 | 5 |\n| Inbox | 1960000.00 | 5 |",
+  "trace": {
+    "question": "show  me the revenue by products",
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1015,
+      "role": "admin"
+    },
+    "model": "worktual-qwen-27B",
+    "tasks": [
+      {
+        "status": "ok",
+        "store": "sql",
+        "sql": "WITH rpt_invoice_lines AS (\nSELECT src.id, src.organization_id, src.invoice_id, src.kind, src.product_id, src.addon_id, src.name, src.quantity, src.unit_price, src.tax_percent, src.amount, src.created_at FROM (\nSELECT \n  il.id,\n  il.organization_id,\n  il.invoice_id,\n  il.kind,\n  il.product_id,\n  il.addon_id,\n  COALESCE(p.name, il.name) AS name,\n  COALESCE(il.quantity, 0) AS quantity,\n  COALESCE(il.unit_price, 0) AS unit_price,\n  COALESCE(il.tax_percent, 0) AS tax_percent,\n  COALESCE(il.amount, 0) AS amount,\n  il.created_at\nFROM crm.invoice_lines il\nLEFT JOIN inventory.products p ON p.id = il.product_id\nWHERE il.organization_id = %(_org_id)s\n) src WHERE TRUE\n),\nrpt_invoices AS (\nSELECT src.id, src.organization_id, src.invoice_number, src.order_id, src.deal_id, src.deal_title, src.company_id, src.company_name, src.status, src.approval_status, src.subtotal, src.discount_amount, src.tax_amount, src.total, src.currency_code, src.due_at, src.paid_at, src.payment_method, src.created_by_user_id, src.owner_user_id, src.owner_name, src.created_at, src.updated_at, src.is_overdue FROM (\nSELECT \n  inv.id,\n  inv.organization_id,\n  inv.number AS invoice_number,\n  inv.order_id,\n  inv.deal_id,\n  d.title AS deal_title,\n  inv.company_id,\n  c.name AS company_name,\n  inv.status,\n  inv.approval_status,\n  COALESCE(inv.total - COALESCE(inv.tax_amount, 0) + COALESCE(inv.discount_amount, 0), inv.total) AS subtotal,\n  COALESCE(inv.discount_amount, 0) AS discount_amount,\n  COALESCE(inv.tax_amount, 0) AS tax_amount,\n  COALESCE(inv.total, 0) AS total,\n  COALESCE(inv.currency, 'USD') AS currency_code,\n  inv.due_at,\n  inv.paid_at,\n  inv.payment_method,\n  inv.created_by_user_id,\n  d.owner_user_id,\n  su.first_name || ' ' || COALESCE(su.last_name, '') AS owner_name,\n  inv.created_at,\n  inv.updated_at,\n  (inv.status = 'overdue' OR (inv.status = 'sent' AND inv.due_at < NOW())) AS is_overdue\nFROM crm.invoices inv\nLEFT JOIN crm.deals d ON d.id = inv.deal_id AND d.organization_id = inv.organization_id\nLEFT JOIN crm.companies c ON c.id = inv.company_id AND c.organization_id = inv.organization_id\nLEFT JOIN accounts.setup_users su ON su.id = d.owner_user_id\nWHERE inv.organization_id = %(_org_id)s\n) src WHERE TRUE\n)\nSELECT COALESCE(il.name, 'Other Products') AS product_name, CAST(COUNT(DISTINCT il.invoice_id) AS BIGINT) AS invoice_count, CAST(COALESCE(SUM(il.amount), 0) AS DECIMAL(15, 2)) AS product_revenue FROM rpt_invoice_lines AS il JOIN rpt_invoices AS inv ON inv.id = il.invoice_id WHERE inv.status = 'paid' AND TRUE AND TRUE AND TRUE GROUP BY il.name ORDER BY product_revenue DESC LIMIT 500",
+        "views": [
+          "invoice_lines",
+          "invoices"
+        ],
+        "guard_notes": [
+          "row cap 500 applied"
+        ],
+        "bound_params": {
+          "_org_id": 1003,
+          "_user_id": 1015,
+          "user_id": 1015,
+          "organization_id": 1003,
+          "org_id": 1003,
+          "tenant_id": 1003,
+          "current_user_id": 1015
+        },
+        "rows": [
+          {
+            "product_name": "Analytics",
+            "invoice_count": 5,
+            "product_revenue": "2200000.00"
+          },
+          {
+            "product_name": "CRM Platform",
+            "invoice_count": 5,
+            "product_revenue": "2185000.00"
+          },
+          {
+            "product_name": "Voice Assist",
+            "invoice_count": 5,
+            "product_revenue": "2155000.00"
+          },
+          {
+            "product_name": "Inbox",
+            "invoice_count": 5,
+            "product_revenue": "1960000.00"
+          }
+        ],
+        "kpi_id": "product_revenue",
+        "dimension": "product",
+        "time_status": "all_time",
+        "attempts": [
+          {
+            "raw": "\n\n{\"tool\":\"run_kpi\",\"kpi_id\":\"product_revenue\",\"dimension\":\"product\"}",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "product_revenue",
+              "dimension": "product"
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "tool": "run_kpi",
+        "requested_kpi": "product_revenue",
+        "requested_dimension": "product",
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "product_revenue",
+          "goal": "Revenue by product",
+          "time": "all time",
+          "scope": "org",
+          "dimension": "product",
+          "answer_type": "breakdown",
+          "depends_on": []
+        }
+      }
+    ],
+    "domain_raw": "\n\n{\n  \"kind\": \"plan\",\n  \"depth\": \"standard\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"product_revenue\",\n      \"goal\": \"Revenue by product\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"dimension\": \"product\",\n      \"answer_type\": \"breakdown\",\n      \"depends_on\": []\n    }\n  ]\n}",
+    "plan": {
+      "kind": "plan",
+      "depth": "standard",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "product_revenue",
+          "goal": "Revenue by product",
+          "time": "all time",
+          "scope": "org",
+          "dimension": "product",
+          "answer_type": "breakdown",
+          "depends_on": []
+        }
+      ]
+    },
+    "facts": "time_requested: all time\nperiod_applied: overall (no date filter, UTC)\ntime_status: all_time\ncatalog_kpi: product_revenue\nRESULT: 4 group(s)\ngroup_by: product\ntotal_invoice_count: 20\n  Analytics / 2200000.00: 5\n  CRM Platform / 2185000.00: 5\n  Voice Assist / 2155000.00: 5\n  Inbox / 1960000.00: 5",
+    "grounded": true,
+    "briefing_raw": "\n\nFor overall (no date filter, UTC), product revenue is 8,500,000.00 across 20 invoices, led by Analytics at 2,200,000.00.\n\n| Product | Revenue | Invoices |\n|---|---:|---:|\n| Analytics | 2,200,000.00 | 5 |\n| CRM Platform | 2,185,000.00 | 5 |\n| Voice Assist | 2,155,000.00 | 5 |\n| Inbox | 1,960,000.00 | 5 |"
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "question": "how many chanels are there?",
+  "answer": "The number of channels cannot be determined because the requested metric is not available in the system catalog.",
+  "trace": {
+    "question": "how many chanels are there?",
+    "identity": {
+      "organization_id": 1012,
+      "user_id": 1038,
+      "role": "admin",
+      "queue_ids": [
+        1060,
+        1061,
+        1062,
+        1063,
+        1064,
+        1065,
+        1066,
+        1071,
+        1072,
+        1073,
+        1074,
+        1075,
+        1076
+      ]
+    },
+    "model": "worktual-gemma",
+    "tasks": [
+      {
+        "status": "error",
+        "store": "sql",
+        "kpi_id": "channel_count",
+        "error_type": "REPLAN",
+        "error": "kpi_not_found: channel_count is not in the certified KPI index.",
+        "rows": [],
+        "attempts": [
+          {
+            "raw": "```json\n{\"tool\": \"run_kpi\", \"kpi_id\": \"channel_count\"}\n```",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "channel_count"
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "time_status": "all_time",
+        "tool": "run_kpi",
+        "requested_kpi": "channel_count",
+        "requested_dimension": null,
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "channel_count",
+          "dimension": null,
+          "goal": "Count of distinct channels",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "kpi"
+        }
+      }
+    ],
+    "domain_raw": "{\n  \"kind\": \"plan\",\n  \"depth\": \"quick\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"channel_count\",\n      \"dimension\": null,\n      \"goal\": \"Count of distinct channels\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"answer_type\": \"kpi\"\n    }\n  ]\n}",
+    "plan": {
+      "kind": "plan",
+      "depth": "quick",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "channel_count",
+          "dimension": null,
+          "goal": "Count of distinct channels",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "kpi"
+        }
+      ]
+    },
+    "facts": "EXECUTION_ERROR\nerror_type: REPLAN\nmessage: kpi_not_found: channel_count is not in the certified KPI index.\ntask_goal: Count of distinct channels\nwindow: overall (no date filter, UTC)",
+    "grounded": true,
+    "briefing_raw": "The number of channels cannot be determined because the requested metric is not available in the system catalog."
+  }
+}

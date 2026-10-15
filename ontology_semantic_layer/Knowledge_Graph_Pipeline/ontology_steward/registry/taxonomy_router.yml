@@ -1,0 +1,38 @@
+# Routes incoming field shapes to the correct taxonomy tree.
+# Taxonomist must not use Shopify for clinical vitals or medicines.
+
+routes:
+  ecommerce:
+    primary: shopify
+    google_via: shopify_mappings
+    instance_class: wt:Offering
+    industry_types: [ecommerce, retail, d2c, marketplace, fashion, apparel]
+
+  saas:
+    primary: shopify_or_offering_plan
+    instance_class: wt:Offering
+    industry_types: [saas, software]
+
+  healthcare_goods:
+    primary: shopify
+    instance_class: wt:Offering
+    industry_types: [healthcare_retail, pharmacy_retail]
+
+  healthcare_clinical:
+    primary: fhir
+    observation_class: wt:ClinicalObservation
+    condition_class: wt:MedicalCondition
+    industry_types: [healthcare, hospital, clinic, medical, telehealth]
+
+  automotive_parts_retail:
+    primary: shopify
+    shopify_root_hint: Vehicles & Parts
+    instance_class: wt:Offering
+    industry_types: [automotive_parts, auto_parts]
+
+  automotive_fleet:
+    primary: vehicle_mm
+    instance_class: wt:Vehicle
+    industry_types: [automotive, dealership, fleet]
+
+default_route: ecommerce

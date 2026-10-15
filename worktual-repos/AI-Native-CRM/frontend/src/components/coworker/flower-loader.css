@@ -1,0 +1,130 @@
+/* Same footprint as the previous 14px status spinner. Motion stays inside the box. */
+.crm-flower-slot {
+  position: relative;
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+  overflow: hidden;
+}
+
+.crm-flower-loader {
+  --fill-color: #7423d7;
+  --shine-color: #5c3d9933;
+  position: relative;
+  width: 14px;
+  height: 14px;
+}
+
+.crm-flower-loader svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 14px;
+  height: 14px;
+}
+
+.crm-flower-loader .crm-flower-one {
+  animation: crm-flower-one 1s linear infinite;
+}
+
+.crm-flower-loader .crm-flower-two {
+  opacity: 0;
+  transform: scale(0) translateY(-8px) translateX(-4px);
+  animation: crm-flower-two 1s linear infinite;
+  animation-delay: 0.3s;
+}
+
+.crm-flower-loader .crm-flower-three {
+  opacity: 0;
+  transform: scale(0) translateY(-8px) translateX(4px);
+  animation: crm-flower-three 1s linear infinite;
+  animation-delay: 0.6s;
+}
+
+.crm-flower-loader svg g path:first-child {
+  fill: var(--fill-color);
+}
+
+@keyframes crm-flower-one {
+  0% {
+    transform: scale(0.5) translateY(-6px);
+    opacity: 0;
+  }
+  25% {
+    transform: scale(0.75) translateY(-3px);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1) translateY(0px);
+    opacity: 1;
+  }
+  75% {
+    transform: scale(0.5) translateY(2px);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0) translateY(4px);
+    opacity: 0;
+  }
+}
+
+@keyframes crm-flower-two {
+  0% {
+    transform: scale(0.5) rotateZ(-10deg) translateY(-6px) translateX(-4px);
+    opacity: 0;
+  }
+  25% {
+    transform: scale(1) rotateZ(-5deg) translateY(-3px) translateX(-2px);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1) rotateZ(0deg) translateY(0px) translateX(-1px);
+    opacity: 1;
+  }
+  75% {
+    transform: scale(0.5) rotateZ(5deg) translateY(2px) translateX(0px);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0) rotateZ(10deg) translateY(4px) translateX(1px);
+    opacity: 0;
+  }
+}
+
+@keyframes crm-flower-three {
+  0% {
+    transform: scale(0.5) rotateZ(10deg) translateY(-6px) translateX(4px);
+    opacity: 0;
+  }
+  25% {
+    transform: scale(1) rotateZ(5deg) translateY(-3px) translateX(2px);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1) rotateZ(0deg) translateY(0px) translateX(1px);
+    opacity: 1;
+  }
+  75% {
+    transform: scale(0.5) rotateZ(-5deg) translateY(2px) translateX(0px);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0) rotateZ(-10deg) translateY(4px) translateX(-1px);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .crm-flower-loader .crm-flower-one,
+  .crm-flower-loader .crm-flower-two,
+  .crm-flower-loader .crm-flower-three {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .crm-flower-loader .crm-flower-two,
+  .crm-flower-loader .crm-flower-three {
+    display: none;
+  }
+}

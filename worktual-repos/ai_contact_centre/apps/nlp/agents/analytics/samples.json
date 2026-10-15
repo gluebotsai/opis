@@ -1,0 +1,64 @@
+{
+  "conversations": [
+    {
+      "id": "analytics-sla",
+      "title": "Ask for SLA this week",
+      "turns": [
+        { "role": "user", "content": "What is our SLA this week?" },
+        {
+          "role": "assistant",
+          "content": "<p>SLA this week is <strong>92.4%</strong> across 1,842 handled conversations.</p>",
+          "tools": ["update_skill_in_system", "generate_performance_report"]
+        }
+      ]
+    },
+    {
+      "id": "analytics-channel-mix",
+      "title": "Channel mix chart",
+      "turns": [
+        { "role": "user", "content": "Show channel mix for yesterday" },
+        {
+          "role": "assistant",
+          "content": "<p>Yesterday: Webchat 48%, Email 31%, WhatsApp 21%.</p>",
+          "tools": ["update_skill_in_system", "ask_semantic_layer", "generate_plot"]
+        }
+      ]
+    },
+    {
+      "id": "analytics-route-contact-count",
+      "title": "Route a contact directory count",
+      "turns": [
+        { "role": "user", "content": "How many contacts were created yesterday?" },
+        {
+          "role": "assistant",
+          "content": "",
+          "tools": ["route_to_agent"]
+        }
+      ]
+    },
+    {
+      "id": "analytics-missed-contact-rate",
+      "title": "Explain missed-contact rate from the Analytics snapshot",
+      "turns": [
+        { "role": "user", "content": "Why is missed-contact rate 166.7% and what changed versus last week?" },
+        {
+          "role": "assistant",
+          "content": "<p>Missed-contact rate is <strong>166.7%</strong> because 5 unique missed conversations sat on 3 agent-demand conversations. That formula can exceed 100%. Top driver is no agents available.</p>",
+          "tools": ["get_dashboard_analytics_snapshot"]
+        }
+      ]
+    },
+    {
+      "id": "analytics-peak-hour-hourly",
+      "title": "Show hourly volume that supports peak hour",
+      "turns": [
+        { "role": "user", "content": "Show me the historical contact volume by hour that supports 10:00-11:00 being the peak hour." },
+        {
+          "role": "assistant",
+          "content": "<p>10:00-11:00 is the peak hour in Asia/Kolkata because org-wide forecast inbound is highest in that hour. Last 7 days had 9 actual conversations then versus 12 forecast.</p>",
+          "tools": ["get_analytics_hourly_volume"]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,198 @@
+version: 1
+roles:
+  admin:
+    default_scope: org
+    created_by_me_column: created_by_user_id
+  operator:
+    default_scope: mine
+    created_by_me_column: created_by_user_id
+scope_levels:
+- org
+- mine
+- own
+- created_by_me
+matrix:
+  org:
+    admin: all
+    operator: deny
+  mine:
+    admin: all
+    operator: all
+  own:
+    admin: all
+    operator: all
+  created_by_me:
+    admin: all
+    operator: all
+views:
+  admin:
+    branches:
+      scope: id = {branch_id}
+    organization_products:
+      scope: branch_id = {branch_id}
+    campaigns:
+      scope: branch_id = {branch_id}
+    campaign_channels:
+      scope: campaign_id IN (SELECT id FROM campaign.campaigns WHERE organization_id = {org_id} AND branch_id = {branch_id})
+    campaign_audience:
+      scope: campaign_id IN (SELECT id FROM campaign.campaigns WHERE organization_id = {org_id} AND branch_id = {branch_id})
+    audience_people:
+      scope: campaign_id IN (SELECT id FROM campaign.campaigns WHERE organization_id = {org_id} AND branch_id = {branch_id})
+    agent_sessions:
+      scope: created_by_user_id = {user_id}
+    audience_refs:
+      scope: session_id IN (SELECT id FROM campaign.campaign_agent_sessions WHERE organization_id = {org_id} AND created_by_user_id
+        = {user_id})
+    session_temp_contacts:
+      scope: session_id IN (SELECT id FROM campaign.campaign_agent_sessions WHERE organization_id = {org_id} AND created_by_user_id
+        = {user_id})
+    channel_templates:
+      scope: created_at IS NOT NULL AND session_id IN (SELECT id FROM campaign.campaign_agent_sessions WHERE organization_id
+        = {org_id} AND created_by_user_id = {user_id})
+    template_messages:
+      scope: template_id IN (SELECT id FROM campaign.campaign_channel_templates t JOIN campaign.campaign_agent_sessions s
+        ON s.id = t.session_id WHERE s.organization_id = {org_id} AND s.created_by_user_id = {user_id})
+    channel_sending_profiles:
+      scope: 'TRUE'
+    organization_api_keys:
+      scope: 'TRUE'
+    push_channel_settings:
+      scope: 'TRUE'
+    email_org_profiles:
+      scope: 'TRUE'
+    email_senders:
+      scope: 'TRUE'
+    email_domains:
+      scope: 'TRUE'
+    email_return_paths:
+      scope: 'TRUE'
+    email_sending_caps:
+      scope: 'TRUE'
+    email_suppressions:
+      scope: 'TRUE'
+    send_batches:
+      scope: branch_id = {branch_id}
+    send_recipients:
+      scope: branch_id = {branch_id}
+    push_endpoints:
+      scope: 'TRUE'
+    website_contacts:
+      scope: 'TRUE'
+    contact_engagement:
+      scope: 'TRUE'
+    regulated_templates:
+      scope: 'TRUE'
+    library_templates:
+      scope: 'TRUE'
+    gallery_ideas:
+      scope: 'TRUE'
+    gallery_jobs:
+      scope: 'TRUE'
+    image_gallery_assets:
+      scope: 'TRUE'
+    sms_channel_settings:
+      scope: 'TRUE'
+    tenant_industry_packs:
+      scope: 'TRUE'
+    recommendations:
+      scope: 'TRUE'
+    app_notifications:
+      scope: 'TRUE'
+    opportunity_events:
+      scope: 'TRUE'
+    form_submissions:
+      scope: 'TRUE'
+    daily_report_emails:
+      scope: 'TRUE'
+    customers:
+      scope: 'TRUE'
+    identity_keys:
+      scope: 'TRUE'
+    organizations:
+      scope: 'TRUE'
+    setup_users:
+      scope: 'TRUE'
+    setup_roles:
+      scope: 'TRUE'
+    setup_user_product_access:
+      scope: 'TRUE'
+    setup_channel_configs:
+      scope: 'TRUE'
+    setup_email_configs:
+      scope: 'TRUE'
+    mail_oauth_connections:
+      scope: 'TRUE'
+    a2a_spoke_clients:
+      scope: 'TRUE'
+    auth_sessions:
+      scope: 'TRUE'
+  operator:
+    branches:
+      scope: id = {branch_id}
+    campaigns:
+      scope: branch_id = {branch_id} AND created_by_user_id = {user_id}
+    campaign_channels:
+      scope: campaign_id IN (SELECT id FROM campaign.campaigns WHERE organization_id = {org_id} AND branch_id = {branch_id}
+        AND created_by_user_id = {user_id})
+    campaign_audience:
+      scope: campaign_id IN (SELECT id FROM campaign.campaigns WHERE organization_id = {org_id} AND branch_id = {branch_id}
+        AND created_by_user_id = {user_id})
+    audience_people:
+      scope: campaign_id IN (SELECT id FROM campaign.campaigns WHERE organization_id = {org_id} AND branch_id = {branch_id}
+        AND created_by_user_id = {user_id})
+    agent_sessions:
+      scope: created_by_user_id = {user_id}
+    audience_refs:
+      scope: session_id IN (SELECT id FROM campaign.campaign_agent_sessions WHERE organization_id = {org_id} AND created_by_user_id
+        = {user_id})
+    session_temp_contacts:
+      scope: session_id IN (SELECT id FROM campaign.campaign_agent_sessions WHERE organization_id = {org_id} AND created_by_user_id
+        = {user_id})
+    channel_templates:
+      scope: created_at IS NOT NULL AND session_id IN (SELECT id FROM campaign.campaign_agent_sessions WHERE organization_id
+        = {org_id} AND created_by_user_id = {user_id})
+    template_messages:
+      scope: template_id IN (SELECT id FROM campaign.campaign_channel_templates t JOIN campaign.campaign_agent_sessions s
+        ON s.id = t.session_id WHERE s.organization_id = {org_id} AND s.created_by_user_id = {user_id})
+    send_batches:
+      scope: branch_id = {branch_id} AND created_by_user_id = {user_id}
+    send_recipients:
+      scope: branch_id = {branch_id} AND created_by_user_id = {user_id}
+    push_endpoints:
+      scope: 'TRUE'
+    website_contacts:
+      scope: 'TRUE'
+    contact_engagement:
+      scope: 'TRUE'
+    library_templates:
+      scope: 'TRUE'
+    gallery_ideas:
+      scope: 'TRUE'
+    gallery_jobs:
+      scope: 'TRUE'
+    image_gallery_assets:
+      scope: 'TRUE'
+    tenant_industry_packs:
+      scope: 'TRUE'
+    recommendations:
+      scope: 'TRUE'
+    app_notifications:
+      scope: user_id IS NULL OR user_id = {user_id}
+    opportunity_events:
+      scope: 'TRUE'
+    form_submissions:
+      scope: 'TRUE'
+    daily_report_emails:
+      scope: 'TRUE'
+    customers:
+      scope: 'TRUE'
+    identity_keys:
+      scope: 'TRUE'
+    organizations:
+      scope: 'TRUE'
+    setup_users:
+      scope: 'TRUE'
+    setup_roles:
+      scope: 'TRUE'
+    setup_user_product_access:
+      scope: 'TRUE'

@@ -1,0 +1,60 @@
+{
+  "turn_id": "3d78b8fa",
+  "timestamp": "2026-10-12T14:30:48.664759+00:00",
+  "question": "how many conversation are there in october 2026 alone",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1014,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Total conversations for October 2026</strong></p><p>There were <strong>425</strong> conversations in October 2026 (UTC).</p><p>Would you like to see how these conversations are distributed by channel?</p>",
+  "card": "card: kpi r1",
+  "facts": "result_id: r1\nwindow: October 2026 (UTC)\nkpi: total\ncertified: true\nunit: conversations\ntask_goal: Count the number of started conversations.\nanswer_type: number\nrow_count: 1\nrow 1: total=425",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1014,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "how many conversation are there in october 2026 alone",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants to know the total number of started conversations that occurred during the month of October 2026.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Count the number of started conversations.",
+          "time": "october 2026",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "total",
+        "row_count": 1
+      }
+    ],
+    "facts": "result_id: r1\nwindow: October 2026 (UTC)\nkpi: total\ncertified: true\nunit: conversations\ntask_goal: Count the number of started conversations.\nanswer_type: number\nrow_count: 1\nrow 1: total=425",
+    "grounded": true,
+    "card": "card: kpi r1"
+  },
+  "error": null
+}

@@ -1,0 +1,1014 @@
+CDP CUSTOMER 360 SCHEMA DESCRIPTION
+===================================
+
+Reference source: cdp_schema_new.sql
+Schema: cdp
+Default owner: nlp
+Tenancy key: organization_id BIGINT
+
+Notation
+--------
+PK       Primary key
+FK       Foreign key
+UQ       Unique constraint/index
+NN       NOT NULL
+RLS      Row-level security
+JSONB    Flexible structured JSON data
+
+General tenancy and security
+----------------------------
+Most Customer 360 tables contain organization_id BIGINT NN.
+Most tables are configured with FORCE ROW LEVEL SECURITY.
+Declared tenant policies compare organization_id with:
+current_setting('app.current_org_id')::bigint.
+The internal agentic_model scheduler table intentionally has RLS disabled because
+its worker claims model jobs across organizations.
+
+
+1. cdp.source_systems
+---------------------
+Purpose: Registry of external systems that contribute Customer 360 data.
+
+Columns:
+- source_id UUID NN, default gen_random_uuid(): Internal source identifier.
+- source_name VARCHAR(255) NN: Organization-scoped source name.
+- source_type VARCHAR(128) NN: Connector/source category.
+- active BOOLEAN NN, default TRUE: Whether ingestion from the source is enabled.
+- created_at TIMESTAMPTZ NN, default NOW(): Registration timestamp.
+- organization_id BIGINT NN: Owning organization.
+- custom_fields JSONB NN, default {}: Source-specific extension attributes.
+
+Constraints:
+- PK: source_id.
+- UQ: (organization_id, source_name).
+
+Indexes:
+- idx_source_systems_org (organization_id).
+
+Security:
+- FORCE RLS.
+
+
+2. cdp.customer_profile
+-----------------------
+Purpose: Golden Customer 360 profile; parent record for customer-linked data.
+
+Columns:
+- cdp_id UUID NN, default gen_random_uuid(): Canonical customer identifier.
+- first_name VARCHAR(128): Customer first name.
+- last_name VARCHAR(128): Customer last name.
+- gender VARCHAR(32): Customer gender when supplied.
+- date_of_birth DATE: Customer birth date.
+- company VARCHAR(255): Company or employer.
+- city VARCHAR(128): Customer city.
+- region VARCHAR(128): State, province, or region.
+- country VARCHAR(128): Customer country.
+- language VARCHAR(64): Preferred language.
+- timezone VARCHAR(64): Customer timezone.
+- acquisition_channel VARCHAR(128): Initial acquisition channel.
+- acquisition_date DATE: Acquisition date.
+- first_referrer TEXT: First known referrer.
+- first_seen_at TIMESTAMPTZ: First observed activity time.
+- last_seen_at TIMESTAMPTZ: Most recent observed activity time.
+- created_at TIMESTAMPTZ NN, default NOW(): Profile creation time.
+- updated_at TIMESTAMPTZ NN, default NOW(): Last profile update time.
+- organization_id BIGINT NN: Owning organization.
+- custom_fields JSONB NN, default {}: Client/industry-specific profile fields.
+
+Constraints:
+- PK: cdp_id.
+
+Indexes:
+- idx_customer_profile_org (organization_id).
+- idx_customer_profile_last_seen (organization_id, last_seen_at DESC).
+- idx_customer_profile_custom_fields GIN (custom_fields).
+
+Triggers:
+- trg_customer_profile_updated_at automatically refreshes updated_at.
+
+Security:
+- FORCE RLS.
+- Policy tenant_isolation_customer_profile scopes reads/writes by organization_id.
+
+
+3. cdp.identity_keys
+--------------------
+Purpose: Maps emails, phones, source IDs, and other identities to a canonical customer.
+
+Columns:
+- identity_id UUID NN, default gen_random_uuid(): Identity-key record identifier.
+- cdp_id UUID NN: Canonical customer receiving the identity.
+- key_type VARCHAR(64) NN: Identity kind, such as email, phone, or source_customer_id.
+- key_value VARCHAR(255) NN: Normalized identity value.
+- source_system VARCHAR(255): Source that supplied the identity.
+- confidence_score NUMERIC(5,4): Identity match confidence from 0 to 1.
+- verified BOOLEAN NN, default FALSE: Whether the identity was verified.
+- created_at TIMESTAMPTZ NN, default NOW(): Identity creation time.
+- organization_id BIGINT NN: Owning organization.
+- custom_fields JSONB NN, default {}: Identity-specific metadata.
+
+Constraints:
+- PK: identity_id.
+- FK: cdp_id -> customer_profile.cdp_id, ON DELETE CASCADE.
+- CHECK: confidence_score is NULL or between 0 and 1.
+- UQ index: (organization_id, key_type, key_value), ensuring one canonical
+  customer mapping per organization and identity.
+
+Indexes:
+- idx_identity_keys_unique (organization_id, key_type, key_value), UNIQUE.
+- idx_identity_keys_cdp (cdp_id).
+- idx_identity_keys_org (organization_id).
+
+Security:
+- FORCE RLS.
+
+
+4. cdp.customer_events
+----------------------
+Purpose: Time-series behavioral and commerce events for each customer.
+Partitioning: RANGE by occurred_at.
+
+Columns:
+- event_id UUID NN, default gen_random_uuid(): Event identifier.
+- cdp_id UUID NN: Customer associated with the event.
+- event_name VARCHAR(255) NN: Canonical event name.
+- event_category VARCHAR(128): Event category.
+- source_name VARCHAR(255): Originating source.
+- source_event_id VARCHAR(255): Source-native event identifier.
+- channel VARCHAR(64): Web, mobile, email, store, API, etc.
+- visitor_id VARCHAR(128): Anonymous visitor identifier.
+- session_id VARCHAR(128): Session identifier.
+- page_path TEXT: Page or route where the event occurred.
+- page_title VARCHAR(512): Page title.
+- referrer TEXT: Event referrer.
+- utm_source VARCHAR(128): UTM source.
+- utm_medium VARCHAR(128): UTM medium.
+- utm_campaign VARCHAR(128): UTM campaign.
+- utm_term VARCHAR(255): UTM term.
+- utm_content TEXT: UTM content.
+- device_type VARCHAR(64): Device class.
+- browser VARCHAR(128): Browser name/version.
+- country VARCHAR(128): Event country.
+- occurred_at TIMESTAMPTZ NN: Business occurrence time and partition key.
+- ingested_at TIMESTAMPTZ NN, default NOW(): CDP ingestion time.
+- amount NUMERIC(14,2): Monetary amount.
+- currency VARCHAR(8): Currency code.
+- quantity INTEGER: Associated quantity.
+- status VARCHAR(64): Event/business status.
+- reference_id VARCHAR(255): Related order, product, campaign, or external ID.
+- properties_json JSONB NN, default {}: Canonical event properties.
+- raw_payload_json JSONB NN, default {}: Original source payload.
+- organization_id BIGINT NN: Owning organization.
+- custom_fields JSONB NN, default {}: Client-specific event attributes.
+
+Constraints:
+- PK: (event_id, occurred_at); partition key is included.
+- FK: cdp_id -> customer_profile.cdp_id, ON DELETE CASCADE.
+
+Indexes:
+- idx_customer_events_org_cdp_time
+  (organization_id, cdp_id, occurred_at DESC).
+- idx_customer_events_custom_fields GIN (custom_fields).
+- idx_customer_events_visitor (visitor_id), only when visitor_id is not NULL.
+
+Partitions:
+- customer_events_2026_07: 2026-07-01 through 2026-08-01.
+- customer_events_2026_08: 2026-08-01 through 2026-09-01.
+- customer_events_default: catches dates outside explicit partitions.
+
+Security:
+- FORCE RLS on the partitioned parent.
+
+
+5. cdp.customer_sessions
+------------------------
+Purpose: Aggregated browsing/application sessions for customers.
+
+Columns:
+- session_id VARCHAR(128) NN: Session identifier.
+- cdp_id UUID NN: Customer associated with the session.
+- visitor_id VARCHAR(128): Anonymous visitor identifier.
+- started_at TIMESTAMPTZ NN: Session start.
+- ended_at TIMESTAMPTZ: Session end.
+- duration_seconds INTEGER: Session duration.
+- entry_page TEXT: First page.
+- exit_page TEXT: Last page.
+- pageview_count INTEGER NN, default 0: Number of page views.
+- is_bounce BOOLEAN NN, default FALSE: Whether the session bounced.
+- referrer TEXT: Referrer URL.
+- referrer_domain VARCHAR(255): Referrer domain.
+- utm_source VARCHAR(128): UTM source.
+- utm_medium VARCHAR(128): UTM medium.
+- utm_campaign VARCHAR(128): UTM campaign.
+- utm_term VARCHAR(255): UTM term.
+- utm_content TEXT: UTM content.
+- device_type VARCHAR(64): Device class.
+- browser VARCHAR(128): Browser.
+- platform VARCHAR(128): Operating system/platform.
+- language VARCHAR(64): Session language.
+- country VARCHAR(128): Country.
+- region VARCHAR(128): Region.
+- city VARCHAR(128): City.
+- created_at TIMESTAMPTZ NN, default NOW(): Record creation time.
+- organization_id BIGINT NN: Owning organization.
+- custom_fields JSONB NN, default {}: Additional session data.
+
+Constraints:
+- PK: session_id.
+- FK: cdp_id -> customer_profile.cdp_id, ON DELETE CASCADE.
+
+Indexes:
+- idx_customer_sessions_org_cdp
+  (organization_id, cdp_id, started_at DESC).
+
+Security:
+- FORCE RLS.
+
+
+6. cdp.customer_interactions
+----------------------------
+Purpose: Customer conversations and UI/service interactions with sentiment.
+Partitioning: RANGE by started_at.
+
+Columns:
+- interaction_id UUID NN, default gen_random_uuid(): Interaction identifier.
+- cdp_id UUID NN: Customer associated with the interaction.
+- interaction_source VARCHAR(255): Originating system.
+- interaction_type VARCHAR(128): Call, chat, click, support case, etc.
+- channel VARCHAR(64): Interaction channel.
+- direction VARCHAR(32): Inbound or outbound.
+- page_path TEXT: Related page.
+- element_name VARCHAR(255): Related UI element.
+- agent_id UUID: Human or automated agent identifier.
+- session_id VARCHAR(128): Related session.
+- sentiment_score NUMERIC(4,3): Sentiment from -1 to 1.
+- summary TEXT: Interaction summary.
+- started_at TIMESTAMPTZ NN: Start time and partition key.
+- ended_at TIMESTAMPTZ: End time.
+- metadata_json JSONB NN, default {}: Structured interaction metadata.
+- organization_id BIGINT NN: Owning organization.
+- custom_fields JSONB NN, default {}: Client-specific attributes.
+
+Constraints:
+- PK: (interaction_id, started_at).
+- FK: cdp_id -> customer_profile.cdp_id, ON DELETE CASCADE.
+- CHECK: sentiment_score is NULL or between -1 and 1.
+
+Indexes:
+- idx_customer_interactions_org_cdp
+  (organization_id, cdp_id, started_at DESC).
+
+Partitions:
+- customer_interactions_2026_07.
+- customer_interactions_2026_08.
+- customer_interactions_default.
+
+Security:
+- FORCE RLS on the partitioned parent.
+
+
+7. cdp.campaigns
+----------------
+Purpose: Marketing campaign definitions.
+
+Columns:
+- campaign_id UUID NN, default gen_random_uuid(): Campaign identifier.
+- campaign_name VARCHAR(255) NN: Campaign name.
+- campaign_type VARCHAR(128): Campaign category.
+- goal TEXT: Campaign objective.
+- status VARCHAR(64) NN, default draft: Lifecycle status.
+- start_date TIMESTAMPTZ: Planned/actual start.
+- end_date TIMESTAMPTZ: Planned/actual end.
+- organization_id BIGINT NN: Owning organization.
+- custom_fields JSONB NN, default {}: Campaign extensions.
+
+Constraints:
+- PK: campaign_id.
+- CHECK: end_date cannot precede start_date when both are present.
+
+Indexes:
+- idx_campaigns_org (organization_id, status).
+
+Security:
+- FORCE RLS.
+
+
+8. cdp.campaign_deliveries
+--------------------------
+Purpose: Records campaign messages delivered to customers.
+
+Columns:
+- delivery_id UUID NN, default gen_random_uuid(): Delivery identifier.
+- campaign_id UUID NN: Parent campaign.
+- cdp_id UUID NN: Recipient customer.
+- channel VARCHAR(64) NN: Delivery channel.
+- sent_at TIMESTAMPTZ NN, default NOW(): Send time.
+- status VARCHAR(64) NN: Delivery status.
+- organization_id BIGINT NN: Owning organization.
+- custom_fields JSONB NN, default {}: Provider/delivery metadata.
+
+Constraints:
+- PK: delivery_id.
+- FK: campaign_id -> campaigns.campaign_id, ON DELETE CASCADE.
+- FK: cdp_id -> customer_profile.cdp_id, ON DELETE CASCADE.
+
+Indexes:
+- idx_campaign_deliveries_campaign (campaign_id).
+- idx_campaign_deliveries_cdp (organization_id, cdp_id).
+
+Security:
+- FORCE RLS.
+
+
+9. cdp.campaign_interactions
+----------------------------
+Purpose: Customer responses to campaigns, such as opens, clicks, and conversions.
+
+Columns:
+- interaction_id UUID NN, default gen_random_uuid(): Campaign interaction identifier.
+- campaign_id UUID NN: Related campaign.
+- cdp_id UUID NN: Customer who interacted.
+- interaction_type VARCHAR(128) NN: Open, click, unsubscribe, conversion, etc.
+- occurred_at TIMESTAMPTZ NN, default NOW(): Interaction time.
+- metadata_json JSONB NN, default {}: Interaction details.
+- organization_id BIGINT NN: Owning organization.
+- custom_fields JSONB NN, default {}: Additional attributes.
+
+Constraints:
+- PK: interaction_id.
+- FK: campaign_id -> campaigns.campaign_id, ON DELETE CASCADE.
+- FK: cdp_id -> customer_profile.cdp_id, ON DELETE CASCADE.
+
+Indexes:
+- idx_campaign_interactions_campaign (campaign_id).
+- idx_campaign_interactions_cdp (organization_id, cdp_id).
+
+Security:
+- FORCE RLS.
+
+
+10. cdp.crm_activities
+----------------------
+Purpose: CRM tasks, calls, meetings, notes, and other customer activities.
+
+Columns:
+- activity_id UUID NN, default gen_random_uuid(): Activity identifier.
+- cdp_id UUID NN: Related customer.
+- activity_type VARCHAR(128) NN: Activity category.
+- title VARCHAR(255) NN: Activity title.
+- description TEXT: Activity details.
+- owner VARCHAR(255): CRM owner/assignee.
+- source VARCHAR(128): Originating CRM/source.
+- occurred_at TIMESTAMPTZ NN: Activity time.
+- metadata_json JSONB NN, default {}: Structured activity metadata.
+- organization_id BIGINT NN: Owning organization.
+- custom_fields JSONB NN, default {}: CRM/client extensions.
+
+Constraints:
+- PK: activity_id.
+- FK: cdp_id -> customer_profile.cdp_id, ON DELETE CASCADE.
+
+Indexes:
+- idx_crm_activities_org_cdp
+  (organization_id, cdp_id, occurred_at DESC).
+
+Security:
+- FORCE RLS.
+
+
+11. cdp.customer_journey
+------------------------
+Purpose: Customer journey transitions and touchpoints.
+Partitioning: RANGE by occurred_at.
+
+Columns:
+- journey_event_id UUID NN, default gen_random_uuid(): Journey event identifier.
+- cdp_id UUID NN: Related customer.
+- journey_name VARCHAR(255) NN: Journey/workflow name.
+- journey_channel VARCHAR(64): Channel.
+- touchpoint VARCHAR(255): Customer touchpoint.
+- from_stage VARCHAR(128): Previous journey stage.
+- to_stage VARCHAR(128): New journey stage.
+- trigger_event VARCHAR(255): Event causing the transition.
+- session_id VARCHAR(128): Related session.
+- source VARCHAR(128): Originating system.
+- occurred_at TIMESTAMPTZ NN: Transition time and partition key.
+- organization_id BIGINT NN: Owning organization.
+- custom_fields JSONB NN, default {}: Journey extensions.
+
+Constraints:
+- PK: (journey_event_id, occurred_at).
+- FK: cdp_id -> customer_profile.cdp_id, ON DELETE CASCADE.
+
+Indexes:
+- idx_customer_journey_org_cdp
+  (organization_id, cdp_id, occurred_at DESC).
+
+Partitions:
+- customer_journey_2026_07.
+- customer_journey_2026_08.
+- customer_journey_default.
+
+Security:
+- FORCE RLS on the partitioned parent.
+
+
+12. cdp.segments
+----------------
+Purpose: Reusable organization-scoped customer segment definitions.
+
+Columns:
+- segment_id UUID NN, default gen_random_uuid(): Segment identifier.
+- segment_name VARCHAR(255) NN: Segment name.
+- description TEXT: Segment definition/description.
+- created_at TIMESTAMPTZ NN, default NOW(): Creation time.
+- organization_id BIGINT NN: Owning organization.
+- custom_fields JSONB NN, default {}: Rules and segment extensions.
+
+Constraints:
+- PK: segment_id.
+- UQ: (organization_id, segment_name).
+
+Security:
+- FORCE RLS.
+
+
+13. cdp.customer_segments
+-------------------------
+Purpose: Many-to-many assignments between customers and segments.
+
+Columns:
+- id UUID NN, default gen_random_uuid(): Assignment identifier.
+- cdp_id UUID NN: Assigned customer.
+- segment_id UUID NN: Assigned segment.
+- source VARCHAR(128): Rule, prediction, manual process, or import source.
+- assigned_at TIMESTAMPTZ NN, default NOW(): Assignment time.
+- organization_id BIGINT NN: Owning organization.
+
+Constraints:
+- PK: id.
+- FK: cdp_id -> customer_profile.cdp_id, ON DELETE CASCADE.
+- FK: segment_id -> segments.segment_id, ON DELETE CASCADE.
+- UQ: (cdp_id, segment_id).
+
+Indexes:
+- idx_customer_segments_segment (segment_id).
+- idx_customer_segments_org_cdp (organization_id, cdp_id).
+
+Security:
+- FORCE RLS.
+
+
+14. cdp.customer_metrics
+------------------------
+Purpose: Daily aggregated Customer 360 behavioral metrics.
+
+Columns:
+- metric_date DATE NN: Metric date.
+- cdp_id UUID NN: Customer being measured.
+- session_count INTEGER NN, default 0: Sessions on the metric date.
+- total_page_views INTEGER NN, default 0: Page views.
+- avg_session_duration NUMERIC(10,2), default 0.00: Average session seconds.
+- bounce_rate NUMERIC(5,4), default 0: Bounce ratio.
+- avg_scroll_depth NUMERIC(5,2): Average scroll depth.
+- conversion_count INTEGER NN, default 0: Conversions.
+- engagement_score NUMERIC(5,4): Aggregated engagement score.
+- value_score NUMERIC(5,4): Aggregated value score.
+- loyalty_score NUMERIC(5,4): Aggregated loyalty score.
+- campaign_engagement_score NUMERIC(5,4): Campaign engagement score.
+- last_seen_days INTEGER: Days since last activity.
+- organization_id BIGINT NN: Owning organization.
+
+Constraints:
+- PK: (metric_date, cdp_id).
+- FK: cdp_id -> customer_profile.cdp_id, ON DELETE CASCADE.
+
+Indexes:
+- idx_customer_metrics_org (organization_id, metric_date DESC).
+
+Security:
+- FORCE RLS.
+
+
+15. cdp.customer_scores
+-----------------------
+Purpose: Latest computed and predictive scores for each customer.
+
+Columns:
+- cdp_id UUID NN: Customer identifier and one-to-one key.
+- engagement_score NUMERIC(5,4): Engagement score.
+- value_score NUMERIC(5,4): Customer value score.
+- loyalty_score NUMERIC(5,4): Loyalty score.
+- churn_score NUMERIC(5,4): Attrition probability/risk.
+- purchase_probability NUMERIC(5,4): Conversion probability.
+- retention_score NUMERIC(5,4): Retention score.
+- advocacy_score NUMERIC(5,4): Advocacy score.
+- web_engagement_score NUMERIC(5,4): Web engagement score.
+- intent_score NUMERIC(5,4): Purchase/engagement intent.
+- digital_activity_score NUMERIC(5,4): Digital activity score.
+- updated_at TIMESTAMPTZ NN, default NOW(): Last score update.
+- organization_id BIGINT NN: Owning organization.
+
+Constraints:
+- PK: cdp_id.
+- FK: cdp_id -> customer_profile.cdp_id, ON DELETE CASCADE.
+
+Indexes:
+- idx_customer_scores_org (organization_id).
+
+Triggers:
+- trg_customer_scores_updated_at automatically refreshes updated_at.
+
+Security:
+- FORCE RLS.
+
+Runtime prediction schema may additionally add:
+- next_purchase_days FLOAT: Predicted days until next purchase.
+- affinity_json JSONB NN, default {}: Product/category affinity scores.
+- prediction_meta_json JSONB NN, default {}: Model output metadata.
+
+
+16. cdp.ai_insights
+-------------------
+Purpose: Human-readable AI-generated or deterministic customer insights.
+
+Columns:
+- insight_id UUID NN, default gen_random_uuid(): Insight identifier.
+- cdp_id UUID NN: Related customer.
+- insight_type VARCHAR(128) NN: Insight category.
+- score NUMERIC(5,4): Optional confidence/relevance score.
+- summary TEXT NN: Short insight.
+- explanation TEXT: Detailed explanation.
+- generated_at TIMESTAMPTZ NN, default NOW(): Generation time.
+- organization_id BIGINT NN: Owning organization.
+- custom_fields JSONB NN, default {}: Model and insight metadata.
+
+Constraints:
+- PK: insight_id.
+- FK: cdp_id -> customer_profile.cdp_id, ON DELETE CASCADE.
+- CHECK: score is NULL or between 0 and 1.
+
+Indexes:
+- idx_ai_insights_org_cdp
+  (organization_id, cdp_id, generated_at DESC).
+
+Security:
+- FORCE RLS.
+
+
+17. cdp.customer_recommendations
+--------------------------------
+Purpose: Customer-specific recommended actions, content, products, or timings.
+
+Columns:
+- recommendation_id UUID NN, default gen_random_uuid(): Recommendation identifier.
+- cdp_id UUID NN: Target customer.
+- recommendation_type VARCHAR(128) NN: Recommendation category.
+- recommendation TEXT NN: Recommendation content.
+- confidence NUMERIC(5,4): Confidence from 0 to 1.
+- generated_at TIMESTAMPTZ NN, default NOW(): Generation time.
+- organization_id BIGINT NN: Owning organization.
+- custom_fields JSONB NN, default {}: Recommendation/model metadata.
+
+Constraints:
+- PK: recommendation_id.
+- FK: cdp_id -> customer_profile.cdp_id, ON DELETE CASCADE.
+- CHECK: confidence is NULL or between 0 and 1.
+
+Indexes:
+- idx_customer_recommendations_org_cdp
+  (organization_id, cdp_id, generated_at DESC).
+
+Security:
+- FORCE RLS.
+
+
+18. cdp.products
+----------------
+Purpose: Organization-scoped product/SKU catalog used by commerce and ML.
+
+Columns:
+- product_id UUID NN, default gen_random_uuid(): Product identifier.
+- sku VARCHAR(128) NN: Organization-scoped SKU.
+- product_name VARCHAR(255) NN: Product display name.
+- brand VARCHAR(128): Brand.
+- category VARCHAR(255): Primary category.
+- subcategory VARCHAR(255): Secondary category.
+- price NUMERIC(14,2) NN, default 0.00: Current/base price.
+- currency VARCHAR(8) NN, default USD: Currency code.
+- status VARCHAR(64) NN, default active: Product lifecycle status.
+- active BOOLEAN NN, default TRUE: Whether the product is active.
+- created_at TIMESTAMPTZ NN, default NOW(): Creation time.
+- updated_at TIMESTAMPTZ NN, default NOW(): Last update time.
+- organization_id BIGINT NN: Owning organization.
+- custom_fields JSONB NN, default {}: Source-specific product data.
+
+Constraints:
+- PK: product_id.
+- UQ: (organization_id, sku).
+
+Indexes:
+- idx_products_org (organization_id).
+- idx_products_category (organization_id, category).
+- idx_products_custom_fields GIN (custom_fields).
+
+Triggers:
+- trg_products_updated_at automatically refreshes updated_at.
+
+Security:
+- FORCE RLS.
+- Policy tenant_isolation_products scopes reads/writes by organization_id.
+
+
+19. cdp.orders
+--------------
+Purpose: Customer orders and order-level commerce facts.
+Partitioning: RANGE by created_at.
+
+Columns:
+- order_id UUID NN, default gen_random_uuid(): Order identifier.
+- cdp_id UUID NN: Purchasing customer.
+- order_number VARCHAR(128) NN: External/business order number.
+- status VARCHAR(64) NN, default pending: Order status.
+- total_amount NUMERIC(14,2) NN, default 0.00: Order total.
+- currency VARCHAR(8) NN, default USD: Currency code.
+- payment_status VARCHAR(64) NN, default unpaid: Payment state.
+- fulfillment_status VARCHAR(64) NN, default unfulfilled: Fulfillment state.
+- shipping_country VARCHAR(128): Destination country.
+- created_at TIMESTAMPTZ NN, default NOW(): Order time and partition key.
+- updated_at TIMESTAMPTZ NN, default NOW(): Last update.
+- organization_id BIGINT NN: Owning organization.
+- custom_fields JSONB NN, default {}: Source order payload/extensions.
+
+Constraints:
+- PK: (order_id, created_at).
+- FK: cdp_id -> customer_profile.cdp_id, ON DELETE CASCADE.
+
+Indexes:
+- idx_orders_org_cdp_time (organization_id, cdp_id, created_at DESC).
+- idx_orders_unique_num (organization_id, order_number).
+  Note: despite its name, the reference defines this as a non-unique index.
+
+Partitions:
+- orders_2026_07.
+- orders_2026_08.
+- orders_default.
+
+Triggers:
+- trg_orders_updated_at automatically refreshes updated_at.
+
+Security:
+- FORCE RLS.
+- Policy tenant_isolation_orders scopes reads/writes by organization_id.
+
+
+20. cdp.order_items
+-------------------
+Purpose: Order line items connecting orders with catalog products.
+Partitioning: RANGE by created_at, aligned with orders.
+
+Columns:
+- order_item_id UUID NN, default gen_random_uuid(): Line-item identifier.
+- order_id UUID NN: Parent order identifier.
+- product_id UUID NN: Purchased product.
+- quantity INTEGER NN, default 1: Purchased quantity.
+- unit_price NUMERIC(14,2) NN: Unit price.
+- subtotal_amount NUMERIC(14,2), generated as quantity * unit_price:
+  Stored calculated line subtotal.
+- created_at TIMESTAMPTZ NN, default NOW(): Creation time and partition key.
+- organization_id BIGINT NN: Owning organization.
+- custom_fields JSONB NN, default {}: Line-item extensions.
+
+Constraints:
+- PK: (order_item_id, created_at).
+- FK: product_id -> products.product_id, ON DELETE RESTRICT.
+- FK: (order_id, created_at) -> orders(order_id, created_at),
+  ON DELETE CASCADE.
+
+Indexes:
+- idx_order_items_order (order_id).
+- idx_order_items_product (product_id).
+
+Partitions:
+- order_items_2026_07.
+- order_items_2026_08.
+- order_items_default.
+
+Security:
+- FORCE RLS.
+- Policy tenant_isolation_order_items scopes reads/writes by organization_id.
+
+
+21. cdp.persona_definitions
+---------------------------
+Purpose: Versioned organization-level buyer persona archetypes shared by customers.
+
+Columns:
+- persona_id UUID NN, default gen_random_uuid(): Persona identifier.
+- organization_id BIGINT NN: Owning organization.
+- persona_key VARCHAR(128) NN: Stable persona slug.
+- name VARCHAR(255) NN: Display name.
+- summary TEXT: Persona summary.
+- industry VARCHAR(128): Industry context.
+- persona_type VARCHAR(32) NN, default b2c: b2c, b2b, hybrid, or negative.
+- status VARCHAR(32) NN, default active: draft, active, or archived.
+- schema_version VARCHAR(32) NN, default 1.0: Persona schema version.
+- model_version VARCHAR(64): Producing model version.
+- version INTEGER NN, default 1: Persona definition version.
+- confidence NUMERIC(5,4): Definition confidence.
+- evidence_count INTEGER NN, default 0: Supporting evidence count.
+- data_freshness_at TIMESTAMPTZ: Latest evidence freshness time.
+- demographic_profile JSONB NN, default {}: Demographic traits.
+- firmographic_profile JSONB NN, default {}: Company traits.
+- professional_context JSONB NN, default {}: Professional context.
+- goals JSONB NN, default []: Persona goals.
+- motivations JSONB NN, default []: Motivations.
+- pain_points JSONB NN, default []: Pain points.
+- buying_behaviour JSONB NN, default {}: Buying patterns.
+- preferred_channels JSONB NN, default []: Preferred channels.
+- objections JSONB NN, default []: Common objections.
+- category_affinities JSONB NN, default {}: Category affinities.
+- brand_affinities JSONB NN, default {}: Brand affinities.
+- journey_stage_tendencies JSONB NN, default {}: Journey-stage behavior.
+- content_preferences JSONB NN, default {}: Content preferences.
+- trust_signals JSONB NN, default []: Trust factors.
+- decision_role VARCHAR(128): Buying decision role.
+- segment_signals JSONB NN, default []: Segment evidence.
+- recommended_messages JSONB NN, default []: Suggested messaging.
+- recommended_actions JSONB NN, default []: Suggested actions.
+- exclusion_signals JSONB NN, default []: Signals that disqualify assignment.
+- evidence_references JSONB NN, default []: Evidence references.
+- industry_extensions JSONB NN, default {}: Industry-specific persona fields.
+- custom_fields JSONB NN, default {}: Additional persona fields.
+- created_at TIMESTAMPTZ NN, default NOW(): Creation time.
+- updated_at TIMESTAMPTZ NN, default NOW(): Last update.
+
+Constraints:
+- PK: persona_id.
+- UQ: (organization_id, persona_key, version).
+- CHECK persona_type IN (b2c, b2b, hybrid, negative).
+- CHECK status IN (draft, active, archived).
+- CHECK confidence is NULL or between 0 and 1.
+
+Indexes:
+- idx_persona_definitions_org (organization_id, status).
+- idx_persona_definitions_type (organization_id, persona_type).
+- idx_persona_definitions_key (organization_id, persona_key).
+- idx_persona_definitions_custom_fields GIN (custom_fields).
+
+Triggers:
+- trg_persona_definitions_updated_at automatically refreshes updated_at.
+
+Security:
+- FORCE RLS.
+- Policy tenant_isolation_persona_definitions.
+
+
+22. cdp.persona_snapshots
+-------------------------
+Purpose: Immutable feature/evidence and inferred persona result for an inference run.
+
+Columns:
+- snapshot_id UUID NN, default gen_random_uuid(): Snapshot identifier.
+- organization_id BIGINT NN: Owning organization.
+- cdp_id UUID NN: Evaluated customer.
+- persona_id UUID: Inferred persona definition.
+- inference_run_id UUID: Inference run that created the snapshot.
+- feature_vector_json JSONB NN, default {}: Deterministic feature vector.
+- inferred_persona_json JSONB NN, default {}: Structured inferred persona payload.
+- observed_facts_json JSONB NN, default {}: Directly observed facts.
+- inferred_traits_json JSONB NN, default {}: Inferred customer traits.
+- evidence_json JSONB NN, default []: Supporting evidence.
+- confidence NUMERIC(5,4): Inference confidence.
+- model_version VARCHAR(64): Model version.
+- schema_version VARCHAR(32) NN, default 1.0: Payload schema version.
+- inference_path VARCHAR(32) NN, default deterministic:
+  deterministic, hybrid_llm, or fallback.
+- created_at TIMESTAMPTZ NN, default NOW(): Snapshot creation time.
+
+Constraints:
+- PK: snapshot_id.
+- FK: cdp_id -> customer_profile.cdp_id, ON DELETE CASCADE.
+- FK: persona_id -> persona_definitions.persona_id, ON DELETE SET NULL.
+- FK: inference_run_id -> persona_inference_runs.run_id, ON DELETE SET NULL
+  (added after both tables exist).
+- CHECK confidence is NULL or between 0 and 1.
+- CHECK inference_path IN (deterministic, hybrid_llm, fallback).
+
+Indexes:
+- idx_persona_snapshots_org_cdp
+  (organization_id, cdp_id, created_at DESC).
+- idx_persona_snapshots_persona (persona_id, created_at DESC).
+- idx_persona_snapshots_run (inference_run_id), only when not NULL.
+
+Security:
+- FORCE RLS.
+- Policy tenant_isolation_persona_snapshots.
+
+
+23. cdp.customer_persona_assignments
+------------------------------------
+Purpose: Versioned customer-to-persona assignments with confidence and drift.
+
+Columns:
+- assignment_id UUID NN, default gen_random_uuid(): Assignment identifier.
+- organization_id BIGINT NN: Owning organization.
+- cdp_id UUID NN: Assigned customer.
+- persona_id UUID NN: Assigned persona.
+- snapshot_id UUID: Supporting snapshot.
+- confidence NUMERIC(5,4) NN: Assignment confidence.
+- evidence_count INTEGER NN, default 0: Number of supporting facts.
+- evidence_json JSONB NN, default []: Supporting evidence.
+- is_active BOOLEAN NN, default TRUE: Whether assignment is current.
+- is_negative BOOLEAN NN, default FALSE: Whether this is a negative persona.
+- drift_score NUMERIC(5,4): Assignment drift from 0 to 1.
+- assigned_at TIMESTAMPTZ NN, default NOW(): Assignment start.
+- closed_at TIMESTAMPTZ: Assignment closure.
+- assignment_source VARCHAR(64) NN, default persona_inference:
+  persona_inference, manual, or import.
+- model_version VARCHAR(64): Assigning model version.
+- schema_version VARCHAR(32) NN, default 1.0: Assignment schema version.
+- custom_fields JSONB NN, default {}: Additional assignment metadata.
+
+Constraints:
+- PK: assignment_id.
+- FK: cdp_id -> customer_profile.cdp_id, ON DELETE CASCADE.
+- FK: persona_id -> persona_definitions.persona_id, ON DELETE RESTRICT.
+- FK: snapshot_id -> persona_snapshots.snapshot_id, ON DELETE SET NULL.
+- CHECK confidence between 0 and 1.
+- CHECK drift_score is NULL or between 0 and 1.
+- CHECK closed_at is NULL or not earlier than assigned_at.
+- Partial UQ index permits one active assignment per
+  (organization_id, cdp_id).
+
+Indexes:
+- idx_customer_persona_active_unique
+  (organization_id, cdp_id) WHERE is_active = TRUE, UNIQUE.
+- idx_customer_persona_org_cdp
+  (organization_id, cdp_id, assigned_at DESC).
+- idx_customer_persona_persona (persona_id, is_active).
+- idx_customer_persona_active
+  (organization_id, is_active, assigned_at DESC).
+
+Security:
+- FORCE RLS.
+- Policy tenant_isolation_customer_persona_assignments.
+
+
+24. cdp.persona_inference_runs
+------------------------------
+Purpose: Audit, status, counters, and checkpoints for persona inference jobs.
+
+Columns:
+- run_id UUID NN, default gen_random_uuid(): Run identifier.
+- organization_id BIGINT NN: Owning organization.
+- cdp_id UUID: Customer for single-customer runs; NULL for organization batches.
+- trigger_type VARCHAR(32) NN: scheduled_batch, event_threshold, manual, or lifecycle.
+- status VARCHAR(32) NN, default pending: pending, running, completed, failed, skipped.
+- idempotency_key VARCHAR(255) NN: Organization-scoped duplicate prevention key.
+- customers_evaluated INTEGER NN, default 0: Evaluated customers.
+- assignments_created INTEGER NN, default 0: New assignments.
+- assignments_unchanged INTEGER NN, default 0: Unchanged assignments.
+- assignments_changed INTEGER NN, default 0: Changed assignments.
+- drift_detected INTEGER NN, default 0: Drifted assignments.
+- insufficient_evidence INTEGER NN, default 0: Customers lacking evidence.
+- validation_failures INTEGER NN, default 0: Validation failures.
+- inference_path VARCHAR(32): Inference path used.
+- model_version VARCHAR(64): Model version.
+- schema_version VARCHAR(32) NN, default 1.0: Schema version.
+- checkpoint_json JSONB NN, default {}: Resume/checkpoint state.
+- error_message TEXT: Failure details.
+- started_at TIMESTAMPTZ: Start time.
+- finished_at TIMESTAMPTZ: Finish time.
+- created_at TIMESTAMPTZ NN, default NOW(): Run creation time.
+- custom_fields JSONB NN, default {}: Additional run metadata.
+
+Constraints:
+- PK: run_id.
+- FK: cdp_id -> customer_profile.cdp_id, ON DELETE SET NULL.
+- UQ: (organization_id, idempotency_key).
+- CHECK trigger_type IN
+  (scheduled_batch, event_threshold, manual, lifecycle).
+- CHECK status IN (pending, running, completed, failed, skipped).
+
+Indexes:
+- idx_persona_inference_runs_org_status
+  (organization_id, status, created_at DESC).
+- idx_persona_inference_runs_cdp (cdp_id, created_at DESC), only when cdp_id
+  is not NULL.
+
+Security:
+- FORCE RLS.
+- Policy tenant_isolation_persona_inference_runs.
+
+
+25. cdp.agentic_model
+---------------------
+Purpose: Per-organization external Agentic MLOps training and serving lifecycle.
+
+Columns:
+- organization_id BIGINT NN: Organization that owns the model.
+- products TEXT NN, default CDP: External API product namespace.
+- model_name TEXT NN: One of the six prediction capabilities.
+- job_id TEXT: Job returned by POST /onboard.
+- model_id TEXT: Trained model identifier returned by the external service.
+- payload JSONB NN, default {}: Dynamic prediction payload schema.
+- status TEXT NN, default dirty: Current lifecycle state.
+- dirty BOOLEAN NN, default TRUE: Whether training data changed.
+- dirty_reason TEXT: Reason the model was marked dirty.
+- dirty_at TIMESTAMPTZ NN, default NOW(): Last dirty time.
+- claimed_dirty_at TIMESTAMPTZ: Dirty generation claimed by a worker.
+- onboarded_at TIMESTAMPTZ: Onboard submission time.
+- trained_at TIMESTAMPTZ: Training completion time.
+- last_polled_at TIMESTAMPTZ: Last GET /jobs poll.
+- last_predict_at TIMESTAMPTZ: Last successful prediction time.
+- last_error TEXT: Latest onboarding, polling, or serving error.
+- created_at TIMESTAMPTZ NN, default NOW(): Lifecycle row creation.
+- updated_at TIMESTAMPTZ NN, default NOW(): Lifecycle row update.
+
+Constraints:
+- PK: (organization_id, products, model_name).
+- CHECK model_name IN:
+  attrition_risk, future_value, conversion_likelihood, product_affinity,
+  next_purchase_timing, behavioral_segments.
+- CHECK status IN:
+  dirty, submitting, submitted, training, ready, failed,
+  submission_unknown, disabled.
+- UQ index: (organization_id, model_name), limiting each organization to one
+  row for each model name.
+
+Indexes:
+- uq_agentic_model_org_name (organization_id, model_name), UNIQUE.
+- idx_agentic_model_dirty (dirty, dirty_at), only for dirty rows.
+- idx_agentic_model_jobs (status, last_polled_at), only for submitted/training
+  rows with a job_id.
+
+Security:
+- RLS is intentionally disabled for this internal cross-organization worker table.
+
+
+Schema relationship summary
+---------------------------
+customer_profile is the central Customer 360 entity.
+
+Customer-linked tables:
+- identity_keys
+- customer_events
+- customer_sessions
+- customer_interactions
+- campaign_deliveries
+- campaign_interactions
+- crm_activities
+- customer_journey
+- customer_segments
+- customer_metrics
+- customer_scores
+- ai_insights
+- customer_recommendations
+- orders
+- persona_snapshots
+- customer_persona_assignments
+- persona_inference_runs
+
+Commerce relationships:
+- customer_profile -> orders -> order_items -> products
+
+Campaign relationships:
+- campaigns -> campaign_deliveries -> customer_profile
+- campaigns -> campaign_interactions -> customer_profile
+
+Segmentation relationships:
+- customer_profile -> customer_segments -> segments
+
+Persona relationships:
+- customer_profile -> persona_snapshots
+- persona_definitions -> persona_snapshots
+- customer_profile -> customer_persona_assignments -> persona_definitions
+- persona_inference_runs -> persona_snapshots
+
+Prediction relationships:
+- customer_profile -> customer_scores
+- customer_profile -> ai_insights
+- customer_profile -> customer_recommendations
+- organization -> agentic_model lifecycle rows
+
+Partition maintenance
+---------------------
+The reference explicitly creates July 2026, August 2026, and default partitions
+for customer_events, customer_interactions, customer_journey, orders, and
+order_items. Production must create future monthly partitions automatically.
+
+Important reference observations
+--------------------------------
+1. The source numbering skips some labels, but this document numbers the 25
+   actual parent/business tables sequentially.
+2. idx_orders_unique_num is named as though it were unique, but the SQL defines
+   a normal non-unique index.
+3. FORCE RLS appears on many tables, while explicit CREATE POLICY statements
+   are present only for selected tables in this reference. Deployment should
+   verify policies for every FORCE-RLS table.
+4. organization_id is BIGINT in the reference schema. Existing UUID databases
+   require an explicit data migration; CREATE TABLE IF NOT EXISTS will not
+   change old column types.
+5. The agentic_model definition above reflects the current reference file,
+   including operational lifecycle fields.

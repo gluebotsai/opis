@@ -1,0 +1,62 @@
+# Module: performance
+module: performance
+layer: domain
+depends_on: [core]
+usecase: >
+  Scheduled Reporting (analytics coworker) and Operational Anomaly.
+  Metric ids are the contract; formulas and thresholds live in the semantic layer.
+
+classes:
+  - id: Anomaly
+    definition: Metric breach or unusual ops pattern (abandonment, queue depth, SLA).
+    properties: [alertId, metricKey, observed, threshold]
+    classified_by: [anomaly.severity]
+    relations:
+      aboutQueue: Queue
+      aboutChannel: Channel
+      triggers: HubRequest
+
+  - id: PerformanceReport
+    definition: Generated agent/queue report or chart. Prefer agent names, never raw UUIDs.
+    properties: [period, breakdown]
+    relations:
+      aboutAgent: Agent
+      aboutQueue: Queue
+
+relations:
+  - { from: Anomaly, type: about, to: Queue }
+  - { from: Anomaly, type: triggers, to: HubRequest }
+  - { from: PerformanceReport, type: about, to: Agent }
+
+actions:
+  - id: action.ask_semantic
+    operates_on: [PerformanceReport]
+    mutates: false
+    definition: First path for rates, counts, mixes, trends. Only metric_ids in this slice.
+    maps_to_tools: [ask_semantic_layer, get_metric, list_active_metrics]
+
+  - id: action.ask_ontology
+    operates_on: []
+    mutates: false
+    definition: Causal why/how/relationship on admin dashboard only. Do not mix with ask_semantic in one turn.
+    maps_to_tools: [ask_ontology_layer]
+
+  - id: action.generate_report
+    operates_on: [PerformanceReport]
+    mutates: false
+    maps_to_tools: [generate_performance_report, generate_plot, sql_analytics]
+    definition: Fallback if semantic returns ok=false, or custom breakdown.
+
+  - id: action.investigate_anomaly
+    operates_on: [Anomaly]
+    maps_to_tools: [cc.anomaly.investigate, cc.analytics.root-cause.analyze]
+
+# Certified MetricFlow ids only (aligned with semantic/metric_registry.yml)
+metric_ids:
+  - missed_contact_rate
+  - open_conversations
+  - sla_breach_rate
+  - ai_containment_rate
+  - average_handle_time
+  - human_agent_occupancy_rate_presence
+  - callback_tasks

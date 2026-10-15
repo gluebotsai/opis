@@ -1,0 +1,46 @@
+{
+  "conversations": [
+    {
+      "id": "queue-list",
+      "title": "List queues",
+      "turns": [
+        { "role": "user", "content": "Show my queues" },
+        {
+          "role": "assistant",
+          "content": "<p>Active queues: <strong>Support</strong>, <strong>Sales</strong>, <strong>Billing</strong>.</p>",
+          "tools": ["list_queues"]
+        }
+      ]
+    },
+    {
+      "id": "queue-add-agent",
+      "title": "Add a person to a queue after confirmation",
+      "turns": [
+        { "role": "user", "content": "Add Bharathi to the Support queue" },
+        {
+          "role": "assistant",
+          "content": "<p>Ready to add <strong>Bharathi</strong> to <strong>Support</strong>. Save this change?</p>",
+          "tools": ["update_skill_in_system", "list_queues"]
+        },
+        { "role": "user", "content": "Yes" },
+        {
+          "role": "assistant",
+          "content": "<p>Added <strong>Bharathi</strong> to <strong>Support</strong>.</p>",
+          "tools": ["update_queue"]
+        }
+      ]
+    },
+    {
+      "id": "queue-route-analytics",
+      "title": "Route an interaction trend question",
+      "turns": [
+        { "role": "user", "content": "Break down yesterday's interactions by channel" },
+        {
+          "role": "assistant",
+          "content": "",
+          "tools": ["route_to_agent"]
+        }
+      ]
+    }
+  ]
+}

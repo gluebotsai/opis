@@ -1,0 +1,60 @@
+{
+  "turn_id": "c0916389",
+  "timestamp": "2026-10-09T06:16:29.988695+00:00",
+  "question": "what is the FCR for our contact centre",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1016,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>First Contact Resolution</strong></p>\n<p>The First Contact Resolution rate for all time is <strong>58.2%</strong>.</p>\n<p>Would you like to see this FCR rate broken down by channel?</p>",
+  "card": "card: kpi r1",
+  "facts": "result_id: r1\nwindow: all time\nkpi: fcr\ncertified: true\nunit: percent\ntask_goal: Calculate the First Contact Resolution rate for all conversations.\nanswer_type: percentage\nrow_count: 1\nrow 1: fcr_n=46; resolved_n=79; rate_pct=58.2",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1016,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "what is the FCR for our contact centre",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants to know the First Contact Resolution (FCR) rate for the entire contact center.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Calculate the First Contact Resolution rate for all conversations.",
+          "time": "all time",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "percentage"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "fcr",
+        "row_count": 1
+      }
+    ],
+    "facts": "result_id: r1\nwindow: all time\nkpi: fcr\ncertified: true\nunit: percent\ntask_goal: Calculate the First Contact Resolution rate for all conversations.\nanswer_type: percentage\nrow_count: 1\nrow 1: fcr_n=46; resolved_n=79; rate_pct=58.2",
+    "grounded": true,
+    "card": "card: kpi r1"
+  },
+  "error": null
+}

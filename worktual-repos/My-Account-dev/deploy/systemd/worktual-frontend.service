@@ -1,0 +1,19 @@
+[Unit]
+Description=Worktual Accounts Frontend
+After=network-online.target worktual-mail-api.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=@@DEPLOY_USER@@
+Group=@@DEPLOY_USER@@
+WorkingDirectory=@@DEPLOY_ROOT@@/current/frontend
+EnvironmentFile=-@@DEPLOY_ROOT@@/shared/.env
+ExecStart=@@NODE_BIN@@ node_modules/vite/bin/vite.js preview --host 0.0.0.0 --port @@FRONTEND_PORT@@
+Restart=on-failure
+RestartSec=5
+StandardOutput=append:@@DEPLOY_ROOT@@/logs/frontend.log
+StandardError=append:@@DEPLOY_ROOT@@/logs/frontend.log
+
+[Install]
+WantedBy=multi-user.target

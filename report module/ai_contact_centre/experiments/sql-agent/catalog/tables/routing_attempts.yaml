@@ -1,0 +1,18 @@
+name: ccass.routing_attempts
+alias: ra
+schema: ccass
+grain: routing_attempt
+purpose: Routing tries, outcomes, candidate scores, skip reasons.
+time_columns: [created_at, completed_at]
+columns:
+  - { name: id, type: bigint, pk: true, description: Attempt id }
+  - { name: organization_id, type: bigint, description: Tenant id }
+  - { name: conversation_id, type: bigint, fk: ccass.conversations.id, description: Conversation }
+  - { name: queue_id, type: bigint, fk: ccass.queues.id, description: Queue }
+  - { name: agent_id, type: bigint, fk: ccass.agents.id, description: Candidate agent }
+  - { name: attempt_number, type: int, description: Attempt index }
+  - { name: outcome, type: text, values: [pending, accepted, skipped, expired], description: Result }
+  - { name: skip_reasons, type: jsonb, description: Why candidates were skipped }
+  - { name: created_at, type: timestamptz, description: Created }
+sample_rows:
+  - { id: 401, conversation_id: 101, queue_id: 7, agent_id: 12, attempt_number: 1, outcome: accepted }

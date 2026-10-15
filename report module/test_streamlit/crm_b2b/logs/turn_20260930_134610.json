@@ -1,0 +1,89 @@
+{
+  "question": "how many meeting are there for this month ",
+  "answer": "There were 25 scheduled appointments this month, with 0 completed.",
+  "trace": {
+    "question": "how many meeting are there for this month",
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1015,
+      "role": "admin"
+    },
+    "model": "worktual-gemma",
+    "tasks": [
+      {
+        "status": "ok",
+        "store": "sql",
+        "sql": "WITH rpt_appointments AS (\nSELECT src.id, src.organization_id, src.contact_id, src.host_user_id, src.host_name, src.source, src.status, src.title, src.starts_at, src.ends_at, src.provider, src.created_at FROM (\nSELECT \n  ap.id,\n  ap.organization_id,\n  ap.contact_id,\n  ap.host_user_id,\n  su.first_name || ' ' || COALESCE(su.last_name, '') AS host_name,\n  ap.source,\n  ap.status,\n  ap.title,\n  ap.starts_at,\n  ap.ends_at,\n  ap.provider,\n  ap.created_at\nFROM crm.appointments ap\nLEFT JOIN accounts.setup_users su ON su.id = ap.host_user_id\nWHERE ap.organization_id = %(_org_id)s\n) src WHERE TRUE\n)\nSELECT CAST(COUNT(*) AS BIGINT) AS scheduled_appointments, CAST(COUNT(*) FILTER(WHERE status = 'completed') AS BIGINT) AS completed_appointments, CASE WHEN COUNT(*) > 0 THEN ROUND(CAST((CAST(COUNT(*) FILTER(WHERE status = 'completed') AS DECIMAL) / CAST(COUNT(*) AS DECIMAL)) * 100.0 AS DECIMAL), 2) ELSE 0.00 END AS meeting_completion_rate FROM rpt_appointments AS appointments WHERE TRUE AND starts_at >= %(start)s AND starts_at < %(end)s AND TRUE LIMIT 500",
+        "views": [
+          "appointments"
+        ],
+        "guard_notes": [
+          "row cap 500 applied"
+        ],
+        "bound_params": {
+          "_org_id": 1003,
+          "_user_id": 1015,
+          "user_id": 1015,
+          "organization_id": 1003,
+          "org_id": 1003,
+          "tenant_id": 1003,
+          "current_user_id": 1015,
+          "start": "2026-09-01T00:00:00+00:00",
+          "end": "2026-10-01T00:00:00+00:00"
+        },
+        "rows": [
+          {
+            "scheduled_appointments": 25,
+            "completed_appointments": 0,
+            "meeting_completion_rate": "0.00"
+          }
+        ],
+        "kpi_id": "meeting_completion",
+        "time_status": "bounded",
+        "attempts": [
+          {
+            "raw": "{\"tool\":\"run_kpi\",\"kpi_id\":\"meeting_completion\",\"dimension\":null}",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "meeting_completion"
+            }
+          }
+        ],
+        "time_echo": "this month (UTC)",
+        "tool": "run_kpi",
+        "requested_kpi": "meeting_completion",
+        "requested_dimension": null,
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "meeting_completion",
+          "goal": "Count the number of meetings for this month",
+          "time": "this month",
+          "scope": "org",
+          "answer_type": "kpi",
+          "depends_on": []
+        }
+      }
+    ],
+    "domain_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"quick\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"meeting_completion\",\n      \"goal\": \"Count the number of meetings for this month\",\n      \"time\": \"this month\",\n      \"scope\": \"org\",\n      \"answer_type\": \"kpi\",\n      \"depends_on\": []\n    }\n  ]\n}\n```",
+    "plan": {
+      "kind": "plan",
+      "depth": "quick",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "meeting_completion",
+          "goal": "Count the number of meetings for this month",
+          "time": "this month",
+          "scope": "org",
+          "answer_type": "kpi",
+          "depends_on": []
+        }
+      ]
+    },
+    "facts": "time_requested: this month\nperiod_applied: this month (UTC)\ntime_status: bounded\ncatalog_kpi: meeting_completion\nRESULT: 1 row(s)\ntask_goal: Count the number of meetings for this month\n  scheduled_appointments=25 | completed_appointments=0 | meeting_completion_rate=0.00",
+    "grounded": true,
+    "briefing_raw": "There were 25 scheduled appointments this month, with 0 completed."
+  }
+}

@@ -1,0 +1,320 @@
+[
+  {
+    "id": "label_orgprofile",
+    "type": "node_label",
+    "name": "OrgProfile",
+    "description": "Organizational profile capturing the structure, identity, and key attributes of an organization within the CRM",
+    "category": "Organization",
+    "properties": [
+      "id",
+      "name",
+      "industry",
+      "size",
+      "website",
+      "address",
+      "phone",
+      "email",
+      "logo",
+      "created_at",
+      "updated_at"
+    ],
+    "synonyms": [
+      "Organization Profile",
+      "Org Info",
+      "Organization Details",
+      "Org Info",
+      "Business Profile",
+      "Corporate Profile"
+    ]
+  },
+  {
+    "id": "label_company",
+    "type": "node_label",
+    "name": "Company",
+    "description": "A business entity representing an organization that interacts with the CRM, including prospects, customers, and partners",
+    "category": "Organization",
+    "properties": [
+      "id",
+      "name",
+      "industry",
+      "website",
+      "address",
+      "phone",
+      "email",
+      "employees",
+      "annual_revenue",
+      "owner_id",
+      "created_at",
+      "updated_at"
+    ],
+    "synonyms": [
+      "Organization",
+      "Business",
+      "Client",
+      "Account",
+      "Firm",
+      "Enterprise"
+    ]
+  },
+  {
+    "id": "label_deal",
+    "type": "node_label",
+    "name": "Deal",
+    "description": "A commercial opportunity representing a potential revenue transaction tracked through stages of a sales pipeline",
+    "category": "Sales",
+    "properties": [
+      "id",
+      "title",
+      "amount",
+      "currency",
+      "stage",
+      "probability",
+      "expected_close_date",
+      "owner_id",
+      "contact_id",
+      "company_id",
+      "pipeline_id",
+      "created_at",
+      "updated_at"
+    ],
+    "synonyms": [
+      "Opportunity",
+      "Pipeline Deal",
+      "Sales Deal",
+      "Win",
+      "Potential Deal",
+      "Revenue Opportunity"
+    ]
+  },
+  {
+    "id": "label_proposal",
+    "type": "node_label",
+    "name": "Proposal",
+    "description": "A formal document sent to a prospect or customer outlining the terms, pricing, and scope of a proposed solution",
+    "category": "Sales",
+    "properties": [
+      "id",
+      "title",
+      "deal_id",
+      "content",
+      "status",
+      "valid_until",
+      "sent_at",
+      "created_by_id",
+      "created_at",
+      "updated_at"
+    ],
+    "synonyms": [
+      "Business Proposal",
+      "Sales Proposal",
+      "Solution Proposal",
+      "Pitch",
+      "Quote Proposal",
+      "Bid"
+    ]
+  },
+  {
+    "id": "label_quote",
+    "type": "node_label",
+    "name": "Quote",
+    "description": "A price quotation provided to a customer detailing the cost of products or services before order creation",
+    "category": "Sales",
+    "properties": [
+      "id",
+      "quote_number",
+      "deal_id",
+      "contact_id",
+      "total_amount",
+      "currency",
+      "status",
+      "issue_date",
+      "valid_until",
+      "created_by_id",
+      "created_at",
+      "updated_at"
+    ],
+    "synonyms": [
+      "Price Quote",
+      "Quotation",
+      "Estimate",
+      "Pricing",
+      "Cost Estimate",
+      "Quoted Price"
+    ]
+  },
+  {
+    "id": "label_salesorder",
+    "type": "node_label",
+    "name": "SalesOrder",
+    "description": "An official order issued to a customer confirming the purchase of products or services",
+    "category": "Sales",
+    "properties": [
+      "id",
+      "order_number",
+      "quote_id",
+      "deal_id",
+      "contact_id",
+      "company_id",
+      "total_amount",
+      "currency",
+      "status",
+      "order_date",
+      "delivery_date",
+      "created_by_id",
+      "created_at",
+      "updated_at"
+    ],
+    "synonyms": [
+      "Order",
+      "Sales Order",
+      "Purchase Order",
+      "SO",
+      "Customer Order",
+      "Contract Order"
+    ]
+  },
+  {
+    "id": "label_invoice",
+    "type": "node_label",
+    "name": "Invoice",
+    "description": "A financial document requesting payment from a customer for products or services delivered",
+    "category": "Finance",
+    "properties": [
+      "id",
+      "invoice_number",
+      "sales_order_id",
+      "contact_id",
+      "company_id",
+      "amount",
+      "tax",
+      "total_amount",
+      "currency",
+      "status",
+      "issue_date",
+      "due_date",
+      "paid_at",
+      "created_by_id",
+      "created_at",
+      "updated_at"
+    ],
+    "synonyms": [
+      "Bill",
+      "Billing Invoice",
+      "Receipt",
+      "Statement",
+      "Payment Request",
+      "AR Invoice"
+    ]
+  },
+  {
+    "id": "label_contactprofile",
+    "type": "node_label",
+    "name": "ContactProfile",
+    "description": "Detailed profile of an individual contact including demographic, behavioral, and preference data",
+    "category": "Contact",
+    "properties": [
+      "id",
+      "contact_id",
+      "profile_picture",
+      "date_of_birth",
+      "gender",
+      "language_preference",
+      "timezone",
+      "source",
+      "lead_score",
+      "lifetime_value",
+      "created_at",
+      "updated_at"
+    ],
+    "synonyms": [
+      "Contact Info",
+      "Contact Details",
+      "Profile",
+      "Customer Profile",
+      "Lead Profile",
+      "Contact Card"
+    ]
+  },
+  {
+    "id": "label_activity",
+    "type": "node_label",
+    "name": "Activity",
+    "description": "A tracked event or interaction involving contacts, such as calls, emails, meetings, or task completions",
+    "category": "Activity",
+    "properties": [
+      "id",
+      "type",
+      "subject",
+      "description",
+      "contact_id",
+      "deal_id",
+      "owner_id",
+      "scheduled_at",
+      "completed_at",
+      "duration_minutes",
+      "outcome",
+      "created_at",
+      "updated_at"
+    ],
+    "synonyms": [
+      "Interaction",
+      "Event",
+      "Task Activity",
+      "Call Log",
+      "Meeting",
+      "Engagement"
+    ]
+  },
+  {
+    "id": "label_note",
+    "type": "node_label",
+    "name": "Note",
+    "description": "A free-text annotation or comment attached to a CRM entity for context or documentation purposes",
+    "category": "Activity",
+    "properties": [
+      "id",
+      "content",
+      "entity_type",
+      "entity_id",
+      "created_by_id",
+      "created_at",
+      "updated_at"
+    ],
+    "synonyms": [
+      "Comment",
+      "Annotation",
+      "Remark",
+      "Memo",
+      "Observation",
+      "Documentation"
+    ]
+  },
+  {
+    "id": "label_campaign",
+    "type": "node_label",
+    "name": "Campaign",
+    "description": "A marketing initiative targeting a set of contacts or segments to achieve specific business goals",
+    "category": "Marketing",
+    "properties": [
+      "id",
+      "name",
+      "type",
+      "status",
+      "start_date",
+      "end_date",
+      "budget",
+      "target_audience",
+      "owner_id",
+      "created_at",
+      "updated_at"
+    ],
+    "synonyms": [
+      "Marketing Campaign",
+      "Ad Campaign",
+      "Promotional Campaign",
+      "Outreach Campaign",
+      "Email Campaign",
+      "Campaign Initiative"
+    ]
+  }
+]

@@ -1,0 +1,116 @@
+{
+  "turn_id": "53dc9e70",
+  "timestamp": "2026-10-03T17:44:50.841516+00:00",
+  "question": "Show campaign monitor preview in the last 1 day?",
+  "identity": {
+    "organization_id": 1012,
+    "user_id": 1054,
+    "branch_id": 1004,
+    "role": "admin"
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma",
+    "dsn_set": true
+  },
+  "answer": "Here is a sample of the campaign performance from All branch campaigns in the last 1 day:\n\n- Mega Sale Blast: **1** targeted, **1** delivered, **1** opened, **1** clicked\n- Samantha Byrne - Data Enrichment Check: **1** targeted, **1** delivered, **0** opened, **0** clicked\n- Intro: Anna Howells: **1** targeted, **1** delivered, **0** opened, **0** clicked\n- Ewa - Profile Verification & Intro: **1** targeted, **1** delivered, **0** opened, **0** clicked\n- Benjamin Hudson - Intro & Verification: **1** targeted, **1** delivered, **0** opened, **0** clicked",
+  "facts": "window: past 1 days (UTC)\nRESULT: 242 group(s)\ngroup_by: campaign\n  campaign=Mega Sale Blast | campaign_id=1589 | campaign_name=Mega Sale Blast | targeted=1 | delivered=1 | opened=1 | clicked=1\n  campaign=Samantha Byrne - Data Enrichment Check | campaign_id=1592 | campaign_name=Samantha Byrne - Data Enrichment Check | targeted=1 | delivered=1 | opened=0 | clicked=0\n  campaign=Intro: Anna Howells | campaign_id=1593 | campaign_name=Intro: Anna Howells | targeted=1 | delivered=1 | opened=0 | clicked=0\n  campaign=Ewa - Profile Verification & Intro | campaign_id=1594 | campaign_name=Ewa - Profile Verification & Intro | targeted=1 | delivered=1 | opened=0 | clicked=0\n  campaign=Benjamin Hudson - Intro & Verification | campaign_id=1595 | campaign_name=Benjamin Hudson - Intro & Verification | targeted=1 | delivered=1 | opened=0 | clicked=0\n  ... 237 more groups not listed",
+  "trace": {
+    "identity": {
+      "organization_id": 1012,
+      "user_id": 1054,
+      "branch_id": 1004,
+      "role": "admin",
+      "scope_label": "All branch campaigns",
+      "timezone": "UTC"
+    },
+    "question": "Show campaign monitor preview in the last 1 day?",
+    "supervisor": {
+      "kind": "route",
+      "target": "domain"
+    },
+    "supervisor_raw": "```json\n{\"kind\": \"route\", \"target\": \"domain\"}\n```",
+    "interpret_raw": "```json\n{\n  \"kind\": \"interpret\",\n  \"need\": \"View the preview or summary of campaign performance for the last 24 hours\",\n  \"object\": \"campaign\",\n  \"metric_family\": \"list\",\n  \"slice\": \"\",\n  \"time\": \"last 1 day\",\n  \"scope_words\": \"All branch campaigns\",\n  \"echo\": \"Show me the campaign monitor preview for the last 1 day\",\n  \"ask_user\": \"\"\n}\n```",
+    "interpret": {
+      "kind": "interpret",
+      "need": "View the preview or summary of campaign performance for the last 24 hours",
+      "object": "campaign",
+      "metric_family": "list",
+      "slice": "",
+      "time": "last 1 day",
+      "scope_words": "All branch campaigns",
+      "echo": "Show me the campaign monitor preview for the last 1 day",
+      "ask_user": ""
+    },
+    "retrieved_kpis": [
+      "monitor_preview",
+      "audience_selected",
+      "campaigns_failed",
+      "campaigns_ran",
+      "campaigns_sent",
+      "entitlement_health",
+      "ppc_clicks",
+      "ppc_conversions"
+    ],
+    "task_results": [
+      {
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "monitor_preview",
+          "goal": "List campaign performance (targeted, delivered, opened, clicked) for the last 1 day",
+          "time": "last 1 day",
+          "scope": "org",
+          "dimensions": [
+            "campaign"
+          ],
+          "answer_type": "list",
+          "depends_on": []
+        },
+        "status": "ok",
+        "error_type": null,
+        "error": null,
+        "kpi_id": "monitor_preview",
+        "store": "sql",
+        "sql": "SELECT\n    campaigns.name AS campaign,\n    campaigns.id AS campaign_id,\n    MAX(campaigns.name) AS campaign_name,\n    MAX(campaigns.audience_count) AS targeted,\n    COUNT(*) FILTER (WHERE ((CASE\n  WHEN lower(coalesce(r.status,'')) IN ('failed','cancelled') THEN 'failed'\n  WHEN lower(coalesce(r.status,'')) = 'skipped' THEN 'skipped'\n  WHEN lower(coalesce(r.status,'')) IN ('stub','stub_sent') THEN 'stub'\n  WHEN lower(coalesce(r.provider_message_id,'')) LIKE 'stub-%'\n    OR lower(coalesce(r.provider_message_id,'')) LIKE 'stub://%' THEN 'stub'\n  WHEN lower(coalesce(r.status,'')) IN ('bounced','hard_bounce','soft_bounce') THEN 'bounce'\n  WHEN lower(coalesce(r.skip_fail_reason,'')) LIKE '%bounce%' THEN 'bounce'\n  WHEN lower(coalesce(r.status,'')) IN ('sent','delivered') THEN 'sent'\n  ELSE 'pending'\nEND) = 'sent'))::bigint AS delivered,\n    COUNT(*) FILTER (WHERE ((CASE\n  WHEN lower(coalesce(r.status,'')) IN ('failed','cancelled') THEN 'failed'\n  WHEN lower(coalesce(r.status,'')) = 'skipped' THEN 'skipped'\n  WHEN lower(coalesce(r.status,'')) IN ('stub','stub_sent') THEN 'stub'\n  WHEN lower(coalesce(r.provider_message_id,'')) LIKE 'stub-%'\n    OR lower(coalesce(r.provider_message_id,'')) LIKE 'stub://%' THEN 'stub'\n  WHEN lower(coalesce(r.status,'')) IN ('bounced','hard_bounce','soft_bounce') THEN 'bounce'\n  WHEN lower(coalesce(r.skip_fail_reason,'')) LIKE '%bounce%' THEN 'bounce'\n  WHEN lower(coalesce(r.status,'')) IN ('sent','delivered') THEN 'sent'\n  ELSE 'pending'\nEND) = 'sent') AND r.opened_at IS NOT NULL)::bigint AS opened,\n    COUNT(*) FILTER (WHERE ((CASE\n  WHEN lower(coalesce(r.status,'')) IN ('failed','cancelled') THEN 'failed'\n  WHEN lower(coalesce(r.status,'')) = 'skipped' THEN 'skipped'\n  WHEN lower(coalesce(r.status,'')) IN ('stub','stub_sent') THEN 'stub'\n  WHEN lower(coalesce(r.provider_message_id,'')) LIKE 'stub-%'\n    OR lower(coalesce(r.provider_message_id,'')) LIKE 'stub://%' THEN 'stub'\n  WHEN lower(coalesce(r.status,'')) IN ('bounced','hard_bounce','soft_bounce') THEN 'bounce'\n  WHEN lower(coalesce(r.skip_fail_reason,'')) LIKE '%bounce%' THEN 'bounce'\n  WHEN lower(coalesce(r.status,'')) IN ('sent','delivered') THEN 'sent'\n  ELSE 'pending'\nEND) = 'sent') AND r.clicked_at IS NOT NULL)::bigint AS clicked\n\nFROM campaign.campaign_send_recipients r\nJOIN campaign.campaign_send_batches b ON b.id = r.batch_id\nJOIN (\nSELECT\n  c.id,\n  c.organization_id,\n  c.branch_id,\n  c.name,\n  c.description,\n  c.status,\n  c.starts_at,\n  c.ends_at,\n  c.source_channel,\n  c.created_by_user_id,\n  c.created_at,\n  c.updated_at,\n  c.goal,\n  c.objective,\n  c.session_id,\n  c.audience_summary,\n  c.audience_count,\n  c.launch_plan,\n  c.launch_local_date,\n  c.launch_local_time,\n  c.timezone\nFROM campaign.campaigns c\nWHERE c.organization_id = 1012\n  AND c.branch_id = 1004\n\n) campaigns ON campaigns.id = r.campaign_id\nWHERE r.organization_id = 1012\n  AND campaigns.branch_id = 1004\n  AND TRUE\n  AND (launch_local_date IS NOT NULL AND launch_local_date >= '2026-10-02' AND launch_local_date < '2026-10-03')\n  AND TRUE\n\n  AND campaigns.status IN ('live','completed','cancelled')\nGROUP BY campaigns.id, campaigns.name\n\n",
+        "row_count": 242,
+        "time_echo": "past 1 days (UTC)"
+      }
+    ],
+    "plan": {
+      "kind": "plan",
+      "understanding": {
+        "need": "View the preview or summary of campaign performance for the last 24 hours",
+        "object": "campaign",
+        "metric_family": "list",
+        "slice": "",
+        "time": "last 1 day",
+        "scope_words": "All branch campaigns",
+        "echo": "Show me the campaign monitor preview for the last 1 day",
+        "ask_user": ""
+      },
+      "depth": "quick",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "monitor_preview",
+          "goal": "List campaign performance (targeted, delivered, opened, clicked) for the last 1 day",
+          "time": "last 1 day",
+          "scope": "org",
+          "dimensions": [
+            "campaign"
+          ],
+          "answer_type": "list",
+          "depends_on": []
+        }
+      ]
+    },
+    "plan_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"understanding\": {\n    \"need\": \"View the preview or summary of campaign performance for the last 24 hours\",\n    \"object\": \"campaign\",\n    \"metric_family\": \"list\",\n    \"slice\": \"\",\n    \"time\": \"last 1 day\",\n    \"scope_words\": \"All branch campaigns\",\n    \"echo\": \"Show me the campaign monitor preview for the last 1 day\",\n    \"ask_user\": \"\"\n  },\n  \"depth\": \"quick\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"monitor_preview\",\n      \"goal\": \"List campaign performance (targeted, delivered, opened, clicked) for the last 1 day\",\n      \"time\": \"last 1 day\",\n      \"scope\": \"org\",\n      \"dimensions\": [\n        \"campaign\"\n      ],\n      \"answer_type\": \"list\",\n      \"depends_on\": []\n    }\n  ]\n}\n```",
+    "facts": "window: past 1 days (UTC)\nRESULT: 242 group(s)\ngroup_by: campaign\n  campaign=Mega Sale Blast | campaign_id=1589 | campaign_name=Mega Sale Blast | targeted=1 | delivered=1 | opened=1 | clicked=1\n  campaign=Samantha Byrne - Data Enrichment Check | campaign_id=1592 | campaign_name=Samantha Byrne - Data Enrichment Check | targeted=1 | delivered=1 | opened=0 | clicked=0\n  campaign=Intro: Anna Howells | campaign_id=1593 | campaign_name=Intro: Anna Howells | targeted=1 | delivered=1 | opened=0 | clicked=0\n  campaign=Ewa - Profile Verification & Intro | campaign_id=1594 | campaign_name=Ewa - Profile Verification & Intro | targeted=1 | delivered=1 | opened=0 | clicked=0\n  campaign=Benjamin Hudson - Intro & Verification | campaign_id=1595 | campaign_name=Benjamin Hudson - Intro & Verification | targeted=1 | delivered=1 | opened=0 | clicked=0\n  ... 237 more groups not listed",
+    "loop_errors": [],
+    "briefing_raw": "Here is a sample of the campaign performance from All branch campaigns in the last 1 day:\n\n- Mega Sale Blast: **1** targeted, **1** delivered, **1** opened, **1** clicked\n- Samantha Byrne - Data Enrichment Check: **1** targeted, **1** delivered, **0** opened, **0** clicked\n- Intro: Anna Howells: **1** targeted, **1** delivered, **0** opened, **0** clicked\n- Ewa - Profile Verification & Intro: **1** targeted, **1** delivered, **0** opened, **0** clicked\n- Benjamin Hudson - Intro & Verification: **1** targeted, **1** delivered, **0** opened, **0** clicked",
+    "grounded": true
+  },
+  "error": null
+}

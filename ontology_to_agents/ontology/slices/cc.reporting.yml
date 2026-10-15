@@ -1,0 +1,127 @@
+slice_id: cc.reporting
+agent: Scheduled Reporting Agent
+modules:
+- core
+- performance
+- workforce
+- queue
+classes:
+- Party
+- Person
+- Organization
+- Contact
+- Agent
+- Consent
+- Preference
+- Channel
+- Event
+- WorkItem
+- Location
+- Anomaly
+- PerformanceReport
+- Agent
+- AgentPresence
+- MonitoringSnapshot
+- Attendance
+- NotReadyEscalation
+- Queue
+- Team
+- BusinessHours
+- Shift
+- QueueDraft
+- RoutingSkill
+relations:
+- Person works_for Organization
+- Contact has_consent Consent
+- Contact has_preference Preference
+- Contact belongs_to Organization
+- Agent works_for Organization
+- Anomaly about Queue
+- Anomaly triggers HubRequest
+- PerformanceReport about Agent
+- Agent has_presence AgentPresence
+- MonitoringSnapshot includes Agent
+- NotReadyEscalation of Agent
+- Queue owned_by_team Team
+- Queue HAS_HOURS BusinessHours
+- Queue HAS_SHIFT Shift
+- Shift staffed_by Agent
+- Queue REQUIRES_SKILL RoutingSkill
+actions:
+- action.identify
+- action.route_to_specialist
+- action.ask_semantic
+- action.ask_ontology
+- action.generate_report
+- action.investigate_anomaly
+- action.get_monitoring_snapshot
+- action.get_agent_attendance
+- action.set_presence
+- action.force_logout
+- action.acknowledge_escalation
+- action.list_presence
+- action.list_queues
+- action.stage_queue_draft
+- action.create_queue
+- action.update_queue_status
+- action.delete_queue
+metric_ids:
+- active_agents
+- active_agents_setup
+- agent_assist_accepted_or_modified
+- agent_assist_adoption_rate
+- agent_assist_modification_rate
+- agent_assist_modified
+- agent_assist_suggestions_total
+- agents_assigned_callback
+- ai_containment_rate
+- ai_handover_rate
+- ai_only_completed_conversations
+- average_first_response_time
+- average_handle_time
+- average_speed_of_answer
+- breached_sla_count
+- call_volume
+- callback_tasks
+- chat_volume
+- completed_leg_count
+- email_volume
+- facebook_volume
+- follow_up_tasks
+- handled_volume
+- handling_or_wrap_seconds
+- handoff_conversations
+- handover_rate
+- human_agent_occupancy_rate_capacity
+- human_agent_occupancy_rate_presence
+- human_handle_seconds_sum
+- instagram_volume
+- logged_in_eligible_seconds
+- missed_assignments
+- missed_contact_rate
+- open_agent_tasks
+- open_conversations
+- resolution_rate
+- resolved_conversations_count
+- resolved_dispositions
+- sla_breach_rate
+- social_media_volume
+- suggestion_tasks
+- tool_executions_succeeded
+- tool_executions_total
+- tool_success_rate
+- total_active_agent_count
+- total_agent_capacity
+- total_agents
+- total_agents_setup
+- total_assignments
+- total_conversations
+- total_queue_agent_assignments
+- total_queues_configured
+- total_sla_states
+- total_teams
+- total_transfers
+- unique_contacts_handled
+- webchat_volume
+- whatsapp_volume
+note: Legal slice (tools/policy). Inject pack.as_prompt() compact, not this file.

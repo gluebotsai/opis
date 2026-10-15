@@ -1,0 +1,85 @@
+tables:
+  - name: ccass.conversations
+    grain: conversation
+    purpose: Operational conversation header. Primary performance fact table.
+    aliases: [tickets, chats, calls, interactions, conversaton]
+  - name: ccass.conversation_messages
+    grain: message
+    purpose: Customer, bot, agent, and system messages. Do not SELECT body in reports.
+    aliases: [messages, replies]
+  - name: ccass.conversation_dispositions
+    grain: disposition_event
+    purpose: Disposition applied to a conversation. Use latest applied_at.
+    aliases: [outcomes applied]
+  - name: ccass.dispositions
+    grain: disposition_catalog
+    purpose: Tenant disposition labels, codes, outcomes.
+    aliases: [outcome catalog]
+  - name: ccass.conversation_assignments
+    grain: offer
+    purpose: Offer/accept/reject/expire history for routing.
+    aliases: [offers, assignments]
+  - name: ccass.conversation_transfers
+    grain: transfer
+    purpose: Transfer requests and destination queues.
+    aliases: [warm transfer]
+  - name: ccass.routing_attempts
+    grain: routing_attempt
+    purpose: Candidate scores and skip reasons per routing try.
+    aliases: [routing]
+  - name: ccass.queues
+    grain: queue
+    purpose: Published queue names and status.
+    aliases: [queue]
+  - name: ccass.queue_members
+    grain: membership
+    purpose: Agents staffed on a queue and channel capabilities.
+    aliases: [staffing]
+  - name: ccass.agents
+    grain: agent
+    purpose: CCaaS agent identity and display name.
+    aliases: [agent, advisor]
+  - name: ccass.agent_presence
+    grain: agent
+    purpose: Current presence snapshot.
+    aliases: [status, presence]
+  - name: ccass.agent_presence_history
+    grain: presence_interval
+    purpose: Presence state intervals for occupancy.
+    aliases: [occupancy, ready time]
+  - name: ccass.agent_capacity
+    grain: agent_channel
+    purpose: Concurrency caps and active count by channel.
+    aliases: [concurrency]
+  - name: ccass.agent_missed_contacts
+    grain: missed_event
+    purpose: Offer timeout and manual reject notifications.
+    aliases: [missed, no answer]
+  - name: ccass.message_receipts
+    grain: receipt
+    purpose: Sent, delivered, read timestamps.
+    aliases: [read receipts]
+  - name: ccass.message_delivery_attempts
+    grain: delivery_attempt
+    purpose: Provider delivery retries and failures.
+    aliases: [retries, undelivered]
+  - name: ccass.sla_policies
+    grain: policy
+    purpose: Tenant first-response and resolution thresholds.
+    aliases: [sla policy]
+  - name: ccass.conversation_sla_state
+    grain: conversation
+    purpose: Per-conversation SLA due and breach timestamps.
+    aliases: [sla breach]
+  - name: ccass.conversation_sentiment_turns
+    grain: message
+    purpose: Per-turn customer and agent sentiment scores.
+    aliases: [sentiment]
+  - name: cdp.interactions
+    grain: conversation
+    purpose: Customer-centric projection of a conversation.
+    aliases: [cdp, customer interaction]
+  - name: cdp.interaction_events
+    grain: event
+    purpose: Projected chronological events for an interaction.
+    aliases: [cdp events]

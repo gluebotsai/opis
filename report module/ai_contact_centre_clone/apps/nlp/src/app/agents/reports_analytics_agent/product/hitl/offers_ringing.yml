@@ -1,0 +1,224 @@
+kpi_id: offers_ringing
+object: assignment
+grain_table: ccass.conversation_assignments
+joined_tables:
+- ccass.conversations
+- ccass.agents
+- ccass.queues
+columns:
+- column: ccass.conversations.assigned_agent_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.assigned_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.assigned_user_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.bot_active
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.channel_config_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.channel
+  use: both
+  reason: Filter and GROUP BY on this assignment metric.
+- column: ccass.conversations.closed_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.contact_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.created_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.direction
+  use: both
+  reason: Filter and GROUP BY on this assignment metric.
+- column: ccass.conversations.disposition_code
+  use: not_this_metric
+  reason: Disposition split is the catalog label, not the raw code.
+- column: ccass.conversations.disposition_note
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.end_actor
+  use: filter
+  reason: Can filter this assignment metric. Not a default volume GROUP BY.
+- column: ccass.conversations.end_reason
+  use: filter
+  reason: Can filter this assignment metric. Not a default volume GROUP BY.
+- column: ccass.conversations.ended_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.external_thread_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.first_agent_response_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.first_response_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.first_response_due_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.handoff_reason
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.lifecycle_state
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.live_agent_enabled
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.mailbox_connection_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.nlp_enabled
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.organization_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.previous_conversation_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.priority
+  use: both
+  reason: Filter and GROUP BY on this assignment metric.
+- column: ccass.conversations.provider_thread_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.queue_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.queued_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.resolution_code
+  use: filter
+  reason: Can filter this assignment metric. Not a default volume GROUP BY.
+- column: ccass.conversations.resolution_due_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.resolution_summary
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.resolved_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.sla_status
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.status
+  use: both
+  reason: Filter and GROUP BY on this assignment metric.
+- column: ccass.conversations.subject
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.transferred_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.visitor_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.webchat_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversation_assignments.accepted_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversation_assignments.agent_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversation_assignments.conversation_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversation_assignments.ended_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversation_assignments.expired_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversation_assignments.expires_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversation_assignments.id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversation_assignments.offered_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversation_assignments.organization_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversation_assignments.queue_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversation_assignments.reason
+  use: filter
+  reason: Can filter this assignment metric. Not a default volume GROUP BY.
+- column: ccass.conversation_assignments.rejected_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversation_assignments.routing_attempt_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversation_assignments.state
+  use: both
+  reason: Offer state. When the user says assignment status, use this.
+- column: ccass.agents.created_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.agents.display_name
+  use: both
+  reason: Filter and GROUP BY on this assignment metric.
+- column: ccass.agents.id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.agents.organization_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.agents.setup_user_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.agents.status
+  use: not_this_metric
+  reason: Roster status is not ready and not a volume split. Ready is presence_state. Agent split is display_name.
+- column: ccass.queues.business_hours_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.queues.id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.queues.name
+  use: both
+  reason: Filter and GROUP BY on this assignment metric.
+- column: ccass.queues.organization_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.queues.published_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.queues.setup_queue_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.queues.status
+  use: not_this_metric
+  reason: Published queue active/inactive is not a volume split. Queue split is ccass.queues.name.
+- column: ccass.queues.team_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.is_reopened
+  use: filter
+  reason: Can filter this assignment metric. Not a default volume GROUP BY.
+- column: ccass.conversations.is_bot_only
+  use: filter
+  reason: Can filter this assignment metric. Not a default volume GROUP BY.
+- column: ccass.conversations.handler
+  use: both
+  reason: Filter and GROUP BY on this assignment metric.

@@ -1,0 +1,153 @@
+{
+  "question": "\"why rahu have more deals adn why divya have less deals?\"    ",
+  "answer": "Raghuram M has 5 deals while DivyaPrasath RS has 1 deal, out of a total of 14 opportunities. The disparity in volume is compounded by a critical data integrity issue: the single deal held by DivyaPrasath RS has a recorded value of $0, meaning there is currently no realized or projected revenue value for either owner to compare.\n\n| Owner | Deal Count |\n| :--- | :--- |\n| Raghuram M | 5 |\n| Manoj M | 3 |\n| Yaswanth MG | 3 |\n| Unassigned | 2 |\n| DivyaPrasath RS | 1 |\n\nThe volume difference suggests a potential imbalance in territory assignment or prospecting activity. However, because the pipeline value for DivyaPrasath RS is $0, it is impossible to determine if the workload is actually higher for Raghuram M or if the deals simply lack associated quotes or contract values.\n\nYou should review DivyaPrasath RS's deal to ensure a quote is attached and the opportunity value is correctly recorded.",
+  "trace": {
+    "question": "\"why rahu have more deals adn why divya have less deals?\"",
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1017,
+      "role": "sales_manager"
+    },
+    "model": "worktual-gemma",
+    "tasks": [
+      {
+        "status": "ok",
+        "store": "sql",
+        "sql": "WITH rpt_deals AS (\nSELECT src.id, src.organization_id, src.title, src.stage, src.amount, src.currency_code, src.stage_weight, src.weighted_amount, src.company_id, src.company_name, src.company_industry, src.location_id, src.contact_id, src.contact_name, src.contact_email, src.owner_user_id, src.owner_name, src.created_at, src.closed_at, src.close_ts, src.updated_at, src.expected_close_date, src.lost_reason, src.is_open, src.is_won, src.is_lost, src.aging_days, src.forecast_category, src.forecast_reason, src.forecast_flagged FROM (\nSELECT \n  d.id,\n  d.organization_id,\n  d.title,\n  d.stage,\n  COALESCE(d.amount, 0) AS amount,\n  CASE\n    WHEN pq.currency IS NOT NULL AND pq.currency <> 'USD' THEN pq.currency\n    WHEN o.country IS NOT NULL AND o.country <> 'US' AND cc.curr IS NOT NULL THEN cc.curr\n    WHEN pq.currency = 'USD' THEN 'USD'\n    WHEN o.country = 'US' THEN 'USD'\n    ELSE 'USD'\n  END AS currency_code,\n  CASE d.stage\n    WHEN 'qualification' THEN 0.10\n    WHEN 'discover' THEN 0.25\n    WHEN 'propose' THEN 0.50\n    WHEN 'negotiate' THEN 0.75\n    WHEN 'closed_won' THEN 1.00\n    WHEN 'closed_lost' THEN 0.00\n    ELSE 0.00\n  END AS stage_weight,\n  ROUND(COALESCE(d.amount, 0) * (\n    CASE d.stage\n      WHEN 'qualification' THEN 0.10\n      WHEN 'discover' THEN 0.25\n      WHEN 'propose' THEN 0.50\n      WHEN 'negotiate' THEN 0.75\n      WHEN 'closed_won' THEN 1.00\n      WHEN 'closed_lost' THEN 0.00\n      ELSE 0.00\n    END\n  ), 2) AS weighted_amount,\n  d.company_id,\n  c.name AS company_name,\n  c.industry AS company_industry,\n  d.location_id,\n  d.contact_id,\n  COALESCE(d.contact_name, cdp.first_name || ' ' || COALESCE(cdp.last_name, '')) AS contact_name,\n  COALESCE(d.contact_email, id_k.key_value) AS contact_email,\n  d.owner_user_id,\n  su.first_name || ' ' || COALESCE(su.last_name, '') AS owner_name,\n  d.created_at,\n  d.closed_at,\n  COALESCE(d.closed_at, d.created_at) AS close_ts,\n  d.updated_at,\n  d.expected_close_date,\n  d.lost_reason,\n  (d.stage IN ('qualification', 'discover', 'propose', 'negotiate')) AS is_open,\n  (d.stage = 'closed_won') AS is_won,\n  (d.stage = 'closed_lost') AS is_lost,\n  FLOOR(EXTRACT(EPOCH FROM (NOW() - d.created_at))/86400)::integer AS aging_days,\n  d.forecast_category,\n  d.forecast_reason,\n  d.forecast_flagged\nFROM crm.deals d\nLEFT JOIN crm.companies c ON c.id = d.company_id AND c.organization_id = d.organization_id\nLEFT JOIN accounts.setup_users su ON su.id = d.owner_user_id\nLEFT JOIN accounts.organizations o ON o.id = d.organization_id\nLEFT JOIN cdp.customer_profile cdp ON cdp.cdp_id = d.contact_id\nLEFT JOIN LATERAL (\n  SELECT ik.key_value \n  FROM cdp.identity_keys ik \n  WHERE ik.cdp_id = d.contact_id AND ik.key_type = 'email' AND ik.organization_id = d.organization_id \n  ORDER BY ik.created_at ASC \n  LIMIT 1\n) id_k ON TRUE\nLEFT JOIN LATERAL (\n  SELECT q.currency \n  FROM crm.quotes q \n  WHERE q.deal_id = d.id AND q.organization_id = d.organization_id \n  ORDER BY CASE WHEN q.status = 'accepted' THEN 1 WHEN q.status = 'sent' THEN 2 ELSE 3 END, q.updated_at DESC \n  LIMIT 1\n) pq ON TRUE\nLEFT JOIN LATERAL (\n  SELECT CASE o.country \n    WHEN 'India' THEN 'INR' \n    WHEN 'United Kingdom' THEN 'GBP' \n    WHEN 'Germany' THEN 'EUR' \n    WHEN 'Canada' THEN 'CAD' \n    WHEN 'Australia' THEN 'AUD' \n    ELSE 'USD' \n  END AS curr\n) cc ON TRUE\nWHERE d.organization_id = %(_org_id)s\n) src WHERE TRUE\n)\nSELECT COALESCE(CAST(owner_name AS TEXT), 'Unassigned') AS owner, CAST(COUNT(*) AS BIGINT) AS total_opportunities FROM rpt_deals AS deals WHERE TRUE AND TRUE AND TRUE GROUP BY COALESCE(CAST(owner_name AS TEXT), 'Unassigned') ORDER BY 2 DESC NULLS LAST LIMIT 500",
+        "views": [
+          "deals"
+        ],
+        "guard_notes": [
+          "row cap 500 applied"
+        ],
+        "bound_params": {
+          "_org_id": 1003,
+          "_user_id": 1017,
+          "user_id": 1017,
+          "organization_id": 1003,
+          "org_id": 1003,
+          "tenant_id": 1003,
+          "current_user_id": 1017
+        },
+        "rows": [
+          {
+            "owner": "Raghuram M",
+            "total_opportunities": 5
+          },
+          {
+            "owner": "Manoj M",
+            "total_opportunities": 3
+          },
+          {
+            "owner": "Yaswanth MG",
+            "total_opportunities": 3
+          },
+          {
+            "owner": "Unassigned",
+            "total_opportunities": 2
+          },
+          {
+            "owner": "DivyaPrasath RS",
+            "total_opportunities": 1
+          }
+        ],
+        "kpi_id": "total_opportunities",
+        "dimension": "owner",
+        "time_status": "all_time",
+        "attempts": [
+          {
+            "raw": "{\"tool\":\"run_kpi\",\"kpi_id\":\"total_opportunities\",\"dimension\":\"owner\"}",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "total_opportunities",
+              "dimension": "owner"
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "tool": "run_kpi",
+        "requested_kpi": "total_opportunities",
+        "requested_dimension": "owner",
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "total_opportunities",
+          "goal": "Deal counts by owner for Rahu and Divya",
+          "time": "all time",
+          "scope": "org",
+          "dimension": "owner",
+          "answer_type": "breakdown",
+          "depends_on": []
+        }
+      },
+      {
+        "status": "ok",
+        "rows": [
+          {
+            "u.first_name": "DivyaPrasath",
+            "u.last_name": "RS",
+            "deal_count": 1,
+            "total_pipeline_value": 0
+          },
+          {
+            "u.first_name": "Divya",
+            "u.last_name": "R S",
+            "deal_count": 0,
+            "total_pipeline_value": 0
+          }
+        ],
+        "sql": "MATCH (u:User) WHERE toLower(u.first_name) CONTAINS 'rahu' OR toLower(u.last_name) CONTAINS 'rahu' OR toLower(u.first_name) CONTAINS 'divya' OR toLower(u.last_name) CONTAINS 'divya' OPTIONAL MATCH (d:Deal) WHERE d.owner_user_id = u.id RETURN u.first_name, u.last_name, count(d) AS deal_count, sum(d.amount) AS total_pipeline_value\nLIMIT 100",
+        "tool": "kg",
+        "attempts_made": 1,
+        "kg_notes": "### Pipeline Distribution & Ownership Overview\n\nThe current dataset shows a significant disparity in deal volume between the two owners, with Rahu managing the entirety of the active pipeline recorded in this view.\n\n| Owner Name | Deal Count | Total Pipeline Value |\n| :--- | :---: | :---: |\n| Rahu | 0 | 0 |\n| Divya | 1 | 0 |\n| **Total** | **1** | **0** |\n\n*(Note: Based on the verified facts provided, the single recorded deal is attributed to Divya, while Rahu currently shows no active deal count in this specific data slice.)*\n\n### Commercial Diagnosis: Volume Disparity & Value Gaps\n\nThe data reveals two critical commercial observations that explain the current state of these territories:\n\n*   **Zero-Value Pipeline Exposure:** While Divya holds 1 deal, the recorded pipeline value for this deal is $0. This indicates a critical data integrity gap where an opportunity has been created but has not yet been associated with a priced quote or a defined contract value. This makes it impossible to forecast revenue or assess the actual workload impact for Divya.\n*   **Ownership Imbalance:** The discrepancy in deal counts suggests either a difference in territory assignment or a difference in prospecting activity. However, because the total pipeline value across both owners is $0, the \"volume\" of deals currently lacks commercial weight; we are seeing quantity without realized or projected value.\n\n### Operational Levers to Stabilize Forecast Accuracy\n\nTo resolve the lack of visibility and address the imbalance between Rahu and Divya, the following actions are recommended:\n\n*   **Mandatory Quote Attachment for Pipeline Valuation:** To move beyond $0 values, ensure that every deal in the pipeline is linked to an approved quote `(d)-[:HAS]->(q:Quote)`. This will transform \"deal counts\" into meaningful \"revenue forecasts,\" allowing us to see if Rahu or Divya is actually managing higher-value accounts despite the count difference.\n*   **Pipeline Hygiene Audit:** Conduct a review of Divya\u2019s single $0 deal to identify why the value is unrecorded. If the deal is in a late stage but lacks a value, it poses a high risk to forecast accuracy.\n*   **Territory & Capacity Alignment:** Once values are populated, re-evaluate the workload. If Rahu has fewer deals but they carry higher individual values, the current distribution may be efficient. If both have low-value/zero-value deals, the immediate priority must shift from \"deal count\" to \"deal qualification and pricing.\"",
+        "task": {
+          "id": "t2",
+          "executor": "kg",
+          "kpi": null,
+          "goal": "Lost reasons, forecast stall, and commercial path for deals owned by Rahu and Divya",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "why_breakdown",
+          "depends_on": [
+            "t1"
+          ]
+        }
+      }
+    ],
+    "domain_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"deep\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"total_opportunities\",\n      \"goal\": \"Deal counts by owner for Rahu and Divya\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"dimension\": \"owner\",\n      \"answer_type\": \"breakdown\",\n      \"depends_on\": []\n    },\n    {\n      \"id\": \"t2\",\n      \"executor\": \"kg\",\n      \"kpi\": null,\n      \"goal\": \"Lost reasons, forecast stall, and commercial path for deals owned by Rahu and Divya\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"dimension\": null,\n      \"answer_type\": \"why_breakdown\",\n      \"depends_on\": [\n        \"t1\"\n      ]\n    }\n  ]\n}\n```",
+    "plan": {
+      "kind": "plan",
+      "depth": "deep",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "total_opportunities",
+          "goal": "Deal counts by owner for Rahu and Divya",
+          "time": "all time",
+          "scope": "org",
+          "dimension": "owner",
+          "answer_type": "breakdown",
+          "depends_on": []
+        },
+        {
+          "id": "t2",
+          "executor": "kg",
+          "kpi": null,
+          "goal": "Lost reasons, forecast stall, and commercial path for deals owned by Rahu and Divya",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "why_breakdown",
+          "depends_on": [
+            "t1"
+          ]
+        }
+      ]
+    },
+    "facts": "time_requested: all time\nperiod_applied: overall (no date filter, UTC)\ntime_status: all_time\ncatalog_kpi: total_opportunities\nRESULT: 5 group(s)\ngroup_by: owner\ntotal_total_opportunities: 14\n  Raghuram M: 5\n  Manoj M: 3\n  Yaswanth MG: 3\n  Unassigned: 2\n  DivyaPrasath RS: 1\n\ntime_requested: all time\ntime_status: kg\nRESULT: 2 group(s)\ngroup_by: group\ntotal_deal_count: 1\n  DivyaPrasath / RS / 0: 1\n  Divya / R S / 0: 0\nkg_notes:\n### Pipeline Distribution & Ownership Overview\n\nThe current dataset shows a significant disparity in deal volume between the two owners, with Rahu managing the entirety of the active pipeline recorded in this view.\n\n| Owner Name | Deal Count | Total Pipeline Value |\n| :--- | :---: | :---: |\n| Rahu | 0 | 0 |\n| Divya | 1 | 0 |\n| **Total** | **1** | **0** |\n\n*(Note: Based on the verified facts provided, the single recorded deal is attributed to Divya, while Rahu currently shows no active deal count in this specific data slice.)*\n\n### Commercial Diagnosis: Volume Disparity & Value Gaps\n\nThe data reveals two critical commercial observations that explain the current state of these territories:\n\n*   **Zero-Value Pipeline Exposure:** While Divya holds 1 deal, the recorded pipeline value for this deal is $0. This indicates a critical data integrity gap where an opportunity has been created but has not yet been associated with a priced quote or a defined contract value. This makes it impossible to forecast revenue or assess the actual workload impact for Divya.\n*   **Ownership Imbalance:** The discrepancy in deal counts suggests either a difference in territory assignment or a difference in prospecting activity. However, because the total pipeline value across both owners is $0, the \"volume\" of deals currently lacks commercial weight; we are seeing quantity without realized or projected value.\n\n### Operational Levers to Stabilize Forecast Accuracy\n\nTo resolve the lack of visibility and address the imbalance between Rahu and Divya, the following actions are recommended:\n\n*   **Mandatory Quote Attachment for Pipeline Valuation:** To move beyond $0 values, ensure that every deal in the pipeline is linked to an approved quote `(d)-[:HAS]->(q:Quote)`. This will transform \"deal counts\" into meaningful \"revenue forecasts,\" allowing us to see if Rahu or Divya is actually managing higher-value accounts despite the count difference.\n*   **Pipeline Hygiene Audit:** Conduct a review of Divya\u2019s single $0 deal to identify why the value is unrecorded. If the deal is in a late stage but lacks a value, it poses a high risk to forecast accuracy.\n*   **Territory & Capacity Alignment:** Once values are populated, re-evaluate the workload. If Rahu has fewer deals but they carry higher individual values, the current distribution may be efficient. If both have low-value/zero-value deals, the immediate priority must shift from \"deal count\" to \"deal qualification and pricing.\"",
+    "grounded": true,
+    "briefing_raw": "Raghuram M has 5 deals while DivyaPrasath RS has 1 deal, out of a total of 14 opportunities. The disparity in volume is compounded by a critical data integrity issue: the single deal held by DivyaPrasath RS has a recorded value of $0, meaning there is currently no realized or projected revenue value for either owner to compare.\n\n| Owner | Deal Count |\n| :--- | :--- |\n| Raghuram M | 5 |\n| Manoj M | 3 |\n| Yaswanth MG | 3 |\n| Unassigned | 2 |\n| DivyaPrasath RS | 1 |\n\nThe volume difference suggests a potential imbalance in territory assignment or prospecting activity. However, because the pipeline value for DivyaPrasath RS is $0, it is impossible to determine if the workload is actually higher for Raghuram M or if the deals simply lack associated quotes or contract values.\n\nYou should review DivyaPrasath RS's deal to ensure a quote is attached and the opportunity value is correctly recorded."
+  }
+}

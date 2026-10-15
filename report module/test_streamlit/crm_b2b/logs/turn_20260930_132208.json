@@ -1,0 +1,106 @@
+{
+  "question": "'what is the count of the activity volume for us",
+  "answer": "The total activity volume for all time is 1,055. This is comprised of:\n\n* **Emails**: 704\n* **Notes**: 171\n* **Meetings**: 169\n* **Tasks**: 6\n* **Calls**: 4\n* **SMS**: 1",
+  "trace": {
+    "question": "'what is the count of the activity volume for us",
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1015,
+      "role": "admin"
+    },
+    "model": "worktual-gemma",
+    "tasks": [
+      {
+        "status": "ok",
+        "store": "sql",
+        "sql": "WITH rpt_activities AS (\nSELECT src.id, src.organization_id, src.activity_source, src.deal_id, src.contact_id, src.type, src.subject, src.body, src.task_status, src.due_at, src.completed_at, src.performed_by_user_id, src.assignee_user_id, src.created_at FROM (\nSELECT \n  id,\n  organization_id,\n  activity_source,\n  deal_id,\n  contact_id,\n  type,\n  subject,\n  body,\n  task_status,\n  due_at,\n  completed_at,\n  performed_by_user_id,\n  assignee_user_id,\n  created_at\nFROM (\n  SELECT \n    da.id,\n    da.organization_id,\n    'deal' AS activity_source,\n    da.deal_id,\n    NULL::text AS contact_id,\n    da.type::text AS type,\n    da.subject,\n    da.body,\n    NULL::text AS task_status,\n    da.due_at,\n    da.completed_at,\n    da.created_by_user_id AS performed_by_user_id,\n    NULL::bigint AS assignee_user_id,\n    da.created_at\n  FROM crm.deal_activities da\n  WHERE da.organization_id = %(_org_id)s\n  UNION ALL\n  SELECT \n    ca.id,\n    ca.organization_id,\n    'contact' AS activity_source,\n    NULL::text AS deal_id,\n    ca.contact_id,\n    ca.type::text AS type,\n    ca.subject,\n    ca.body,\n    ca.task_status::text AS task_status,\n    ca.due_at,\n    ca.completed_at,\n    ca.created_by_user_id AS performed_by_user_id,\n    ca.assignee_user_id,\n    ca.created_at\n  FROM crm.contact_activities ca\n  WHERE ca.organization_id = %(_org_id)s\n) u\n) src WHERE TRUE\n)\nSELECT type AS activity_type, CAST(COUNT(*) AS BIGINT) AS activity_count FROM rpt_activities AS activities WHERE TRUE AND TRUE AND TRUE GROUP BY type ORDER BY activity_count DESC LIMIT 500",
+        "views": [
+          "activities"
+        ],
+        "guard_notes": [
+          "row cap 500 applied"
+        ],
+        "bound_params": {
+          "_org_id": 1003,
+          "_user_id": 1015,
+          "user_id": 1015,
+          "organization_id": 1003,
+          "org_id": 1003,
+          "tenant_id": 1003,
+          "current_user_id": 1015
+        },
+        "rows": [
+          {
+            "activity_type": "email",
+            "activity_count": 704
+          },
+          {
+            "activity_type": "note",
+            "activity_count": 171
+          },
+          {
+            "activity_type": "meeting",
+            "activity_count": 169
+          },
+          {
+            "activity_type": "task",
+            "activity_count": 6
+          },
+          {
+            "activity_type": "call",
+            "activity_count": 4
+          },
+          {
+            "activity_type": "sms",
+            "activity_count": 1
+          }
+        ],
+        "kpi_id": "activity_volume",
+        "time_status": "all_time",
+        "attempts": [
+          {
+            "raw": "{\"tool\":\"run_kpi\",\"kpi_id\":\"activity_volume\",\"dimension\":null}",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "activity_volume"
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "tool": "run_kpi",
+        "requested_kpi": "activity_volume",
+        "requested_dimension": null,
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "activity_volume",
+          "goal": "Count the total volume of activities",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "kpi",
+          "depends_on": []
+        }
+      }
+    ],
+    "domain_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"quick\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"activity_volume\",\n      \"goal\": \"Count the total volume of activities\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"answer_type\": \"kpi\",\n      \"depends_on\": []\n    }\n  ]\n}\n```",
+    "plan": {
+      "kind": "plan",
+      "depth": "quick",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "activity_volume",
+          "goal": "Count the total volume of activities",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "kpi",
+          "depends_on": []
+        }
+      ]
+    },
+    "facts": "time_requested: all time\nperiod_applied: overall (no date filter, UTC)\ntime_status: all_time\ncatalog_kpi: activity_volume\nRESULT: 6 row(s)\ntask_goal: Count the total volume of activities\n  activity_type=email | activity_count=704\n  activity_type=note | activity_count=171\n  activity_type=meeting | activity_count=169\n  activity_type=task | activity_count=6\n  activity_type=call | activity_count=4\n  activity_type=sms | activity_count=1",
+    "grounded": true,
+    "briefing_raw": "The total activity volume for all time is 1,055. This is comprised of:\n\n* **Emails**: 704\n* **Notes**: 171\n* **Meetings**: 169\n* **Tasks**: 6\n* **Calls**: 4\n* **SMS**: 1"
+  }
+}

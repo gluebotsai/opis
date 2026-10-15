@@ -1,0 +1,121 @@
+{
+  "endpoint": "http://127.0.0.1:8765/v1/sql/query",
+  "org": 1000,
+  "user_id": 1005,
+  "agent": "tk.reporting",
+  "scope": "role=admin identity=ticketing_agents visible=org",
+  "passed": 0,
+  "failed": 10,
+  "metrics": [
+    {
+      "metric": "ticket_volume",
+      "scope": "org",
+      "api_status": 500,
+      "source": "",
+      "api_value": null,
+      "pg_value": 113.0,
+      "delta": null,
+      "match": false,
+      "note": "{'code': 'internal', 'message': 'SQL agent failed. Check server logs.'}"
+    },
+    {
+      "metric": "open_tickets_metric",
+      "scope": "org",
+      "api_status": 500,
+      "source": "",
+      "api_value": null,
+      "pg_value": 1.0,
+      "delta": null,
+      "match": false,
+      "note": "{'code': 'internal', 'message': 'SQL agent failed. Check server logs.'}"
+    },
+    {
+      "metric": "resolved_tickets_metric",
+      "scope": "org",
+      "api_status": 500,
+      "source": "",
+      "api_value": null,
+      "pg_value": 11.0,
+      "delta": null,
+      "match": false,
+      "note": "{'code': 'internal', 'message': 'SQL agent failed. Check server logs.'}"
+    },
+    {
+      "metric": "unassigned_tickets_metric",
+      "scope": "org",
+      "api_status": 500,
+      "source": "",
+      "api_value": null,
+      "pg_value": 3.0,
+      "delta": null,
+      "match": false,
+      "note": "{'code': 'internal', 'message': 'SQL agent failed. Check server logs.'}"
+    },
+    {
+      "metric": "high_priority_ticket_volume",
+      "scope": "org",
+      "api_status": 500,
+      "source": "",
+      "api_value": null,
+      "pg_value": 78.0,
+      "delta": null,
+      "match": false,
+      "note": "{'code': 'internal', 'message': 'SQL agent failed. Check server logs.'}"
+    },
+    {
+      "metric": "breached_tickets_metric",
+      "scope": "org",
+      "api_status": 500,
+      "source": "",
+      "api_value": null,
+      "pg_value": 96.0,
+      "delta": null,
+      "match": false,
+      "note": "{'code': 'internal', 'message': 'SQL agent failed. Check server logs.'}"
+    },
+    {
+      "metric": "resolution_sla_compliance_rate",
+      "scope": "org",
+      "api_status": 500,
+      "source": "",
+      "api_value": null,
+      "pg_value": 0.4,
+      "delta": null,
+      "match": false,
+      "note": "{'code': 'internal', 'message': 'SQL agent failed. Check server logs.'}"
+    },
+    {
+      "metric": "sla_breach_rate",
+      "scope": "org",
+      "api_status": 500,
+      "source": "",
+      "api_value": null,
+      "pg_value": 9.6,
+      "delta": null,
+      "match": false,
+      "note": "{'code': 'internal', 'message': 'SQL agent failed. Check server logs.'}"
+    },
+    {
+      "metric": "assignment_rate",
+      "scope": "org",
+      "api_status": 500,
+      "source": "",
+      "api_value": null,
+      "pg_value": 0.9734513274336283,
+      "delta": null,
+      "match": false,
+      "note": "{'code': 'internal', 'message': 'SQL agent failed. Check server logs.'}"
+    },
+    {
+      "metric": "average_resolution_time_hours",
+      "scope": "org",
+      "api_status": 500,
+      "source": "",
+      "api_value": null,
+      "pg_value": 75.02847095372222,
+      "delta": null,
+      "match": false,
+      "note": "{'code': 'internal', 'message': 'SQL agent failed. Check server logs.'}"
+    }
+  ]
+}

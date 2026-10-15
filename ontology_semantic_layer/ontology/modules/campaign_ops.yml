@@ -1,0 +1,34 @@
+# Campaign monitoring, recommendations, events report
+module: campaign_ops
+layer: product
+depends_on: [core, campaign_core, cdp]
+owned_by_spoke: campaign
+usecase: Live monitoring, suppression, engagement anomalies.
+
+classes:
+  - id: Suppression
+    definition: Contact blocked from channel (bounce, complaint, unsubscribe).
+    properties: [reason, channel]
+    relations:
+      of: Contact
+
+actions:
+  - id: action.monitor_campaign
+    operates_on: [Campaign]
+    mutates: false
+  - id: action.recommend_next_action
+    operates_on: [Campaign, Contact]
+    mutates: false
+
+metric_ids:
+  - touch_count
+  - sent_touch_count
+  - opened_touch_count
+  - clicked_touch_count
+  - failed_touch_count
+  - engaged_contact_count
+  - unsubscribed_contact_count
+  - suppression_rate
+  - unsubscribe_rate
+  - batch_failure_rate
+  - frequency_per_contact

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Help Center</title>
+    <link rel="stylesheet" href="/hc-assets/help.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="hero">
+        <p class="eyebrow" id="org-name">Help Center</p>
+        <h1 id="title">How can we help?</h1>
+        <p class="sub">Search published guides from this company.</p>
+        <form id="search-form" class="search" autocomplete="off">
+          <input
+            id="q"
+            type="search"
+            placeholder="Search articles…"
+            aria-label="Search articles"
+          />
+          <button type="submit">Search</button>
+        </form>
+        <div id="categories" class="cats" hidden></div>
+      </header>
+
+      <main>
+        <div id="status" class="status" hidden></div>
+        <section id="list-view">
+          <ul id="results" class="results"></ul>
+        </section>
+        <article id="article-view" class="article" hidden>
+          <button type="button" id="back" class="back">← All articles</button>
+          <p class="meta" id="article-meta"></p>
+          <h2 id="article-title"></h2>
+          <div id="article-body" class="body"></div>
+        </article>
+      </main>
+
+      <footer class="foot">
+        <span>Powered by Worktual Help Center</span>
+      </footer>
+    </div>
+    <script src="/hc-assets/help.js" defer></script>
+  </body>
+</html>

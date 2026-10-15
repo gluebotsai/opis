@@ -1,0 +1,60 @@
+{
+  "turn_id": "5dcdc40e",
+  "timestamp": "2026-10-09T12:48:55.728651+00:00",
+  "question": "how many conversations are in this month ?",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1018,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong><p>Conversations this month</p></strong></p><p>There were <strong>386</strong> conversations started during this month (UTC).</p><p>Would you like to see this number split by channel?</p>",
+  "card": "card: kpi r1",
+  "facts": "result_id: r1\nwindow: this month (UTC)\nkpi: total\ncertified: true\nunit: conversations\ntask_goal: Count the number of conversations started this month.\nanswer_type: number\nrow_count: 1\nrow 1: total=386",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1018,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "how many conversations are in this month ?",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants to know the total number of conversations started during the current month.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Count the number of conversations started this month.",
+          "time": "this month",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "total",
+        "row_count": 1
+      }
+    ],
+    "facts": "result_id: r1\nwindow: this month (UTC)\nkpi: total\ncertified: true\nunit: conversations\ntask_goal: Count the number of conversations started this month.\nanswer_type: number\nrow_count: 1\nrow 1: total=386",
+    "grounded": true,
+    "card": "card: kpi r1"
+  },
+  "error": null
+}

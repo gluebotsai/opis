@@ -1,0 +1,136 @@
+# Worktual Campaign — Docker Compose (production)
+#
+# Quick start:
+#   cp deploy/docker.env.example .env
+#   cp backend/.env.example backend/.env    # set DATABASE_URL, JWT_SECRET, etc.
+#   cp deploy/agents.env.example agents/.env
+#   docker compose build
+#   docker compose up -d
+#
+# See deploy/README.md for full guide.
+
+services:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    env_file:
+      - backend/.env
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 3001
+      SOCKET_PORT: 3002
+      REDIS_URL: redis://redis:6379
+      # Backend → agents (gallery worker / chat). Not 127.0.0.1 inside Docker.
+      AGENTS_INTERNAL_URL: http://agents:8005
+      # Hub on-demand prepare → A2A spoke (same Python stack as message/send).
+      AGENTS_PREPARE_URL: http://a2a:8040
+      RUN_DB_MIGRATE: ${RUN_DB_MIGRATE:-0}
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - backend_uploads:/app/backend/uploads
+    restart: unless-stopped
+    ports:
+      # Host / DevOps: REST (+ health/docs) and dedicated Socket.IO
+      - "${API_PORT:-3001}:3001"
+      - "${SOCKET_PORT:-3002}:3002"
+
+  agents:
+    build:
+      context: .
+      dockerfile: agents/Dockerfile
+    env_file:
+      - agents/.env
+    environment:
+      AGENTS_HOST: 0.0.0.0
+      AGENTS_PORT: 8005
+      # Spoke runs in service `a2a`, not as a sidecar inside this container.
+      A2A_AUTOSTART: "0"
+      CAMPAIGN_API_BASE: http://backend:3001/api
+      DATA_DIR: /data
+    depends_on:
+      backend:
+        condition: service_started
+    volumes:
+      - agents_data:/data
+    restart: unless-stopped
+    ports:
+      # Default: localhost only (browsers use web nginx /agents-socket).
+      # SFT / remote catalog: set AGENTS_HOST_BIND=0.0.0.0 in root .env and
+      # firewall-allow scheduler IPs (catalog still requires INTERNAL_SERVICE_KEY).
+      - "${AGENTS_HOST_BIND:-127.0.0.1}:${AGENTS_PORT:-8005}:8005"
+
+  # Hub A2A spoke (JSON-RPC message/send). Public path: web nginx /a2a/ → this service.
+  a2a:
+    build:
+      context: .
+      dockerfile: agents/Dockerfile
+    command:
+      [
+        "python",
+        "-m",
+        "uvicorn",
+        "app.a2a_main:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8040",
+      ]
+    env_file:
+      - agents/.env
+    environment:
+      A2A_HOST: 0.0.0.0
+      A2A_PORT: 8040
+      CAMPAIGN_API_BASE: http://backend:3001/api
+      DATA_DIR: /data
+    depends_on:
+      backend:
+        condition: service_started
+    volumes:
+      - agents_data:/data
+    restart: unless-stopped
+    ports:
+      # Optional direct access (Hub should use https://<site>/a2a/ via web nginx).
+      - "127.0.0.1:${A2A_PORT:-8040}:8040"
+
+  web:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        VITE_AGENTS_SOCKET_PATH: /agents-socket
+        VITE_PUBLIC_APP_URL: ${PUBLIC_APP_URL:-}
+        VITE_CRM_EMBED_ORIGINS: ${CRM_EMBED_ORIGINS:-}
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    environment:
+      NGINX_SERVER_NAME: ${NGINX_SERVER_NAME:-_}
+      # Space-separated origins for CSP frame-ancestors (CRM iframe embed)
+      CRM_FRAME_ANCESTORS: ${CRM_FRAME_ANCESTORS:-}
+    depends_on:
+      backend:
+        condition: service_started
+      agents:
+        condition: service_started
+      a2a:
+        condition: service_started
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+  backend_uploads:
+  agents_data:

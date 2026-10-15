@@ -1,0 +1,46 @@
+---
+description: Reports & Analytics V2 — follow REPORTING_V2_DESIGN; Python for correctness, LLM for understanding (this repo only)
+alwaysApply: true
+---
+
+# Reporting V2 architecture (this repo)
+
+**Source of truth:** [REPORTING_V2_DESIGN.md](REPORTING_V2_DESIGN.md). Do not reintroduce V1 patterns from `old_reports_analytics_agent_ticketing` or extend step-1 reference zips unless the user asks.
+
+**Build output:** New work lives under `reports_analytics_agent_ticketing_v2/` only. Do not edit reference copies (`*_step1`, `old_*`) as the deliverable.
+
+## Principle
+
+> Deterministic where correctness matters. Intelligent where understanding matters.
+
+| Python (no regex-as-router) | LLM (Gemma) |
+|---|---|
+| Certified KPIs via `run_kpi` + `product/sql/` templates | Domain: understand, depth (quick/standard/deep), plain-language tasks |
+| `time.py` / `resolve.py`: time words → UTC; names → ids | SQL executor: `run_sql` or `run_kpi` JSON from task + schema/examples |
+| `access.yml` + `views.py` scoped CTEs; early access deny | KG executor: Cypher from `product_edges.yml` + examples |
+| `sql_guard.py` (**sqlglot**, Postgres dialect) — parse AST, allowlists, bind params | One repair turn on guard/DB/sanity mismatch |
+| `cypher_guard.py` — **parse** Cypher subset (not regex fences); scope labels (`Support` / `Shared` per product boundary | Domain synthesis: CEO answer from facts only |
+| `facts.py`, `analysis.py`, `grounding.py` | Executor checks whether results answer the task (with Python sanity signals) |
+
+## Forbidden
+
+- Routing or “understanding” user questions with **regex / giant if-this-then-that** in Python or Domain prompts (V1 `query_frame`, `compiler.py` catalog path, `dims.py`, `present.py` formatter).
+- **SQL path that skips the executor LLM** and formats answers in Python (`present_job` for SQL).
+- LLM computing **ISO dates** or choosing **scope ids** without Python resolution.
+- Ad-hoc SQL for metrics that have a certified KPI when the task names `kpi` (must be `run_kpi` only).
+- Pasting user/org values into SQL strings (use bound parameters).
+- Using **regex alone** to validate or rewrite full SQL/Cypher queries (use sqlglot / structured Cypher parse per design §6.3, §7.1).
+
+## Allowed Python (structured, not “regex everything”)
+
+- Load and validate YAML (`schema.yml`, `access.yml`, `kpis.yml`, `product_edges.yml`).
+- Deterministic arithmetic in `analysis.py`; number extraction for `grounding.py` (simple numeric parse is fine; not question routing).
+- Small regex only for **mechanical** helpers (e.g. escaping LIKE, env expansion) — never for intent, shapes, or graph/SQL structure.
+
+## Prompts
+
+Role → method → output contract → **8–10 examples**. No rule trees. New failures → adjust examples, not new “if user says X” lines.
+
+## Tests
+
+Extend the question bank (§13): deterministic checks (view/KPI, filters, row count, access, grounding) plus CEO-style answer quality.

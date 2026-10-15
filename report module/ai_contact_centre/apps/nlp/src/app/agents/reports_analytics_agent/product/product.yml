@@ -1,0 +1,24 @@
+version: 1
+product_id: contact_center
+schema: ccass
+tenant_column: organization_id
+engine: postgres
+defaults:
+  timezone: UTC
+  week_start: monday
+  row_limit: 500
+  statement_timeout_ms: 15000
+  display_timezone: UTC
+hub:
+  cdp_schema: cdp
+  cdp_customer_table: customer_profile
+  cdp_join: "conversations.contact_id = customer_profile.cdp_id"
+  queue_name_table: ccass.queues
+  cdr_tenant_column: domain_id
+identity_from_ui:
+  - organization_id
+  - user_id
+  - role
+extra:
+  - queue_ids
+llm_must_not_invent: true

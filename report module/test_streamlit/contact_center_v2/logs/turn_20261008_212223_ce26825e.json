@@ -1,0 +1,37 @@
+{
+  "turn_id": "ce26825e",
+  "timestamp": "2026-10-08T15:52:23.750799+00:00",
+  "question": "i need the total overall conversation count all time",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1014,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p>Which period should I use for the conversation count, including those still open? For example, last 7 days, this month, or a specific date range.</p>",
+  "card": "card: none",
+  "facts": "",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1014,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "i need the total overall conversation count all time",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants every conversation that started, including those still open, but they requested 'all time' which is a rejected window. A specific time window is required.",
+      "ask_user": "Which period should I use for the conversation count, including those still open? For example, last 7 days, this month, or a specific date range.",
+      "tasks": []
+    }
+  },
+  "error": null
+}

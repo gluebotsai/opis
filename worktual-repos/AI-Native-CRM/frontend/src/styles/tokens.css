@@ -1,0 +1,88 @@
+/* Worktual UI system tokens — match Contact Center (worktual-ui-system).
+   Login/marketing violet stays below; in-app chrome is graphite + white. */
+
+:root {
+  /* Violet — login / marketing only */
+  --color-violet-900: #2a134f;
+  --color-violet-800: #431a7e;
+  --color-violet-700: #5f1fb0;
+  --color-violet-600: #7423d7;
+  --color-violet-500: #8650de;
+  --color-violet-400: #9a6bfa;
+  --color-violet-300: #b894ff;
+  --color-violet-200: #d1b9ff;
+  --color-violet-100: #e6d8ff;
+  --color-violet-0: #f5eeff;
+
+  /* Neutral — Tailwind-aligned in-app scale */
+  --color-neutral-900: #171717;
+  --color-neutral-800: #262626;
+  --color-neutral-700: #404040;
+  --color-neutral-600: #525252;
+  --color-neutral-500: #737373;
+  --color-neutral-400: #a3a3a3;
+  --color-neutral-300: #d4d4d4;
+  --color-neutral-200: #e5e5e5;
+  --color-neutral-100: #f5f5f5;
+  --color-neutral-50: #fafafa;
+  --color-neutral-0: #ffffff;
+
+  /* Text */
+  --clr-text-primary: #171717;
+  --clr-text-secondary: #404040;
+  --clr-text-caption: #737373;
+  --clr-text-placeholder: #a3a3a3;
+  --clr-text-on-dark: #ffffff;
+  --clr-text-on-dark-muted: rgba(255, 255, 255, 0.7);
+  --clr-text-success: #059669;
+  --clr-text-info: #2563eb;
+  --clr-text-warning: #d97706;
+  --clr-text-caution: #d97706;
+  --clr-text-danger: #dc2626;
+  --clr-text-link: #171717;
+
+  /* Backgrounds */
+  --c-bg-canvas: #f3f4f6;
+  --c-bg-canvas-inverse: #111111;
+  --c-bg-subtle: #f3f4f6;
+  --c-bg-subtle-inverse: #262626;
+  --c-bg-surface: #ffffff;
+
+  /* Borders — card/control hairline is #bfbfbf; list rows may still use #e5e5e5 */
+  --c-border-default: #bfbfbf;
+  --c-border-strong: #171717;
+  --c-border-focus: #171717;
+  --c-border-row: #e5e5e5;
+
+  /* Icons */
+  --c-icon-on-light: #262626;
+  --c-icon-on-dark: #e5e5e5;
+
+  /* States */
+  --c-state-hover: #f5f5f5;
+  --c-state-active: #e5e5e5;
+  --c-state-hover-on-dark: rgba(255, 255, 255, 0.05);
+  --c-state-disabled: #e5e5e5;
+  --c-state-disabled-text: #a3a3a3;
+
+  /* Spacing */
+  --space-gap-xsmall: 4px;
+  --space-gap-small: 8px;
+  --space-gap-medium: 16px;
+  --space-gap-large: 24px;
+  --space-gap-xlarge: 32px;
+
+  /* Radius — md 6 / lg 8 / xl 12 / 2xl 16 */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-pill: 9999px;
+
+  /* Brand aliases — primary CTAs are black (no purple in-app) */
+  --brand-primary: #000000;
+  --brand-primary-hover: #262626;
+  --brand-primary-active: #171717;
+  --brand-primary-dark: #111111;
+}

@@ -1,0 +1,75 @@
+INFO:     Started server process [309501]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8500 (Press CTRL+C to quit)
+Database error fetching role: connection to server on socket "/var/run/postgresql/.s.PGSQL.5432" failed: FATAL:  role "govindaraajan" does not exist
+
+
+[12:08:23] [QUERY - agent] Why are some tickets still open even though associated customer conversations appear to have ended?
+[12:08:51] [RESPONSE - 30.089s] The contact center records indicate that the **Ticket** entity is not currently tracked within this telemetry scope. As a result, I cannot directly verify the status of tickets or their relationship to ended conversations.
+
+**DATA_UNAVAILABLE**: The platform does not currently provide visibility into a "Ticket" domain or its lifecycle (e.g., open vs. closed status) within this specific dataset.
+
+### Potential Explanations (Hypothesis)
+While I cannot confirm the state of your tickets, the discrepancy you are observing between ended conversations and open tickets typically stems from one of the following operational patterns:
+
+* **Asynchronous Resolution**: In many CCaaS environments, a conversation (like a chat or email) is a synchronous interaction used to *initiate* a request, whereas the ticket represents the underlying work item. A conversation may end once the agent has gathered the necessary information, but the ticket remains open while the agent performs back-office tasks or waits for third-party information.
+* **Manual Wrap-up Requirements**: If your workflow requires agents to manually transition a ticket to a "Resolved" state after the interaction ends, any delay in agent administrative tasks (wrap-up time) will result in a mismatch between conversation end times and ticket closure.
+* **System Integration Latency**: If your ticketing system is a separate platform (e.g., Zendesk, Salesforce) integrated via API, there may be a delay or a failure in the webhook/sync process that signals the conversation's end to the ticketing system.
+
+### Tactical Operational Levers
+To investigate this further within your existing tools, I recommend:
+1. **Reviewing Agent Wrap-up Time**: Analyze the duration between `c.ended_at` and the time the associated work item is updated.
+2. **Auditing Integration Logs**: Verify if the "Conversation Ended" event is successfully triggering the "Ticket Update" event in your external CRM/Ticketing system.
+3. **Standardizing Disposition Codes**: Ensure agents are using specific `disposition_code` values that are mapped to automated ticket resolution triggers....
+
+INFO:     127.0.0.1:56464 - "POST /chat HTTP/1.1" 200 OK
+Database error fetching role: connection to server on socket "/var/run/postgresql/.s.PGSQL.5432" failed: FATAL:  role "govindaraajan" does not exist
+
+
+[12:08:51] [QUERY - agent] Why does one channel have a higher first-contact resolution rate than another, and does the difference remain after accounting for sample size and missing outcomes?
+[12:09:35] [RESPONSE - 43.753s] I was unable to retrieve sufficient data to fully answer your question. Please try rephrasing your request....
+
+INFO:     127.0.0.1:57942 - "POST /chat HTTP/1.1" 200 OK
+Database error fetching role: connection to server on socket "/var/run/postgresql/.s.PGSQL.5432" failed: FATAL:  role "govindaraajan" does not exist
+
+
+[12:09:35] [QUERY - agent] Why does the total number of conversations differ from the sum of answered, missed, abandoned, transferred, and other outcomes?
+[12:10:05] [RESPONSE - 29.986s] The discrepancy you are observing between the total conversation count and the sum of individual outcome categories is typically due to the distinction between **interaction states** (what is happening) and **interaction outcomes** (what happened), as well as the potential for **overlapping classifications**.
+
+In the CCaaS telemetry, these categories are not always mutually exclusive. Summing them can lead to "double-counting" or "under-counting" depending on how the categories are defined.
+
+### Executive Summary
+The total conversation count represents the unique number of interaction sessions. Discrepancies arise because metrics like "Answered" and "Transferred" describe different attributes of the same conversation, meaning a single interaction can belong to multiple categories simultaneously.
+
+### Empirical Diagnostic Findings
+
+The following structural logic explains why a simple sum of outcomes often fails to reconcile with the total volume:
+
+| Category Type | Example Metric | Logic & Overlap Risk |
+| :--- | :--- | :--- |
+| **State-Based** | **Answered** | This is a state (where `assigned_at` is populated). An answered call can also be **Transferred**, **Resolved**, or **Disconnected**. If you sum "Answered" + "Transferred," you are counting the same conversation twice. |
+| **Event-Based** | **Transferred** | This identifies an event (a `Transfer` record or a `CONTINUES` relationship). A transfer is almost always an "Answered" interaction, so it is a subset of answered calls, not a separate category. |
+| **Outcome-Based** | **Abandoned** | This is a terminal outcome (where `assigned_at` is null and the customer disconnected). This is generally mutually exclusive with "Answered." |
+| **Outcome-Based** | **Missed Contact** | These are explicit `MissedContact` nodes. While related to abandonment, they are logged as distinct telemetry events. |
+| **In-Progress** | **Active** | Conversations currently in progress do not yet have a terminal `end_reason` or `disposition_code`, meaning they are included in the "Total" but haven't yet been categorized into an "Outcome." |
+
+**Observed Logic Patterns:**
+* **Double-Counting (The Sum > Total Error):** Occurs when summing state-based metrics (e.g., `Answered` + `Transferred` + `Resolved`). Since a resolved call is also an answered call, the sum will exceed the actual number of unique conversations.
+* **Under-Counting (The Sum < Total Error):** Occurs when ignoring "In-Progress" conversations or when certain interactions lack the specific properties (like `disposition_code`) required to be categorized into your specific outcome buckets.
+
+**Hypothesis:**
+The discrepancy is likely not a data error, but a result of using a "Sum of Parts" approach on metrics that are designed to be overlapping dimensions rather than mutually exclusive segments.
+
+### Tactical Operational Levers
+
+To ensure accurate...
+
+INFO:     127.0.0.1:40752 - "POST /chat HTTP/1.1" 200 OK
+Database error fetching role: connection to server on socket "/var/run/postgresql/.s.PGSQL.5432" failed: FATAL:  role "govindaraajan" does not exist
+
+
+[12:10:05] [QUERY - agent] Why do customers from particular campaigns generate more support interactions, and how do attribution, customer identity, product usage, and ticket history affect the conclusion?
+[12:10:39] [RESPONSE - 34.058s] I was unable to retrieve sufficient data to fully answer your question. Please try rephrasing your request....
+
+INFO:     127.0.0.1:51434 - "POST /chat HTTP/1.1" 200 OK

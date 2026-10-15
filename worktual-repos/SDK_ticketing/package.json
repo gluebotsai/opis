@@ -1,0 +1,42 @@
+{
+  "name": "@worktual/ticketing",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Headless Worktual Ticketing API client (intake + staff routes).",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Worktual-vibecoding/SDK_ticketing.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Worktual-vibecoding/SDK_ticketing/issues"
+  },
+  "homepage": "https://github.com/Worktual-vibecoding/SDK_ticketing#readme",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "test:watch": "vitest tests/unit"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "typescript": "~5.8.2",
+    "vitest": "^3.0.9"
+  }
+}

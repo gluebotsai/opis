@@ -1,0 +1,132 @@
+name: Test
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        workspace: [cc-core, chat-service, social-service, nlp]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install Node dependencies
+        if: matrix.workspace != 'nlp'
+        run: npm ci
+      - name: Run cc-core unit tests
+        if: matrix.workspace == 'cc-core'
+        run: npm test -w cc-core
+      - name: Run chat-service unit tests
+        if: matrix.workspace == 'chat-service'
+        run: npm test -w chat-service
+      - name: Run social-service unit tests
+        if: matrix.workspace == 'social-service'
+        run: npm test -w social-service
+      - name: Install NLP dependencies
+        if: matrix.workspace == 'nlp'
+        run: npm run nlp:sync
+      - name: Run NLP tests
+        if: matrix.workspace == 'nlp'
+        run: npm test -w nlp
+
+  integration:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: worktual
+          POSTGRES_PASSWORD: worktual
+          POSTGRES_DB: worktual_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U worktual -d worktual_db"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://worktual:worktual@localhost:5432/worktual_db
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - name: Apply database schema
+        run: |
+          npm run db:push
+          npm run db:migrate
+      - name: Seed test accounts
+        run: npm run seed:worktual-test-accounts -w cc-core
+      - name: Run rollback integration tests
+        run: |
+          npm run test:email-enterprise -w cc-core
+          npx tsx apps/cc-core/scripts/test-contact-identity-integration.ts
+          npx tsx apps/cc-core/scripts/test-webchat-memory-integration.ts
+
+  api-e2e:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: worktual
+          POSTGRES_PASSWORD: worktual
+          POSTGRES_DB: worktual_db
+        ports:
+          - 5432:5432
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+    env:
+      DATABASE_URL: postgresql://worktual:worktual@localhost:5432/worktual_db
+      REDIS_URL: redis://localhost:6379
+      WHATSAPP_E2E_STUB: "true"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npm run nlp:sync
+      - name: Start stack
+        run: |
+          npm run db:push
+          npm run db:migrate
+          npm run dev &
+          sleep 30
+      - name: API E2E smoke
+        run: npx tsx scripts/e2e/run-all.ts --smoke
+
+  playwright:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    env:
+      PLAYWRIGHT_SKIP_WEBSERVER: "1"
+      E2E_STACK_READY: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install chromium --with-deps
+      - name: Playwright smoke
+        run: npm run test:e2e -w web -- --project=smoke

@@ -1,0 +1,17 @@
+name: ccass.message_delivery_attempts
+alias: da
+schema: ccass
+grain: delivery_attempt
+purpose: Provider delivery retries and failures.
+time_columns: [attempted_at, delivered_at]
+columns:
+  - { name: id, type: bigint, pk: true, description: Attempt id }
+  - { name: organization_id, type: bigint, description: Tenant id }
+  - { name: message_id, type: bigint, fk: ccass.conversation_messages.id, description: Message }
+  - { name: destination, type: text, description: Destination }
+  - { name: attempt_number, type: int, description: Attempt index }
+  - { name: status, type: text, values: [pending, delivered, failed], description: Attempt status }
+  - { name: error_message, type: text, description: Provider error }
+  - { name: attempted_at, type: timestamptz, description: When attempted }
+sample_rows:
+  - { id: 1, message_id: 9002, destination: whatsapp, attempt_number: 1, status: delivered, attempted_at: "2026-09-07T10:02:18Z" }

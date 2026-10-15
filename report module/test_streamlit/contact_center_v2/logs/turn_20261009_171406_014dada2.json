@@ -1,0 +1,60 @@
+{
+  "turn_id": "014dada2",
+  "timestamp": "2026-10-09T11:44:06.451957+00:00",
+  "question": "what is the bot containment rate.. ",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1016,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong><p>Bot containment rate</p></strong></p><p>The bot containment rate for all time is <strong>82.1%</strong>.</p><p>Would you like to see this rate broken down by channel?</p>",
+  "card": "card: kpi r1",
+  "facts": "result_id: r1\nwindow: all time\nkpi: bot_containment\ncertified: true\nunit: percent\ntask_goal: Calculate the bot containment rate.\nanswer_type: percentage\nrow_count: 1\nrow 1: contained_n=499; handled_n=608; rate_pct=82.1",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1016,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "what is the bot containment rate.. ",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants to know the bot containment rate.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Calculate the bot containment rate.",
+          "time": "all time",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "percentage"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "bot_containment",
+        "row_count": 1
+      }
+    ],
+    "facts": "result_id: r1\nwindow: all time\nkpi: bot_containment\ncertified: true\nunit: percent\ntask_goal: Calculate the bot containment rate.\nanswer_type: percentage\nrow_count: 1\nrow 1: contained_n=499; handled_n=608; rate_pct=82.1",
+    "grounded": true,
+    "card": "card: kpi r1"
+  },
+  "error": null
+}

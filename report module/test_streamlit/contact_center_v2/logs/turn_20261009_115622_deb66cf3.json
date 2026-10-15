@@ -1,0 +1,60 @@
+{
+  "turn_id": "deb66cf3",
+  "timestamp": "2026-10-09T06:26:22.424690+00:00",
+  "question": "how many calls does bharathi have?",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1016,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Bharathi's handled calls</strong></p>\n<p>Bharathi has handled <strong>61</strong> conversations all time.</p>\n<p>Would you like to see the average handle time for these calls?</p>",
+  "card": "card: kpi r1",
+  "facts": "result_id: r1\nwindow: all time\nkpi: handled\ncertified: true\nunit: conversations\ntask_goal: Count the number of calls handled by the agent named Bharathi.\nanswer_type: number\nrow_count: 1\nrow 1: handled=61",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1016,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "how many calls does bharathi have?",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants to know the total number of calls handled by the agent Bharathi.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Count the number of calls handled by the agent named Bharathi.",
+          "time": "all time",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "handled",
+        "row_count": 1
+      }
+    ],
+    "facts": "result_id: r1\nwindow: all time\nkpi: handled\ncertified: true\nunit: conversations\ntask_goal: Count the number of calls handled by the agent named Bharathi.\nanswer_type: number\nrow_count: 1\nrow 1: handled=61",
+    "grounded": true,
+    "card": "card: kpi r1"
+  },
+  "error": null
+}

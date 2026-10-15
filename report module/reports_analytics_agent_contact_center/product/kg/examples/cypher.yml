@@ -1,0 +1,291 @@
+version: 1
+# Canonical Cypher few-shot examples for kg_analytics_executor in Contact Center.
+# CRITICAL: Org isolation is structural (dedicated database per tenant e.g. org1000, org1012).
+# Do NOT filter by organization_id in Cypher queries.
+
+examples:
+  - id: conversation_volume_summary
+    goal: "What is the total conversation volume and channel breakdown?"
+    cypher: |
+      MATCH (c:Conversation)
+      RETURN count(c) AS total_conversations,
+             count(DISTINCT c.channel) AS channels_active,
+             count(DISTINCT c.visitor_id) AS unique_customers
+      LIMIT 100
+
+  - id: average_handle_time
+    goal: "What is the average handle time across channels?"
+    cypher: |
+      MATCH (c:Conversation)
+      WHERE c.created_at IS NOT NULL AND c.ended_at IS NOT NULL
+      RETURN coalesce(c.channel, 'all') AS channel,
+             count(c) AS conversations_measured,
+             round(avg(duration.between(c.created_at, c.ended_at).seconds), 1) AS avg_handle_time_seconds,
+             round(avg(duration.between(c.created_at, c.ended_at).seconds) / 60.0, 2) AS avg_handle_time_minutes,
+             round(min(duration.between(c.created_at, c.ended_at).seconds) / 60.0, 2) AS min_duration_minutes,
+             round(max(duration.between(c.created_at, c.ended_at).seconds) / 60.0, 2) AS max_duration_minutes
+      ORDER BY conversations_measured DESC
+      LIMIT 50
+
+  - id: conversation_outcomes_and_reasons
+    goal: "Why are calls and chats ending? Show termination breakdown."
+    cypher: |
+      MATCH (c:Conversation)
+      RETURN coalesce(c.end_reason, 'unspecified') AS end_reason,
+             coalesce(c.end_actor, 'system') AS end_actor,
+             count(*) AS conversation_count
+      ORDER BY conversation_count DESC
+      LIMIT 20
+
+  - id: resolution_rate_and_outcomes
+    goal: "What is our first contact resolution rate and outcome breakdown?"
+    cypher: |
+      MATCH (c:Conversation)
+      WHERE c.resolution_code IS NOT NULL
+      RETURN count(c) AS total_evaluated,
+             count(CASE WHEN toLower(c.resolution_code) = 'resolved' THEN 1 END) AS resolved_count,
+             count(CASE WHEN toLower(c.resolution_code) = 'unresolved' THEN 1 END) AS unresolved_count,
+             CASE WHEN count(c) > 0 
+                  THEN round(100.0 * count(CASE WHEN toLower(c.resolution_code) = 'resolved' THEN 1 END) / count(c), 2)
+                  ELSE 0.0 
+             END AS resolution_rate_pct
+      LIMIT 10
+
+  - id: unresolved_interaction_causes
+    goal: "Why did conversations remain unresolved?"
+    cypher: |
+      MATCH (c:Conversation)
+      WHERE toLower(c.resolution_code) = 'unresolved' AND c.custom_conclusion IS NOT NULL
+      RETURN c.id AS conversation_id,
+             c.channel AS channel,
+             c.custom_conclusion AS root_cause,
+             coalesce(c.end_reason, 'unspecified') AS end_reason,
+             coalesce(c.end_actor, 'agent') AS end_actor
+      LIMIT 20
+
+  - id: abandonment_and_disconnect_analysis
+    goal: "Why are customers abandoning or dropping off?"
+    cypher: |
+      MATCH (c:Conversation)
+      WHERE c.end_reason IN ['idle_timeout', 'visitor_disconnected', 'customer_abandon', 'caller_disconnected', 'customer_ended', 'browser_disconnected']
+         OR c.end_actor = 'customer'
+      RETURN coalesce(c.end_reason, 'disconnected') AS disconnect_reason,
+             coalesce(c.end_actor, 'customer') AS disconnect_actor,
+             count(*) AS dropped_conversations
+      ORDER BY dropped_conversations DESC
+      LIMIT 20
+
+  - id: channel_distribution
+    goal: "How is conversation volume distributed across channels?"
+    cypher: |
+      MATCH (c:Conversation)
+      RETURN coalesce(c.channel, 'unknown') AS channel,
+             count(*) AS volume,
+             count(DISTINCT c.visitor_id) AS unique_visitors
+      ORDER BY volume DESC
+      LIMIT 10
+
+  - id: channel_comparison_root_cause
+    goal: "Compare channels and explain differences in volume, bot activity, and duration."
+    cypher: |
+      MATCH (c:Conversation)
+      WHERE c.channel IS NOT NULL
+      WITH c.channel AS channel,
+           count(c) AS conversation_volume,
+           count(DISTINCT c.visitor_id) AS unique_visitors,
+           collect(DISTINCT coalesce(c.end_reason, 'active/in_progress'))[..4] AS common_end_reasons,
+           [s IN collect(DISTINCT c.subject) WHERE s IS NOT NULL][..4] AS sample_subjects,
+           count(CASE WHEN c.bot_active = true THEN 1 END) AS bot_active_count,
+           count(CASE WHEN toLower(c.end_actor) = 'customer' THEN 1 END) AS customer_ended_count,
+           round(avg(duration.between(c.created_at, c.ended_at).seconds), 1) AS avg_duration_seconds
+      RETURN channel,
+             conversation_volume,
+             unique_visitors,
+             bot_active_count,
+             customer_ended_count,
+             sample_subjects,
+             common_end_reasons,
+             avg_duration_seconds
+      ORDER BY conversation_volume DESC
+      LIMIT 10
+
+  - id: queue_wait_times_and_performance
+    goal: "How are conversations routed across queues?"
+    cypher: |
+      MATCH (c:Conversation)-[:ROUTED_TO]->(q)
+      WHERE q:ContactCentreQueue OR q:Queue OR q:LiveRoutingProfile
+      RETURN coalesce(q.name, q.queue_name, 'Queue ' + toString(q.id)) AS queue_name,
+             count(c) AS conversations_routed,
+             count(DISTINCT c.visitor_id) AS distinct_callers
+      ORDER BY conversations_routed DESC
+      LIMIT 20
+
+  - id: agent_workload_and_performance
+    goal: "What is the agent workload and duration breakdown?"
+    cypher: |
+      MATCH (c:Conversation)-[:HANDLED_BY]->(s)
+      WHERE s:ContactCentreAgent OR s:Staff OR s:ContactCentreStaff
+      RETURN coalesce(s.display_name, s.email, s.support_email, 'Agent ' + toString(s.id)) AS agent_name,
+             count(c) AS conversations_handled,
+             round(avg(duration.between(c.created_at, c.ended_at).seconds), 1) AS avg_duration_sec
+      ORDER BY conversations_handled DESC
+      LIMIT 20
+
+  - id: unresolved_conversations_root_cause
+    goal: "Detailed 4-step root cause analysis for unresolved conversations"
+    cypher: |
+      MATCH (c:Conversation)
+      WHERE toLower(c.resolution_code) = 'unresolved'
+      OPTIONAL MATCH (c)-[:ROUTED_TO]->(q)
+      OPTIONAL MATCH (c)-[:HANDLED_BY]->(a)
+      RETURN coalesce(q.name, q.queue_name, 'Queue ' + toString(c.queue_id)) AS queue_name,
+             coalesce(c.queue_id, q.id) AS queue_id,
+             coalesce(a.display_name, a.email, 'Agent ' + toString(c.assigned_agent_id)) AS agent_name,
+             coalesce(c.assigned_agent_id, a.id) AS assigned_agent_id,
+             coalesce(c.end_actor, 'unspecified') AS end_actor,
+             coalesce(c.end_reason, 'unspecified') AS end_reason,
+             coalesce(c.disposition_code, 'none') AS disposition_code,
+             count(c) AS unresolved_count,
+             round(avg(duration.between(c.created_at, c.ended_at).seconds), 1) AS avg_duration_seconds,
+             collect(DISTINCT c.custom_conclusion)[..3] AS sample_conclusions
+      ORDER BY unresolved_count DESC
+      LIMIT 20
+
+  - id: transfer_loops_and_chained_sessions
+    goal: "Identify transfer loops, continued sessions, and failure facts"
+    cypher: |
+      MATCH (c1:Conversation)-[:CONTINUES]->(c2:Conversation)
+      WITH c1, c2,
+           coalesce(c1.facts, c2.facts, []) AS combined_facts,
+           coalesce(c1.summary, c2.summary, '') AS combined_summary,
+           coalesce(c1.handoff_reason, c2.handoff_reason, 'none') AS handoff_reason
+      RETURN c1.id AS from_session_id,
+             c2.id AS to_session_id,
+             c1.channel AS channel,
+             handoff_reason,
+             combined_facts AS system_facts,
+             combined_summary AS system_summary,
+             coalesce(c1.end_actor, 'unknown') AS from_end_actor,
+             coalesce(c1.end_reason, 'unknown') AS from_end_reason,
+             coalesce(c2.end_actor, 'unknown') AS to_end_actor,
+             coalesce(c2.end_reason, 'unknown') AS to_end_reason
+      ORDER BY CASE WHEN size(combined_facts) > 0 THEN 0 ELSE 1 END, c1.id DESC
+      LIMIT 25
+
+  - id: bot_escalation_and_missed_contacts
+    goal: "Why did bot-to-agent handoffs result in missed contacts?"
+    cypher: |
+      MATCH (c:Conversation)
+      WHERE c.handoff_reason IS NOT NULL 
+         OR exists((c)-[:HAS]->(:MissedContact))
+         OR any(f IN coalesce(c.facts, []) WHERE f IN ['live_agent_unavailable', 'no_ready_agents'])
+      OPTIONAL MATCH (c)-[:HAS]->(mc:MissedContact)
+      OPTIONAL MATCH (c)-[:ROUTED_TO]->(q)
+      OPTIONAL MATCH (c)-[:HANDLED_BY]->(a)
+      RETURN c.id AS conversation_id,
+             c.channel AS channel,
+             c.handoff_reason AS handoff_reason,
+             coalesce(mc.reason, 'none') AS missed_contact_reason,
+             coalesce(mc.custom_reasonCode, 'none') AS missed_reason_code,
+             coalesce(q.name, q.queue_name, CASE WHEN c.queue_id IS NOT NULL THEN 'Queue ' + toString(c.queue_id) ELSE 'Unassigned' END) AS queue_name,
+             coalesce(a.display_name, 'None (Unassigned)') AS assigned_agent,
+             c.status AS status,
+             coalesce(c.resolution_code, 'none') AS resolution_code,
+             c.end_actor AS end_actor,
+             c.end_reason AS end_reason,
+             c.facts AS telemetry_facts,
+             c.summary AS system_summary
+      ORDER BY c.id DESC
+      LIMIT 20
+
+  - id: bot_sessions_and_handoff_volume
+    goal: "Summary of bot sessions, handoff requests, and agent transfer volume"
+    cypher: |
+      MATCH (c:Conversation)
+      RETURN c.channel AS channel,
+             count(c) AS total_conversations,
+             count(CASE WHEN c.handoff_reason IS NOT NULL THEN 1 END) AS handoffs_requested,
+             count(CASE WHEN exists((c)-[:HAS]->(:MissedContact)) THEN 1 END) AS missed_contacts_logged,
+             count(CASE WHEN any(f IN coalesce(c.facts, []) WHERE f = 'no_ready_agents') THEN 1 END) AS no_ready_agent_failures,
+             count(CASE WHEN c.assigned_agent_id IS NOT NULL THEN 1 END) AS transferred_to_human_staff,
+             round(avg(duration.between(c.created_at, c.ended_at).seconds), 1) AS avg_duration_seconds
+      ORDER BY total_conversations DESC
+      LIMIT 10
+
+  - id: customer_contact_journey
+    goal: "Show touchpoint history and interactions for a customer"
+    cypher: |
+      MATCH (ct:Contact {cdp_id: $contact_id})-[:HAS_CONVERSATION_HISTORY]->(:ConversationHistory)-[:HAS_CONVERSATION]->(c:Conversation)
+      RETURN ct.cdp_id AS contact_id,
+             coalesce(ct.first_name + ' ' + ct.last_name, 'Unknown Customer') AS customer_name,
+             c.id AS conversation_id,
+             c.channel AS channel,
+             coalesce(c.status, 'unspecified') AS status,
+             c.created_at AS interaction_time,
+             coalesce(c.end_reason, 'active') AS outcome
+      ORDER BY c.created_at DESC
+      LIMIT 20
+
+  - id: business_hours_and_shifts
+    goal: "What are the contact center business hours and shift schedules?"
+    cypher: |
+      MATCH (bh:BusinessHours)-[:HAS_SHIFT]->(sh:Shift)
+      RETURN bh.name AS schedule_name,
+             bh.timezone AS timezone,
+             sh.day_of_week AS day_of_week,
+             sh.shift_type AS shift_type,
+             sh.start_time AS start_time,
+             sh.end_time AS end_time
+      ORDER BY sh.day_of_week, sh.start_time
+      LIMIT 20
+
+  - id: holiday_calendar_overview
+    goal: "Show official contact center operating holidays"
+    cypher: |
+      MATCH (hc:HolidayCalendar)-[:HAS_HOLIDAY]->(h:Holiday)
+      RETURN h.name AS holiday_name,
+             h.holiday_date AS holiday_date
+      ORDER BY h.holiday_date ASC
+      LIMIT 20
+
+  - id: queue_overflow_and_agent_shortage_risk
+    goal: "Which queues are at risk of overflow and agent availability bottlenecks?"
+    cypher: |
+      MATCH (c:Conversation)-[:ROUTED_TO]->(q:ContactCentreQueue)
+      WHERE any(f IN coalesce(c.facts, []) WHERE f IN ['live_agent_unavailable', 'no_ready_agents'])
+      RETURN coalesce(q.name, 'Queue ' + toString(q.id)) AS bottleneck_queue,
+             count(c) AS unhandled_failures,
+             count(CASE WHEN any(f IN coalesce(c.facts, []) WHERE f = 'no_ready_agents') THEN 1 END) AS no_ready_agent_count,
+             count(CASE WHEN any(f IN coalesce(c.facts, []) WHERE f = 'live_agent_unavailable') THEN 1 END) AS agent_unavailable_count,
+             round(avg(duration.between(c.created_at, c.ended_at).seconds) / 60.0, 2) AS avg_duration_minutes
+      ORDER BY unhandled_failures DESC
+      LIMIT 15
+
+  - id: social_channel_response_variance
+    goal: "Analyze conversation duration and resolution across Facebook and Instagram channels."
+    cypher: |
+      MATCH (c:Conversation)
+      WHERE c:FacebookConversation OR c:InstagramConversation
+      RETURN CASE WHEN c:FacebookConversation THEN 'Facebook' ELSE 'Instagram' END AS social_platform,
+             count(c) AS total_conversations,
+             count(CASE WHEN toLower(c.resolution_code) = 'resolved' THEN 1 END) AS resolved_count,
+             count(CASE WHEN toLower(c.resolution_code) = 'unresolved' THEN 1 END) AS unresolved_count,
+             round(avg(duration.between(c.created_at, c.ended_at).seconds) / 60.0, 2) AS avg_handle_time_minutes
+      LIMIT 10
+
+  - id: transfer_loop_attribution
+    goal: "Identify repeat session continuations and transfer handoffs between queues."
+    cypher: |
+      MATCH (c1:Conversation)-[:CONTINUES]->(c2:Conversation)
+      OPTIONAL MATCH (c1)-[:ROUTED_TO]->(q1:ContactCentreQueue)
+      OPTIONAL MATCH (c2)-[:ROUTED_TO]->(q2:ContactCentreQueue)
+      RETURN c1.id AS origin_session,
+             c2.id AS continuation_session,
+             coalesce(q1.name, 'Initial Queue') AS from_queue,
+             coalesce(q2.name, 'Target Queue') AS to_queue,
+             c1.handoff_reason AS handoff_trigger,
+             coalesce(c1.disposition_code, 'none') AS origin_disposition,
+             round(duration.between(c1.created_at, c1.ended_at).seconds / 60.0, 2) AS origin_duration_minutes
+      ORDER BY c1.id DESC
+      LIMIT 20
+

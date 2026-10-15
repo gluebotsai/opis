@@ -1,0 +1,65 @@
+slice_id: cc.followup
+agent: Follow-Up Management Agent
+modules:
+- core
+- interaction
+- followup
+classes:
+- Party
+- Person
+- Organization
+- Contact
+- Agent
+- Consent
+- Preference
+- Channel
+- Event
+- WorkItem
+- Location
+- Conversation
+- Conversation
+- Intent
+- Disposition
+- WrapUp
+- Task
+- Callback
+relations:
+- Person works_for Organization
+- Contact has_consent Consent
+- Contact has_preference Preference
+- Contact belongs_to Organization
+- Agent works_for Organization
+- Conversation WITH Contact
+- Conversation WITH Contact
+- Conversation handled_by Agent
+- Conversation IN_QUEUE Queue
+- Conversation MAY_CREATE Ticket
+- Conversation about WorkItem
+- Conversation HAS_INTENT Intent
+- Task assigned_to Agent
+- Task related_to Conversation
+- Callback raised_by Contact
+- Callback assigned_to Agent
+- Callback FROM Conversation
+actions:
+- action.identify
+- action.route_to_specialist
+- action.get_conversation_context
+- action.suggest_reply
+- action.summarize_conversation
+- action.handoff
+- action.adapt_channel
+- action.list_tasks
+- action.get_task
+- action.update_task
+- action.open_task_workspace
+- action.callback
+- action.assign_recovery
+metric_ids: []
+metric_ids:
+- agents_assigned_callback
+- callback_tasks
+- follow_up_tasks
+- open_agent_tasks
+- suggestion_tasks
+note: Legal slice (tools/policy). Inject pack.as_prompt() compact, not this file.

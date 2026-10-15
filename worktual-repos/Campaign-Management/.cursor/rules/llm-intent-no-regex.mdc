@@ -1,0 +1,23 @@
+---
+description: No chat-intent regex — LLM + tools only (create-campaign / Worktual)
+alwaysApply: true
+---
+
+# Intent = LLM only
+
+For this Worktual campaign rebuild through completion:
+
+- **Do not** use regex, phrase lists, or substring "word checks" to interpret user chat
+  (channels, proceed, launch, drop WhatsApp, all at once, etc.).
+- The **LLM** understands the user and calls tools with explicit arguments
+  (e.g. `channels=[email,web,push]`, `user_confirmed=true`).
+- Tools only **normalize / validate / persist** what the LLM passed.
+
+## Allowed exception
+
+Regex (or simple format checks) for **email** and **phone validation** when the user
+**uploads a contacts sheet** — not for inventing chat intent in create-campaign.
+
+## When fixing chat mistakes
+
+Fix **prompts + tool schemas + tool results**, not new parsers in Python.

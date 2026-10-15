@@ -1,0 +1,20 @@
+name: ccass.conversation_assignments
+alias: ca
+schema: ccass
+grain: offer
+purpose: Offer, accept, reject, expire history for a conversation.
+time_columns: [offered_at, accepted_at, rejected_at, expired_at, ended_at]
+columns:
+  - { name: id, type: bigint, pk: true, description: Assignment id }
+  - { name: organization_id, type: bigint, description: Tenant id }
+  - { name: conversation_id, type: bigint, fk: ccass.conversations.id, description: Conversation }
+  - { name: queue_id, type: bigint, fk: ccass.queues.id, description: Queue of the offer }
+  - { name: agent_id, type: bigint, fk: ccass.agents.id, description: Offered agent }
+  - { name: state, type: text, values: [offered, accepted, rejected, expired, ended], description: Offer state }
+  - { name: offered_at, type: timestamptz, description: Offer time }
+  - { name: accepted_at, type: timestamptz, description: Accepted }
+  - { name: rejected_at, type: timestamptz, description: Rejected }
+  - { name: expired_at, type: timestamptz, description: Timed out }
+sample_rows:
+  - { id: 301, conversation_id: 101, agent_id: 12, state: accepted, offered_at: "2026-09-07T10:01:58Z", accepted_at: "2026-09-07T10:02:00Z" }
+  - { id: 302, conversation_id: 88, agent_id: 12, state: expired, offered_at: "2026-09-07T10:03:00Z", expired_at: "2026-09-07T10:04:00Z" }

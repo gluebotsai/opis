@@ -1,0 +1,60 @@
+{
+  "turn_id": "ce032c32",
+  "timestamp": "2026-10-09T11:36:36.374712+00:00",
+  "question": "what is the resolution rate overall",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1016,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Resolution rate report</strong></p><p>The resolution rate for all time is not available in Contact Center reports.</p><p>Would you like to see the total number of handled conversations for this period instead?</p>",
+  "card": "card: none",
+  "facts": "result_id: r1\nwindow: all time\nkpi: resolution_rate\ncertified: true\nunit: percent\ntask_goal: Calculate the resolution rate as the share of resolved conversations against all handled conversations.\nanswer_type: percentage\nrow_count: 1\nrow 1: resolved_n=0; handled_n=0; rate_pct=None",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1016,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "what is the resolution rate overall",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants to know the overall resolution rate.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Calculate the resolution rate as the share of resolved conversations against all handled conversations.",
+          "time": "all time",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "percentage"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "resolution_rate",
+        "row_count": 1
+      }
+    ],
+    "facts": "result_id: r1\nwindow: all time\nkpi: resolution_rate\ncertified: true\nunit: percent\ntask_goal: Calculate the resolution rate as the share of resolved conversations against all handled conversations.\nanswer_type: percentage\nrow_count: 1\nrow 1: resolved_n=0; handled_n=0; rate_pct=None",
+    "grounded": true,
+    "card": "card: none"
+  },
+  "error": null
+}

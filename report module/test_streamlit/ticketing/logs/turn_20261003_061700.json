@@ -1,0 +1,2022 @@
+{
+  "question": "why the avarage  of tickets per day is high ?",
+  "answer": "The average number of tickets per day is **53.91** across all time. High volume is driven by spikes in daily ticket counts, such as 1,584 tickets on 2026-09-25 and 1,052 tickets on 2026-09-24. The primary drivers by category are Delivery delay (1,256), Tracking (1,211), and Return request (976), while the most active queues are Shipping & Delivery Support (4,478), Returns & Refunds Support (4,031), and Order Management & Fulfillment (3,209).",
+  "trace": {
+    "question": "why the avarage  of tickets per day is high ?",
+    "identity": {
+      "organization_id": 1012,
+      "user_id": 1038,
+      "role": "admin",
+      "queue_ids": [
+        1060,
+        1061,
+        1062,
+        1063,
+        1064,
+        1065,
+        1066,
+        1071,
+        1072,
+        1073,
+        1074,
+        1075,
+        1076
+      ]
+    },
+    "model": "worktual-gemma",
+    "tasks": [
+      {
+        "status": "ok",
+        "store": "sql",
+        "kpi_id": "avg_tickets_per_day",
+        "sql": "WITH base_ticket AS (\n-- Shared ticket grain. Python inlines this as the base_ticket CTE body.\n-- No aggregations. Status rules use tickets.status only. Never is_terminal.\nSELECT\n    t.id AS ticket_id,\n    t.organization_id,\n    t.ticket_number,\n    t.status,\n    t.priority,\n    t.channel,\n    t.category,\n    t.customer_id,\n    t.customer_name,\n    t.assignee_id,\n    t.assignee_name,\n    t.resolver_id,\n    t.resolver_name,\n    t.queue_id,\n    t.queue_name,\n    t.created_by_id,\n    t.created_by_name,\n    t.due_at,\n    t.first_response_at,\n    t.resolved_at,\n    t.csat_score,\n    t.csat_rated_at,\n    t.created_at,\n    t.updated_at,\n    sp.resolution_hours AS sla_resolution_hours,\n    sp.first_response_hours AS sla_first_response_hours,\n    EXTRACT(EPOCH FROM (t.resolved_at - t.created_at)) / 3600.0 AS resolution_hours,\n    EXTRACT(EPOCH FROM (t.first_response_at - t.created_at)) / 3600.0 AS first_response_hours,\n    EXTRACT(EPOCH FROM (t.resolved_at - t.due_at)) / 3600.0 AS resolution_variance_hours,\n    EXTRACT(EPOCH FROM (COALESCE(t.resolved_at, NOW()) - t.due_at)) / 3600.0 AS overdue_hours_so_far,\n    (t.status = 'Open') AS is_status_open,\n    (t.status = 'Pending') AS is_status_pending_literal,\n    (t.status = 'Reopened') AS is_status_reopened,\n    (t.status = 'Overdue') AS is_status_overdue,\n    (t.status = 'Resolved') AS is_status_resolved,\n    (t.status = 'Closed') AS is_status_closed,\n    (t.status NOT IN ('Closed', 'Resolved')) AS is_pending_generic,\n    (t.assignee_id IS NULL) AS is_unassigned,\n    (t.priority = 'high') AS is_high_priority,\n    (t.due_at IS NOT NULL) AS has_resolution_due,\n    (sp.first_response_hours IS NOT NULL) AS has_first_response_policy,\n    (\n        t.resolved_at IS NOT NULL\n        AND t.due_at IS NOT NULL\n        AND t.resolved_at <= t.due_at\n    ) AS resolution_sla_met,\n    (\n        t.due_at IS NOT NULL\n        AND (\n            (t.resolved_at IS NOT NULL AND t.resolved_at > t.due_at)\n            OR (\n                t.status NOT IN ('Closed', 'Resolved')\n                AND NOW() > t.due_at\n            )\n            OR (\n                t.status IN ('Closed', 'Resolved')\n                AND t.resolved_at IS NULL\n                AND NOW() > t.due_at\n            )\n        )\n    ) AS resolution_sla_missed,\n    (\n        t.due_at IS NOT NULL\n        AND t.status NOT IN ('Closed', 'Resolved')\n        AND NOW() <= t.due_at\n        AND EXTRACT(EPOCH FROM (t.due_at - NOW()))\n            <= 0.20 * EXTRACT(EPOCH FROM (t.due_at - t.created_at))\n        AND EXTRACT(EPOCH FROM (t.due_at - t.created_at)) > 0\n    ) AS resolution_at_risk,\n    (t.due_at IS NULL) AS resolution_no_sla,\n    (\n        t.first_response_at IS NOT NULL\n        AND sp.first_response_hours IS NOT NULL\n        AND t.first_response_at <= t.created_at + (sp.first_response_hours * INTERVAL '1 hour')\n    ) AS first_response_sla_met,\n    (\n        sp.first_response_hours IS NOT NULL\n        AND (\n            (\n                t.first_response_at IS NOT NULL\n                AND t.first_response_at > t.created_at + (sp.first_response_hours * INTERVAL '1 hour')\n            )\n            OR (\n                t.first_response_at IS NULL\n                AND NOW() > t.created_at + (sp.first_response_hours * INTERVAL '1 hour')\n            )\n        )\n    ) AS first_response_sla_missed,\n    (\n        t.first_response_at IS NULL\n        AND sp.first_response_hours IS NOT NULL\n        AND t.status NOT IN ('Closed', 'Resolved')\n        AND NOW() <= t.created_at + (sp.first_response_hours * INTERVAL '1 hour')\n        AND EXTRACT(EPOCH FROM (\n            (t.created_at + (sp.first_response_hours * INTERVAL '1 hour'))\n            - NOW()\n        )) <= 0.20 * (sp.first_response_hours * 3600.0)\n    ) AS first_response_at_risk,\n    (sp.first_response_hours IS NULL) AS first_response_no_sla\nFROM ticketing.tickets t\nLEFT JOIN LATERAL (\n    SELECT sp.resolution_hours, sp.first_response_hours\n    FROM ticketing.sla_policies sp\n    WHERE sp.organization_id = t.organization_id\n      AND sp.priority = t.priority\n      AND sp.active = true\n    ORDER BY sp.id DESC\n    LIMIT 1\n) sp ON true\nWHERE t.organization_id = 1012\n\n)\nSELECT\n    \n    (COUNT(*)::float / NULLIF((GREATEST(1.0, COALESCE(EXTRACT(EPOCH FROM (NOW() - MIN(created_at))) / 86400.0, 1.0)))::float, 0)) AS avg_tickets_per_day\nFROM base_ticket\nWHERE TRUE\n  AND TRUE\n  AND TRUE\n  AND TRUE\n\n",
+        "rows": [
+          {
+            "avg_tickets_per_day": 53.91156201403008
+          }
+        ],
+        "attempts": [
+          {
+            "raw": "```json\n{\"tool\": \"run_kpi\", \"kpi_id\": \"avg_tickets_per_day\"}\n```",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "avg_tickets_per_day"
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "time_status": "all_time",
+        "tool": "run_kpi",
+        "requested_kpi": "avg_tickets_per_day",
+        "requested_dimension": null,
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "avg_tickets_per_day",
+          "dimension": null,
+          "goal": "Get the average tickets per day to establish baseline",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "kpi"
+        }
+      },
+      {
+        "status": "ok",
+        "store": "sql",
+        "kpi_id": "ticket_count",
+        "sql": "WITH base_ticket AS (\n-- Shared ticket grain. Python inlines this as the base_ticket CTE body.\n-- No aggregations. Status rules use tickets.status only. Never is_terminal.\nSELECT\n    t.id AS ticket_id,\n    t.organization_id,\n    t.ticket_number,\n    t.status,\n    t.priority,\n    t.channel,\n    t.category,\n    t.customer_id,\n    t.customer_name,\n    t.assignee_id,\n    t.assignee_name,\n    t.resolver_id,\n    t.resolver_name,\n    t.queue_id,\n    t.queue_name,\n    t.created_by_id,\n    t.created_by_name,\n    t.due_at,\n    t.first_response_at,\n    t.resolved_at,\n    t.csat_score,\n    t.csat_rated_at,\n    t.created_at,\n    t.updated_at,\n    sp.resolution_hours AS sla_resolution_hours,\n    sp.first_response_hours AS sla_first_response_hours,\n    EXTRACT(EPOCH FROM (t.resolved_at - t.created_at)) / 3600.0 AS resolution_hours,\n    EXTRACT(EPOCH FROM (t.first_response_at - t.created_at)) / 3600.0 AS first_response_hours,\n    EXTRACT(EPOCH FROM (t.resolved_at - t.due_at)) / 3600.0 AS resolution_variance_hours,\n    EXTRACT(EPOCH FROM (COALESCE(t.resolved_at, NOW()) - t.due_at)) / 3600.0 AS overdue_hours_so_far,\n    (t.status = 'Open') AS is_status_open,\n    (t.status = 'Pending') AS is_status_pending_literal,\n    (t.status = 'Reopened') AS is_status_reopened,\n    (t.status = 'Overdue') AS is_status_overdue,\n    (t.status = 'Resolved') AS is_status_resolved,\n    (t.status = 'Closed') AS is_status_closed,\n    (t.status NOT IN ('Closed', 'Resolved')) AS is_pending_generic,\n    (t.assignee_id IS NULL) AS is_unassigned,\n    (t.priority = 'high') AS is_high_priority,\n    (t.due_at IS NOT NULL) AS has_resolution_due,\n    (sp.first_response_hours IS NOT NULL) AS has_first_response_policy,\n    (\n        t.resolved_at IS NOT NULL\n        AND t.due_at IS NOT NULL\n        AND t.resolved_at <= t.due_at\n    ) AS resolution_sla_met,\n    (\n        t.due_at IS NOT NULL\n        AND (\n            (t.resolved_at IS NOT NULL AND t.resolved_at > t.due_at)\n            OR (\n                t.status NOT IN ('Closed', 'Resolved')\n                AND NOW() > t.due_at\n            )\n            OR (\n                t.status IN ('Closed', 'Resolved')\n                AND t.resolved_at IS NULL\n                AND NOW() > t.due_at\n            )\n        )\n    ) AS resolution_sla_missed,\n    (\n        t.due_at IS NOT NULL\n        AND t.status NOT IN ('Closed', 'Resolved')\n        AND NOW() <= t.due_at\n        AND EXTRACT(EPOCH FROM (t.due_at - NOW()))\n            <= 0.20 * EXTRACT(EPOCH FROM (t.due_at - t.created_at))\n        AND EXTRACT(EPOCH FROM (t.due_at - t.created_at)) > 0\n    ) AS resolution_at_risk,\n    (t.due_at IS NULL) AS resolution_no_sla,\n    (\n        t.first_response_at IS NOT NULL\n        AND sp.first_response_hours IS NOT NULL\n        AND t.first_response_at <= t.created_at + (sp.first_response_hours * INTERVAL '1 hour')\n    ) AS first_response_sla_met,\n    (\n        sp.first_response_hours IS NOT NULL\n        AND (\n            (\n                t.first_response_at IS NOT NULL\n                AND t.first_response_at > t.created_at + (sp.first_response_hours * INTERVAL '1 hour')\n            )\n            OR (\n                t.first_response_at IS NULL\n                AND NOW() > t.created_at + (sp.first_response_hours * INTERVAL '1 hour')\n            )\n        )\n    ) AS first_response_sla_missed,\n    (\n        t.first_response_at IS NULL\n        AND sp.first_response_hours IS NOT NULL\n        AND t.status NOT IN ('Closed', 'Resolved')\n        AND NOW() <= t.created_at + (sp.first_response_hours * INTERVAL '1 hour')\n        AND EXTRACT(EPOCH FROM (\n            (t.created_at + (sp.first_response_hours * INTERVAL '1 hour'))\n            - NOW()\n        )) <= 0.20 * (sp.first_response_hours * 3600.0)\n    ) AS first_response_at_risk,\n    (sp.first_response_hours IS NULL) AS first_response_no_sla\nFROM ticketing.tickets t\nLEFT JOIN LATERAL (\n    SELECT sp.resolution_hours, sp.first_response_hours\n    FROM ticketing.sla_policies sp\n    WHERE sp.organization_id = t.organization_id\n      AND sp.priority = t.priority\n      AND sp.active = true\n    ORDER BY sp.id DESC\n    LIMIT 1\n) sp ON true\nWHERE t.organization_id = 1012\n\n)\nSELECT\n    DATE_TRUNC('day', created_at)::date AS day,\n    COUNT(*)::bigint AS ticket_count\nFROM base_ticket\nWHERE TRUE\n  AND TRUE\n  AND TRUE\n  AND TRUE\nGROUP BY DATE_TRUNC('day', created_at)::date ORDER BY 2 DESC NULLS LAST\n\n",
+        "rows": [
+          {
+            "day": "2026-09-25",
+            "ticket_count": 1584
+          },
+          {
+            "day": "2026-09-24",
+            "ticket_count": 1052
+          },
+          {
+            "day": "2026-09-19",
+            "ticket_count": 635
+          },
+          {
+            "day": "2026-09-23",
+            "ticket_count": 592
+          },
+          {
+            "day": "2026-09-17",
+            "ticket_count": 584
+          },
+          {
+            "day": "2026-09-16",
+            "ticket_count": 579
+          },
+          {
+            "day": "2026-09-18",
+            "ticket_count": 559
+          },
+          {
+            "day": "2026-09-22",
+            "ticket_count": 558
+          },
+          {
+            "day": "2026-09-20",
+            "ticket_count": 539
+          },
+          {
+            "day": "2026-09-21",
+            "ticket_count": 534
+          },
+          {
+            "day": "2026-09-14",
+            "ticket_count": 381
+          },
+          {
+            "day": "2026-09-15",
+            "ticket_count": 324
+          },
+          {
+            "day": "2026-08-27",
+            "ticket_count": 219
+          },
+          {
+            "day": "2026-08-31",
+            "ticket_count": 208
+          },
+          {
+            "day": "2026-09-06",
+            "ticket_count": 205
+          },
+          {
+            "day": "2026-09-13",
+            "ticket_count": 204
+          },
+          {
+            "day": "2026-09-02",
+            "ticket_count": 197
+          },
+          {
+            "day": "2026-09-10",
+            "ticket_count": 195
+          },
+          {
+            "day": "2026-09-04",
+            "ticket_count": 193
+          },
+          {
+            "day": "2026-09-07",
+            "ticket_count": 192
+          },
+          {
+            "day": "2026-09-08",
+            "ticket_count": 191
+          },
+          {
+            "day": "2026-08-29",
+            "ticket_count": 187
+          },
+          {
+            "day": "2026-08-30",
+            "ticket_count": 186
+          },
+          {
+            "day": "2026-09-01",
+            "ticket_count": 185
+          },
+          {
+            "day": "2026-08-28",
+            "ticket_count": 183
+          },
+          {
+            "day": "2026-09-09",
+            "ticket_count": 179
+          },
+          {
+            "day": "2026-09-12",
+            "ticket_count": 171
+          },
+          {
+            "day": "2026-09-11",
+            "ticket_count": 170
+          },
+          {
+            "day": "2026-09-05",
+            "ticket_count": 167
+          },
+          {
+            "day": "2026-09-03",
+            "ticket_count": 163
+          },
+          {
+            "day": "2026-08-16",
+            "ticket_count": 142
+          },
+          {
+            "day": "2026-08-12",
+            "ticket_count": 134
+          },
+          {
+            "day": "2026-08-26",
+            "ticket_count": 131
+          },
+          {
+            "day": "2026-08-23",
+            "ticket_count": 128
+          },
+          {
+            "day": "2026-08-14",
+            "ticket_count": 124
+          },
+          {
+            "day": "2026-08-22",
+            "ticket_count": 124
+          },
+          {
+            "day": "2026-08-17",
+            "ticket_count": 123
+          },
+          {
+            "day": "2026-08-15",
+            "ticket_count": 122
+          },
+          {
+            "day": "2026-08-13",
+            "ticket_count": 120
+          },
+          {
+            "day": "2026-08-20",
+            "ticket_count": 118
+          },
+          {
+            "day": "2026-08-24",
+            "ticket_count": 116
+          },
+          {
+            "day": "2026-08-21",
+            "ticket_count": 115
+          },
+          {
+            "day": "2026-08-19",
+            "ticket_count": 114
+          },
+          {
+            "day": "2026-08-18",
+            "ticket_count": 112
+          },
+          {
+            "day": "2026-08-25",
+            "ticket_count": 112
+          },
+          {
+            "day": "2025-11-28",
+            "ticket_count": 35
+          },
+          {
+            "day": "2026-07-08",
+            "ticket_count": 33
+          },
+          {
+            "day": "2026-06-08",
+            "ticket_count": 32
+          },
+          {
+            "day": "2026-05-04",
+            "ticket_count": 32
+          },
+          {
+            "day": "2026-04-14",
+            "ticket_count": 32
+          },
+          {
+            "day": "2026-04-19",
+            "ticket_count": 32
+          },
+          {
+            "day": "2026-01-16",
+            "ticket_count": 31
+          },
+          {
+            "day": "2025-12-04",
+            "ticket_count": 31
+          },
+          {
+            "day": "2026-05-17",
+            "ticket_count": 31
+          },
+          {
+            "day": "2025-12-05",
+            "ticket_count": 31
+          },
+          {
+            "day": "2026-07-18",
+            "ticket_count": 30
+          },
+          {
+            "day": "2026-07-05",
+            "ticket_count": 30
+          },
+          {
+            "day": "2026-06-16",
+            "ticket_count": 30
+          },
+          {
+            "day": "2026-02-24",
+            "ticket_count": 30
+          },
+          {
+            "day": "2026-06-25",
+            "ticket_count": 29
+          },
+          {
+            "day": "2026-01-10",
+            "ticket_count": 29
+          },
+          {
+            "day": "2025-12-12",
+            "ticket_count": 29
+          },
+          {
+            "day": "2026-07-28",
+            "ticket_count": 29
+          },
+          {
+            "day": "2025-11-22",
+            "ticket_count": 29
+          },
+          {
+            "day": "2025-12-27",
+            "ticket_count": 29
+          },
+          {
+            "day": "2026-03-31",
+            "ticket_count": 29
+          },
+          {
+            "day": "2026-07-11",
+            "ticket_count": 29
+          },
+          {
+            "day": "2026-06-14",
+            "ticket_count": 28
+          },
+          {
+            "day": "2026-06-23",
+            "ticket_count": 28
+          },
+          {
+            "day": "2026-04-01",
+            "ticket_count": 28
+          },
+          {
+            "day": "2026-07-09",
+            "ticket_count": 28
+          },
+          {
+            "day": "2025-11-10",
+            "ticket_count": 28
+          },
+          {
+            "day": "2026-04-29",
+            "ticket_count": 28
+          },
+          {
+            "day": "2025-10-03",
+            "ticket_count": 28
+          },
+          {
+            "day": "2026-03-02",
+            "ticket_count": 28
+          },
+          {
+            "day": "2026-08-11",
+            "ticket_count": 28
+          },
+          {
+            "day": "2026-02-22",
+            "ticket_count": 28
+          },
+          {
+            "day": "2025-12-11",
+            "ticket_count": 28
+          },
+          {
+            "day": "2026-08-07",
+            "ticket_count": 28
+          },
+          {
+            "day": "2026-06-01",
+            "ticket_count": 27
+          },
+          {
+            "day": "2026-01-13",
+            "ticket_count": 27
+          },
+          {
+            "day": "2026-02-28",
+            "ticket_count": 27
+          },
+          {
+            "day": "2026-05-09",
+            "ticket_count": 27
+          },
+          {
+            "day": "2026-02-15",
+            "ticket_count": 27
+          },
+          {
+            "day": "2025-12-18",
+            "ticket_count": 27
+          },
+          {
+            "day": "2026-01-05",
+            "ticket_count": 27
+          },
+          {
+            "day": "2026-01-23",
+            "ticket_count": 27
+          },
+          {
+            "day": "2025-11-23",
+            "ticket_count": 27
+          },
+          {
+            "day": "2026-07-24",
+            "ticket_count": 27
+          },
+          {
+            "day": "2026-05-28",
+            "ticket_count": 27
+          },
+          {
+            "day": "2026-07-10",
+            "ticket_count": 27
+          },
+          {
+            "day": "2025-12-02",
+            "ticket_count": 27
+          },
+          {
+            "day": "2025-09-28",
+            "ticket_count": 26
+          },
+          {
+            "day": "2025-12-28",
+            "ticket_count": 26
+          },
+          {
+            "day": "2026-03-21",
+            "ticket_count": 26
+          },
+          {
+            "day": "2025-11-11",
+            "ticket_count": 26
+          },
+          {
+            "day": "2026-07-19",
+            "ticket_count": 26
+          },
+          {
+            "day": "2026-02-21",
+            "ticket_count": 26
+          },
+          {
+            "day": "2025-12-20",
+            "ticket_count": 26
+          },
+          {
+            "day": "2026-04-24",
+            "ticket_count": 26
+          },
+          {
+            "day": "2026-07-04",
+            "ticket_count": 26
+          },
+          {
+            "day": "2026-08-10",
+            "ticket_count": 26
+          },
+          {
+            "day": "2026-04-12",
+            "ticket_count": 26
+          },
+          {
+            "day": "2026-06-26",
+            "ticket_count": 25
+          },
+          {
+            "day": "2025-09-30",
+            "ticket_count": 25
+          },
+          {
+            "day": "2026-06-04",
+            "ticket_count": 25
+          },
+          {
+            "day": "2026-02-20",
+            "ticket_count": 25
+          },
+          {
+            "day": "2025-10-20",
+            "ticket_count": 25
+          },
+          {
+            "day": "2026-06-29",
+            "ticket_count": 25
+          },
+          {
+            "day": "2025-10-17",
+            "ticket_count": 25
+          },
+          {
+            "day": "2025-10-08",
+            "ticket_count": 25
+          },
+          {
+            "day": "2025-12-25",
+            "ticket_count": 25
+          },
+          {
+            "day": "2026-08-08",
+            "ticket_count": 25
+          },
+          {
+            "day": "2026-08-05",
+            "ticket_count": 25
+          },
+          {
+            "day": "2026-07-30",
+            "ticket_count": 25
+          },
+          {
+            "day": "2026-05-08",
+            "ticket_count": 25
+          },
+          {
+            "day": "2026-04-04",
+            "ticket_count": 25
+          },
+          {
+            "day": "2025-12-09",
+            "ticket_count": 25
+          },
+          {
+            "day": "2026-05-01",
+            "ticket_count": 25
+          },
+          {
+            "day": "2026-03-28",
+            "ticket_count": 25
+          },
+          {
+            "day": "2025-11-16",
+            "ticket_count": 24
+          },
+          {
+            "day": "2025-11-29",
+            "ticket_count": 24
+          },
+          {
+            "day": "2025-12-14",
+            "ticket_count": 24
+          },
+          {
+            "day": "2026-06-13",
+            "ticket_count": 24
+          },
+          {
+            "day": "2026-06-24",
+            "ticket_count": 24
+          },
+          {
+            "day": "2026-01-03",
+            "ticket_count": 24
+          },
+          {
+            "day": "2025-10-01",
+            "ticket_count": 24
+          },
+          {
+            "day": "2026-03-30",
+            "ticket_count": 24
+          },
+          {
+            "day": "2026-07-22",
+            "ticket_count": 24
+          },
+          {
+            "day": "2026-04-11",
+            "ticket_count": 24
+          },
+          {
+            "day": "2026-01-27",
+            "ticket_count": 24
+          },
+          {
+            "day": "2025-10-24",
+            "ticket_count": 24
+          },
+          {
+            "day": "2026-03-25",
+            "ticket_count": 24
+          },
+          {
+            "day": "2026-02-09",
+            "ticket_count": 24
+          },
+          {
+            "day": "2026-01-18",
+            "ticket_count": 24
+          },
+          {
+            "day": "2026-08-09",
+            "ticket_count": 24
+          },
+          {
+            "day": "2026-01-22",
+            "ticket_count": 24
+          },
+          {
+            "day": "2026-05-14",
+            "ticket_count": 24
+          },
+          {
+            "day": "2026-07-27",
+            "ticket_count": 24
+          },
+          {
+            "day": "2026-01-01",
+            "ticket_count": 24
+          },
+          {
+            "day": "2025-11-12",
+            "ticket_count": 24
+          },
+          {
+            "day": "2026-06-18",
+            "ticket_count": 24
+          },
+          {
+            "day": "2025-10-10",
+            "ticket_count": 24
+          },
+          {
+            "day": "2026-02-26",
+            "ticket_count": 24
+          },
+          {
+            "day": "2026-07-21",
+            "ticket_count": 23
+          },
+          {
+            "day": "2025-11-14",
+            "ticket_count": 23
+          },
+          {
+            "day": "2025-11-21",
+            "ticket_count": 23
+          },
+          {
+            "day": "2025-10-02",
+            "ticket_count": 23
+          },
+          {
+            "day": "2026-02-02",
+            "ticket_count": 23
+          },
+          {
+            "day": "2026-06-03",
+            "ticket_count": 23
+          },
+          {
+            "day": "2026-05-12",
+            "ticket_count": 23
+          },
+          {
+            "day": "2026-01-31",
+            "ticket_count": 23
+          },
+          {
+            "day": "2025-11-17",
+            "ticket_count": 23
+          },
+          {
+            "day": "2026-07-14",
+            "ticket_count": 23
+          },
+          {
+            "day": "2026-03-01",
+            "ticket_count": 23
+          },
+          {
+            "day": "2025-12-10",
+            "ticket_count": 23
+          },
+          {
+            "day": "2025-10-25",
+            "ticket_count": 23
+          },
+          {
+            "day": "2026-07-16",
+            "ticket_count": 23
+          },
+          {
+            "day": "2026-03-11",
+            "ticket_count": 23
+          },
+          {
+            "day": "2026-01-08",
+            "ticket_count": 23
+          },
+          {
+            "day": "2026-08-04",
+            "ticket_count": 23
+          },
+          {
+            "day": "2026-06-12",
+            "ticket_count": 23
+          },
+          {
+            "day": "2025-12-03",
+            "ticket_count": 23
+          },
+          {
+            "day": "2026-05-15",
+            "ticket_count": 23
+          },
+          {
+            "day": "2026-04-23",
+            "ticket_count": 23
+          },
+          {
+            "day": "2026-02-16",
+            "ticket_count": 23
+          },
+          {
+            "day": "2026-07-29",
+            "ticket_count": 23
+          },
+          {
+            "day": "2025-12-30",
+            "ticket_count": 22
+          },
+          {
+            "day": "2026-04-21",
+            "ticket_count": 22
+          },
+          {
+            "day": "2025-11-15",
+            "ticket_count": 22
+          },
+          {
+            "day": "2026-01-14",
+            "ticket_count": 22
+          },
+          {
+            "day": "2026-03-06",
+            "ticket_count": 22
+          },
+          {
+            "day": "2026-07-23",
+            "ticket_count": 22
+          },
+          {
+            "day": "2026-03-09",
+            "ticket_count": 22
+          },
+          {
+            "day": "2025-12-16",
+            "ticket_count": 22
+          },
+          {
+            "day": "2026-07-17",
+            "ticket_count": 22
+          },
+          {
+            "day": "2026-05-30",
+            "ticket_count": 22
+          },
+          {
+            "day": "2026-01-26",
+            "ticket_count": 22
+          },
+          {
+            "day": "2025-12-13",
+            "ticket_count": 22
+          },
+          {
+            "day": "2026-06-28",
+            "ticket_count": 22
+          },
+          {
+            "day": "2026-03-05",
+            "ticket_count": 22
+          },
+          {
+            "day": "2026-04-03",
+            "ticket_count": 22
+          },
+          {
+            "day": "2025-11-02",
+            "ticket_count": 22
+          },
+          {
+            "day": "2025-10-09",
+            "ticket_count": 22
+          },
+          {
+            "day": "2026-02-12",
+            "ticket_count": 22
+          },
+          {
+            "day": "2026-05-22",
+            "ticket_count": 22
+          },
+          {
+            "day": "2026-04-26",
+            "ticket_count": 22
+          },
+          {
+            "day": "2025-10-21",
+            "ticket_count": 22
+          },
+          {
+            "day": "2026-03-14",
+            "ticket_count": 22
+          },
+          {
+            "day": "2025-12-23",
+            "ticket_count": 22
+          },
+          {
+            "day": "2026-05-31",
+            "ticket_count": 22
+          },
+          {
+            "day": "2026-03-20",
+            "ticket_count": 22
+          },
+          {
+            "day": "2025-11-13",
+            "ticket_count": 21
+          },
+          {
+            "day": "2026-04-17",
+            "ticket_count": 21
+          },
+          {
+            "day": "2025-11-05",
+            "ticket_count": 21
+          },
+          {
+            "day": "2026-06-22",
+            "ticket_count": 21
+          },
+          {
+            "day": "2026-07-12",
+            "ticket_count": 21
+          },
+          {
+            "day": "2026-07-15",
+            "ticket_count": 21
+          },
+          {
+            "day": "2026-04-18",
+            "ticket_count": 21
+          },
+          {
+            "day": "2025-12-26",
+            "ticket_count": 21
+          },
+          {
+            "day": "2025-11-24",
+            "ticket_count": 21
+          },
+          {
+            "day": "2025-12-21",
+            "ticket_count": 21
+          },
+          {
+            "day": "2026-03-08",
+            "ticket_count": 21
+          },
+          {
+            "day": "2025-11-20",
+            "ticket_count": 21
+          },
+          {
+            "day": "2026-04-13",
+            "ticket_count": 21
+          },
+          {
+            "day": "2025-11-25",
+            "ticket_count": 21
+          },
+          {
+            "day": "2025-10-16",
+            "ticket_count": 21
+          },
+          {
+            "day": "2026-06-10",
+            "ticket_count": 21
+          },
+          {
+            "day": "2026-03-17",
+            "ticket_count": 21
+          },
+          {
+            "day": "2025-12-24",
+            "ticket_count": 21
+          },
+          {
+            "day": "2026-01-17",
+            "ticket_count": 21
+          },
+          {
+            "day": "2025-11-04",
+            "ticket_count": 21
+          },
+          {
+            "day": "2026-01-04",
+            "ticket_count": 21
+          },
+          {
+            "day": "2026-07-20",
+            "ticket_count": 21
+          },
+          {
+            "day": "2026-05-19",
+            "ticket_count": 21
+          },
+          {
+            "day": "2026-02-04",
+            "ticket_count": 21
+          },
+          {
+            "day": "2026-01-12",
+            "ticket_count": 21
+          },
+          {
+            "day": "2026-04-27",
+            "ticket_count": 21
+          },
+          {
+            "day": "2026-02-05",
+            "ticket_count": 21
+          },
+          {
+            "day": "2026-07-03",
+            "ticket_count": 21
+          },
+          {
+            "day": "2026-01-30",
+            "ticket_count": 21
+          },
+          {
+            "day": "2025-10-30",
+            "ticket_count": 21
+          },
+          {
+            "day": "2026-02-11",
+            "ticket_count": 21
+          },
+          {
+            "day": "2025-10-31",
+            "ticket_count": 21
+          },
+          {
+            "day": "2026-06-20",
+            "ticket_count": 21
+          },
+          {
+            "day": "2026-05-21",
+            "ticket_count": 21
+          },
+          {
+            "day": "2025-10-07",
+            "ticket_count": 21
+          },
+          {
+            "day": "2026-06-05",
+            "ticket_count": 21
+          },
+          {
+            "day": "2026-04-28",
+            "ticket_count": 20
+          },
+          {
+            "day": "2026-03-16",
+            "ticket_count": 20
+          },
+          {
+            "day": "2025-10-14",
+            "ticket_count": 20
+          },
+          {
+            "day": "2026-05-07",
+            "ticket_count": 20
+          },
+          {
+            "day": "2026-05-27",
+            "ticket_count": 20
+          },
+          {
+            "day": "2026-01-21",
+            "ticket_count": 20
+          },
+          {
+            "day": "2026-02-19",
+            "ticket_count": 20
+          },
+          {
+            "day": "2026-05-16",
+            "ticket_count": 20
+          },
+          {
+            "day": "2026-06-11",
+            "ticket_count": 20
+          },
+          {
+            "day": "2026-07-01",
+            "ticket_count": 20
+          },
+          {
+            "day": "2025-12-07",
+            "ticket_count": 20
+          },
+          {
+            "day": "2026-01-06",
+            "ticket_count": 20
+          },
+          {
+            "day": "2026-02-14",
+            "ticket_count": 20
+          },
+          {
+            "day": "2026-03-19",
+            "ticket_count": 20
+          },
+          {
+            "day": "2026-07-07",
+            "ticket_count": 20
+          },
+          {
+            "day": "2026-02-13",
+            "ticket_count": 20
+          },
+          {
+            "day": "2026-08-06",
+            "ticket_count": 20
+          },
+          {
+            "day": "2025-12-31",
+            "ticket_count": 20
+          },
+          {
+            "day": "2025-11-08",
+            "ticket_count": 20
+          },
+          {
+            "day": "2026-08-02",
+            "ticket_count": 20
+          },
+          {
+            "day": "2026-01-29",
+            "ticket_count": 20
+          },
+          {
+            "day": "2026-01-07",
+            "ticket_count": 20
+          },
+          {
+            "day": "2026-06-07",
+            "ticket_count": 20
+          },
+          {
+            "day": "2025-10-18",
+            "ticket_count": 20
+          },
+          {
+            "day": "2025-11-30",
+            "ticket_count": 20
+          },
+          {
+            "day": "2026-06-30",
+            "ticket_count": 20
+          },
+          {
+            "day": "2025-12-15",
+            "ticket_count": 20
+          },
+          {
+            "day": "2026-05-18",
+            "ticket_count": 20
+          },
+          {
+            "day": "2025-10-15",
+            "ticket_count": 20
+          },
+          {
+            "day": "2025-09-29",
+            "ticket_count": 20
+          },
+          {
+            "day": "2026-03-29",
+            "ticket_count": 20
+          },
+          {
+            "day": "2025-12-19",
+            "ticket_count": 20
+          },
+          {
+            "day": "2026-05-05",
+            "ticket_count": 19
+          },
+          {
+            "day": "2026-01-20",
+            "ticket_count": 19
+          },
+          {
+            "day": "2026-06-09",
+            "ticket_count": 19
+          },
+          {
+            "day": "2026-03-13",
+            "ticket_count": 19
+          },
+          {
+            "day": "2025-10-11",
+            "ticket_count": 19
+          },
+          {
+            "day": "2026-04-07",
+            "ticket_count": 19
+          },
+          {
+            "day": "2026-03-15",
+            "ticket_count": 19
+          },
+          {
+            "day": "2026-03-26",
+            "ticket_count": 19
+          },
+          {
+            "day": "2025-10-12",
+            "ticket_count": 19
+          },
+          {
+            "day": "2025-09-27",
+            "ticket_count": 19
+          },
+          {
+            "day": "2026-07-31",
+            "ticket_count": 19
+          },
+          {
+            "day": "2026-05-24",
+            "ticket_count": 19
+          },
+          {
+            "day": "2026-07-13",
+            "ticket_count": 19
+          },
+          {
+            "day": "2025-10-19",
+            "ticket_count": 19
+          },
+          {
+            "day": "2026-04-02",
+            "ticket_count": 19
+          },
+          {
+            "day": "2026-06-21",
+            "ticket_count": 19
+          },
+          {
+            "day": "2026-02-10",
+            "ticket_count": 19
+          },
+          {
+            "day": "2026-04-25",
+            "ticket_count": 19
+          },
+          {
+            "day": "2026-04-10",
+            "ticket_count": 19
+          },
+          {
+            "day": "2026-05-06",
+            "ticket_count": 19
+          },
+          {
+            "day": "2026-06-15",
+            "ticket_count": 19
+          },
+          {
+            "day": "2026-05-25",
+            "ticket_count": 19
+          },
+          {
+            "day": "2026-03-22",
+            "ticket_count": 19
+          },
+          {
+            "day": "2026-04-20",
+            "ticket_count": 19
+          },
+          {
+            "day": "2025-11-18",
+            "ticket_count": 19
+          },
+          {
+            "day": "2026-01-19",
+            "ticket_count": 18
+          },
+          {
+            "day": "2025-11-26",
+            "ticket_count": 18
+          },
+          {
+            "day": "2026-02-27",
+            "ticket_count": 18
+          },
+          {
+            "day": "2025-11-06",
+            "ticket_count": 18
+          },
+          {
+            "day": "2026-05-10",
+            "ticket_count": 18
+          },
+          {
+            "day": "2026-04-09",
+            "ticket_count": 18
+          },
+          {
+            "day": "2026-05-13",
+            "ticket_count": 18
+          },
+          {
+            "day": "2025-12-29",
+            "ticket_count": 18
+          },
+          {
+            "day": "2026-08-03",
+            "ticket_count": 18
+          },
+          {
+            "day": "2025-10-26",
+            "ticket_count": 18
+          },
+          {
+            "day": "2026-04-08",
+            "ticket_count": 18
+          },
+          {
+            "day": "2025-10-29",
+            "ticket_count": 18
+          },
+          {
+            "day": "2026-05-29",
+            "ticket_count": 18
+          },
+          {
+            "day": "2025-12-06",
+            "ticket_count": 18
+          },
+          {
+            "day": "2026-07-06",
+            "ticket_count": 17
+          },
+          {
+            "day": "2026-03-23",
+            "ticket_count": 17
+          },
+          {
+            "day": "2026-06-02",
+            "ticket_count": 17
+          },
+          {
+            "day": "2026-02-25",
+            "ticket_count": 17
+          },
+          {
+            "day": "2026-01-24",
+            "ticket_count": 17
+          },
+          {
+            "day": "2025-11-01",
+            "ticket_count": 17
+          },
+          {
+            "day": "2026-01-11",
+            "ticket_count": 17
+          },
+          {
+            "day": "2026-05-26",
+            "ticket_count": 17
+          },
+          {
+            "day": "2026-01-28",
+            "ticket_count": 17
+          },
+          {
+            "day": "2025-11-07",
+            "ticket_count": 17
+          },
+          {
+            "day": "2026-01-15",
+            "ticket_count": 17
+          },
+          {
+            "day": "2025-11-27",
+            "ticket_count": 17
+          },
+          {
+            "day": "2026-02-07",
+            "ticket_count": 17
+          },
+          {
+            "day": "2026-05-03",
+            "ticket_count": 17
+          },
+          {
+            "day": "2026-06-17",
+            "ticket_count": 17
+          },
+          {
+            "day": "2026-06-19",
+            "ticket_count": 17
+          },
+          {
+            "day": "2025-10-06",
+            "ticket_count": 17
+          },
+          {
+            "day": "2026-02-01",
+            "ticket_count": 17
+          },
+          {
+            "day": "2025-12-22",
+            "ticket_count": 17
+          },
+          {
+            "day": "2026-03-04",
+            "ticket_count": 16
+          },
+          {
+            "day": "2026-03-12",
+            "ticket_count": 16
+          },
+          {
+            "day": "2026-03-24",
+            "ticket_count": 16
+          },
+          {
+            "day": "2026-04-05",
+            "ticket_count": 16
+          },
+          {
+            "day": "2025-10-05",
+            "ticket_count": 16
+          },
+          {
+            "day": "2026-03-07",
+            "ticket_count": 16
+          },
+          {
+            "day": "2026-02-06",
+            "ticket_count": 16
+          },
+          {
+            "day": "2026-07-26",
+            "ticket_count": 16
+          },
+          {
+            "day": "2026-05-23",
+            "ticket_count": 16
+          },
+          {
+            "day": "2026-04-16",
+            "ticket_count": 16
+          },
+          {
+            "day": "2026-01-02",
+            "ticket_count": 16
+          },
+          {
+            "day": "2026-04-22",
+            "ticket_count": 16
+          },
+          {
+            "day": "2026-04-06",
+            "ticket_count": 16
+          },
+          {
+            "day": "2026-01-25",
+            "ticket_count": 16
+          },
+          {
+            "day": "2025-10-27",
+            "ticket_count": 16
+          },
+          {
+            "day": "2025-10-23",
+            "ticket_count": 16
+          },
+          {
+            "day": "2026-04-30",
+            "ticket_count": 16
+          },
+          {
+            "day": "2026-02-03",
+            "ticket_count": 15
+          },
+          {
+            "day": "2026-02-17",
+            "ticket_count": 15
+          },
+          {
+            "day": "2025-10-13",
+            "ticket_count": 15
+          },
+          {
+            "day": "2026-06-06",
+            "ticket_count": 15
+          },
+          {
+            "day": "2025-10-28",
+            "ticket_count": 15
+          },
+          {
+            "day": "2026-03-03",
+            "ticket_count": 15
+          },
+          {
+            "day": "2025-11-19",
+            "ticket_count": 15
+          },
+          {
+            "day": "2025-09-26",
+            "ticket_count": 15
+          },
+          {
+            "day": "2026-07-25",
+            "ticket_count": 15
+          },
+          {
+            "day": "2026-03-18",
+            "ticket_count": 15
+          },
+          {
+            "day": "2026-09-28",
+            "ticket_count": 15
+          },
+          {
+            "day": "2026-03-10",
+            "ticket_count": 14
+          },
+          {
+            "day": "2026-01-09",
+            "ticket_count": 14
+          },
+          {
+            "day": "2025-10-04",
+            "ticket_count": 14
+          },
+          {
+            "day": "2026-02-23",
+            "ticket_count": 14
+          },
+          {
+            "day": "2025-12-17",
+            "ticket_count": 14
+          },
+          {
+            "day": "2026-03-27",
+            "ticket_count": 14
+          },
+          {
+            "day": "2026-05-20",
+            "ticket_count": 14
+          },
+          {
+            "day": "2026-02-08",
+            "ticket_count": 14
+          },
+          {
+            "day": "2026-07-02",
+            "ticket_count": 13
+          },
+          {
+            "day": "2025-11-03",
+            "ticket_count": 13
+          },
+          {
+            "day": "2025-10-22",
+            "ticket_count": 13
+          },
+          {
+            "day": "2026-04-15",
+            "ticket_count": 13
+          },
+          {
+            "day": "2025-12-01",
+            "ticket_count": 13
+          },
+          {
+            "day": "2025-11-09",
+            "ticket_count": 13
+          },
+          {
+            "day": "2025-12-08",
+            "ticket_count": 13
+          },
+          {
+            "day": "2026-06-27",
+            "ticket_count": 12
+          },
+          {
+            "day": "2026-02-18",
+            "ticket_count": 12
+          },
+          {
+            "day": "2026-05-11",
+            "ticket_count": 11
+          },
+          {
+            "day": "2026-08-01",
+            "ticket_count": 11
+          },
+          {
+            "day": "2026-09-30",
+            "ticket_count": 9
+          },
+          {
+            "day": "2026-09-29",
+            "ticket_count": 8
+          },
+          {
+            "day": "2026-10-02",
+            "ticket_count": 7
+          },
+          {
+            "day": "2026-05-02",
+            "ticket_count": 7
+          },
+          {
+            "day": "2026-10-01",
+            "ticket_count": 6
+          },
+          {
+            "day": "2026-09-27",
+            "ticket_count": 5
+          }
+        ],
+        "attempts": [
+          {
+            "raw": "```json\n{\"tool\": \"run_kpi\", \"kpi_id\": \"ticket_count\", \"dimension\": \"day\"}\n```",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "ticket_count",
+              "dimension": "day"
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "time_status": "all_time",
+        "tool": "run_kpi",
+        "requested_kpi": "ticket_count",
+        "requested_dimension": "day",
+        "task": {
+          "id": "t2",
+          "executor": "sql",
+          "kpi": "ticket_count",
+          "dimension": "day",
+          "goal": "Identify specific days with high ticket volume spikes",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "breakdown"
+        }
+      },
+      {
+        "status": "ok",
+        "store": "sql",
+        "kpi_id": "ticket_count",
+        "sql": "WITH base_ticket AS (\n-- Shared ticket grain. Python inlines this as the base_ticket CTE body.\n-- No aggregations. Status rules use tickets.status only. Never is_terminal.\nSELECT\n    t.id AS ticket_id,\n    t.organization_id,\n    t.ticket_number,\n    t.status,\n    t.priority,\n    t.channel,\n    t.category,\n    t.customer_id,\n    t.customer_name,\n    t.assignee_id,\n    t.assignee_name,\n    t.resolver_id,\n    t.resolver_name,\n    t.queue_id,\n    t.queue_name,\n    t.created_by_id,\n    t.created_by_name,\n    t.due_at,\n    t.first_response_at,\n    t.resolved_at,\n    t.csat_score,\n    t.csat_rated_at,\n    t.created_at,\n    t.updated_at,\n    sp.resolution_hours AS sla_resolution_hours,\n    sp.first_response_hours AS sla_first_response_hours,\n    EXTRACT(EPOCH FROM (t.resolved_at - t.created_at)) / 3600.0 AS resolution_hours,\n    EXTRACT(EPOCH FROM (t.first_response_at - t.created_at)) / 3600.0 AS first_response_hours,\n    EXTRACT(EPOCH FROM (t.resolved_at - t.due_at)) / 3600.0 AS resolution_variance_hours,\n    EXTRACT(EPOCH FROM (COALESCE(t.resolved_at, NOW()) - t.due_at)) / 3600.0 AS overdue_hours_so_far,\n    (t.status = 'Open') AS is_status_open,\n    (t.status = 'Pending') AS is_status_pending_literal,\n    (t.status = 'Reopened') AS is_status_reopened,\n    (t.status = 'Overdue') AS is_status_overdue,\n    (t.status = 'Resolved') AS is_status_resolved,\n    (t.status = 'Closed') AS is_status_closed,\n    (t.status NOT IN ('Closed', 'Resolved')) AS is_pending_generic,\n    (t.assignee_id IS NULL) AS is_unassigned,\n    (t.priority = 'high') AS is_high_priority,\n    (t.due_at IS NOT NULL) AS has_resolution_due,\n    (sp.first_response_hours IS NOT NULL) AS has_first_response_policy,\n    (\n        t.resolved_at IS NOT NULL\n        AND t.due_at IS NOT NULL\n        AND t.resolved_at <= t.due_at\n    ) AS resolution_sla_met,\n    (\n        t.due_at IS NOT NULL\n        AND (\n            (t.resolved_at IS NOT NULL AND t.resolved_at > t.due_at)\n            OR (\n                t.status NOT IN ('Closed', 'Resolved')\n                AND NOW() > t.due_at\n            )\n            OR (\n                t.status IN ('Closed', 'Resolved')\n                AND t.resolved_at IS NULL\n                AND NOW() > t.due_at\n            )\n        )\n    ) AS resolution_sla_missed,\n    (\n        t.due_at IS NOT NULL\n        AND t.status NOT IN ('Closed', 'Resolved')\n        AND NOW() <= t.due_at\n        AND EXTRACT(EPOCH FROM (t.due_at - NOW()))\n            <= 0.20 * EXTRACT(EPOCH FROM (t.due_at - t.created_at))\n        AND EXTRACT(EPOCH FROM (t.due_at - t.created_at)) > 0\n    ) AS resolution_at_risk,\n    (t.due_at IS NULL) AS resolution_no_sla,\n    (\n        t.first_response_at IS NOT NULL\n        AND sp.first_response_hours IS NOT NULL\n        AND t.first_response_at <= t.created_at + (sp.first_response_hours * INTERVAL '1 hour')\n    ) AS first_response_sla_met,\n    (\n        sp.first_response_hours IS NOT NULL\n        AND (\n            (\n                t.first_response_at IS NOT NULL\n                AND t.first_response_at > t.created_at + (sp.first_response_hours * INTERVAL '1 hour')\n            )\n            OR (\n                t.first_response_at IS NULL\n                AND NOW() > t.created_at + (sp.first_response_hours * INTERVAL '1 hour')\n            )\n        )\n    ) AS first_response_sla_missed,\n    (\n        t.first_response_at IS NULL\n        AND sp.first_response_hours IS NOT NULL\n        AND t.status NOT IN ('Closed', 'Resolved')\n        AND NOW() <= t.created_at + (sp.first_response_hours * INTERVAL '1 hour')\n        AND EXTRACT(EPOCH FROM (\n            (t.created_at + (sp.first_response_hours * INTERVAL '1 hour'))\n            - NOW()\n        )) <= 0.20 * (sp.first_response_hours * 3600.0)\n    ) AS first_response_at_risk,\n    (sp.first_response_hours IS NULL) AS first_response_no_sla\nFROM ticketing.tickets t\nLEFT JOIN LATERAL (\n    SELECT sp.resolution_hours, sp.first_response_hours\n    FROM ticketing.sla_policies sp\n    WHERE sp.organization_id = t.organization_id\n      AND sp.priority = t.priority\n      AND sp.active = true\n    ORDER BY sp.id DESC\n    LIMIT 1\n) sp ON true\nWHERE t.organization_id = 1012\n\n)\nSELECT\n    category AS category,\n    COUNT(*)::bigint AS ticket_count\nFROM base_ticket\nWHERE TRUE\n  AND TRUE\n  AND TRUE\n  AND TRUE\nGROUP BY category ORDER BY 2 DESC NULLS LAST\n\n",
+        "rows": [
+          {
+            "category": "Delivery delay",
+            "ticket_count": 1256
+          },
+          {
+            "category": "Tracking",
+            "ticket_count": 1211
+          },
+          {
+            "category": "Return request",
+            "ticket_count": 976
+          },
+          {
+            "category": "Refund status",
+            "ticket_count": 971
+          },
+          {
+            "category": "Size & fit",
+            "ticket_count": 838
+          },
+          {
+            "category": "Order status",
+            "ticket_count": 822
+          },
+          {
+            "category": "Duplicate charge",
+            "ticket_count": 702
+          },
+          {
+            "category": "Cancel order",
+            "ticket_count": 670
+          },
+          {
+            "category": "Failed delivery",
+            "ticket_count": 614
+          },
+          {
+            "category": "Product quality",
+            "ticket_count": 606
+          },
+          {
+            "category": "Lost package",
+            "ticket_count": 590
+          },
+          {
+            "category": "Invoice request",
+            "ticket_count": 582
+          },
+          {
+            "category": "Exchange request",
+            "ticket_count": 579
+          },
+          {
+            "category": "Wrong item",
+            "ticket_count": 577
+          },
+          {
+            "category": "Damaged item",
+            "ticket_count": 539
+          },
+          {
+            "category": "Password reset",
+            "ticket_count": 502
+          },
+          {
+            "category": "Change delivery address",
+            "ticket_count": 502
+          },
+          {
+            "category": "Login issue",
+            "ticket_count": 501
+          },
+          {
+            "category": "Change order",
+            "ticket_count": 496
+          },
+          {
+            "category": "Coupon not applied",
+            "ticket_count": 486
+          },
+          {
+            "category": "Express delivery",
+            "ticket_count": 406
+          },
+          {
+            "category": "Courier issue",
+            "ticket_count": 395
+          },
+          {
+            "category": "Discount query",
+            "ticket_count": 394
+          },
+          {
+            "category": "Product availability",
+            "ticket_count": 393
+          },
+          {
+            "category": "Care instructions",
+            "ticket_count": 380
+          },
+          {
+            "category": "Order confirmation",
+            "ticket_count": 374
+          },
+          {
+            "category": "Return eligibility",
+            "ticket_count": 371
+          },
+          {
+            "category": "Profile update",
+            "ticket_count": 364
+          },
+          {
+            "category": "Billing correction",
+            "ticket_count": 361
+          },
+          {
+            "category": "Loyalty points",
+            "ticket_count": 353
+          },
+          {
+            "category": "Payment failed",
+            "ticket_count": 348
+          },
+          {
+            "category": "Order verification",
+            "ticket_count": 339
+          },
+          {
+            "category": "Address update",
+            "ticket_count": 315
+          },
+          {
+            "category": "Replacement",
+            "ticket_count": 204
+          },
+          {
+            "category": "Payment dispute",
+            "ticket_count": 185
+          },
+          {
+            "category": "Payment verification",
+            "ticket_count": 183
+          },
+          {
+            "category": "Email verification",
+            "ticket_count": 170
+          },
+          {
+            "category": "Account recovery",
+            "ticket_count": 154
+          },
+          {
+            "category": "Campaign eligibility",
+            "ticket_count": 124
+          },
+          {
+            "category": "Rewards",
+            "ticket_count": 111
+          },
+          {
+            "category": "Membership",
+            "ticket_count": 56
+          },
+          {
+            "category": "Damaged Item",
+            "ticket_count": 6
+          },
+          {
+            "category": "Account Lock",
+            "ticket_count": 4
+          },
+          {
+            "category": "Damaged Item Return",
+            "ticket_count": 3
+          },
+          {
+            "category": "Account Access",
+            "ticket_count": 2
+          },
+          {
+            "category": "Exchange",
+            "ticket_count": 2
+          },
+          {
+            "category": "Refund",
+            "ticket_count": 2
+          },
+          {
+            "category": "Shipping & Delivery",
+            "ticket_count": 2
+          },
+          {
+            "category": "Profile Update",
+            "ticket_count": 2
+          },
+          {
+            "category": "Delivery",
+            "ticket_count": 2
+          },
+          {
+            "category": "Return Request",
+            "ticket_count": 2
+          },
+          {
+            "category": "Failed Payment",
+            "ticket_count": 1
+          },
+          {
+            "category": "Payment-Order Sync",
+            "ticket_count": 1
+          },
+          {
+            "category": "Product Defect",
+            "ticket_count": 1
+          },
+          {
+            "category": "Payment Failure",
+            "ticket_count": 1
+          },
+          {
+            "category": "Damaged Product",
+            "ticket_count": 1
+          },
+          {
+            "category": "Damaged Item \u2013 Return & Refund",
+            "ticket_count": 1
+          },
+          {
+            "category": "Incorrect Item",
+            "ticket_count": 1
+          },
+          {
+            "category": "Partial Return",
+            "ticket_count": 1
+          },
+          {
+            "category": "Damaged Item Replacement",
+            "ticket_count": 1
+          },
+          {
+            "category": "Delivery Delay",
+            "ticket_count": 1
+          },
+          {
+            "category": "Delayed Delivery",
+            "ticket_count": 1
+          },
+          {
+            "category": "Payment Declined",
+            "ticket_count": 1
+          },
+          {
+            "category": "Payment Discrepancy",
+            "ticket_count": 1
+          },
+          {
+            "category": "Login Issue",
+            "ticket_count": 1
+          },
+          {
+            "category": "Order Not Found After Payment",
+            "ticket_count": 1
+          },
+          {
+            "category": "Order Reinstatement",
+            "ticket_count": 1
+          },
+          {
+            "category": "Order Inquiry",
+            "ticket_count": 1
+          },
+          {
+            "category": "Refund Status",
+            "ticket_count": 1
+          },
+          {
+            "category": "Product Care Information",
+            "ticket_count": 1
+          },
+          {
+            "category": "Ticket Management",
+            "ticket_count": 1
+          },
+          {
+            "category": "Return Process Failure",
+            "ticket_count": 1
+          },
+          {
+            "category": "Order Status",
+            "ticket_count": 1
+          },
+          {
+            "category": "Order Cancellation",
+            "ticket_count": 1
+          }
+        ],
+        "attempts": [
+          {
+            "raw": "```json\n{\"tool\": \"run_kpi\", \"kpi_id\": \"ticket_count\", \"dimension\": \"category\"}\n```",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "ticket_count",
+              "dimension": "category"
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "time_status": "all_time",
+        "tool": "run_kpi",
+        "requested_kpi": "ticket_count",
+        "requested_dimension": "category",
+        "task": {
+          "id": "t3",
+          "executor": "sql",
+          "kpi": "ticket_count",
+          "dimension": "category",
+          "goal": "Identify which categories are driving the volume",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "breakdown"
+        }
+      },
+      {
+        "status": "ok",
+        "store": "sql",
+        "kpi_id": "ticket_count",
+        "sql": "WITH base_ticket AS (\n-- Shared ticket grain. Python inlines this as the base_ticket CTE body.\n-- No aggregations. Status rules use tickets.status only. Never is_terminal.\nSELECT\n    t.id AS ticket_id,\n    t.organization_id,\n    t.ticket_number,\n    t.status,\n    t.priority,\n    t.channel,\n    t.category,\n    t.customer_id,\n    t.customer_name,\n    t.assignee_id,\n    t.assignee_name,\n    t.resolver_id,\n    t.resolver_name,\n    t.queue_id,\n    t.queue_name,\n    t.created_by_id,\n    t.created_by_name,\n    t.due_at,\n    t.first_response_at,\n    t.resolved_at,\n    t.csat_score,\n    t.csat_rated_at,\n    t.created_at,\n    t.updated_at,\n    sp.resolution_hours AS sla_resolution_hours,\n    sp.first_response_hours AS sla_first_response_hours,\n    EXTRACT(EPOCH FROM (t.resolved_at - t.created_at)) / 3600.0 AS resolution_hours,\n    EXTRACT(EPOCH FROM (t.first_response_at - t.created_at)) / 3600.0 AS first_response_hours,\n    EXTRACT(EPOCH FROM (t.resolved_at - t.due_at)) / 3600.0 AS resolution_variance_hours,\n    EXTRACT(EPOCH FROM (COALESCE(t.resolved_at, NOW()) - t.due_at)) / 3600.0 AS overdue_hours_so_far,\n    (t.status = 'Open') AS is_status_open,\n    (t.status = 'Pending') AS is_status_pending_literal,\n    (t.status = 'Reopened') AS is_status_reopened,\n    (t.status = 'Overdue') AS is_status_overdue,\n    (t.status = 'Resolved') AS is_status_resolved,\n    (t.status = 'Closed') AS is_status_closed,\n    (t.status NOT IN ('Closed', 'Resolved')) AS is_pending_generic,\n    (t.assignee_id IS NULL) AS is_unassigned,\n    (t.priority = 'high') AS is_high_priority,\n    (t.due_at IS NOT NULL) AS has_resolution_due,\n    (sp.first_response_hours IS NOT NULL) AS has_first_response_policy,\n    (\n        t.resolved_at IS NOT NULL\n        AND t.due_at IS NOT NULL\n        AND t.resolved_at <= t.due_at\n    ) AS resolution_sla_met,\n    (\n        t.due_at IS NOT NULL\n        AND (\n            (t.resolved_at IS NOT NULL AND t.resolved_at > t.due_at)\n            OR (\n                t.status NOT IN ('Closed', 'Resolved')\n                AND NOW() > t.due_at\n            )\n            OR (\n                t.status IN ('Closed', 'Resolved')\n                AND t.resolved_at IS NULL\n                AND NOW() > t.due_at\n            )\n        )\n    ) AS resolution_sla_missed,\n    (\n        t.due_at IS NOT NULL\n        AND t.status NOT IN ('Closed', 'Resolved')\n        AND NOW() <= t.due_at\n        AND EXTRACT(EPOCH FROM (t.due_at - NOW()))\n            <= 0.20 * EXTRACT(EPOCH FROM (t.due_at - t.created_at))\n        AND EXTRACT(EPOCH FROM (t.due_at - t.created_at)) > 0\n    ) AS resolution_at_risk,\n    (t.due_at IS NULL) AS resolution_no_sla,\n    (\n        t.first_response_at IS NOT NULL\n        AND sp.first_response_hours IS NOT NULL\n        AND t.first_response_at <= t.created_at + (sp.first_response_hours * INTERVAL '1 hour')\n    ) AS first_response_sla_met,\n    (\n        sp.first_response_hours IS NOT NULL\n        AND (\n            (\n                t.first_response_at IS NOT NULL\n                AND t.first_response_at > t.created_at + (sp.first_response_hours * INTERVAL '1 hour')\n            )\n            OR (\n                t.first_response_at IS NULL\n                AND NOW() > t.created_at + (sp.first_response_hours * INTERVAL '1 hour')\n            )\n        )\n    ) AS first_response_sla_missed,\n    (\n        t.first_response_at IS NULL\n        AND sp.first_response_hours IS NOT NULL\n        AND t.status NOT IN ('Closed', 'Resolved')\n        AND NOW() <= t.created_at + (sp.first_response_hours * INTERVAL '1 hour')\n        AND EXTRACT(EPOCH FROM (\n            (t.created_at + (sp.first_response_hours * INTERVAL '1 hour'))\n            - NOW()\n        )) <= 0.20 * (sp.first_response_hours * 3600.0)\n    ) AS first_response_at_risk,\n    (sp.first_response_hours IS NULL) AS first_response_no_sla\nFROM ticketing.tickets t\nLEFT JOIN LATERAL (\n    SELECT sp.resolution_hours, sp.first_response_hours\n    FROM ticketing.sla_policies sp\n    WHERE sp.organization_id = t.organization_id\n      AND sp.priority = t.priority\n      AND sp.active = true\n    ORDER BY sp.id DESC\n    LIMIT 1\n) sp ON true\nWHERE t.organization_id = 1012\n\n)\nSELECT\n    queue_name AS queue,\n    COUNT(*)::bigint AS ticket_count\nFROM base_ticket\nWHERE TRUE\n  AND TRUE\n  AND TRUE\n  AND TRUE\nGROUP BY queue_name ORDER BY 2 DESC NULLS LAST\n\n",
+        "rows": [
+          {
+            "queue": "Shipping & Delivery Support",
+            "ticket_count": 4478
+          },
+          {
+            "queue": "Returns & Refunds Support",
+            "ticket_count": 4031
+          },
+          {
+            "queue": "Order Management & Fulfillment",
+            "ticket_count": 3209
+          },
+          {
+            "queue": "Product Support",
+            "ticket_count": 2427
+          },
+          {
+            "queue": "Payments & Billing Support",
+            "ticket_count": 2366
+          },
+          {
+            "queue": "Customer Account & Access Support",
+            "ticket_count": 2015
+          },
+          {
+            "queue": "Offers & Loyalty Support",
+            "ticket_count": 1524
+          }
+        ],
+        "attempts": [
+          {
+            "raw": "```json\n{\"tool\": \"run_kpi\", \"kpi_id\": \"ticket_count\", \"dimension\": \"queue\"}\n```",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "ticket_count",
+              "dimension": "queue"
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "time_status": "all_time",
+        "tool": "run_kpi",
+        "requested_kpi": "ticket_count",
+        "requested_dimension": "queue",
+        "task": {
+          "id": "t4",
+          "executor": "sql",
+          "kpi": "ticket_count",
+          "dimension": "queue",
+          "goal": "Identify which queues are driving the volume",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "breakdown"
+        }
+      }
+    ],
+    "domain_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"deep\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"avg_tickets_per_day\",\n      \"dimension\": null,\n      \"goal\": \"Get the average tickets per day to establish baseline\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"answer_type\": \"kpi\"\n    },\n    {\n      \"id\": \"t2\",\n      \"executor\": \"sql\",\n      \"kpi\": \"ticket_count\",\n      \"dimension\": \"day\",\n      \"goal\": \"Identify specific days with high ticket volume spikes\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"answer_type\": \"breakdown\"\n    },\n    {\n      \"id\": \"t3\",\n      \"executor\": \"sql\",\n      \"kpi\": \"ticket_count\",\n      \"dimension\": \"category\",\n      \"goal\": \"Identify which categories are driving the volume\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"answer_type\": \"breakdown\"\n    },\n    {\n      \"id\": \"t4\",\n      \"executor\": \"sql\",\n      \"kpi\": \"ticket_count\",\n      \"dimension\": \"queue\",\n      \"goal\": \"Identify which queues are driving the volume\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"answer_type\": \"breakdown\"\n    }\n  ]\n}\n```",
+    "plan": {
+      "kind": "plan",
+      "depth": "deep",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "avg_tickets_per_day",
+          "dimension": null,
+          "goal": "Get the average tickets per day to establish baseline",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "kpi"
+        },
+        {
+          "id": "t2",
+          "executor": "sql",
+          "kpi": "ticket_count",
+          "dimension": "day",
+          "goal": "Identify specific days with high ticket volume spikes",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "breakdown"
+        },
+        {
+          "id": "t3",
+          "executor": "sql",
+          "kpi": "ticket_count",
+          "dimension": "category",
+          "goal": "Identify which categories are driving the volume",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "breakdown"
+        },
+        {
+          "id": "t4",
+          "executor": "sql",
+          "kpi": "ticket_count",
+          "dimension": "queue",
+          "goal": "Identify which queues are driving the volume",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "breakdown"
+        }
+      ]
+    },
+    "facts": "window: overall (no date filter, UTC)\nRESULT: avg_tickets_per_day = 53.91156201403008\navg_tickets_per_day=53.91156201403008 display=53.91\n\nwindow: overall (no date filter, UTC)\nRESULT: 371 group(s)\ngroup_by: day\ntotal_ticket_count: 20050\n  2026-09-25: 1584\n  2026-09-24: 1052\n  2026-09-19: 635\n  2026-09-23: 592\n  2026-09-17: 584\n  ... 366 more groups not listed\n\nwindow: overall (no date filter, UTC)\nRESULT: 74 group(s)\ngroup_by: category\ntotal_ticket_count: 20050\n  Delivery delay: 1256\n  Tracking: 1211\n  Return request: 976\n  Refund status: 971\n  Size & fit: 838\n  ... 69 more groups not listed\n\nwindow: overall (no date filter, UTC)\nRESULT: 7 group(s)\ngroup_by: queue\ntotal_ticket_count: 20050\n  Shipping & Delivery Support: 4478\n  Returns & Refunds Support: 4031\n  Order Management & Fulfillment: 3209\n  Product Support: 2427\n  Payments & Billing Support: 2366\n  ... 2 more groups not listed",
+    "grounded": true,
+    "briefing_raw": "The average number of tickets per day is **53.91** across all time. High volume is driven by spikes in daily ticket counts, such as 1,584 tickets on 2026-09-25 and 1,052 tickets on 2026-09-24. The primary drivers by category are Delivery delay (1,256), Tracking (1,211), and Return request (976), while the most active queues are Shipping & Delivery Support (4,478), Returns & Refunds Support (4,031), and Order Management & Fulfillment (3,209)."
+  }
+}

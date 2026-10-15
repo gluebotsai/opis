@@ -1,0 +1,34 @@
+# Agent-visible and KG-only relations (all products).
+# Subject → verb → object. Verbs are lowercase snake_case.
+version: 2026.09.2
+
+relations:
+  # --- Ticketing situation model (agent slice) --------------------------------
+  - { from: Ticket, verb: raised_by, to: Contact, in_agent_slice: true, product: ticketing, neo4j_was: FOR_CUSTOMER }
+  - { from: Ticket, verb: assigned_to, to: Agent, in_agent_slice: true, product: ticketing, neo4j_was: ASSIGNED_L1 }
+  - { from: Ticket, verb: resolved_by, to: Agent, in_agent_slice: true, product: ticketing, neo4j_was: RESOLVER_L2 }
+  - { from: Ticket, verb: in_queue, to: Queue, in_agent_slice: true, product: ticketing }
+  - { from: Ticket, verb: has_note, to: Note, in_agent_slice: true, product: ticketing }
+  - { from: Ticket, verb: has_sla, to: SLA, in_agent_slice: true, product: ticketing, neo4j_was: GOVERNED_BY }
+  - { from: Ticket, verb: belongs_to, to: ContactAccount, in_agent_slice: true, product: ticketing, neo4j_was: FOR_ACCOUNT }
+  - { from: Agent, verb: member_of, to: Team, in_agent_slice: true, product: ticketing }
+  - { from: Suggestion, verb: about, to: Ticket, in_agent_slice: true, product: ticketing, neo4j_was: ABOUT }
+  - { from: Approval, verb: of, to: Suggestion, in_agent_slice: true, product: ticketing }
+
+  # --- CCaaS situation model -------------------------------------------------
+  - { from: Conversation, verb: handled_by, to: Agent, in_agent_slice: true, product: ccaas }
+  - { from: Task, verb: assigned_to, to: Agent, in_agent_slice: true, product: ccaas }
+
+  # --- CRM situation model -----------------------------------------------------
+  - { from: Deal, verb: primary_contact, to: Contact, in_agent_slice: true, product: crm }
+  - { from: Deal, verb: owned_by, to: Agent, in_agent_slice: true, product: crm }
+
+  # --- People (KG; hidden from product slices) --------------------------------
+  - { from: Agent, verb: role_of, to: User, in_agent_slice: false, product: platform, neo4j_was: ROLE_OF }
+  - { from: User, verb: holds_role, to: AccessRole, in_agent_slice: false, product: platform, neo4j_was: HOLDS_ROLE }
+  - { from: ConfigurationHub, verb: has_user, to: User, in_agent_slice: false, product: platform, neo4j_was: HAS_EMPLOYEE }
+
+  # --- Hub / collection plumbing (KG only) ------------------------------------
+  - { from: SupportHub, verb: has_support_queue, to: Queue, in_agent_slice: false, product: ticketing }
+  - { from: SupportHub, verb: has_support_account, to: ContactAccount, in_agent_slice: false, product: ticketing }
+  - { from: ConfigurationHub, verb: has_team, to: Team, in_agent_slice: false, product: platform, neo4j_was: HAS_TEAM }

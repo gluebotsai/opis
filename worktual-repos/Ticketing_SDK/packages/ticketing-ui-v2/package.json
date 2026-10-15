@@ -1,0 +1,26 @@
+{
+  "name": "@worktual/ticketing-ui-v2",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Desk-only assist popup. Suggests a reply from text the host sends and lets the host save it.",
+  "license": "SEE LICENSE IN LICENSE",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run tests"
+  },
+  "devDependencies": {
+    "happy-dom": "^17.4.4",
+    "typescript": "~5.8.2",
+    "vitest": "^3.0.9"
+  }
+}

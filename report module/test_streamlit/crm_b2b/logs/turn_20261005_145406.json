@@ -1,0 +1,64 @@
+{
+  "question": "how many deals i have",
+  "answer": "\n\nNo deal count is available for the overall period because the SQL executor failed before returning a result.",
+  "trace": {
+    "question": "how many deals i have",
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1017,
+      "role": "sales_rep"
+    },
+    "model": "worktual-qwen-27B",
+    "tasks": [
+      {
+        "status": "error",
+        "error_type": "NO_TOOL",
+        "error": "SQL executor did not return run_kpi JSON or a SELECT/WITH statement.",
+        "raw": null,
+        "attempts": [
+          {
+            "raw": null,
+            "call": {
+              "kind": "none"
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "rows": [],
+        "sql": "",
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "total_opportunities",
+          "goal": "Count all deals owned by the rep",
+          "time": "all time",
+          "scope": "own",
+          "dimension": null,
+          "answer_type": "kpi",
+          "depends_on": []
+        }
+      }
+    ],
+    "domain_raw": "\n\n{\n  \"kind\": \"plan\",\n  \"depth\": \"quick\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"total_opportunities\",\n      \"goal\": \"Count all deals owned by the rep\",\n      \"time\": \"all time\",\n      \"scope\": \"own\",\n      \"dimension\": null,\n      \"answer_type\": \"kpi\",\n      \"depends_on\": []\n    }\n  ]\n}",
+    "plan": {
+      "kind": "plan",
+      "depth": "quick",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "total_opportunities",
+          "goal": "Count all deals owned by the rep",
+          "time": "all time",
+          "scope": "own",
+          "dimension": null,
+          "answer_type": "kpi",
+          "depends_on": []
+        }
+      ]
+    },
+    "facts": "EXECUTION_ERROR\ntime_requested: all time\nperiod_applied: overall (no date filter, UTC)\ncatalog_kpi: total_opportunities\nerror_type: NO_TOOL\nmessage: SQL executor did not return run_kpi JSON or a SELECT/WITH statement.\ntask_goal: Count all deals owned by the rep",
+    "grounded": true,
+    "briefing_raw": "\n\nNo deal count is available for the overall period because the SQL executor failed before returning a result."
+  }
+}

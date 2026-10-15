@@ -1,0 +1,60 @@
+{
+  "turn_id": "a7297ae7",
+  "timestamp": "2026-10-09T05:17:19.174369+00:00",
+  "question": "how many agents are ready now?",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1016,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Current agent status</strong></p><p>There is <strong>1</strong> agent ready <strong>now</strong>.</p><p>Would you like to see which specific agents are currently ready?</p>",
+  "card": "card: none",
+  "facts": "result_id: r1\nwindow: now (live)\ncertified: false\ntask_goal: List the number of agents currently in a ready state\nanswer_type: number\nrow_count: 1\nrow 1: count=1",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1016,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "how many agents are ready now?",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants to know the current count of agents in a ready state.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "free_sql",
+          "goal": "List the number of agents currently in a ready state",
+          "time": "now",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": false,
+        "kpi_id": null,
+        "row_count": 1
+      }
+    ],
+    "facts": "result_id: r1\nwindow: now (live)\ncertified: false\ntask_goal: List the number of agents currently in a ready state\nanswer_type: number\nrow_count: 1\nrow 1: count=1",
+    "grounded": true,
+    "card": "card: none"
+  },
+  "error": null
+}

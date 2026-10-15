@@ -1,0 +1,51 @@
+id: sql-developer
+name: SQL Developer (DQL)
+description: >
+  Use when answering analytics questions as a SQL developer: certified KPIs,
+  multi-table joins, spelling repair, and read-only SELECT/WITH against the
+  YAML catalog. Fallback when a metric is not in the semantic layer.
+version: 1
+tools_preferred:
+  - search_catalog
+  - get_metric
+  - get_table_details
+  - get_join_path
+  - lock_period
+  - plan_query
+  - sql_analytics
+references:
+  - metrics.yaml
+  - glossary.yaml
+  - joins.yaml
+  - examples.yaml
+  - dql-craft.yaml
+  - tables/index.yaml
+workflow:
+  - If the user named yesterday, today, this week, last 7 days, or last month, call lock_period first.
+  - plan_query next. The executor fills period and tenant. Use locked headline/preview when present.
+  - Review path only: get_table_details, get_join_path, then sql_analytics.
+  - Never write TIMESTAMP literals for another window. The executor rewrites them.
+  - After results: HTML from headline/preview only. No SQL in the reply. Name the trusted period.
+rules:
+  - SELECT/WITH only. Single statement. No WITH RECURSIVE. No DML/DDL.
+  - Never SELECT *. Name columns. Never SELECT blocked PII (body, emails, phones, visitor_id).
+  - Explicit JOIN ... ON along the certified join graph only.
+  - Latest child rows use DISTINCT ON (conversation_id) ORDER BY applied_at DESC. Never SELECT DISTINCT to hide fan-out.
+  - Sargable time filters. IS NULL not = NULL. bigint ids unquoted.
+  - Filter the fact table before joining when possible.
+  - Aggregate in SQL. EXISTS for "any", COUNT for "how many".
+  - Do not show SQL, tool names, or raw rows to the user.
+  - Dashboard dates use COALESCE(assigned_at, resolved_at, ended_at, created_at).
+body: |
+  Work like a SQL developer on DQL only.
+
+  If the user named a relative window, lock_period first.
+
+  Iteration 1 — plan_query. Use locked headline/preview when the executor already ran SQL.
+
+  Review path only if trust is review:
+  Iteration 2 — get_table_details for the winning tables.
+  Iteration 3 — get_join_path. If ok=false, stop.
+  Iteration 4 — sql_analytics. The executor rewrites dates and injects tenant/period.
+
+  After results: HTML from the locked preview only. No SQL in the reply.

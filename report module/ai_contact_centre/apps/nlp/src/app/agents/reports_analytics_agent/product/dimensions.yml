@@ -1,0 +1,2436 @@
+# Contact Center dimensions. Aliases are per object. Do not map every status to one column.
+# sql_expr uses rpt view column names. Time slices use the card clock.
+
+aliases:
+  agent.agent: agent
+  agent.agent name: agent
+  agent.agent status: agent_roster_status
+  agent.display_name: agent
+  agent.roster: agent_roster_status
+  agent.status: agent_roster_status
+  agent_capacity.channel: channel
+  analytics_incident.analytics_incident status: incident_status
+  analytics_incident.headline: headline
+  analytics_incident.incident type: incident_type
+  analytics_incident.incident_type: incident_type
+  analytics_incident.model name: analytics_incident_model_name
+  analytics_incident.model_name: analytics_incident_model_name
+  analytics_incident.severity: severity
+  analytics_incident.source: analytics_incident_source
+  analytics_incident.status: incident_status
+  analytics_incident.summary: analytics_incident_summary
+  applied_disposition.is final: is_final
+  applied_disposition.is_final: is_final
+  applied_disposition.note: note
+  applied_disposition.resolution code: applied_disposition_resolution_code
+  applied_disposition.resolution_code: applied_disposition_resolution_code
+  applied_disposition.source: applied_disposition_source
+  assignment.assignment status: assignment_state
+  assignment.offer reason: assignment_reason
+  assignment.offer state: assignment_state
+  assignment.reason: assignment_reason
+  assignment.ringing: assignment_state
+  assignment.state: assignment_state
+  assignment.status: assignment_state
+  automation_policy.automation mode: automation_mode
+  automation_policy.automation_mode: automation_mode
+  automation_policy.automation_policy status: automation_policy_status
+  automation_policy.bot enabled: automation_policy_bot_enabled
+  automation_policy.bot_enabled: automation_policy_bot_enabled
+  automation_policy.channel: channel
+  automation_policy.default_queue_name: automation_policy_default_queue_name
+  automation_policy.handoff message: handoff_message
+  automation_policy.handoff_message: handoff_message
+  automation_policy.live agent enabled: automation_policy_live_agent_enabled
+  automation_policy.live_agent_enabled: automation_policy_live_agent_enabled
+  automation_policy.no agent behavior: no_agent_behavior
+  automation_policy.no_agent_behavior: no_agent_behavior
+  automation_policy.queue: automation_policy_default_queue_name
+  automation_policy.shadow mode: automation_policy_shadow_mode
+  automation_policy.shadow_mode: automation_policy_shadow_mode
+  automation_policy.status: automation_policy_status
+  business_hours.business_hours: business_hours_name
+  business_hours.business_hours status: business_hours_status
+  business_hours.description: business_hours_description
+  business_hours.name: business_hours_name
+  business_hours.status: business_hours_status
+  business_hours.timezone: business_hours_timezone
+  business_hours.timing mode: timing_mode
+  business_hours.timing_mode: timing_mode
+  call_cdr.cdr abandoned: is_abandoned
+  call_cdr.cdr missed: is_missed
+  call_cdr.disconnected by: disconnected_by
+  call_cdr.disconnected_by: disconnected_by
+  call_cdr.is barge: is_barge
+  call_cdr.is bot: call_cdr_is_bot
+  call_cdr.is inbound: is_inbound
+  call_cdr.is listen: is_listen
+  call_cdr.is transferred: is_transferred
+  call_cdr.is whisper: is_whisper
+  call_cdr.is_abandoned: is_abandoned
+  call_cdr.is_barge: is_barge
+  call_cdr.is_bot: call_cdr_is_bot
+  call_cdr.is_inbound: is_inbound
+  call_cdr.is_listen: is_listen
+  call_cdr.is_missed: is_missed
+  call_cdr.is_transferred: is_transferred
+  call_cdr.is_whisper: is_whisper
+  call_cdr.queue: queue
+  call_cdr.queue_name: queue
+  callback_attempt.callback_attempt status: callback_attempt_status
+  callback_attempt.error message: callback_attempt_error_message
+  callback_attempt.error_message: callback_attempt_error_message
+  callback_attempt.status: callback_attempt_status
+  channel_config.channel type: channel_type
+  channel_config.channel_config: channel_config_name
+  channel_config.channel_config status: channel_config_status
+  channel_config.channel_type: channel_type
+  channel_config.name: channel_config_name
+  channel_config.status: channel_config_status
+  conversation.AI: handler
+  conversation.agent: agent
+  conversation.agent name: agent
+  conversation.agent_name: agent
+  conversation.blocked: customer_blocked
+  conversation.bot: bot_active
+  conversation.bot active: bot_active
+  conversation.bot only: is_bot_only
+  conversation.bot_active: bot_active
+  conversation.call: channel
+  conversation.channel: channel
+  conversation.closed: conversation_status
+  conversation.company: customer_company
+  conversation.contained: is_bot_only
+  conversation.customer_blocked: customer_blocked
+  conversation.customer_company: customer_company
+  conversation.customer_language: customer_language
+  conversation.direction: conversation_direction
+  conversation.disposition: disposition
+  conversation.disposition code: conversation_disposition_code
+  conversation.disposition_code: conversation_disposition_code
+  conversation.disposition_label: disposition
+  conversation.end actor: end_actor
+  conversation.end reason: end_reason
+  conversation.end_actor: end_actor
+  conversation.end_reason: end_reason
+  conversation.handler: handler
+  conversation.high priority: priority
+  conversation.human: handler
+  conversation.inbound: conversation_direction
+  conversation.is_bot_only: is_bot_only
+  conversation.is_reopened: is_reopened
+  conversation.language: customer_language
+  conversation.lifecycle: lifecycle_state
+  conversation.lifecycle_state: lifecycle_state
+  conversation.live agent: conversation_live_agent_enabled
+  conversation.live_agent_enabled: conversation_live_agent_enabled
+  conversation.nlp enabled: nlp_enabled
+  conversation.nlp_enabled: nlp_enabled
+  conversation.open: conversation_status
+  conversation.outbound: conversation_direction
+  conversation.priority: priority
+  conversation.queue: queue
+  conversation.queue_name: queue
+  conversation.reopened: is_reopened
+  conversation.repeat: is_reopened
+  conversation.resolution: resolution_code
+  conversation.resolution_code: resolution_code
+  conversation.sla status: sla_status
+  conversation.sla_status: sla_status
+  conversation.social: channel
+  conversation.status: conversation_status
+  conversation.team: team
+  conversation.team_name: team
+  conversation.voice: channel
+  conversation.wrap up: disposition
+  copilot_turn.accepted: copilot_accepted
+  copilot_turn.agent input: agent_input
+  copilot_turn.agent_input: agent_input
+  copilot_turn.copilot accepted: copilot_accepted
+  copilot_turn.copilot response: copilot_response
+  copilot_turn.copilot turn type: copilot_turn_type
+  copilot_turn.copilot_response: copilot_response
+  copilot_turn.copilot_turn status: copilot_turn_status
+  copilot_turn.final text: final_text
+  copilot_turn.final_text: final_text
+  copilot_turn.model name: copilot_turn_model_name
+  copilot_turn.model_name: copilot_turn_model_name
+  copilot_turn.skill key: copilot_turn_skill_key
+  copilot_turn.skill_key: copilot_turn_skill_key
+  copilot_turn.status: copilot_turn_status
+  copilot_turn.suggestion text: suggestion_text
+  copilot_turn.suggestion_text: suggestion_text
+  copilot_turn.surface: surface
+  copilot_turn.turn_type: copilot_turn_type
+  customer.acquisition channel: acquisition_channel
+  customer.acquisition_channel: acquisition_channel
+  customer.blocked: customer_blocked
+  customer.city: customer_city
+  customer.company: company
+  customer.contact type: contact_type
+  customer.contact_type: contact_type
+  customer.country: customer_country
+  customer.customer status: customer_blocked
+  customer.first referrer: first_referrer
+  customer.first_referrer: first_referrer
+  customer.gender: gender
+  customer.industry: industry
+  customer.language: customer_language
+  customer.primary product: primary_product
+  customer.primary_product: primary_product
+  customer.region: region
+  customer.status: customer_blocked
+  customer.timezone: customer_timezone
+  delivery_attempt.delivery_attempt status: delivery_attempt_status
+  delivery_attempt.destination: destination
+  delivery_attempt.error message: delivery_attempt_error_message
+  delivery_attempt.error_message: delivery_attempt_error_message
+  delivery_attempt.status: delivery_attempt_status
+  disposition.category: disposition_category
+  disposition.code: disposition_code
+  disposition.description: disposition_description
+  disposition.disposition: disposition
+  disposition.is active: disposition_is_active
+  disposition.is_active: disposition_is_active
+  disposition.label: disposition
+  disposition.outcome: disposition_outcome
+  disposition.requires note: disposition_requires_note
+  disposition.requires resolution: requires_resolution
+  disposition.requires_note: disposition_requires_note
+  disposition.requires_resolution: requires_resolution
+  email_config.ccaas handler: ccaas_handler
+  email_config.ccaas_handler: ccaas_handler
+  email_config.domain: domain
+  email_config.domain verification status: domain_verification_status
+  email_config.domain_verification_status: domain_verification_status
+  email_config.hosted domain: hosted_domain
+  email_config.hosted_domain: hosted_domain
+  email_config.imap host: imap_host
+  email_config.imap secure: imap_secure
+  email_config.imap_host: imap_host
+  email_config.imap_secure: imap_secure
+  email_config.is bot: email_config_is_bot
+  email_config.is_bot: email_config_is_bot
+  email_config.provider type: provider_type
+  email_config.provider_type: provider_type
+  email_config.provisioning status: provisioning_status
+  email_config.provisioning_status: provisioning_status
+  email_config.requested local part: requested_local_part
+  email_config.requested_local_part: requested_local_part
+  email_config.sender name: sender_name
+  email_config.sender_name: sender_name
+  email_config.smtp host: smtp_host
+  email_config.smtp secure: smtp_secure
+  email_config.smtp_host: smtp_host
+  email_config.smtp_secure: smtp_secure
+  email_config.third party mode: third_party_mode
+  email_config.third_party_mode: third_party_mode
+  forecast_run.forecast_run status: forecast_status
+  forecast_run.method: method
+  forecast_run.model name: forecast_run_model_name
+  forecast_run.model_name: forecast_run_model_name
+  forecast_run.status: forecast_status
+  forecast_run.validation status: validation_status
+  forecast_run.validation_status: validation_status
+  holiday.audio name: audio_name
+  holiday.audio_name: audio_name
+  holiday.error: error
+  holiday.holiday: holiday_name
+  holiday.holiday status: holiday_status
+  holiday.name: holiday_name
+  holiday.prompt text: prompt_text
+  holiday.prompt_text: prompt_text
+  holiday.source: holiday_source
+  holiday.status: holiday_status
+  holiday_calendar.country: holiday_calendar_country
+  holiday_calendar.holiday_calendar: holiday_calendar_name
+  holiday_calendar.name: holiday_calendar_name
+  identity_key.key type: key_type
+  identity_key.key_type: key_type
+  identity_key.source system: source_system
+  identity_key.source_system: source_system
+  identity_key.verified: verified
+  knowledge_document.all branches: all_branches
+  knowledge_document.all_branches: all_branches
+  knowledge_document.category: knowledge_document_category
+  knowledge_document.ccaas audience: ccaas_audience
+  knowledge_document.ccaas_audience: ccaas_audience
+  knowledge_document.file name: file_name
+  knowledge_document.file type: file_type
+  knowledge_document.file_name: file_name
+  knowledge_document.file_type: file_type
+  live_queue_snapshot.queue name: queue
+  live_queue_snapshot.queue type: queue_type
+  live_queue_snapshot.queue_name: queue
+  live_queue_snapshot.queue_type: queue_type
+  mailbox_policy.approved service message: approved_service_message
+  mailbox_policy.approved_service_message: approved_service_message
+  mailbox_policy.auto send enabled: auto_send_enabled
+  mailbox_policy.auto_send_enabled: auto_send_enabled
+  mailbox_policy.bot enabled: mailbox_policy_bot_enabled
+  mailbox_policy.bot_enabled: mailbox_policy_bot_enabled
+  mailbox_policy.business hours mode: mailbox_policy_business_hours_mode
+  mailbox_policy.business_hours_mode: mailbox_policy_business_hours_mode
+  mailbox_policy.default_queue_name: mailbox_policy_default_queue_name
+  mailbox_policy.live agent enabled: mailbox_policy_live_agent_enabled
+  mailbox_policy.live_agent_enabled: mailbox_policy_live_agent_enabled
+  mailbox_policy.mailbox_policy status: mailbox_policy_status
+  mailbox_policy.queue: mailbox_policy_default_queue_name
+  mailbox_policy.shadow mode: mailbox_policy_shadow_mode
+  mailbox_policy.shadow_mode: mailbox_policy_shadow_mode
+  mailbox_policy.status: mailbox_policy_status
+  message.customer visible: visibility
+  message.delivery: delivery_state
+  message.delivery_state: delivery_state
+  message.direction: message_direction
+  message.failed: delivery_state
+  message.internal: visibility
+  message.message direction: message_direction
+  message.message status: delivery_state
+  message.message type: message_type
+  message.message_type: message_type
+  message.recipient type: message_recipient_type
+  message.recipient_type: message_recipient_type
+  message.sender: sender_type
+  message.sender type: sender_type
+  message.sender_type: sender_type
+  message.status: delivery_state
+  message.visibility: visibility
+  message_receipt.message_receipt status: receipt_status
+  message_receipt.recipient ref: recipient_ref
+  message_receipt.recipient type: message_receipt_recipient_type
+  message_receipt.recipient_ref: recipient_ref
+  message_receipt.recipient_type: message_receipt_recipient_type
+  message_receipt.status: receipt_status
+  miss_reason.code: miss_reason
+  miss_reason.description: miss_reason_description
+  miss_reason.miss_reason: miss_reason
+  miss_reason.name: miss_reason
+  missed_contact.agent: agent
+  missed_contact.agent_name: agent
+  missed_contact.channel: channel
+  missed_contact.miss reason: miss_reason
+  missed_contact.queue: queue
+  missed_contact.queue_name: queue
+  missed_contact.reason: miss_reason
+  missed_contact.reason_label: miss_reason
+  nlp_conversation.end reason: nlp_conversation_end_reason
+  nlp_conversation.end_reason: nlp_conversation_end_reason
+  nlp_conversation.nlp_conversation status: nlp_conversation_status
+  nlp_conversation.runtime type: runtime_type
+  nlp_conversation.runtime_type: runtime_type
+  nlp_conversation.status: nlp_conversation_status
+  nlp_turn.bot reply: bot_reply
+  nlp_turn.bot_reply: bot_reply
+  nlp_turn.customer text: customer_text
+  nlp_turn.customer_text: customer_text
+  nlp_turn.grounded: grounded
+  nlp_turn.guard passed: guard_passed
+  nlp_turn.guard_passed: guard_passed
+  nlp_turn.handoff reason: handoff_reason
+  nlp_turn.handoff recommended: handoff_recommended
+  nlp_turn.handoff_reason: handoff_reason
+  nlp_turn.handoff_recommended: handoff_recommended
+  nlp_turn.intent: intent
+  nlp_turn.model name: nlp_turn_model_name
+  nlp_turn.model_name: nlp_turn_model_name
+  nlp_turn.nlp_turn status: nlp_turn_status
+  nlp_turn.queue profile version: queue_profile_version
+  nlp_turn.queue_profile_version: queue_profile_version
+  nlp_turn.selected queue key: selected_queue_key
+  nlp_turn.selected_queue_key: selected_queue_key
+  nlp_turn.sentiment: sentiment
+  nlp_turn.skill key: nlp_turn_skill_key
+  nlp_turn.skill_key: nlp_turn_skill_key
+  nlp_turn.status: nlp_turn_status
+  nlp_turn.summary: nlp_turn_summary
+  not_ready_escalation.agent name: agent
+  not_ready_escalation.agent_name: agent
+  note.body: body
+  note.note: note_title
+  note.title: note_title
+  participant.participant type: participant_type
+  participant.participant_type: participant_type
+  presence.logged in: presence_state
+  presence.presence: presence_state
+  presence.presence row status: presence_row_status
+  presence.presence_state: presence_state
+  presence.ready: presence_state
+  presence.reason code: presence_reason_code
+  presence.reason_code: presence_reason_code
+  presence.source: presence_source
+  presence.status: presence_state
+  presence_interval.new state: presence_state
+  presence_interval.new_state: presence_state
+  presence_interval.presence state: presence_state
+  presence_interval.previous state: previous_state
+  presence_interval.previous_state: previous_state
+  presence_interval.reason code: presence_interval_reason_code
+  presence_interval.reason_code: presence_interval_reason_code
+  presence_interval.source: presence_interval_source
+  presence_reason.code: presence_reason_code
+  presence_reason.is active: presence_reason_is_active
+  presence_reason.is_active: presence_reason_is_active
+  presence_reason.label: presence_reason_label
+  presence_reason.presence state: presence_state
+  presence_reason.presence_reason: presence_reason_label
+  presence_reason.presence_state: presence_state
+  presence_reason.requires note: presence_reason_requires_note
+  presence_reason.requires_note: presence_reason_requires_note
+  queue.name: queue
+  queue.queue: queue
+  queue.queue name: queue
+  queue.queue status: queue_status
+  queue.status: queue_status
+  queue_member.call type: queue_member_call_type
+  queue_member.call_type: queue_member_call_type
+  queue_member.handles calls: queue_member_handles_calls
+  queue_member.handles chat: queue_member_handles_chat
+  queue_member.handles email: queue_member_handles_email
+  queue_member.handles facebook: queue_member_handles_facebook
+  queue_member.handles instagram: queue_member_handles_instagram
+  queue_member.handles social: queue_member_handles_social
+  queue_member.handles whatsapp: queue_member_handles_whatsapp
+  queue_member.handles_calls: queue_member_handles_calls
+  queue_member.handles_chat: queue_member_handles_chat
+  queue_member.handles_email: queue_member_handles_email
+  queue_member.handles_facebook: queue_member_handles_facebook
+  queue_member.handles_instagram: queue_member_handles_instagram
+  queue_member.handles_social: queue_member_handles_social
+  queue_member.handles_whatsapp: queue_member_handles_whatsapp
+  queue_member.shift: shift
+  queue_member.shift_type: shift
+  queue_routing_profile.classifier version: classifier_version
+  queue_routing_profile.classifier_version: classifier_version
+  queue_routing_profile.description: queue_routing_profile_description
+  queue_skill.requirement type: requirement_type
+  queue_skill.requirement_type: requirement_type
+  recording_settings.agent access enabled: agent_access_enabled
+  recording_settings.agent_access_enabled: agent_access_enabled
+  recording_settings.consent notice enabled: consent_notice_enabled
+  recording_settings.consent_notice_enabled: consent_notice_enabled
+  recording_settings.inbound enabled: inbound_enabled
+  recording_settings.inbound_enabled: inbound_enabled
+  recording_settings.outbound enabled: outbound_enabled
+  recording_settings.outbound_enabled: outbound_enabled
+  recording_settings.recording enabled: recording_enabled
+  recording_settings.recording_enabled: recording_enabled
+  role.can approve: can_approve
+  role.can create: can_create
+  role.can delete: can_delete
+  role.can edit: can_edit
+  role.can export: can_export
+  role.can view: can_view
+  role.can_approve: can_approve
+  role.can_create: can_create
+  role.can_delete: can_delete
+  role.can_edit: can_edit
+  role.can_export: can_export
+  role.can_view: can_view
+  role.description: role_description
+  role.module permission: module_permission
+  role.module_permission: module_permission
+  role.name: role_name
+  role.product id: role_product_id
+  role.product_id: role_product_id
+  role.role: role_name
+  routing_attempt.outcome: routing_attempt_outcome
+  routing_policy.overflow queue: overflow_queue_name
+  routing_policy.overflow_queue_name: overflow_queue_name
+  routing_policy.queue: queue
+  routing_policy.queue_name: queue
+  routing_policy.strategy: strategy
+  sentiment_turn.agent label: agent_label
+  sentiment_turn.agent_label: agent_label
+  sentiment_turn.customer_label: customer_sentiment
+  sentiment_turn.model name: sentiment_turn_model_name
+  sentiment_turn.model_name: sentiment_turn_model_name
+  sentiment_turn.negative: customer_sentiment
+  sentiment_turn.sentiment: customer_sentiment
+  sentiment_turn.trigger role: trigger_role
+  sentiment_turn.trigger_role: trigger_role
+  setup_queue.admin queue: setup_queue_name
+  setup_queue.announcement audio name: announcement_audio_name
+  setup_queue.announcement callback: announcement_callback
+  setup_queue.announcement voicemail: announcement_voicemail
+  setup_queue.announcement_audio_name: announcement_audio_name
+  setup_queue.announcement_callback: announcement_callback
+  setup_queue.announcement_voicemail: announcement_voicemail
+  setup_queue.description: setup_queue_description
+  setup_queue.max caller limit callback: max_caller_limit_callback
+  setup_queue.max caller limit voicemail: max_caller_limit_voicemail
+  setup_queue.max wait callback: max_wait_callback
+  setup_queue.max wait mode: max_wait_mode
+  setup_queue.max wait voicemail: max_wait_voicemail
+  setup_queue.max_caller_limit_callback: max_caller_limit_callback
+  setup_queue.max_caller_limit_voicemail: max_caller_limit_voicemail
+  setup_queue.max_wait_callback: max_wait_callback
+  setup_queue.max_wait_mode: max_wait_mode
+  setup_queue.max_wait_voicemail: max_wait_voicemail
+  setup_queue.name: setup_queue_name
+  setup_queue.out of businesshour callback: out_of_businesshour_callback
+  setup_queue.out of businesshour voicemail: out_of_businesshour_voicemail
+  setup_queue.out_of_businesshour_callback: out_of_businesshour_callback
+  setup_queue.out_of_businesshour_voicemail: out_of_businesshour_voicemail
+  setup_queue.setup queue name: setup_queue_name
+  setup_queue.setup_queue status: setup_queue_status
+  setup_queue.status: setup_queue_status
+  setup_queue_agent.call type: setup_queue_agent_call_type
+  setup_queue_agent.call_type: setup_queue_agent_call_type
+  setup_queue_agent.handles calls: setup_queue_agent_handles_calls
+  setup_queue_agent.handles chat: setup_queue_agent_handles_chat
+  setup_queue_agent.handles email: setup_queue_agent_handles_email
+  setup_queue_agent.handles facebook: setup_queue_agent_handles_facebook
+  setup_queue_agent.handles inbound: handles_inbound
+  setup_queue_agent.handles instagram: setup_queue_agent_handles_instagram
+  setup_queue_agent.handles outbound: handles_outbound
+  setup_queue_agent.handles outbound campaign: handles_outbound_campaign
+  setup_queue_agent.handles social: setup_queue_agent_handles_social
+  setup_queue_agent.handles whatsapp: setup_queue_agent_handles_whatsapp
+  setup_queue_agent.handles_calls: setup_queue_agent_handles_calls
+  setup_queue_agent.handles_chat: setup_queue_agent_handles_chat
+  setup_queue_agent.handles_email: setup_queue_agent_handles_email
+  setup_queue_agent.handles_facebook: setup_queue_agent_handles_facebook
+  setup_queue_agent.handles_inbound: handles_inbound
+  setup_queue_agent.handles_instagram: setup_queue_agent_handles_instagram
+  setup_queue_agent.handles_outbound: handles_outbound
+  setup_queue_agent.handles_outbound_campaign: handles_outbound_campaign
+  setup_queue_agent.handles_social: setup_queue_agent_handles_social
+  setup_queue_agent.handles_whatsapp: setup_queue_agent_handles_whatsapp
+  setup_queue_agent.shift type: shift
+  setup_queue_agent.shift_type: shift
+  shift.crosses midnight: crosses_midnight
+  shift.crosses_midnight: crosses_midnight
+  shift.day of week: day_of_week
+  shift.day_of_week: day_of_week
+  shift.end day of week: end_day_of_week
+  shift.end_day_of_week: end_day_of_week
+  shift.shift type: shift
+  shift.shift_type: shift
+  sip_domain.domain name: domain_name
+  sip_domain.domain_name: domain_name
+  sip_domain.sip_domain status: sip_domain_status
+  sip_domain.status: sip_domain_status
+  sip_extension.extension: extension
+  sip_extension.sip_extension status: sip_extension_status
+  sip_extension.status: sip_extension_status
+  skill.description: skill_description
+  skill.is active: skill_is_active
+  skill.is_active: skill_is_active
+  skill.key: key
+  skill.name: skill_name
+  skill.skill: skill_name
+  sla_policy.business hours mode: sla_policy_business_hours_mode
+  sla_policy.business_hours_mode: sla_policy_business_hours_mode
+  sla_policy.is active: sla_policy_is_active
+  sla_policy.is_active: sla_policy_is_active
+  sla_policy.name: sla_policy_name
+  sla_policy.sla_policy: sla_policy_name
+  social_config.bot enabled: social_config_bot_enabled
+  social_config.bot_enabled: social_config_bot_enabled
+  social_config.granted scopes: granted_scopes
+  social_config.granted_scopes: granted_scopes
+  social_config.meta auth type: meta_auth_type
+  social_config.meta connection status: meta_connection_status
+  social_config.meta user name: meta_user_name
+  social_config.meta_auth_type: meta_auth_type
+  social_config.meta_connection_status: meta_connection_status
+  social_config.meta_user_name: meta_user_name
+  social_config.provider: provider
+  social_config.usage mode: usage_mode
+  social_config.usage_mode: usage_mode
+  task.agent: assignee_name
+  task.assigned by label: assigned_by_label
+  task.assigned_by_label: assigned_by_label
+  task.assignee: assignee_name
+  task.assignee_name: assignee_name
+  task.callback: task_type
+  task.channel: channel
+  task.notes: task_notes
+  task.priority: task_priority
+  task.source: task_source
+  task.status: task_status
+  task.summary: task_summary
+  task.task: task_title
+  task.task status: task_status
+  task.task type: task_type
+  task.task_type: task_type
+  task.title: task_title
+  team.description: team_description
+  team.name: team
+  team.status: team_status
+  team.team: team
+  team.team name: team
+  team.team status: team_status
+  transfer.channel: channel
+  transfer.disposition code: transfer_disposition_code
+  transfer.disposition_code: transfer_disposition_code
+  transfer.from agent: from_agent_name
+  transfer.from queue: from_queue_name
+  transfer.from_agent_name: from_agent_name
+  transfer.from_queue_name: from_queue_name
+  transfer.notes: transfer_notes
+  transfer.outcome reason: outcome_reason
+  transfer.outcome_reason: outcome_reason
+  transfer.resolution code: transfer_resolution_code
+  transfer.resolution_code: transfer_resolution_code
+  transfer.state: transfer_state
+  transfer.to agent: to_agent_name
+  transfer.to queue: to_queue_name
+  transfer.to_agent_name: to_agent_name
+  transfer.to_queue_name: to_queue_name
+  transfer.transfer state: transfer_state
+  transfer.transferred to agent: to_agent_name
+  transfer.transferred to queue: to_queue_name
+  user.agent language: primary_language
+  user.city: user_city
+  user.country: user_country
+  user.employee id: employee_id
+  user.employee_id: employee_id
+  user.invite status: invite_status
+  user.invite_status: invite_status
+  user.primary_language: primary_language
+  user.secondary language: secondary_language
+  user.secondary_language: secondary_language
+  user.sip domain name: sip_domain_name
+  user.sip_domain_name: sip_domain_name
+  user.state: user_state
+  user.status: user_status
+  user.user status: user_status
+  user_access.product id: user_access_product_id
+  user_access.product_id: user_access_product_id
+  voice_did.call direction: call_direction
+  voice_did.call_direction: call_direction
+  voice_did.handling type: handling_type
+  voice_did.handling_type: handling_type
+  voice_did.is route to agent: is_route_to_agent
+  voice_did.is_route_to_agent: is_route_to_agent
+  voice_did.lead nurturing bot: lead_nurturing_bot
+  voice_did.lead_nurturing_bot: lead_nurturing_bot
+  voice_did.multilingual: multilingual
+  voice_did.outbound caller name: outbound_caller_name
+  voice_did.outbound_caller_name: outbound_caller_name
+  voice_did.product id: voice_did_product_id
+  voice_did.product_id: voice_did_product_id
+  voice_did.queue: voice_did_routing_queue_name
+  voice_did.routing type: routing_type
+  voice_did.routing_queue_name: voice_did_routing_queue_name
+  voice_did.routing_type: routing_type
+  voice_did.status: did_status
+  voice_did.voice_did status: did_status
+  voice_outcome.customer name: customer_name
+  voice_outcome.customer_name: customer_name
+  voice_outcome.instruction: instruction
+  voice_outcome.outcome: voice_outcome_outcome
+  voice_outcome.reason: voice_outcome_reason
+  voice_outcome.status: voice_outcome_status
+  voice_outcome.timezone: voice_outcome_timezone
+  voice_outcome.voice_outcome status: voice_outcome_status
+  webchat_config.alias title: alias_title
+  webchat_config.alias_title: alias_title
+  webchat_config.description: webchat_config_description
+  webchat_config.greeting message: greeting_message
+  webchat_config.greeting mode: greeting_mode
+  webchat_config.greeting_message: greeting_message
+  webchat_config.greeting_mode: greeting_mode
+  webchat_config.queue: webchat_config_routing_queue_name
+  webchat_config.routing_queue_name: webchat_config_routing_queue_name
+  webchat_config.title: webchat_config_title
+  webchat_config.trigger message: trigger_message
+  webchat_config.trigger_message: trigger_message
+  webchat_config.webchat_config: webchat_config_title
+  webchat_session.connection state: connection_state
+  webchat_session.connection_state: connection_state
+  webchat_session.end reason: webchat_session_end_reason
+  webchat_session.end_reason: webchat_session_end_reason
+  webchat_session.ended by: ended_by
+  webchat_session.ended_by: ended_by
+  webchat_session.page origin: page_origin
+  webchat_session.page url: page_url
+  webchat_session.page_origin: page_origin
+  webchat_session.page_url: page_url
+  whatsapp_policy.approved handoff message: approved_handoff_message
+  whatsapp_policy.approved_handoff_message: approved_handoff_message
+  whatsapp_policy.bot enabled: whatsapp_policy_bot_enabled
+  whatsapp_policy.bot_enabled: whatsapp_policy_bot_enabled
+  whatsapp_policy.default_queue_name: whatsapp_policy_default_queue_name
+  whatsapp_policy.live agent enabled: whatsapp_policy_live_agent_enabled
+  whatsapp_policy.live_agent_enabled: whatsapp_policy_live_agent_enabled
+  whatsapp_policy.queue: whatsapp_policy_default_queue_name
+  whatsapp_policy.status: whatsapp_policy_status
+  whatsapp_policy.whatsapp_policy status: whatsapp_policy_status
+  workforce_plan.decision: decision
+  workforce_plan.model name: workforce_plan_model_name
+  workforce_plan.model_name: workforce_plan_model_name
+  workforce_plan.source: workforce_plan_source
+  workforce_plan.status: workforce_plan_status
+  workforce_plan.workforce_plan status: workforce_plan_status
+
+dimensions:
+  channel:
+    meaning: "Channel: webchat, email, call, whatsapp, instagram, facebook. Call count uses call. Social is whatsapp, instagram, facebook. Voice maps to call."
+    user_phrases: [channel, call, social, voice]
+    not_the_same_as: [CDR call count]
+    sql_expr:
+      agent_capacity: "agent_capacity.channel"
+      assignment: "conversations.channel"
+      automation_policy: "automation_policies.channel"
+      conversation: "conversations.channel"
+      copilot_turn: "conversations.channel"
+      message: "conversations.channel"
+      missed_contact: "missed_contacts.channel"
+      missed_rate: "missed_rate_src.channel"
+      nlp_turn: "conversations.channel"
+      task: "tasks.channel"
+      transfer: "transfers.channel"
+  conversation_direction:
+    meaning: "Inbound or outbound conversation. Not message direction."
+    user_phrases: [direction, inbound, outbound]
+    not_the_same_as: [message direction]
+    sql_expr:
+      assignment: "conversations.direction"
+      conversation: "conversations.direction"
+      copilot_turn: "conversations.direction"
+      message: "conversations.direction"
+      nlp_turn: "conversations.direction"
+  conversation_status:
+    meaning: "Inbox status: bot_active, queued, assigned, active, resolved, closed. Handled is resolved/closed or ended_at set. Not lifecycle_state, sla_status, queue status, or presence."
+    user_phrases: [status, open, closed]
+    not_the_same_as: [lifecycle_state, sla_status, queue status, presence]
+    sql_expr:
+      assignment: "conversations.status"
+      conversation: "conversations.status"
+      copilot_turn: "conversations.status"
+      message: "conversations.status"
+      nlp_turn: "conversations.status"
+  queue:
+    meaning: "Runtime published queue name. Default queue label. Not the admin setup-queue profile name."
+    user_phrases: [queue, queue name]
+    not_the_same_as: [setup_queue_name]
+    sql_expr:
+      assignment: "queues.name"
+      call_cdr: "call_cdr.queue_name"
+      conversation: "conversations.queue_name"
+      live_queue_snapshot: "live_queue_snapshot.queue_name"
+      missed_contact: "missed_contacts.queue_name"
+      missed_rate: "missed_rate_src.queue_name"
+      queue: "queues.name"
+      routing_policy: "routing_policies.queue_name"
+  team:
+    meaning: "Team name. Never the team id."
+    user_phrases: [team, team name]
+    sql_expr:
+      conversation: "conversations.team_name"
+      team: "teams.name"
+  agent:
+    meaning: "Agent display name. Never the agent id."
+    user_phrases: [agent, agent name]
+    not_the_same_as: [user name]
+    sql_expr:
+      agent: "agents.display_name"
+      assignment: "agents.display_name"
+      conversation: "conversations.agent_name"
+      missed_contact: "missed_contacts.agent_name"
+      missed_rate: "missed_rate_src.agent_name"
+      not_ready_escalation: "not_ready_escalations.agent_name"
+  handler:
+    meaning: "AI if never assigned, Agent if assigned. Split of handled. Not bot containment as a rate."
+    user_phrases: [handler, AI, human]
+    not_the_same_as: [bot_containment]
+    sql_expr:
+      assignment: "conversations.handler"
+      conversation: "conversations.handler"
+      copilot_turn: "conversations.handler"
+      message: "conversations.handler"
+      nlp_turn: "conversations.handler"
+  priority:
+    meaning: "0 normal, 1 high."
+    user_phrases: [priority, high priority]
+    sql_expr:
+      assignment: "conversations.priority"
+      conversation: "conversations.priority"
+      copilot_turn: "conversations.priority"
+      message: "conversations.priority"
+      nlp_turn: "conversations.priority"
+  end_reason:
+    meaning: "Why the session ended."
+    user_phrases: [end reason]
+    sql_expr:
+      conversation: "conversations.end_reason"
+  end_actor:
+    meaning: "Who ended it: agent, customer, system, bot, session."
+    user_phrases: [end actor]
+    sql_expr:
+      conversation: "conversations.end_actor"
+  disposition:
+    meaning: "Human wrap-up label from the catalog. Not the raw code."
+    user_phrases: [disposition, wrap up]
+    not_the_same_as: [disposition_code]
+    sql_expr:
+      conversation: "conversations.disposition_label"
+      disposition: "disposition_catalog.label"
+  resolution_code:
+    meaning: "resolved, unresolved, abandoned, transferred."
+    user_phrases: [resolution]
+    not_the_same_as: [resolved_at]
+    sql_expr:
+      conversation: "conversations.resolution_code"
+  is_reopened:
+    meaning: "True if previous_conversation_id is set. FCR excludes these."
+    user_phrases: [reopened, repeat]
+    not_the_same_as: [resolution_rate]
+    sql_expr:
+      conversation: "conversations.is_reopened"
+  is_bot_only:
+    meaning: "Never assigned to a person. Bot containment numerator."
+    user_phrases: [bot only, contained]
+    not_the_same_as: [bot_active]
+    sql_expr:
+      conversation: "conversations.is_bot_only"
+  day:
+    meaning: "UTC calendar day of the card's business date column."
+    user_phrases: [day, date]
+    not_the_same_as: [week, month, hour]
+    sql_expr:
+      default: "date_trunc('day', <business_date_column> AT TIME ZONE 'UTC')"
+      missed_rate: "date_trunc('day', missed_rate_src.clock_at AT TIME ZONE 'UTC')"
+  week:
+    meaning: "UTC week Monday–Sunday of the card's business date column."
+    user_phrases: [week]
+    not_the_same_as: [day, month]
+    sql_expr:
+      default: "date_trunc('week', <business_date_column> AT TIME ZONE 'UTC')"
+      missed_rate: "date_trunc('week', missed_rate_src.clock_at AT TIME ZONE 'UTC')"
+  month:
+    meaning: "UTC calendar month of the card's business date column."
+    user_phrases: [month]
+    not_the_same_as: [day, week]
+    sql_expr:
+      default: "date_trunc('month', <business_date_column> AT TIME ZONE 'UTC')"
+      missed_rate: "date_trunc('month', missed_rate_src.clock_at AT TIME ZONE 'UTC')"
+  hour:
+    meaning: "UTC hour of the card's business date column."
+    user_phrases: [hour]
+    not_the_same_as: [day]
+    sql_expr:
+      default: "date_trunc('hour', <business_date_column> AT TIME ZONE 'UTC')"
+      missed_rate: "date_trunc('hour', missed_rate_src.clock_at AT TIME ZONE 'UTC')"
+  miss_reason:
+    meaning: "Why the contact was missed (no agent, offer timeout). Not abandoned in queue."
+    user_phrases: [miss reason]
+    not_the_same_as: [abandoned, end_reason]
+    sql_expr:
+      miss_reason: "missed_reasons.name"
+      missed_contact: "missed_contacts.reason_label"
+  presence_state:
+    meaning: "ready, not_ready, busy, break, away, after_contact_work, offline. Ready agents use this. Not roster agents.status."
+    user_phrases: [presence, ready, logged in, presence state]
+    not_the_same_as: [agent_roster_status, conversation_status]
+    sql_expr:
+      agent: "presence.presence_state"
+      presence: "presence.presence_state"
+      presence_interval: "presence_history.new_state"
+      presence_reason: "presence_reasons.presence_state"
+  assignment_state:
+    meaning: "Offer state: offered, accepted, rejected, expired, ended. When the user says assignment status, use this. Not conversation status."
+    user_phrases: [assignment status, offer state, ringing]
+    not_the_same_as: [conversation status]
+    sql_expr:
+      assignment: "assignments.state"
+  shift:
+    meaning: "Shift type on queue membership."
+    user_phrases: [shift, shift type]
+    sql_expr:
+      queue_member: "queue_members.shift_type"
+      setup_queue_agent: "setup_queue_agents.shift_type"
+      shift: "shifts.shift_type"
+  task_type:
+    meaning: "callback and other task types. callback_count filters this to callback."
+    user_phrases: [task type, callback]
+    sql_expr:
+      task: "tasks.task_type"
+  task_status:
+    meaning: "open, completed, dismissed. Not conversation status."
+    user_phrases: [task status]
+    not_the_same_as: [conversation status]
+    sql_expr:
+      task: "tasks.status"
+  delivery_state:
+    meaning: "pending, delivered, read, failed. When the user says message status, use this. Failed-send numerator is failed."
+    user_phrases: [delivery, failed, message status]
+    not_the_same_as: [conversation status]
+    sql_expr:
+      message: "messages.delivery_state"
+  visibility:
+    meaning: "internal vs customer-visible. Failed-send denominator is outbound and customer-visible."
+    user_phrases: [visibility, internal, customer visible]
+    not_the_same_as: [conversation status]
+    sql_expr:
+      message: "messages.visibility"
+  sender_type:
+    meaning: "Who sent it: customer, agent, bot, system."
+    user_phrases: [sender, sender type]
+    not_the_same_as: [participant_type]
+    sql_expr:
+      message: "messages.sender_type"
+  message_type:
+    meaning: "Kind of message (text, file, and similar)."
+    user_phrases: [message type]
+    sql_expr:
+      message: "messages.message_type"
+  message_direction:
+    meaning: "Message inbound or outbound. Not conversation direction. Failed-send uses outbound."
+    user_phrases: [message direction]
+    not_the_same_as: [conversation direction]
+    sql_expr:
+      message: "messages.direction"
+  intent:
+    meaning: "Detected intent on the bot turn."
+    user_phrases: [intent]
+    sql_expr:
+      nlp_turn: "nlp_turns.intent"
+  grounded:
+    meaning: "Whether the bot reply was grounded. bot_grounded_rate numerator. Not bot containment."
+    user_phrases: [grounded]
+    not_the_same_as: [bot_containment]
+    sql_expr:
+      nlp_turn: "nlp_turns.grounded"
+  handoff_recommended:
+    meaning: "Bot recommended a handoff on this turn."
+    user_phrases: [handoff recommended]
+    not_the_same_as: [handoff_reason]
+    sql_expr:
+      nlp_turn: "nlp_turns.handoff_recommended"
+  copilot_accepted:
+    meaning: "Whether the agent accepted the suggestion. Null means no suggestion shown. copilot_acceptance_rate denominator is accepted IS NOT NULL."
+    user_phrases: [accepted, copilot accepted]
+    not_the_same_as: [offer accept]
+    sql_expr:
+      copilot_turn: "copilot_turns.accepted"
+  copilot_turn_type:
+    meaning: "Kind of copilot turn."
+    user_phrases: [copilot turn type]
+    sql_expr:
+      copilot_turn: "copilot_turns.turn_type"
+  customer_sentiment:
+    meaning: "Customer sentiment label. Negative KPI uses negative and very_negative. Fanout: EXISTS, do not join into conversation COUNT."
+    user_phrases: [sentiment, negative]
+    not_the_same_as: [agent_label]
+    sql_expr:
+      sentiment_turn: "sentiment_turns.customer_label"
+  agent_roster_status:
+    meaning: "Roster active/inactive. Not ready. Ready agents use presence_state."
+    user_phrases: [agent status, roster]
+    not_the_same_as: [presence_state, conversation status]
+    sql_expr:
+      agent: "agents.status"
+  queue_status:
+    meaning: "Published queue active/inactive. Not conversation status."
+    user_phrases: [queue status]
+    not_the_same_as: [conversation status, presence]
+    sql_expr:
+      queue: "queues.status"
+  setup_queue_name:
+    meaning: "Admin queue profile name. Not the default KPI queue label. Default label is the runtime published queue name."
+    user_phrases: [setup queue name, admin queue]
+    not_the_same_as: [runtime queue name]
+    sql_expr:
+      setup_queue: "setup_queues.name"
+  customer_blocked:
+    meaning: "Blocked on CDP."
+    user_phrases: [blocked]
+    sql_expr:
+      conversation: "conversations.customer_blocked"
+      customer: "customers.blocked"
+  customer_language:
+    meaning: "Customer language. Filter, not a Total GROUP BY."
+    user_phrases: [language]
+    sql_expr:
+      conversation: "conversations.customer_language"
+      customer: "customers.language"
+  acquisition_channel:
+    meaning: "Acquisition channel on this customer."
+    user_phrases: [acquisition channel]
+    sql_expr:
+      customer: "customers.acquisition_channel"
+  agent_access_enabled:
+    meaning: "Whether agent access enabled on this recording_settings."
+    user_phrases: [agent access enabled]
+    sql_expr:
+      recording_settings: "recording_settings.agent_access_enabled"
+  agent_input:
+    meaning: "Agent input on this copilot_turn."
+    user_phrases: [agent input]
+    sql_expr:
+      copilot_turn: "copilot_turns.agent_input"
+  agent_label:
+    meaning: "Agent label on this sentiment_turn."
+    user_phrases: [agent label]
+    sql_expr:
+      sentiment_turn: "sentiment_turns.agent_label"
+  alias_title:
+    meaning: "Alias title on this webchat_config."
+    user_phrases: [alias title]
+    sql_expr:
+      webchat_config: "webchat_configs.alias_title"
+  all_branches:
+    meaning: "Whether all branches on this knowledge_document."
+    user_phrases: [all branches]
+    sql_expr:
+      knowledge_document: "knowledge_documents.all_branches"
+  analytics_incident_model_name:
+    meaning: "Model name on this analytics_incident."
+    user_phrases: [model name]
+    sql_expr:
+      analytics_incident: "analytics_incidents.model_name"
+  analytics_incident_source:
+    meaning: "Source on this analytics_incident."
+    user_phrases: [source]
+    sql_expr:
+      analytics_incident: "analytics_incidents.source"
+  analytics_incident_summary:
+    meaning: "Summary on this analytics_incident."
+    user_phrases: [summary]
+    sql_expr:
+      analytics_incident: "analytics_incidents.summary"
+  announcement_audio_name:
+    meaning: "Announcement audio name on this setup_queue."
+    user_phrases: [announcement audio name]
+    sql_expr:
+      setup_queue: "setup_queues.announcement_audio_name"
+  announcement_callback:
+    meaning: "Whether announcement callback on this setup_queue."
+    user_phrases: [announcement callback]
+    sql_expr:
+      setup_queue: "setup_queues.announcement_callback"
+  announcement_voicemail:
+    meaning: "Whether announcement voicemail on this setup_queue."
+    user_phrases: [announcement voicemail]
+    sql_expr:
+      setup_queue: "setup_queues.announcement_voicemail"
+  applied_disposition_resolution_code:
+    meaning: "Resolution code on this applied_disposition."
+    user_phrases: [resolution code]
+    sql_expr:
+      applied_disposition: "applied_dispositions.resolution_code"
+  applied_disposition_source:
+    meaning: "Source on this applied_disposition."
+    user_phrases: [source]
+    sql_expr:
+      applied_disposition: "applied_dispositions.source"
+  approved_handoff_message:
+    meaning: "Approved handoff message on this whatsapp_policy."
+    user_phrases: [approved handoff message]
+    sql_expr:
+      whatsapp_policy: "whatsapp_policies.approved_handoff_message"
+  approved_service_message:
+    meaning: "Approved service message on this mailbox_policy."
+    user_phrases: [approved service message]
+    sql_expr:
+      mailbox_policy: "mailbox_policies.approved_service_message"
+  assigned_by_label:
+    meaning: "Assigned by label on this task."
+    user_phrases: [assigned by label]
+    sql_expr:
+      task: "tasks.assigned_by_label"
+  assignee_name:
+    meaning: "Assigned user first plus last."
+    user_phrases: [assignee, agent]
+    sql_expr:
+      task: "tasks.assignee_name"
+  assignment_reason:
+    meaning: "Why the offer ended or was skipped."
+    user_phrases: [offer reason]
+    not_the_same_as: [miss reason]
+    sql_expr:
+      assignment: "assignments.reason"
+  audio_name:
+    meaning: "Audio name on this holiday."
+    user_phrases: [audio name]
+    sql_expr:
+      holiday: "holidays.audio_name"
+  auto_send_enabled:
+    meaning: "Whether auto send enabled on this mailbox_policy."
+    user_phrases: [auto send enabled]
+    sql_expr:
+      mailbox_policy: "mailbox_policies.auto_send_enabled"
+  automation_mode:
+    meaning: "Automation mode on this automation_policy."
+    user_phrases: [automation mode]
+    sql_expr:
+      automation_policy: "automation_policies.automation_mode"
+  automation_policy_bot_enabled:
+    meaning: "Whether bot enabled on this automation_policy."
+    user_phrases: [bot enabled]
+    sql_expr:
+      automation_policy: "automation_policies.bot_enabled"
+  automation_policy_default_queue_name:
+    meaning: "Default runtime queue name."
+    user_phrases: [queue]
+    sql_expr:
+      automation_policy: "automation_policies.default_queue_name"
+  automation_policy_live_agent_enabled:
+    meaning: "Whether live agent enabled on this automation_policy."
+    user_phrases: [live agent enabled]
+    sql_expr:
+      automation_policy: "automation_policies.live_agent_enabled"
+  automation_policy_shadow_mode:
+    meaning: "Whether shadow mode on this automation_policy."
+    user_phrases: [shadow mode]
+    sql_expr:
+      automation_policy: "automation_policies.shadow_mode"
+  automation_policy_status:
+    meaning: "Status of this automation_policy. Not conversation inbox status, not presence ready, unless this object is that thing."
+    user_phrases: [automation_policy status, status]
+    not_the_same_as: [conversation status, presence_state, agents.status]
+    sql_expr:
+      automation_policy: "automation_policies.status"
+  body:
+    meaning: "Body on this note."
+    user_phrases: [body]
+    sql_expr:
+      note: "notes.body"
+  bot_active:
+    meaning: "True while the bot still owns the session. Live bot_active KPI uses this with not finished."
+    user_phrases: [bot, bot active]
+    not_the_same_as: [bot_containment, is_bot_only]
+    sql_expr:
+      conversation: "conversations.bot_active"
+  bot_reply:
+    meaning: "Bot reply on this nlp_turn."
+    user_phrases: [bot reply]
+    sql_expr:
+      nlp_turn: "nlp_turns.bot_reply"
+  business_hours_description:
+    meaning: "Description on this business_hours."
+    user_phrases: [description]
+    sql_expr:
+      business_hours: "business_hours.description"
+  business_hours_name:
+    meaning: "Display name for this business_hours. Show the name, never the id."
+    user_phrases: [name, business_hours]
+    sql_expr:
+      business_hours: "business_hours.name"
+  business_hours_status:
+    meaning: "Status of this business_hours. Not conversation inbox status, not presence ready, unless this object is that thing."
+    user_phrases: [business_hours status, status]
+    not_the_same_as: [conversation status, presence_state, agents.status]
+    sql_expr:
+      business_hours: "business_hours.status"
+  business_hours_timezone:
+    meaning: "Timezone on this business_hours."
+    user_phrases: [timezone]
+    sql_expr:
+      business_hours: "business_hours.timezone"
+  call_cdr_is_bot:
+    meaning: "Flag is bot on this call_cdr."
+    user_phrases: [is bot]
+    sql_expr:
+      call_cdr: "call_cdr.is_bot"
+  call_direction:
+    meaning: "Call direction on this voice_did."
+    user_phrases: [call direction]
+    sql_expr:
+      voice_did: "voice_dids.call_direction"
+  callback_attempt_error_message:
+    meaning: "Error message on this callback_attempt."
+    user_phrases: [error message]
+    sql_expr:
+      callback_attempt: "callback_attempts.error_message"
+  callback_attempt_status:
+    meaning: "Status of this callback_attempt. Not conversation inbox status, not presence ready, unless this object is that thing."
+    user_phrases: [callback_attempt status, status]
+    not_the_same_as: [conversation status, presence_state, agents.status]
+    sql_expr:
+      callback_attempt: "callback_attempts.status"
+  can_approve:
+    meaning: "Whether can approve on this role."
+    user_phrases: [can approve]
+    sql_expr:
+      role: "roles.can_approve"
+  can_create:
+    meaning: "Whether can create on this role."
+    user_phrases: [can create]
+    sql_expr:
+      role: "roles.can_create"
+  can_delete:
+    meaning: "Whether can delete on this role."
+    user_phrases: [can delete]
+    sql_expr:
+      role: "roles.can_delete"
+  can_edit:
+    meaning: "Whether can edit on this role."
+    user_phrases: [can edit]
+    sql_expr:
+      role: "roles.can_edit"
+  can_export:
+    meaning: "Whether can export on this role."
+    user_phrases: [can export]
+    sql_expr:
+      role: "roles.can_export"
+  can_view:
+    meaning: "Whether can view on this role."
+    user_phrases: [can view]
+    sql_expr:
+      role: "roles.can_view"
+  ccaas_audience:
+    meaning: "Ccaas audience on this knowledge_document."
+    user_phrases: [ccaas audience]
+    sql_expr:
+      knowledge_document: "knowledge_documents.ccaas_audience"
+  ccaas_handler:
+    meaning: "Ccaas handler on this email_config."
+    user_phrases: [ccaas handler]
+    sql_expr:
+      email_config: "email_configs.ccaas_handler"
+  channel_config_name:
+    meaning: "Display name for this channel_config. Show the name, never the id."
+    user_phrases: [name, channel_config]
+    sql_expr:
+      channel_config: "channel_configs.name"
+  channel_config_status:
+    meaning: "Status of this channel_config. Not conversation inbox status, not presence ready, unless this object is that thing."
+    user_phrases: [channel_config status, status]
+    not_the_same_as: [conversation status, presence_state, agents.status]
+    sql_expr:
+      channel_config: "channel_configs.status"
+  channel_type:
+    meaning: "Channel type on this channel_config."
+    user_phrases: [channel type]
+    sql_expr:
+      channel_config: "channel_configs.channel_type"
+  classifier_version:
+    meaning: "Classifier version on this queue_routing_profile."
+    user_phrases: [classifier version]
+    sql_expr:
+      queue_routing_profile: "queue_routing_profiles.classifier_version"
+  company:
+    meaning: "Customer company. Filter, not a Total GROUP BY."
+    user_phrases: [company]
+    not_the_same_as: [tenant company_name]
+    sql_expr:
+      customer: "customers.company"
+  connection_state:
+    meaning: "Connection state on this webchat_session."
+    user_phrases: [connection state]
+    sql_expr:
+      webchat_session: "webchat_sessions.connection_state"
+  consent_notice_enabled:
+    meaning: "Whether consent notice enabled on this recording_settings."
+    user_phrases: [consent notice enabled]
+    sql_expr:
+      recording_settings: "recording_settings.consent_notice_enabled"
+  contact_type:
+    meaning: "Contact type on this customer."
+    user_phrases: [contact type]
+    sql_expr:
+      customer: "customers.contact_type"
+  conversation_disposition_code:
+    meaning: "Wrap-up code. Prefer the catalog label for display."
+    user_phrases: [disposition code]
+    not_the_same_as: [disposition label]
+    sql_expr:
+      conversation: "conversations.disposition_code"
+  conversation_live_agent_enabled:
+    meaning: "Whether live agent is enabled on this session."
+    user_phrases: [live agent]
+    sql_expr:
+      conversation: "conversations.live_agent_enabled"
+  copilot_response:
+    meaning: "Copilot response on this copilot_turn."
+    user_phrases: [copilot response]
+    sql_expr:
+      copilot_turn: "copilot_turns.copilot_response"
+  copilot_turn_model_name:
+    meaning: "Model name on this copilot_turn."
+    user_phrases: [model name]
+    sql_expr:
+      copilot_turn: "copilot_turns.model_name"
+  copilot_turn_skill_key:
+    meaning: "Skill key on this copilot_turn."
+    user_phrases: [skill key]
+    sql_expr:
+      copilot_turn: "copilot_turns.skill_key"
+  copilot_turn_status:
+    meaning: "Status of this copilot_turn. Not conversation inbox status, not presence ready, unless this object is that thing."
+    user_phrases: [copilot_turn status, status]
+    not_the_same_as: [conversation status, presence_state, agents.status]
+    sql_expr:
+      copilot_turn: "copilot_turns.status"
+  crosses_midnight:
+    meaning: "Whether crosses midnight on this shift."
+    user_phrases: [crosses midnight]
+    sql_expr:
+      shift: "shifts.crosses_midnight"
+  customer_city:
+    meaning: "City on this customer."
+    user_phrases: [city]
+    sql_expr:
+      customer: "customers.city"
+  customer_company:
+    meaning: "Customer company. Filter, not a Total GROUP BY."
+    user_phrases: [company]
+    sql_expr:
+      conversation: "conversations.customer_company"
+  customer_country:
+    meaning: "Country on this customer."
+    user_phrases: [country]
+    sql_expr:
+      customer: "customers.country"
+  customer_name:
+    meaning: "Customer name on this voice_outcome."
+    user_phrases: [customer name]
+    sql_expr:
+      voice_outcome: "voice_outcomes.customer_name"
+  customer_text:
+    meaning: "Customer text on this nlp_turn."
+    user_phrases: [customer text]
+    sql_expr:
+      nlp_turn: "nlp_turns.customer_text"
+  customer_timezone:
+    meaning: "Timezone on this customer."
+    user_phrases: [timezone]
+    sql_expr:
+      customer: "customers.timezone"
+  day_of_week:
+    meaning: "Day of week on this shift."
+    user_phrases: [day of week]
+    sql_expr:
+      shift: "shifts.day_of_week"
+  decision:
+    meaning: "Decision on this workforce_plan."
+    user_phrases: [decision]
+    sql_expr:
+      workforce_plan: "workforce_plans.decision"
+  delivery_attempt_error_message:
+    meaning: "Error message on this delivery_attempt."
+    user_phrases: [error message]
+    sql_expr:
+      delivery_attempt: "message_delivery_attempts.error_message"
+  delivery_attempt_status:
+    meaning: "Status of this delivery_attempt. Not conversation inbox status, not presence ready, unless this object is that thing."
+    user_phrases: [delivery_attempt status, status]
+    not_the_same_as: [conversation status, presence_state, agents.status]
+    sql_expr:
+      delivery_attempt: "message_delivery_attempts.status"
+  destination:
+    meaning: "Destination on this delivery_attempt."
+    user_phrases: [destination]
+    sql_expr:
+      delivery_attempt: "message_delivery_attempts.destination"
+  did_status:
+    meaning: "Status of this voice_did. Not conversation inbox status, not presence ready, unless this object is that thing."
+    user_phrases: [voice_did status, status]
+    not_the_same_as: [conversation status, presence_state, agents.status]
+    sql_expr:
+      voice_did: "voice_dids.status"
+  disconnected_by:
+    meaning: "Disconnected by on this call_cdr."
+    user_phrases: [disconnected by]
+    sql_expr:
+      call_cdr: "call_cdr.disconnected_by"
+  disposition_category:
+    meaning: "Category on this disposition."
+    user_phrases: [category]
+    sql_expr:
+      disposition: "disposition_catalog.category"
+  disposition_code:
+    meaning: "Code on this disposition."
+    user_phrases: [code]
+    sql_expr:
+      disposition: "disposition_catalog.code"
+  disposition_description:
+    meaning: "Description on this disposition."
+    user_phrases: [description]
+    sql_expr:
+      disposition: "disposition_catalog.description"
+  disposition_is_active:
+    meaning: "Flag is active on this disposition."
+    user_phrases: [is active]
+    sql_expr:
+      disposition: "disposition_catalog.is_active"
+  disposition_outcome:
+    meaning: "Outcome on this disposition."
+    user_phrases: [outcome]
+    sql_expr:
+      disposition: "disposition_catalog.outcome"
+  disposition_requires_note:
+    meaning: "Whether requires note on this disposition."
+    user_phrases: [requires note]
+    sql_expr:
+      disposition: "disposition_catalog.requires_note"
+  domain:
+    meaning: "Domain on this email_config."
+    user_phrases: [domain]
+    sql_expr:
+      email_config: "email_configs.domain"
+  domain_name:
+    meaning: "Domain name on this sip_domain."
+    user_phrases: [domain name]
+    sql_expr:
+      sip_domain: "sip_domains.domain_name"
+  domain_verification_status:
+    meaning: "Domain verification status on this email_config."
+    user_phrases: [domain verification status]
+    sql_expr:
+      email_config: "email_configs.domain_verification_status"
+  email_config_is_bot:
+    meaning: "Flag is bot on this email_config."
+    user_phrases: [is bot]
+    sql_expr:
+      email_config: "email_configs.is_bot"
+  employee_id:
+    meaning: "Employee id on this user."
+    user_phrases: [employee id]
+    sql_expr:
+      user: "users.employee_id"
+  end_day_of_week:
+    meaning: "End day of week on this shift."
+    user_phrases: [end day of week]
+    sql_expr:
+      shift: "shifts.end_day_of_week"
+  ended_by:
+    meaning: "Ended by on this webchat_session."
+    user_phrases: [ended by]
+    sql_expr:
+      webchat_session: "webchat_sessions.ended_by"
+  error:
+    meaning: "Error on this holiday."
+    user_phrases: [error]
+    sql_expr:
+      holiday: "holidays.error"
+  extension:
+    meaning: "Extension on this sip_extension."
+    user_phrases: [extension]
+    sql_expr:
+      sip_extension: "sip_extensions.extension"
+  file_name:
+    meaning: "File name on this knowledge_document."
+    user_phrases: [file name]
+    sql_expr:
+      knowledge_document: "knowledge_documents.file_name"
+  file_type:
+    meaning: "File type on this knowledge_document."
+    user_phrases: [file type]
+    sql_expr:
+      knowledge_document: "knowledge_documents.file_type"
+  final_text:
+    meaning: "Final text on this copilot_turn."
+    user_phrases: [final text]
+    sql_expr:
+      copilot_turn: "copilot_turns.final_text"
+  first_referrer:
+    meaning: "First referrer on this customer."
+    user_phrases: [first referrer]
+    sql_expr:
+      customer: "customers.first_referrer"
+  forecast_run_model_name:
+    meaning: "Model name on this forecast_run."
+    user_phrases: [model name]
+    sql_expr:
+      forecast_run: "forecast_runs.model_name"
+  forecast_status:
+    meaning: "Status of this forecast_run. Not conversation inbox status, not presence ready, unless this object is that thing."
+    user_phrases: [forecast_run status, status]
+    not_the_same_as: [conversation status, presence_state, agents.status]
+    sql_expr:
+      forecast_run: "forecast_runs.status"
+  from_agent_name:
+    meaning: "Agent transferred from."
+    user_phrases: [from agent]
+    sql_expr:
+      transfer: "transfers.from_agent_name"
+  from_queue_name:
+    meaning: "Queue transferred from."
+    user_phrases: [from queue]
+    sql_expr:
+      transfer: "transfers.from_queue_name"
+  gender:
+    meaning: "Gender on this customer."
+    user_phrases: [gender]
+    sql_expr:
+      customer: "customers.gender"
+  granted_scopes:
+    meaning: "Granted scopes on this social_config."
+    user_phrases: [granted scopes]
+    sql_expr:
+      social_config: "social_configs.granted_scopes"
+  greeting_message:
+    meaning: "Greeting message on this webchat_config."
+    user_phrases: [greeting message]
+    sql_expr:
+      webchat_config: "webchat_configs.greeting_message"
+  greeting_mode:
+    meaning: "Greeting mode on this webchat_config."
+    user_phrases: [greeting mode]
+    sql_expr:
+      webchat_config: "webchat_configs.greeting_mode"
+  guard_passed:
+    meaning: "Whether guard passed on this nlp_turn."
+    user_phrases: [guard passed]
+    sql_expr:
+      nlp_turn: "nlp_turns.guard_passed"
+  handles_inbound:
+    meaning: "Whether handles inbound on this setup_queue_agent."
+    user_phrases: [handles inbound]
+    sql_expr:
+      setup_queue_agent: "setup_queue_agents.handles_inbound"
+  handles_outbound:
+    meaning: "Whether handles outbound on this setup_queue_agent."
+    user_phrases: [handles outbound]
+    sql_expr:
+      setup_queue_agent: "setup_queue_agents.handles_outbound"
+  handles_outbound_campaign:
+    meaning: "Whether handles outbound campaign on this setup_queue_agent."
+    user_phrases: [handles outbound campaign]
+    sql_expr:
+      setup_queue_agent: "setup_queue_agents.handles_outbound_campaign"
+  handling_type:
+    meaning: "Handling type on this voice_did."
+    user_phrases: [handling type]
+    sql_expr:
+      voice_did: "voice_dids.handling_type"
+  handoff_message:
+    meaning: "Handoff message on this automation_policy."
+    user_phrases: [handoff message]
+    sql_expr:
+      automation_policy: "automation_policies.handoff_message"
+  handoff_reason:
+    meaning: "Handoff reason on this nlp_turn."
+    user_phrases: [handoff reason]
+    sql_expr:
+      nlp_turn: "nlp_turns.handoff_reason"
+  headline:
+    meaning: "Headline on this analytics_incident."
+    user_phrases: [headline]
+    sql_expr:
+      analytics_incident: "analytics_incidents.headline"
+  holiday_calendar_country:
+    meaning: "Country on this holiday_calendar."
+    user_phrases: [country]
+    sql_expr:
+      holiday_calendar: "holiday_calendars.country"
+  holiday_calendar_name:
+    meaning: "Display name for this holiday_calendar. Show the name, never the id."
+    user_phrases: [name, holiday_calendar]
+    sql_expr:
+      holiday_calendar: "holiday_calendars.name"
+  holiday_name:
+    meaning: "Display name for this holiday. Show the name, never the id."
+    user_phrases: [name, holiday]
+    sql_expr:
+      holiday: "holidays.name"
+  holiday_source:
+    meaning: "Source on this holiday."
+    user_phrases: [source]
+    sql_expr:
+      holiday: "holidays.source"
+  holiday_status:
+    meaning: "Status of this holiday. Not conversation inbox status, not presence ready, unless this object is that thing."
+    user_phrases: [holiday status, status]
+    not_the_same_as: [conversation status, presence_state, agents.status]
+    sql_expr:
+      holiday: "holidays.status"
+  hosted_domain:
+    meaning: "Hosted domain on this email_config."
+    user_phrases: [hosted domain]
+    sql_expr:
+      email_config: "email_configs.hosted_domain"
+  imap_host:
+    meaning: "Imap host on this email_config."
+    user_phrases: [imap host]
+    sql_expr:
+      email_config: "email_configs.imap_host"
+  imap_secure:
+    meaning: "Whether imap secure on this email_config."
+    user_phrases: [imap secure]
+    sql_expr:
+      email_config: "email_configs.imap_secure"
+  inbound_enabled:
+    meaning: "Whether inbound enabled on this recording_settings."
+    user_phrases: [inbound enabled]
+    sql_expr:
+      recording_settings: "recording_settings.inbound_enabled"
+  incident_status:
+    meaning: "Status of this analytics_incident. Not conversation inbox status, not presence ready, unless this object is that thing."
+    user_phrases: [analytics_incident status, status]
+    not_the_same_as: [conversation status, presence_state, agents.status]
+    sql_expr:
+      analytics_incident: "analytics_incidents.status"
+  incident_type:
+    meaning: "Incident type on this analytics_incident."
+    user_phrases: [incident type]
+    sql_expr:
+      analytics_incident: "analytics_incidents.incident_type"
+  industry:
+    meaning: "Industry on this customer."
+    user_phrases: [industry]
+    sql_expr:
+      customer: "customers.industry"
+  instruction:
+    meaning: "Instruction on this voice_outcome."
+    user_phrases: [instruction]
+    sql_expr:
+      voice_outcome: "voice_outcomes.instruction"
+  invite_status:
+    meaning: "Invite status on this user."
+    user_phrases: [invite status]
+    sql_expr:
+      user: "users.invite_status"
+  is_abandoned:
+    meaning: "Telephony abandon flag. Not the product abandoned KPI (queued, never assigned, ended)."
+    user_phrases: [cdr abandoned]
+    not_the_same_as: [abandoned]
+    sql_expr:
+      call_cdr: "call_cdr.is_abandoned"
+  is_barge:
+    meaning: "Flag is barge on this call_cdr."
+    user_phrases: [is barge]
+    sql_expr:
+      call_cdr: "call_cdr.is_barge"
+  is_final:
+    meaning: "Flag is final on this applied_disposition."
+    user_phrases: [is final]
+    sql_expr:
+      applied_disposition: "applied_dispositions.is_final"
+  is_inbound:
+    meaning: "Flag is inbound on this call_cdr."
+    user_phrases: [is inbound]
+    sql_expr:
+      call_cdr: "call_cdr.is_inbound"
+  is_listen:
+    meaning: "Flag is listen on this call_cdr."
+    user_phrases: [is listen]
+    sql_expr:
+      call_cdr: "call_cdr.is_listen"
+  is_missed:
+    meaning: "Telephony missed flag. Not product missed_contacts."
+    user_phrases: [cdr missed]
+    not_the_same_as: [missed_contacts]
+    sql_expr:
+      call_cdr: "call_cdr.is_missed"
+  is_route_to_agent:
+    meaning: "Flag is route to agent on this voice_did."
+    user_phrases: [is route to agent]
+    sql_expr:
+      voice_did: "voice_dids.is_route_to_agent"
+  is_transferred:
+    meaning: "Flag is transferred on this call_cdr."
+    user_phrases: [is transferred]
+    sql_expr:
+      call_cdr: "call_cdr.is_transferred"
+  is_whisper:
+    meaning: "Flag is whisper on this call_cdr."
+    user_phrases: [is whisper]
+    sql_expr:
+      call_cdr: "call_cdr.is_whisper"
+  key:
+    meaning: "Key on this skill."
+    user_phrases: [key]
+    sql_expr:
+      skill: "skills.key"
+  key_type:
+    meaning: "Key type on this identity_key."
+    user_phrases: [key type]
+    sql_expr:
+      identity_key: "identity_keys.key_type"
+  knowledge_document_category:
+    meaning: "Category on this knowledge_document."
+    user_phrases: [category]
+    sql_expr:
+      knowledge_document: "knowledge_documents.category"
+  lead_nurturing_bot:
+    meaning: "Whether lead nurturing bot on this voice_did."
+    user_phrases: [lead nurturing bot]
+    sql_expr:
+      voice_did: "voice_dids.lead_nurturing_bot"
+  lifecycle_state:
+    meaning: "Finer phase than inbox status. Do not use for handled."
+    user_phrases: [lifecycle]
+    not_the_same_as: [status]
+    sql_expr:
+      conversation: "conversations.lifecycle_state"
+  mailbox_policy_bot_enabled:
+    meaning: "Whether bot enabled on this mailbox_policy."
+    user_phrases: [bot enabled]
+    sql_expr:
+      mailbox_policy: "mailbox_policies.bot_enabled"
+  mailbox_policy_business_hours_mode:
+    meaning: "Business hours mode on this mailbox_policy."
+    user_phrases: [business hours mode]
+    sql_expr:
+      mailbox_policy: "mailbox_policies.business_hours_mode"
+  mailbox_policy_default_queue_name:
+    meaning: "Default runtime queue name."
+    user_phrases: [queue]
+    sql_expr:
+      mailbox_policy: "mailbox_policies.default_queue_name"
+  mailbox_policy_live_agent_enabled:
+    meaning: "Whether live agent enabled on this mailbox_policy."
+    user_phrases: [live agent enabled]
+    sql_expr:
+      mailbox_policy: "mailbox_policies.live_agent_enabled"
+  mailbox_policy_shadow_mode:
+    meaning: "Whether shadow mode on this mailbox_policy."
+    user_phrases: [shadow mode]
+    sql_expr:
+      mailbox_policy: "mailbox_policies.shadow_mode"
+  mailbox_policy_status:
+    meaning: "Status of this mailbox_policy. Not conversation inbox status, not presence ready, unless this object is that thing."
+    user_phrases: [mailbox_policy status, status]
+    not_the_same_as: [conversation status, presence_state, agents.status]
+    sql_expr:
+      mailbox_policy: "mailbox_policies.status"
+  max_caller_limit_callback:
+    meaning: "Whether max caller limit callback on this setup_queue."
+    user_phrases: [max caller limit callback]
+    sql_expr:
+      setup_queue: "setup_queues.max_caller_limit_callback"
+  max_caller_limit_voicemail:
+    meaning: "Whether max caller limit voicemail on this setup_queue."
+    user_phrases: [max caller limit voicemail]
+    sql_expr:
+      setup_queue: "setup_queues.max_caller_limit_voicemail"
+  max_wait_callback:
+    meaning: "Whether max wait callback on this setup_queue."
+    user_phrases: [max wait callback]
+    sql_expr:
+      setup_queue: "setup_queues.max_wait_callback"
+  max_wait_mode:
+    meaning: "Max wait mode on this setup_queue."
+    user_phrases: [max wait mode]
+    sql_expr:
+      setup_queue: "setup_queues.max_wait_mode"
+  max_wait_voicemail:
+    meaning: "Whether max wait voicemail on this setup_queue."
+    user_phrases: [max wait voicemail]
+    sql_expr:
+      setup_queue: "setup_queues.max_wait_voicemail"
+  message_receipt_recipient_type:
+    meaning: "Recipient type on this message_receipt."
+    user_phrases: [recipient type]
+    sql_expr:
+      message_receipt: "message_receipts.recipient_type"
+  message_recipient_type:
+    meaning: "Recipient type on this message."
+    user_phrases: [recipient type]
+    sql_expr:
+      message: "messages.recipient_type"
+  meta_auth_type:
+    meaning: "Meta auth type on this social_config."
+    user_phrases: [meta auth type]
+    sql_expr:
+      social_config: "social_configs.meta_auth_type"
+  meta_connection_status:
+    meaning: "Meta connection status on this social_config."
+    user_phrases: [meta connection status]
+    sql_expr:
+      social_config: "social_configs.meta_connection_status"
+  meta_user_name:
+    meaning: "Meta user name on this social_config."
+    user_phrases: [meta user name]
+    sql_expr:
+      social_config: "social_configs.meta_user_name"
+  method:
+    meaning: "Method on this forecast_run."
+    user_phrases: [method]
+    sql_expr:
+      forecast_run: "forecast_runs.method"
+  miss_reason_description:
+    meaning: "Description on this miss_reason."
+    user_phrases: [description]
+    sql_expr:
+      miss_reason: "missed_reasons.description"
+  module_permission:
+    meaning: "Module permission on this role."
+    user_phrases: [module permission]
+    sql_expr:
+      role: "roles.module_permission"
+  multilingual:
+    meaning: "Whether multilingual on this voice_did."
+    user_phrases: [multilingual]
+    sql_expr:
+      voice_did: "voice_dids.multilingual"
+  nlp_conversation_end_reason:
+    meaning: "End reason on this nlp_conversation."
+    user_phrases: [end reason]
+    sql_expr:
+      nlp_conversation: "nlp_conversations.end_reason"
+  nlp_conversation_status:
+    meaning: "Status of this nlp_conversation. Not conversation inbox status, not presence ready, unless this object is that thing."
+    user_phrases: [nlp_conversation status, status]
+    not_the_same_as: [conversation status, presence_state, agents.status]
+    sql_expr:
+      nlp_conversation: "nlp_conversations.status"
+  nlp_enabled:
+    meaning: "Whether NLP/bot is enabled on this session."
+    user_phrases: [nlp enabled]
+    not_the_same_as: [bot_active]
+    sql_expr:
+      conversation: "conversations.nlp_enabled"
+  nlp_turn_model_name:
+    meaning: "Model name on this nlp_turn."
+    user_phrases: [model name]
+    sql_expr:
+      nlp_turn: "nlp_turns.model_name"
+  nlp_turn_skill_key:
+    meaning: "Skill key on this nlp_turn."
+    user_phrases: [skill key]
+    sql_expr:
+      nlp_turn: "nlp_turns.skill_key"
+  nlp_turn_status:
+    meaning: "Status of this nlp_turn. Not conversation inbox status, not presence ready, unless this object is that thing."
+    user_phrases: [nlp_turn status, status]
+    not_the_same_as: [conversation status, presence_state, agents.status]
+    sql_expr:
+      nlp_turn: "nlp_turns.status"
+  nlp_turn_summary:
+    meaning: "Summary on this nlp_turn."
+    user_phrases: [summary]
+    sql_expr:
+      nlp_turn: "nlp_turns.summary"
+  no_agent_behavior:
+    meaning: "No agent behavior on this automation_policy."
+    user_phrases: [no agent behavior]
+    sql_expr:
+      automation_policy: "automation_policies.no_agent_behavior"
+  note:
+    meaning: "Note on this applied_disposition."
+    user_phrases: [note]
+    sql_expr:
+      applied_disposition: "applied_dispositions.note"
+  note_title:
+    meaning: "Display title for this note. Show the name, never the id."
+    user_phrases: [title, note]
+    sql_expr:
+      note: "notes.title"
+  out_of_businesshour_callback:
+    meaning: "Whether out of businesshour callback on this setup_queue."
+    user_phrases: [out of businesshour callback]
+    sql_expr:
+      setup_queue: "setup_queues.out_of_businesshour_callback"
+  out_of_businesshour_voicemail:
+    meaning: "Whether out of businesshour voicemail on this setup_queue."
+    user_phrases: [out of businesshour voicemail]
+    sql_expr:
+      setup_queue: "setup_queues.out_of_businesshour_voicemail"
+  outbound_caller_name:
+    meaning: "Outbound caller name on this voice_did."
+    user_phrases: [outbound caller name]
+    sql_expr:
+      voice_did: "voice_dids.outbound_caller_name"
+  outbound_enabled:
+    meaning: "Whether outbound enabled on this recording_settings."
+    user_phrases: [outbound enabled]
+    sql_expr:
+      recording_settings: "recording_settings.outbound_enabled"
+  outcome_reason:
+    meaning: "Outcome reason on this transfer."
+    user_phrases: [outcome reason]
+    sql_expr:
+      transfer: "transfers.outcome_reason"
+  overflow_queue_name:
+    meaning: "Overflow queue name."
+    user_phrases: [overflow queue]
+    sql_expr:
+      routing_policy: "routing_policies.overflow_queue_name"
+  page_origin:
+    meaning: "Page origin on this webchat_session."
+    user_phrases: [page origin]
+    sql_expr:
+      webchat_session: "webchat_sessions.page_origin"
+  page_url:
+    meaning: "Page url on this webchat_session."
+    user_phrases: [page url]
+    sql_expr:
+      webchat_session: "webchat_sessions.page_url"
+  participant_type:
+    meaning: "visitor or customer. Not message sender_type."
+    user_phrases: [participant type]
+    not_the_same_as: [sender_type]
+    sql_expr:
+      participant: "participants.participant_type"
+  presence_interval_reason_code:
+    meaning: "Reason code on this presence_interval."
+    user_phrases: [reason code]
+    sql_expr:
+      presence_interval: "presence_history.reason_code"
+  presence_interval_source:
+    meaning: "Source on this presence_interval."
+    user_phrases: [source]
+    sql_expr:
+      presence_interval: "presence_history.source"
+  presence_reason_code:
+    meaning: "Reason code on this presence."
+    user_phrases: [reason code]
+    sql_expr:
+      presence: "presence.reason_code"
+      presence_reason: "presence_reasons.code"
+  presence_reason_is_active:
+    meaning: "Flag is active on this presence_reason."
+    user_phrases: [is active]
+    sql_expr:
+      presence_reason: "presence_reasons.is_active"
+  presence_reason_label:
+    meaning: "Display label for this presence_reason. Show the name, never the id."
+    user_phrases: [label, presence_reason]
+    sql_expr:
+      presence_reason: "presence_reasons.label"
+  presence_reason_requires_note:
+    meaning: "Whether requires note on this presence_reason."
+    user_phrases: [requires note]
+    sql_expr:
+      presence_reason: "presence_reasons.requires_note"
+  presence_row_status:
+    meaning: "Presence row bookkeeping status. Not ready. Use presence_state for ready."
+    user_phrases: [presence row status]
+    not_the_same_as: [presence_state, agents.status]
+    sql_expr:
+      presence: "presence.status"
+  presence_source:
+    meaning: "Source on this presence."
+    user_phrases: [source]
+    sql_expr:
+      presence: "presence.source"
+  previous_state:
+    meaning: "Previous state on this presence_interval."
+    user_phrases: [previous state]
+    sql_expr:
+      presence_interval: "presence_history.previous_state"
+  primary_language:
+    meaning: "Agent primary language."
+    user_phrases: [agent language]
+    not_the_same_as: [customer language]
+    sql_expr:
+      user: "users.primary_language"
+  primary_product:
+    meaning: "Primary product on this customer."
+    user_phrases: [primary product]
+    sql_expr:
+      customer: "customers.primary_product"
+  prompt_text:
+    meaning: "Prompt text on this holiday."
+    user_phrases: [prompt text]
+    sql_expr:
+      holiday: "holidays.prompt_text"
+  provider:
+    meaning: "Provider on this social_config."
+    user_phrases: [provider]
+    sql_expr:
+      social_config: "social_configs.provider"
+  provider_type:
+    meaning: "Provider type on this email_config."
+    user_phrases: [provider type]
+    sql_expr:
+      email_config: "email_configs.provider_type"
+  provisioning_status:
+    meaning: "Provisioning status on this email_config."
+    user_phrases: [provisioning status]
+    sql_expr:
+      email_config: "email_configs.provisioning_status"
+  queue_member_call_type:
+    meaning: "Call type on this queue_member."
+    user_phrases: [call type]
+    sql_expr:
+      queue_member: "queue_members.call_type"
+  queue_member_handles_calls:
+    meaning: "Whether handles calls on this queue_member."
+    user_phrases: [handles calls]
+    sql_expr:
+      queue_member: "queue_members.handles_calls"
+  queue_member_handles_chat:
+    meaning: "Whether handles chat on this queue_member."
+    user_phrases: [handles chat]
+    sql_expr:
+      queue_member: "queue_members.handles_chat"
+  queue_member_handles_email:
+    meaning: "Whether handles email on this queue_member."
+    user_phrases: [handles email]
+    sql_expr:
+      queue_member: "queue_members.handles_email"
+  queue_member_handles_facebook:
+    meaning: "Whether handles facebook on this queue_member."
+    user_phrases: [handles facebook]
+    sql_expr:
+      queue_member: "queue_members.handles_facebook"
+  queue_member_handles_instagram:
+    meaning: "Whether handles instagram on this queue_member."
+    user_phrases: [handles instagram]
+    sql_expr:
+      queue_member: "queue_members.handles_instagram"
+  queue_member_handles_social:
+    meaning: "Whether handles social on this queue_member."
+    user_phrases: [handles social]
+    sql_expr:
+      queue_member: "queue_members.handles_social"
+  queue_member_handles_whatsapp:
+    meaning: "Whether handles whatsapp on this queue_member."
+    user_phrases: [handles whatsapp]
+    sql_expr:
+      queue_member: "queue_members.handles_whatsapp"
+  queue_profile_version:
+    meaning: "Queue profile version on this nlp_turn."
+    user_phrases: [queue profile version]
+    sql_expr:
+      nlp_turn: "nlp_turns.queue_profile_version"
+  queue_routing_profile_description:
+    meaning: "Description on this queue_routing_profile."
+    user_phrases: [description]
+    sql_expr:
+      queue_routing_profile: "queue_routing_profiles.description"
+  queue_type:
+    meaning: "Queue type on this live_queue_snapshot."
+    user_phrases: [queue type]
+    sql_expr:
+      live_queue_snapshot: "live_queue_snapshot.queue_type"
+  receipt_status:
+    meaning: "Status of this message_receipt. Not conversation inbox status, not presence ready, unless this object is that thing."
+    user_phrases: [message_receipt status, status]
+    not_the_same_as: [conversation status, presence_state, agents.status]
+    sql_expr:
+      message_receipt: "message_receipts.status"
+  recipient_ref:
+    meaning: "Recipient ref on this message_receipt."
+    user_phrases: [recipient ref]
+    sql_expr:
+      message_receipt: "message_receipts.recipient_ref"
+  recording_enabled:
+    meaning: "Whether recording enabled on this recording_settings."
+    user_phrases: [recording enabled]
+    sql_expr:
+      recording_settings: "recording_settings.recording_enabled"
+  region:
+    meaning: "Customer region."
+    user_phrases: [region]
+    sql_expr:
+      customer: "customers.region"
+  requested_local_part:
+    meaning: "Requested local part on this email_config."
+    user_phrases: [requested local part]
+    sql_expr:
+      email_config: "email_configs.requested_local_part"
+  requirement_type:
+    meaning: "Requirement type on this queue_skill."
+    user_phrases: [requirement type]
+    sql_expr:
+      queue_skill: "queue_skills.requirement_type"
+  requires_resolution:
+    meaning: "Whether requires resolution on this disposition."
+    user_phrases: [requires resolution]
+    sql_expr:
+      disposition: "disposition_catalog.requires_resolution"
+  role_description:
+    meaning: "Description on this role."
+    user_phrases: [description]
+    sql_expr:
+      role: "roles.description"
+  role_name:
+    meaning: "Display name for this role. Show the name, never the id."
+    user_phrases: [name, role]
+    sql_expr:
+      role: "roles.name"
+  role_product_id:
+    meaning: "Product id on this role."
+    user_phrases: [product id]
+    sql_expr:
+      role: "roles.product_id"
+  routing_attempt_outcome:
+    meaning: "Outcome on this routing_attempt."
+    user_phrases: [outcome]
+    sql_expr:
+      routing_attempt: "routing_attempts.outcome"
+  routing_type:
+    meaning: "Routing type on this voice_did."
+    user_phrases: [routing type]
+    sql_expr:
+      voice_did: "voice_dids.routing_type"
+  runtime_type:
+    meaning: "Runtime type on this nlp_conversation."
+    user_phrases: [runtime type]
+    sql_expr:
+      nlp_conversation: "nlp_conversations.runtime_type"
+  secondary_language:
+    meaning: "Secondary language on this user."
+    user_phrases: [secondary language]
+    sql_expr:
+      user: "users.secondary_language"
+  selected_queue_key:
+    meaning: "Selected queue key on this nlp_turn."
+    user_phrases: [selected queue key]
+    sql_expr:
+      nlp_turn: "nlp_turns.selected_queue_key"
+  sender_name:
+    meaning: "Sender name on this email_config."
+    user_phrases: [sender name]
+    sql_expr:
+      email_config: "email_configs.sender_name"
+  sentiment:
+    meaning: "Sentiment on this nlp_turn."
+    user_phrases: [sentiment]
+    sql_expr:
+      nlp_turn: "nlp_turns.sentiment"
+  sentiment_turn_model_name:
+    meaning: "Model name on this sentiment_turn."
+    user_phrases: [model name]
+    sql_expr:
+      sentiment_turn: "sentiment_turns.model_name"
+  setup_queue_agent_call_type:
+    meaning: "Call type on this setup_queue_agent."
+    user_phrases: [call type]
+    sql_expr:
+      setup_queue_agent: "setup_queue_agents.call_type"
+  setup_queue_agent_handles_calls:
+    meaning: "Whether handles calls on this setup_queue_agent."
+    user_phrases: [handles calls]
+    sql_expr:
+      setup_queue_agent: "setup_queue_agents.handles_calls"
+  setup_queue_agent_handles_chat:
+    meaning: "Whether handles chat on this setup_queue_agent."
+    user_phrases: [handles chat]
+    sql_expr:
+      setup_queue_agent: "setup_queue_agents.handles_chat"
+  setup_queue_agent_handles_email:
+    meaning: "Whether handles email on this setup_queue_agent."
+    user_phrases: [handles email]
+    sql_expr:
+      setup_queue_agent: "setup_queue_agents.handles_email"
+  setup_queue_agent_handles_facebook:
+    meaning: "Whether handles facebook on this setup_queue_agent."
+    user_phrases: [handles facebook]
+    sql_expr:
+      setup_queue_agent: "setup_queue_agents.handles_facebook"
+  setup_queue_agent_handles_instagram:
+    meaning: "Whether handles instagram on this setup_queue_agent."
+    user_phrases: [handles instagram]
+    sql_expr:
+      setup_queue_agent: "setup_queue_agents.handles_instagram"
+  setup_queue_agent_handles_social:
+    meaning: "Whether handles social on this setup_queue_agent."
+    user_phrases: [handles social]
+    sql_expr:
+      setup_queue_agent: "setup_queue_agents.handles_social"
+  setup_queue_agent_handles_whatsapp:
+    meaning: "Whether handles whatsapp on this setup_queue_agent."
+    user_phrases: [handles whatsapp]
+    sql_expr:
+      setup_queue_agent: "setup_queue_agents.handles_whatsapp"
+  setup_queue_description:
+    meaning: "Description on this setup_queue."
+    user_phrases: [description]
+    sql_expr:
+      setup_queue: "setup_queues.description"
+  setup_queue_status:
+    meaning: "Status of this setup_queue. Not conversation inbox status, not presence ready, unless this object is that thing."
+    user_phrases: [setup_queue status, status]
+    not_the_same_as: [conversation status, presence_state, agents.status]
+    sql_expr:
+      setup_queue: "setup_queues.status"
+  severity:
+    meaning: "Severity on this analytics_incident."
+    user_phrases: [severity]
+    sql_expr:
+      analytics_incident: "analytics_incidents.severity"
+  sip_domain_name:
+    meaning: "Sip domain name on this user."
+    user_phrases: [sip domain name]
+    sql_expr:
+      user: "users.sip_domain_name"
+  sip_domain_status:
+    meaning: "Status of this sip_domain. Not conversation inbox status, not presence ready, unless this object is that thing."
+    user_phrases: [sip_domain status, status]
+    not_the_same_as: [conversation status, presence_state, agents.status]
+    sql_expr:
+      sip_domain: "sip_domains.status"
+  sip_extension_status:
+    meaning: "Status of this sip_extension. Not conversation inbox status, not presence ready, unless this object is that thing."
+    user_phrases: [sip_extension status, status]
+    not_the_same_as: [conversation status, presence_state, agents.status]
+    sql_expr:
+      sip_extension: "sip_extensions.status"
+  skill_description:
+    meaning: "Description on this skill."
+    user_phrases: [description]
+    sql_expr:
+      skill: "skills.description"
+  skill_is_active:
+    meaning: "Flag is active on this skill."
+    user_phrases: [is active]
+    sql_expr:
+      skill: "skills.is_active"
+  skill_name:
+    meaning: "Display name for this skill. Show the name, never the id."
+    user_phrases: [name, skill]
+    sql_expr:
+      skill: "skills.name"
+  sla_policy_business_hours_mode:
+    meaning: "Business hours mode on this sla_policy."
+    user_phrases: [business hours mode]
+    sql_expr:
+      sla_policy: "sla_policies.business_hours_mode"
+  sla_policy_is_active:
+    meaning: "Flag is active on this sla_policy."
+    user_phrases: [is active]
+    sql_expr:
+      sla_policy: "sla_policies.is_active"
+  sla_policy_name:
+    meaning: "Display name for this sla_policy. Show the name, never the id."
+    user_phrases: [name, sla_policy]
+    sql_expr:
+      sla_policy: "sla_policies.name"
+  sla_status:
+    meaning: "Product SLA flag. Certified 60s SLA does not read this."
+    user_phrases: [sla status]
+    not_the_same_as: [first_reply_sla]
+    sql_expr:
+      conversation: "conversations.sla_status"
+  smtp_host:
+    meaning: "Smtp host on this email_config."
+    user_phrases: [smtp host]
+    sql_expr:
+      email_config: "email_configs.smtp_host"
+  smtp_secure:
+    meaning: "Whether smtp secure on this email_config."
+    user_phrases: [smtp secure]
+    sql_expr:
+      email_config: "email_configs.smtp_secure"
+  social_config_bot_enabled:
+    meaning: "Whether bot enabled on this social_config."
+    user_phrases: [bot enabled]
+    sql_expr:
+      social_config: "social_configs.bot_enabled"
+  source_system:
+    meaning: "Source system on this identity_key."
+    user_phrases: [source system]
+    sql_expr:
+      identity_key: "identity_keys.source_system"
+  strategy:
+    meaning: "Strategy on this routing_policy."
+    user_phrases: [strategy]
+    sql_expr:
+      routing_policy: "routing_policies.strategy"
+  suggestion_text:
+    meaning: "Suggestion text on this copilot_turn."
+    user_phrases: [suggestion text]
+    sql_expr:
+      copilot_turn: "copilot_turns.suggestion_text"
+  surface:
+    meaning: "Surface on this copilot_turn."
+    user_phrases: [surface]
+    sql_expr:
+      copilot_turn: "copilot_turns.surface"
+  task_notes:
+    meaning: "Notes on this task."
+    user_phrases: [notes]
+    sql_expr:
+      task: "tasks.notes"
+  task_priority:
+    meaning: "Priority on this task."
+    user_phrases: [priority]
+    sql_expr:
+      task: "tasks.priority"
+  task_source:
+    meaning: "Source on this task."
+    user_phrases: [source]
+    sql_expr:
+      task: "tasks.source"
+  task_summary:
+    meaning: "Summary on this task."
+    user_phrases: [summary]
+    sql_expr:
+      task: "tasks.summary"
+  task_title:
+    meaning: "Display title for this task. Show the name, never the id."
+    user_phrases: [title, task]
+    sql_expr:
+      task: "tasks.title"
+  team_description:
+    meaning: "Description on this team."
+    user_phrases: [description]
+    sql_expr:
+      team: "teams.description"
+  team_status:
+    meaning: "Status of this team. Not conversation inbox status, not presence ready, unless this object is that thing."
+    user_phrases: [team status, status]
+    not_the_same_as: [conversation status, presence_state, agents.status]
+    sql_expr:
+      team: "teams.status"
+  third_party_mode:
+    meaning: "Third party mode on this email_config."
+    user_phrases: [third party mode]
+    sql_expr:
+      email_config: "email_configs.third_party_mode"
+  timing_mode:
+    meaning: "Timing mode on this business_hours."
+    user_phrases: [timing mode]
+    sql_expr:
+      business_hours: "business_hours.timing_mode"
+  to_agent_name:
+    meaning: "Agent who accepted the transfer."
+    user_phrases: [to agent, transferred to agent]
+    sql_expr:
+      transfer: "transfers.to_agent_name"
+  to_queue_name:
+    meaning: "Queue transferred to."
+    user_phrases: [to queue, transferred to queue]
+    sql_expr:
+      transfer: "transfers.to_queue_name"
+  transfer_disposition_code:
+    meaning: "Disposition code on this transfer."
+    user_phrases: [disposition code]
+    sql_expr:
+      transfer: "transfers.disposition_code"
+  transfer_notes:
+    meaning: "Notes on this transfer."
+    user_phrases: [notes]
+    sql_expr:
+      transfer: "transfers.notes"
+  transfer_resolution_code:
+    meaning: "Resolution code on this transfer."
+    user_phrases: [resolution code]
+    sql_expr:
+      transfer: "transfers.resolution_code"
+  transfer_state:
+    meaning: "Transfer hop state. Completed hops only count toward transferred when conversations.transferred_at is set."
+    user_phrases: [transfer state]
+    not_the_same_as: [conversation status]
+    sql_expr:
+      transfer: "transfers.state"
+  trigger_message:
+    meaning: "Trigger message on this webchat_config."
+    user_phrases: [trigger message]
+    sql_expr:
+      webchat_config: "webchat_configs.trigger_message"
+  trigger_role:
+    meaning: "Trigger role on this sentiment_turn."
+    user_phrases: [trigger role]
+    sql_expr:
+      sentiment_turn: "sentiment_turns.trigger_role"
+  usage_mode:
+    meaning: "Usage mode on this social_config."
+    user_phrases: [usage mode]
+    sql_expr:
+      social_config: "social_configs.usage_mode"
+  user_access_product_id:
+    meaning: "Product id on this user_access."
+    user_phrases: [product id]
+    sql_expr:
+      user_access: "user_product_access.product_id"
+  user_city:
+    meaning: "City on this user."
+    user_phrases: [city]
+    sql_expr:
+      user: "users.city"
+  user_country:
+    meaning: "Country on this user."
+    user_phrases: [country]
+    sql_expr:
+      user: "users.country"
+  user_state:
+    meaning: "State on this user."
+    user_phrases: [state]
+    sql_expr:
+      user: "users.state"
+  user_status:
+    meaning: "Setup user active/inactive. Not presence ready."
+    user_phrases: [user status]
+    not_the_same_as: [presence_state, agents.status]
+    sql_expr:
+      user: "users.status"
+  validation_status:
+    meaning: "Validation status on this forecast_run."
+    user_phrases: [validation status]
+    sql_expr:
+      forecast_run: "forecast_runs.validation_status"
+  verified:
+    meaning: "Whether verified on this identity_key."
+    user_phrases: [verified]
+    sql_expr:
+      identity_key: "identity_keys.verified"
+  voice_did_product_id:
+    meaning: "Product id on this voice_did."
+    user_phrases: [product id]
+    sql_expr:
+      voice_did: "voice_dids.product_id"
+  voice_did_routing_queue_name:
+    meaning: "Runtime queue this DID routes to."
+    user_phrases: [queue]
+    sql_expr:
+      voice_did: "voice_dids.routing_queue_name"
+  voice_outcome_outcome:
+    meaning: "Outcome on this voice_outcome."
+    user_phrases: [outcome]
+    sql_expr:
+      voice_outcome: "voice_outcomes.outcome"
+  voice_outcome_reason:
+    meaning: "Reason on this voice_outcome."
+    user_phrases: [reason]
+    sql_expr:
+      voice_outcome: "voice_outcomes.reason"
+  voice_outcome_status:
+    meaning: "Status of this voice_outcome. Not conversation inbox status, not presence ready, unless this object is that thing."
+    user_phrases: [voice_outcome status, status]
+    not_the_same_as: [conversation status, presence_state, agents.status]
+    sql_expr:
+      voice_outcome: "voice_outcomes.status"
+  voice_outcome_timezone:
+    meaning: "Timezone on this voice_outcome."
+    user_phrases: [timezone]
+    sql_expr:
+      voice_outcome: "voice_outcomes.timezone"
+  webchat_config_description:
+    meaning: "Description on this webchat_config."
+    user_phrases: [description]
+    sql_expr:
+      webchat_config: "webchat_configs.description"
+  webchat_config_routing_queue_name:
+    meaning: "Runtime queue the widget routes to."
+    user_phrases: [queue]
+    sql_expr:
+      webchat_config: "webchat_configs.routing_queue_name"
+  webchat_config_title:
+    meaning: "Display title for this webchat_config. Show the name, never the id."
+    user_phrases: [title, webchat_config]
+    sql_expr:
+      webchat_config: "webchat_configs.title"
+  webchat_session_end_reason:
+    meaning: "End reason on this webchat_session."
+    user_phrases: [end reason]
+    sql_expr:
+      webchat_session: "webchat_sessions.end_reason"
+  whatsapp_policy_bot_enabled:
+    meaning: "Whether bot enabled on this whatsapp_policy."
+    user_phrases: [bot enabled]
+    sql_expr:
+      whatsapp_policy: "whatsapp_policies.bot_enabled"
+  whatsapp_policy_default_queue_name:
+    meaning: "Default runtime queue name."
+    user_phrases: [queue]
+    sql_expr:
+      whatsapp_policy: "whatsapp_policies.default_queue_name"
+  whatsapp_policy_live_agent_enabled:
+    meaning: "Whether live agent enabled on this whatsapp_policy."
+    user_phrases: [live agent enabled]
+    sql_expr:
+      whatsapp_policy: "whatsapp_policies.live_agent_enabled"
+  whatsapp_policy_status:
+    meaning: "Status of this whatsapp_policy. Not conversation inbox status, not presence ready, unless this object is that thing."
+    user_phrases: [whatsapp_policy status, status]
+    not_the_same_as: [conversation status, presence_state, agents.status]
+    sql_expr:
+      whatsapp_policy: "whatsapp_policies.status"
+  workforce_plan_model_name:
+    meaning: "Model name on this workforce_plan."
+    user_phrases: [model name]
+    sql_expr:
+      workforce_plan: "workforce_plans.model_name"
+  workforce_plan_source:
+    meaning: "Source on this workforce_plan."
+    user_phrases: [source]
+    sql_expr:
+      workforce_plan: "workforce_plans.source"
+  workforce_plan_status:
+    meaning: "Status of this workforce_plan. Not conversation inbox status, not presence ready, unless this object is that thing."
+    user_phrases: [workforce_plan status, status]
+    not_the_same_as: [conversation status, presence_state, agents.status]
+    sql_expr:
+      workforce_plan: "workforce_plans.status"

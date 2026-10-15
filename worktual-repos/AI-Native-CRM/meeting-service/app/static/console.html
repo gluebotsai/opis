@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Meeting service test console</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --panel: #1a2332;
+      --line: #2d3a4f;
+      --text: #e8eef7;
+      --muted: #8b9bb4;
+      --ok: #3dd68c;
+      --warn: #f5c542;
+      --bad: #f07178;
+      --accent: #5b9fd4;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+    }
+    header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      align-items: baseline;
+    }
+    header h1 { font-size: 1.1rem; margin: 0; }
+    header p { margin: 0; color: var(--muted); font-size: 0.85rem; }
+    main {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      min-height: calc(100vh - 58px);
+    }
+    @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+    aside, section { padding: 1.25rem; }
+    aside { border-right: 1px solid var(--line); }
+    label { display: block; font-size: 0.75rem; color: var(--muted); margin: 0.75rem 0 0.25rem; }
+    input, select, button, textarea {
+      width: 100%;
+      font: inherit;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--text);
+      padding: 0.5rem 0.65rem;
+    }
+    button {
+      margin-top: 1rem;
+      background: var(--accent);
+      color: #061018;
+      font-weight: 600;
+      cursor: pointer;
+      border: 0;
+    }
+    button.secondary { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .check { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.75rem; }
+    .check input { width: auto; }
+    .banner {
+      display: none;
+      background: #3d2e12;
+      border: 1px solid var(--warn);
+      color: var(--warn);
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+    .banner.show { display: block; }
+    .status {
+      font-size: 0.9rem;
+      margin-bottom: 0.75rem;
+    }
+    .pill {
+      display: inline-block;
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      font-size: 0.8rem;
+    }
+    .pill.active { border-color: var(--ok); color: var(--ok); }
+    .pill.failed { border-color: var(--bad); color: var(--bad); }
+    .pill.lobby { border-color: var(--warn); color: var(--warn); }
+    #log {
+      white-space: pre-wrap;
+      font-family: ui-monospace, monospace;
+      font-size: 0.85rem;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 1rem;
+      min-height: 280px;
+      max-height: 55vh;
+      overflow: auto;
+    }
+    .seg { margin: 0 0 0.65rem; }
+    .seg .who { color: var(--accent); font-size: 0.75rem; }
+    .health { font-size: 0.75rem; color: var(--muted); margin-top: 1rem; }
+    pre.extract {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 0.75rem;
+      font-size: 0.8rem;
+      overflow: auto;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Worktual notetaker — test console</h1>
+      <p>Org 1003 · API on this origin · Admit the bot in Google Meet</p>
+    </div>
+    <p id="readyLine">checking /readyz…</p>
+  </header>
+  <main>
+    <aside>
+      <label>Meeting URL</label>
+      <input id="url" placeholder="https://meet.google.com/xxx-xxxx-xxx" />
+      <label>Entity type</label>
+      <select id="entityType">
+        <option value="contact">contact</option>
+        <option value="deal">deal</option>
+        <option value="team">team</option>
+      </select>
+      <label>Entity id</label>
+      <input id="entityId" value="C-TEST" />
+      <label>Bot name</label>
+      <input id="botName" value="Worktual Notetaker" />
+      <div class="check">
+        <input type="checkbox" id="consent" checked />
+        <label for="consent" style="margin:0">Recording consent captured</label>
+      </div>
+      <div class="check">
+        <input type="checkbox" id="recordFile" />
+        <label for="recordFile" style="margin:0">Save Vexa recording file</label>
+      </div>
+      <button id="start">Send notetaker</button>
+      <button class="secondary" id="stop" disabled>Stop bot</button>
+      <p class="health" id="health"></p>
+    </aside>
+    <section>
+      <div id="admit" class="banner">Host must click <strong>Admit Worktual Notetaker</strong> in Google Meet.</div>
+      <div class="status">
+        Status <span class="pill" id="statusPill">idle</span>
+        <span id="errorLine"></span>
+      </div>
+      <p class="muted" id="meetingId" style="color:var(--muted);font-size:0.8rem"></p>
+      <h2 style="font-size:0.95rem">Live transcript</h2>
+      <div id="log">Create a meeting to stream segments here.</div>
+      <h2 style="font-size:0.95rem">Extract</h2>
+      <pre class="extract" id="extract">—</pre>
+    </section>
+  </main>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let token = "";
+    let meetingId = "";
+    let ws = null;
+    let pollTimer = null;
+
+    function pillClass(status) {
+      if (status === "active") return "pill active";
+      if (status === "awaiting_admission") return "pill lobby";
+      if (status === "failed" || status === "completed_partial") return "pill failed";
+      return "pill";
+    }
+
+    function setStatus(m) {
+      const s = m.status || "idle";
+      $("statusPill").textContent = s;
+      $("statusPill").className = pillClass(s);
+      if (s === "requested") {
+        $("errorLine").textContent = " · queued — bot joins when a slot is free";
+      } else {
+        $("errorLine").textContent = m.error_code ? ` · ${m.error_code} ${m.error_message || ""}` : "";
+      }
+      $("admit").classList.toggle("show", s === "awaiting_admission" || s === "joining");
+      $("meetingId").textContent = m.id ? `id ${m.id}` : "";
+    }
+
+    async function api(path, opts = {}) {
+      const headers = Object.assign({ "Content-Type": "application/json" }, opts.headers || {});
+      if (token && !path.startsWith("/ui")) headers.Authorization = "Bearer " + token;
+      const res = await fetch(path, Object.assign({}, opts, { headers }));
+      const text = await res.text();
+      let body = null;
+      try { body = text ? JSON.parse(text) : null; } catch { body = { raw: text }; }
+      if (!res.ok) throw { status: res.status, body };
+      return body;
+    }
+
+    function upsertSeg(seg) {
+      const log = $("log");
+      if (log.dataset.empty !== "0") {
+        log.innerHTML = "";
+        log.dataset.empty = "0";
+      }
+      const id = String(seg.segment_id || seg.id || "");
+      let div = id ? log.querySelector('[data-seg="' + CSS.escape(id) + '"]') : null;
+      if (!div) {
+        div = document.createElement("div");
+        div.className = "seg";
+        if (id) div.dataset.seg = id;
+        const who = document.createElement("div");
+        who.className = "who";
+        const text = document.createElement("div");
+        text.className = "body";
+        div.appendChild(who);
+        div.appendChild(text);
+        log.appendChild(div);
+      }
+      div.querySelector(".who").textContent =
+        (seg.speaker || "(unnamed)") + (seg.completed === false ? " · draft" : "");
+      div.querySelector(".body").textContent = seg.text || "";
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function openLive(id) {
+      if (ws) { try { ws.close(); } catch (e) {} }
+      const proto = location.protocol === "https:" ? "wss" : "ws";
+      ws = new WebSocket(`${proto}://${location.host}/v1/meetings/${id}/live?token=${encodeURIComponent(token)}`);
+      ws.onmessage = (ev) => {
+        const msg = JSON.parse(ev.data);
+        if (msg.type === "snapshot") {
+          setStatus(msg);
+          $("log").innerHTML = "";
+          $("log").dataset.empty = "0";
+          (msg.segments || []).forEach(upsertSeg);
+          if (!(msg.segments || []).length) {
+            $("log").textContent = "Waiting for speech…";
+            $("log").dataset.empty = "1";
+          }
+        } else if (msg.type === "segment") {
+          upsertSeg(msg);
+        } else if (msg.type === "status") {
+          setStatus(msg);
+          if (msg.status === "completed" || msg.status === "completed_partial") loadExtract();
+        }
+      };
+      ws.onerror = () => {};
+    }
+
+    function attachMeeting(m) {
+      meetingId = m.id;
+      $("stop").disabled = false;
+      setStatus(m);
+      openLive(meetingId);
+      clearInterval(pollTimer);
+      pollTimer = setInterval(pollOnce, 2500);
+    }
+
+    async function resumeInflight() {
+      const rows = await api("/v1/meetings");
+      const live = (rows || []).find((x) =>
+        ["requested", "joining", "awaiting_admission", "active", "stopping"].includes(x.status)
+      );
+      if (!live) return false;
+      attachMeeting(live);
+      $("log").textContent = "Reconnected to in-flight notetaker. Stop it before sending another (cap is 1).";
+      $("log").dataset.empty = "1";
+      return true;
+    }
+
+    async function pollOnce() {
+      if (!meetingId) return;
+      try {
+        const m = await api("/v1/meetings/" + meetingId);
+        setStatus(m);
+        if (m.status === "completed" || m.status === "completed_partial") {
+          loadExtract();
+          clearInterval(pollTimer);
+        }
+      } catch (e) {}
+    }
+
+    async function loadExtract() {
+      try {
+        const ext = await api("/v1/meetings/" + meetingId + "/extract");
+        $("extract").textContent = JSON.stringify(ext, null, 2);
+      } catch (e) {
+        $("extract").textContent = "Extract not ready yet (LLM may still be running, or completed_partial).";
+      }
+    }
+
+    $("start").onclick = async () => {
+      $("start").disabled = true;
+      try {
+        if (!token) {
+          const t = await api("/ui/token", { method: "POST" });
+          token = t.token;
+        }
+        const body = {
+          organization_id: "1003",
+          entity_type: $("entityType").value,
+          entity_id: $("entityId").value,
+          meeting_url: $("url").value.trim(),
+          bot_name: $("botName").value,
+          consent_captured: $("consent").checked,
+          recording_enabled: $("recordFile").checked,
+        };
+        const m = await api("/v1/meetings", {
+          method: "POST",
+          headers: { "Idempotency-Key": crypto.randomUUID() },
+          body: JSON.stringify(body),
+        });
+        meetingId = m.id;
+        $("stop").disabled = false;
+        setStatus(m);
+        $("log").textContent = "Bot requested. Admit Worktual Notetaker in Meet.";
+        $("log").dataset.empty = "1";
+        openLive(meetingId);
+        clearInterval(pollTimer);
+        pollTimer = setInterval(pollOnce, 2500);
+      } catch (e) {
+        $("statusPill").textContent = "error";
+        $("statusPill").className = "pill failed";
+        const detail = e.body && e.body.detail;
+        if (e.status === 429) {
+          const resumed = await resumeInflight().catch(() => false);
+          $("errorLine").textContent = resumed
+            ? " · A notetaker is already running. Click Stop bot, then Send again."
+            : " · " + JSON.stringify(e.body || e);
+        } else {
+          $("errorLine").textContent = " · " + JSON.stringify(e.body || e);
+        }
+      } finally {
+        $("start").disabled = false;
+      }
+    };
+
+    $("stop").onclick = async () => {
+      if (!meetingId) return;
+      try {
+        const m = await api("/v1/meetings/" + meetingId, { method: "DELETE" });
+        setStatus(m);
+      } catch (e) {
+        $("errorLine").textContent = " · stop failed";
+      }
+    };
+
+    (async () => {
+      try {
+        const z = await fetch("/healthz").then((r) => r.json());
+        const r = await fetch("/readyz").then((r) => r.json());
+        $("health").textContent = "healthz " + z.status + " · readyz " + JSON.stringify(r.checks);
+        $("readyLine").textContent = r.status === "ok"
+          ? "ready"
+          : "degraded (Vexa must be up for a live bot; Whisper via adapter)";
+        const t = await api("/ui/token", { method: "POST" });
+        token = t.token;
+        await resumeInflight();
+      } catch (e) {
+        $("readyLine").textContent = "API not reachable";
+      }
+    })();
+  </script>
+</body>
+</html>

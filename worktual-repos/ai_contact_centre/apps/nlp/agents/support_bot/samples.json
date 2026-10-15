@@ -1,0 +1,42 @@
+{
+  "conversations": [
+    {
+      "id": "support-business-hours",
+      "title": "Customer asks business hours",
+      "turns": [
+        { "role": "user", "content": "What are your support hours?" },
+        {
+          "role": "assistant",
+          "content": "We're available Monday to Friday, 9:00 AM to 6:00 PM IST.",
+          "tools": ["get_organization_knowledge"]
+        }
+      ]
+    },
+    {
+      "id": "support-live-agent",
+      "title": "Customer asks for a live agent",
+      "turns": [
+        { "role": "user", "content": "I want to speak to a human" },
+        {
+          "role": "assistant",
+          "content": "I can connect you with a live agent now.",
+          "tools": ["recommend_live_agent_handoff"]
+        }
+      ]
+    },
+    {
+      "id": "support-omni-phone-match",
+      "title": "Webchat customer gives WhatsApp number and bot recalls name and city",
+      "turns": [
+        {
+          "role": "user",
+          "content": "My mobile number is 919150911820. What's my name, and which city am I in?"
+        },
+        {
+          "role": "assistant",
+          "content": "You're Priya Raman, and you're in Chennai. I also have you at Ziffo Tech from your earlier WhatsApp chat."
+        }
+      ]
+    }
+  ]
+}

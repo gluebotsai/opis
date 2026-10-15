@@ -1,0 +1,60 @@
+{
+  "turn_id": "751ed9ef",
+  "timestamp": "2026-10-09T06:30:24.056020+00:00",
+  "question": "what is the average handle time for bharathi",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1016,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Average handle time for Bharathi</strong></p>\n<p>The average handle time for Bharathi for all time is <strong>10.83 minutes</strong>.</p>\n<p>Would you like to see how this compares to the team average?</p>",
+  "card": "card: kpi r1",
+  "facts": "result_id: r1\nwindow: all time\nkpi: avg_handle_time\ncertified: true\nunit: minutes\ntask_goal: Calculate the average handle time for agent Bharathi.\nanswer_type: number\nrow_count: 1\nrow 1: avg_handle_time=10.83",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1016,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "what is the average handle time for bharathi",
+    "plan": {
+      "kind": "plan",
+      "understanding": "Find the average handle time for the agent Bharathi.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Calculate the average handle time for agent Bharathi.",
+          "time": "all time",
+          "scope": "agent",
+          "slice": [],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "avg_handle_time",
+        "row_count": 1
+      }
+    ],
+    "facts": "result_id: r1\nwindow: all time\nkpi: avg_handle_time\ncertified: true\nunit: minutes\ntask_goal: Calculate the average handle time for agent Bharathi.\nanswer_type: number\nrow_count: 1\nrow 1: avg_handle_time=10.83",
+    "grounded": true,
+    "card": "card: kpi r1"
+  },
+  "error": null
+}

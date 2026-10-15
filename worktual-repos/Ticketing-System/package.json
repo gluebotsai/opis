@@ -1,0 +1,44 @@
+{
+  "name": "worktual",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "workspaces": [
+    "ui-frontend",
+    "ui-backend"
+  ],
+  "scripts": {
+    "dev": "tsx ui-backend/server.ts",
+    "dev:frontend": "npm run dev --workspace=ui-frontend",
+    "dev:backend": "DOTENV_CONFIG_PATH=.env TICKETING_API_ONLY=1 PORT=3001 tsx ui-backend/server.ts",
+    "dev:api": "npm run dev:backend",
+    "dev:agents": "cd ai-agents && .venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8012 --reload",
+    "dev:mcp": "cd ai-agents && .venv/bin/uvicorn app.mcp_main:app --host 127.0.0.1 --port 8020 --reload",
+    "dev:ai": "cd ai-agents && (.venv/bin/uvicorn app.mcp_main:app --host 127.0.0.1 --port 8020 --reload & exec .venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8012 --reload)",
+    "dev:a2a": "cd ai-agents && .venv/bin/uvicorn app.a2a_main:app --host 0.0.0.0 --port 8021 --reload",
+    "dev:stack": "npm run dev:api & npm run dev:mcp & npm run dev:agents & npm run dev:a2a & npm run dev:frontend",
+    "docker:up": "docker compose up -d --build",
+    "docker:ps": "docker compose ps",
+    "build": "npm run build --workspace=ui-frontend && npm run build --workspace=ui-backend",
+    "start": "NODE_ENV=production node ui-backend/dist/server.cjs",
+    "clean": "rm -rf ui-frontend/dist ui-backend/dist",
+    "lint": "npm run lint --workspace=ui-frontend && npm run lint --workspace=ui-backend",
+    "test:smoke": "node scripts/smoke-test.mjs",
+    "test:agents": "cd ai-agents && .venv/bin/python -m pytest tests/ -q",
+    "test:layers": "cd ai-agents && .venv/bin/python -m pytest tests/test_layer1_workflow_manager.py tests/test_layer2_auth_boundary.py tests/test_layer4_regression_transcripts.py tests/test_layer5_contracts.py tests/test_layer6_security.py tests/test_rbac_live_scope.py -q",
+    "test:integration": "cd ai-agents && RUN_INTEGRATION=1 .venv/bin/python -m pytest -m integration tests/test_layer3_e2e_chat.py -q",
+    "test:e2e": "node scripts/product-e2e.mjs",
+    "test:filters": "node scripts/module-filter-scenarios.mjs",
+    "test:modules": "node scripts/full-module-test.mjs",
+    "test:chat": "node scripts/module-chat-smoke.mjs",
+    "test:scenarios": "node scripts/scenario-e2e.mjs",
+    "test:all": "npm run lint && npm run test:agents && npm run test:filters && npm run test:smoke && npm run test:e2e && npm run test:modules && npm run test:chat && npm run test:scenarios",
+    "test:strict": "node scripts/strict-module-bug-hunt.mjs",
+    "test:strict:dual": "node scripts/strict-dual-assign.mjs",
+    "test:strict:all": "npm run test:strict && node scripts/strict-flow-bug-hunt.mjs && node scripts/strict-loophole-hunt.mjs && npm run test:strict:dual"
+  },
+  "devDependencies": {
+    "tsx": "^4.21.0",
+    "typescript": "~5.8.2"
+  }
+}

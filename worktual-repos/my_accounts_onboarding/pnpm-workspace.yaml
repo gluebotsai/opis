@@ -1,0 +1,11 @@
+packages:
+  - .
+
+allowBuilds:
+  bcrypt: true
+  core-js: true
+  esbuild: true
+  msgpackr-extract: true
+
+# Avoid blocking `pnpm dev` when pnpm re-checks installs (pnpm 11).
+verifyDepsBeforeRun: false

@@ -1,0 +1,79 @@
+# Allowlisted mart-to-mart joins for future SQL agent (same product, org-safe).
+version: 1
+
+joins:
+  ticketing:
+    - from: mart_tickets
+      to: mart_users
+      keys: [{ left: assignee_id, right: user_id }, { left: organization_id, right: organization_id }]
+      cardinality: many_to_one
+      purpose: Ticket assignee role and name
+
+    - from: mart_tickets
+      to: mart_agent_queues
+      keys: [{ left: queue_id, right: queue_id }, { left: organization_id, right: organization_id }]
+      cardinality: many_to_one
+      purpose: Queue type and SLA status
+
+    - from: mart_ticket_notes
+      to: mart_tickets
+      keys: [{ left: ticket_id, right: ticket_id }, { left: organization_id, right: organization_id }]
+      cardinality: many_to_one
+      purpose: Notes on tickets
+
+  crm:
+    - from: mart_deals
+      to: mart_contacts
+      keys: [{ left: contact_id, right: contact_id }, { left: organization_id, right: organization_id }]
+      cardinality: many_to_one
+      purpose: Deal primary contact
+
+    - from: mart_deals
+      to: mart_companies
+      keys: [{ left: company_id, right: company_id }, { left: organization_id, right: organization_id }]
+      cardinality: many_to_one
+      purpose: Deal account company
+
+    - from: mart_orders
+      to: mart_contacts
+      keys: [{ left: contact_id, right: contact_id }, { left: organization_id, right: organization_id }]
+      cardinality: many_to_one
+      purpose: Order buyer contact
+
+    - from: mart_contact_campaign_engagement
+      to: mart_contacts
+      keys: [{ left: contact_id, right: contact_id }, { left: organization_id, right: organization_id }]
+      cardinality: one_to_one
+      purpose: Campaign engagement on contact (sql_agent_only)
+
+  ccaas:
+    - from: mart_conversations
+      to: mart_setup_ccaas_queues
+      keys: [{ left: queue_id, right: queue_id }, { left: organization_id, right: organization_id }]
+      cardinality: many_to_one
+      purpose: Queue name on conversation
+
+    - from: mart_conversations
+      to: mart_agents
+      keys: [{ left: assigned_agent_id, right: agent_id }, { left: organization_id, right: organization_id }]
+      cardinality: many_to_one
+      purpose: Assigned agent display name
+
+    - from: mart_conversation_assignments
+      to: mart_conversations
+      keys: [{ left: conversation_id, right: conversation_id }, { left: organization_id, right: organization_id }]
+      cardinality: many_to_one
+      purpose: Assignment to conversation header
+
+    - from: mart_conversation_sla_state
+      to: mart_conversations
+      keys: [{ left: conversation_id, right: conversation_id }, { left: organization_id, right: organization_id }]
+      cardinality: many_to_one
+      purpose: SLA state on conversation
+
+  campaign:
+    - from: mart_campaign_touch_performance
+      to: mart_campaign_overview
+      keys: [{ left: campaign_id, right: campaign_id }]
+      cardinality: many_to_one
+      purpose: Touch metrics to campaign overview; filter org via campaign__organization_id

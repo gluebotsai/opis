@@ -1,0 +1,87 @@
+{
+  "question": "how much is our renewval book",
+  "answer": "The total renewal book is 0.00, with 2 expiring contracts.",
+  "trace": {
+    "question": "how much is our renewval book",
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1015,
+      "role": "admin"
+    },
+    "model": "worktual-gemma",
+    "tasks": [
+      {
+        "status": "ok",
+        "store": "sql",
+        "sql": "WITH rpt_contracts AS (\nSELECT src.id, src.organization_id, src.title, src.company_id, src.company_name, src.deal_id, src.starts_at, src.ends_at, src.arr, src.billing_frequency, src.auto_renew, src.status, src.renew_deal_id, src.created_at FROM (\nSELECT \n  ct.id,\n  ct.organization_id,\n  ct.title,\n  ct.company_id,\n  c.name AS company_name,\n  ct.deal_id,\n  ct.starts_at,\n  ct.ends_at,\n  COALESCE(ct.arr, 0) AS arr,\n  ct.billing_frequency,\n  ct.auto_renew,\n  ct.status,\n  ct.renew_deal_id,\n  ct.created_at\nFROM crm.contracts ct\nLEFT JOIN crm.companies c ON c.id = ct.company_id AND c.organization_id = ct.organization_id\nWHERE ct.organization_id = %(_org_id)s\n) src WHERE TRUE\n)\nSELECT CAST(COUNT(*) AS BIGINT) AS expiring_contracts, CAST(COALESCE(SUM(arr), 0) AS DECIMAL(15, 2)) AS expiring_arr, CAST(COUNT(*) FILTER(WHERE renew_deal_id IS NOT NULL) AS BIGINT) AS renewed_deals_count FROM rpt_contracts AS contracts WHERE status = 'active' AND TRUE AND TRUE AND TRUE LIMIT 500",
+        "views": [
+          "contracts"
+        ],
+        "guard_notes": [
+          "row cap 500 applied"
+        ],
+        "bound_params": {
+          "_org_id": 1003,
+          "_user_id": 1015,
+          "user_id": 1015,
+          "organization_id": 1003,
+          "org_id": 1003,
+          "tenant_id": 1003,
+          "current_user_id": 1015
+        },
+        "rows": [
+          {
+            "expiring_contracts": 2,
+            "expiring_arr": "0.00",
+            "renewed_deals_count": 0
+          }
+        ],
+        "kpi_id": "renewal_book",
+        "time_status": "all_time",
+        "attempts": [
+          {
+            "raw": "{\"tool\":\"run_kpi\",\"kpi_id\":\"renewal_book\",\"dimension\":null}",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "renewal_book"
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "tool": "run_kpi",
+        "requested_kpi": "renewal_book",
+        "requested_dimension": null,
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "renewal_book",
+          "goal": "Calculate the total renewal book amount",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "kpi",
+          "depends_on": []
+        }
+      }
+    ],
+    "domain_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"quick\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"renewal_book\",\n      \"goal\": \"Calculate the total renewal book amount\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"answer_type\": \"kpi\",\n      \"depends_on\": []\n    }\n  ]\n}\n```",
+    "plan": {
+      "kind": "plan",
+      "depth": "quick",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "renewal_book",
+          "goal": "Calculate the total renewal book amount",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "kpi",
+          "depends_on": []
+        }
+      ]
+    },
+    "facts": "time_requested: all time\nperiod_applied: overall (no date filter, UTC)\ntime_status: all_time\ncatalog_kpi: renewal_book\nRESULT: 1 row(s)\ntask_goal: Calculate the total renewal book amount\n  expiring_contracts=2 | expiring_arr=0.00 | renewed_deals_count=0",
+    "grounded": true,
+    "briefing_raw": "The total renewal book is 0.00, with 2 expiring contracts."
+  }
+}

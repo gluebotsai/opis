@@ -1,0 +1,210 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --color-canvas: #f3f4f6;
+  --color-sidebar: #111111;
+  --color-border-app: #e5e5e5;
+  /* Secondary copy: readable on white cards (meta, descriptions, placeholders). */
+  --color-neutral-400: #5c5c5c;
+  --color-neutral-500: #404040;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: #f3f4f6;
+  color: #171717;
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #d4d4d4;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #a3a3a3;
+}
+
+/* Menu lists: hide the bar until the user actually scrolls. */
+.menu-select-list {
+  scrollbar-width: none;
+}
+.menu-select-list::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+.menu-select-list.menu-select-list--scrolling {
+  scrollbar-width: thin;
+}
+.menu-select-list.menu-select-list--scrolling::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: #a3a3a3 !important;
+  box-shadow: 0 0 0 2px rgba(163, 163, 163, 0.25);
+}
+
+/* Native select chevron inset from the right edge (Worktual dropdowns). */
+select:not([multiple]):not(.appearance-none) {
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23a3a3a3' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 14px 14px;
+  padding-right: 2.25rem;
+}
+select:not([multiple]):not(.appearance-none)::-ms-expand {
+  display: none;
+}
+
+@keyframes order-card-next {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes order-card-prev {
+  from {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+.order-card-enter-next {
+  animation: order-card-next 280ms ease-out;
+}
+.order-card-enter-prev {
+  animation: order-card-prev 280ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .order-card-enter-next,
+  .order-card-enter-prev {
+    animation: none;
+  }
+}
+
+@keyframes coworkerThink {
+  0%,
+  80%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(0);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+
+.coworker-html {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.coworker-html .coworker-data-table {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  line-height: 1.35;
+  text-align: left;
+  border: 0.6px solid rgb(191 191 191 / 0.6);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.coworker-html .coworker-data-table thead tr {
+  border-bottom: 1px solid #e5e5e5;
+  background: #fafafa;
+}
+
+.coworker-html .coworker-data-table th {
+  padding: 8px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #737373;
+  white-space: nowrap;
+}
+
+.coworker-html .coworker-data-table td {
+  padding: 8px 10px;
+  color: #404040;
+  border-bottom: 1px solid #e5e5e5;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.coworker-html .coworker-data-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+/* Portal chat already frames the bubble — one outer edge, room around the grid. */
+.portal-assistant-bubble .coworker-html .coworker-data-table {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.coworker-html p {
+  margin: 0;
+}
+
+.coworker-html p + p {
+  margin-top: 0.5em;
+}
+
+.coworker-html ul,
+.coworker-html ol {
+  margin: 0.4em 0 0;
+  padding-left: 1.15rem;
+}
+
+.coworker-html li {
+  margin: 0.2em 0;
+}
+
+.coworker-html strong {
+  font-weight: 600;
+}
+
+.coworker-html h2,
+.coworker-html h3 {
+  margin: 0.4em 0 0.2em;
+  font-size: inherit;
+  font-weight: 600;
+}
+
+.coworker-html em {
+  color: #737373;
+  font-size: 12px;
+}

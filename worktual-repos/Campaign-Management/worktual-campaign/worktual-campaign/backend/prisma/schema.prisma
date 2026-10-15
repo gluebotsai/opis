@@ -1,0 +1,808 @@
+// Campaign MS models live in campaign_db (DATABASE_URL / CAMPAIGN_DATABASE_URL).
+// worktual_bigint: ids / organization_id / user refs are bigint (autoincrement sequences).
+// Account + CDP (ACCOUNT_DATABASE_URL): users/contacts via pg pool, not Prisma.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Branch {
+  id            BigInt                 @id @default(autoincrement())
+  organizationId      BigInt                 @map("organization_id")
+  name          String
+  isDefault     Boolean                @default(false) @map("is_default")
+  createdAt     DateTime               @default(now()) @map("created_at")
+  updatedAt     DateTime               @updatedAt @map("updated_at")
+  agentSessions CampaignAgentSession[]
+  campaigns     Campaign[]
+  products      OrganizationProduct[]
+
+  @@index([organizationId])
+  @@index([organizationId, isDefault])
+  @@map("branches")
+}
+
+model OrganizationProduct {
+  id          BigInt        @id @default(autoincrement())
+  organizationId    BigInt        @map("organization_id")
+  branchId    BigInt        @map("branch_id")
+  productCode ProductCode   @map("product_code")
+  status      ProductStatus @default(active)
+  startsAt    DateTime?     @map("starts_at")
+  endsAt      DateTime?     @map("ends_at")
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+  branch      Branch        @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, branchId, productCode])
+  @@index([organizationId, branchId])
+  @@index([organizationId, productCode, status])
+  @@map("organization_products")
+}
+
+model Campaign {
+  id              BigInt              @id @default(autoincrement())
+  organizationId        BigInt              @map("organization_id")
+  branchId        BigInt              @map("branch_id")
+  name            String
+  description     String?
+  status          CampaignStatus      @default(draft)
+  startsAt        DateTime?           @map("starts_at")
+  endsAt          DateTime?           @map("ends_at")
+  sourceChannel   SourceChannel       @default(standalone_campaign) @map("source_channel")
+  createdByUserId BigInt              @map("created_by_user_id")
+  createdAt       DateTime            @default(now()) @map("created_at")
+  updatedAt       DateTime            @updatedAt @map("updated_at")
+  goal            String?
+  objective       String?
+  /// Create-campaign agent session this campaign was saved from.
+  sessionId       BigInt?             @unique @map("session_id")
+  audienceSummary String?             @map("audience_summary")
+  audienceFilters Json?               @map("audience_filters")
+  audienceCount   Int                 @default(0) @map("audience_count")
+  /// Launch plan (schedule, channels, email A/B, channel_run).
+  launchPlan      Json?               @map("launch_plan")
+  /// Local calendar date for launch in `timezone` (YYYY-MM-DD).
+  launchLocalDate String?             @map("launch_local_date")
+  /// Local clock time for launch in `timezone` (HH:mm).
+  launchLocalTime String?             @map("launch_local_time")
+  /// IANA timezone used for launch scheduling (default Asia/Kolkata / IST).
+  timezone        String?             @default("Asia/Kolkata") @map("timezone")
+  audience        CampaignAudience[]
+  channels        CampaignChannel[]
+  sendBatches     CampaignSendBatch[]
+  branch          Branch              @relation(fields: [branchId], references: [id])
+
+  @@index([organizationId, branchId])
+  @@index([organizationId, branchId, status])
+  @@index([organizationId, branchId, startsAt])
+  @@map("campaigns")
+}
+
+/// One row per channel for a stored campaign (email, sms, whatsapp, push, web, …).
+model CampaignChannel {
+  id              BigInt   @id @default(autoincrement())
+  campaignId      BigInt   @map("campaign_id")
+  organizationId        BigInt   @map("organization_id")
+  channel         String
+  templateId      BigInt?  @map("template_id")
+  howItWorks      String?  @map("how_it_works")
+  plannedLaunchAt String?  @map("planned_launch_at")
+  status          String   @default("ready")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  campaign        Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, channel])
+  @@index([organizationId])
+  @@index([templateId])
+  @@map("campaign_channels")
+}
+
+/// Frozen contact UUID refs at template-save time (cdp.customer_profile.cdp_id).
+model CampaignAudience {
+  campaignId BigInt   @map("campaign_id")
+  contactId  BigInt   @map("contact_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@id([campaignId, contactId])
+  @@index([contactId])
+  @@map("campaign_audience")
+}
+
+/// Create-campaign agent chat draft. Payload holds messages/templates/channel plans.
+/// Audience people are contact UUID refs only (my_account_qa), never full contact rows.
+model CampaignAgentSession {
+  id               BigInt                    @id @default(autoincrement())
+  organizationId         BigInt                    @map("organization_id")
+  branchId         BigInt                    @map("branch_id")
+  createdByUserId  BigInt                    @map("created_by_user_id")
+  module           String                    @default("create_campaign")
+  stage            String                    @default("intake")
+  payload          Json
+  createdAt        DateTime                  @default(now()) @map("created_at")
+  updatedAt        DateTime                  @updatedAt @map("updated_at")
+  branch           Branch                    @relation(fields: [branchId], references: [id])
+  audienceRefs     CampaignAudienceRef[]
+  channelTemplates CampaignChannelTemplate[]
+  tempContacts     CampaignSessionTempContact[]
+
+  @@index([organizationId, branchId])
+  @@index([organizationId, createdByUserId])
+  @@map("campaign_agent_sessions")
+}
+
+model CampaignAudienceRef {
+  sessionId BigInt               @map("session_id")
+  contactId BigInt               @map("contact_id")
+  session   CampaignAgentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@id([sessionId, contactId])
+  @@index([contactId])
+  @@map("campaign_audience_refs")
+}
+
+/// Temporary contacts uploaded for one create-campaign session only (not CRM).
+model CampaignSessionTempContact {
+  id             BigInt               @id @default(autoincrement())
+  sessionId      BigInt               @map("session_id")
+  organizationId BigInt               @map("organization_id")
+  firstName      String               @default("") @map("first_name")
+  lastName       String               @default("") @map("last_name")
+  email          String               @default("")
+  phone          String               @default("")
+  companyName    String               @default("") @map("company_name")
+  city           String               @default("")
+  /// Original row / extra columns
+  raw            Json                 @default("{}")
+  createdAt      DateTime             @default(now()) @map("created_at")
+  session        CampaignAgentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@index([organizationId, sessionId])
+  @@map("campaign_session_temp_contacts")
+}
+
+/// Channel template keyed by template_id. Fields are structured key/value for FE shells.
+model CampaignChannelTemplate {
+  id                BigInt                    @id @default(autoincrement())
+  sessionId         BigInt                    @map("session_id")
+  organizationId          BigInt                    @map("organization_id")
+  branchId          BigInt                    @map("branch_id")
+  channel           String
+  logo              String?
+  launchAt          String?                   @map("launch_at")
+  howItWorks        String?                   @map("how_it_works")
+  fields            Json
+  generationBatchId BigInt?                   @map("generation_batch_id")
+  createdAt         DateTime                  @default(now()) @map("created_at")
+  updatedAt         DateTime                  @updatedAt @map("updated_at")
+  session           CampaignAgentSession      @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  messages          CampaignTemplateMessage[]
+
+  @@index([sessionId, createdAt])
+  @@index([organizationId, branchId])
+  @@map("campaign_channel_templates")
+}
+
+/// Edit-space chat for one template. Ordered by seq; kind is text | template.
+model CampaignTemplateMessage {
+  id         BigInt                  @id @default(autoincrement())
+  templateId BigInt                  @map("template_id")
+  role       String
+  seq        Int
+  kind       String
+  payload    Json
+  createdAt  DateTime                @default(now()) @map("created_at")
+  template   CampaignChannelTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@unique([templateId, seq])
+  @@index([templateId, seq])
+  @@map("campaign_template_messages")
+}
+
+model ChannelSendingProfile {
+  id        BigInt              @id @default(autoincrement())
+  organizationId  BigInt              @map("organization_id")
+  channel   String
+  status    ChannelConfigStatus @default(not_started)
+  checklist Json?
+  createdAt DateTime            @default(now()) @map("created_at")
+  updatedAt DateTime            @updatedAt @map("updated_at")
+
+  @@unique([organizationId, channel])
+  @@index([organizationId])
+  @@map("channel_sending_profiles")
+}
+
+/// Per-organization integration keys (app push register API — no user JWT).
+model OrganizationApiKey {
+  id             BigInt    @id @default(autoincrement())
+  organizationId BigInt    @map("organization_id")
+  purpose        String    @default("app_push")
+  keyHash        String    @unique @map("key_hash")
+  keyPrefix      String    @map("key_prefix")
+  active         Boolean   @default(true)
+  createdAt      DateTime  @default(now()) @map("created_at")
+  lastUsedAt     DateTime? @map("last_used_at")
+
+  @@unique([organizationId, purpose])
+  @@index([organizationId])
+  @@map("organization_api_keys")
+}
+
+/// Web push / app push provider credentials collected in Configuration.
+model PushChannelSettings {
+  id        BigInt   @id @default(autoincrement())
+  organizationId  BigInt   @map("organization_id")
+  /// Config UI id: web_push | app_push
+  channel   String
+  /// Field bag (VAPID / FCM / APNs). Secrets stored server-side.
+  settings  Json     @default("{}")
+  status    String   @default("not_started")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([organizationId, channel])
+  @@index([organizationId])
+  @@map("push_channel_settings")
+}
+
+model EmailOrgProfile {
+  id        BigInt   @id @default(autoincrement())
+  organizationId  BigInt   @unique @map("organization_id")
+  legalName String   @map("legal_name")
+  street    String
+  city      String
+  country   String
+  phone     String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("email_org_profiles")
+}
+
+model EmailSender {
+  id              BigInt    @id @default(autoincrement())
+  organizationId        BigInt    @map("organization_id")
+  displayName     String    @map("display_name")
+  fromEmail       String    @map("from_email")
+  replyTo         String?   @map("reply_to")
+  status          String    @default("pending_verification")
+  verifyToken     String?   @map("verify_token")
+  verifyExpiresAt DateTime? @map("verify_expires_at")
+  verifiedAt      DateTime? @map("verified_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  /// Active From used by the campaign email send worker (one per tenant).
+  isActive        Boolean   @default(false) @map("is_active")
+
+  @@unique([organizationId, fromEmail])
+  @@index([organizationId])
+  @@index([organizationId, isActive])
+  @@map("email_senders")
+}
+
+model EmailDomain {
+  id                      BigInt   @id @default(autoincrement())
+  organizationId                BigInt   @map("organization_id")
+  domain                  String
+  spfOk                   Boolean  @default(false) @map("spf_ok")
+  dkimOk                  Boolean  @default(false) @map("dkim_ok")
+  dmarcOk                 Boolean  @default(false) @map("dmarc_ok")
+  status                  String   @default("not_started")
+  createdAt               DateTime @default(now()) @map("created_at")
+  updatedAt               DateTime @updatedAt @map("updated_at")
+  /// Optional ops domain id (unused for send; mailbox From is My Accounts).
+  providerDomainId        String?  @map("provider_domain_id")
+  /// DNS records for operator paste (platform DKIM / SPF / DMARC).
+  dnsRecords              Json?    @map("dns_records")
+  /// OpenDKIM / platform selector (e.g. campaign).
+  dkimSelector            String?  @map("dkim_selector")
+  /// Public key material for DNS p= (base64, no PEM).
+  dkimPublicKey           String?  @map("dkim_public_key")
+  /// AES-GCM encrypted PEM private key — never returned to FE.
+  dkimPrivateKeyEncrypted String?  @map("dkim_private_key_encrypted")
+
+  @@unique([organizationId, domain])
+  @@index([organizationId])
+  @@map("email_domains")
+}
+
+model EmailReturnPath {
+  id        BigInt   @id @default(autoincrement())
+  organizationId  BigInt   @unique @map("organization_id")
+  domain    String
+  status    String   @default("not_started")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("email_return_paths")
+}
+
+model EmailSendingCaps {
+  id           BigInt   @id @default(autoincrement())
+  organizationId     BigInt   @unique @map("organization_id")
+  batchSize    Int      @default(200) @map("batch_size")
+  hourlyCap    Int      @default(500) @map("hourly_cap")
+  dailyCap     Int      @default(1000) @map("daily_cap")
+  warmupStage  Int      @default(0) @map("warmup_stage")
+  healthStatus String   @default("healthy") @map("health_status")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  /// Rolling counters for auto-pause: { sent, hardBounce, complaint, windowStart }
+  healthStats  Json?    @map("health_stats")
+
+  @@map("email_sending_caps")
+}
+
+/// Durable suppression for campaign email (unsub / hard bounce / complaint).
+model EmailSuppression {
+  id        BigInt   @id @default(autoincrement())
+  organizationId  BigInt   @map("organization_id")
+  email     String
+  reason    String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([organizationId, email])
+  @@index([organizationId])
+  @@map("email_suppressions")
+}
+
+/// Batched send slices for a campaign channel run (email | push | web).
+model CampaignSendBatch {
+  id           BigInt                  @id @default(autoincrement())
+  organizationId     BigInt                  @map("organization_id")
+  campaignId   BigInt                  @map("campaign_id")
+  seq          Int
+  scheduledFor DateTime                @map("scheduled_for")
+  status       String                  @default("queued")
+  size         Int                     @default(0)
+  createdAt    DateTime                @default(now()) @map("created_at")
+  updatedAt    DateTime                @updatedAt @map("updated_at")
+  /// Agent-canonical channel: email | push | web | …
+  channel      String                  @default("email")
+  campaign     Campaign                @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  recipients   CampaignSendRecipient[]
+
+  @@unique([campaignId, channel, seq])
+  @@index([organizationId, status, scheduledFor])
+  @@index([organizationId, channel, status, scheduledFor], map: "csb_org_id_channel_status_sched_for_idx")
+  @@map("campaign_send_batches")
+}
+
+model CampaignSendRecipient {
+  id                BigInt            @id @default(autoincrement())
+  organizationId          BigInt            @map("organization_id")
+  batchId           BigInt            @map("batch_id")
+  campaignId        BigInt            @map("campaign_id")
+  contactId         BigInt?           @map("contact_id")
+  /// Email address when channel=email; optional otherwise.
+  email             String?
+  status            String            @default("pending")
+  skipFailReason    String?           @map("skip_fail_reason")
+  providerMessageId String?           @map("provider_message_id")
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+  attemptCount      Int               @default(0) @map("attempt_count")
+  /// Push token / web-push endpoint URL (or stub://… in demo mode).
+  destination       String?
+  platform          String?
+  /// Email A/B: a | b | holdout | winner
+  abVariant         String?           @map("ab_variant")
+  openedAt          DateTime?         @map("opened_at")
+  clickedAt         DateTime?         @map("clicked_at")
+  /// Total open pixel hits (includes re-opens).
+  openCount         Int               @default(0) @map("open_count")
+  /// Total tracked link clicks (includes re-clicks).
+  clickCount        Int               @default(0) @map("click_count")
+  batch             CampaignSendBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+  @@index([batchId, status])
+  @@index([campaignId, status])
+  @@index([campaignId, abVariant])
+  @@index([organizationId, email])
+  @@map("campaign_send_recipients")
+}
+
+/// Device tokens (app push) and browser subscriptions (web push), keyed by contact.
+model PushEndpoint {
+  id        BigInt   @id @default(autoincrement())
+  organizationId  BigInt   @map("organization_id")
+  contactId BigInt?  @map("contact_id")
+  /// Agent-canonical: push | web
+  channel   String
+  platform  String?
+  endpoint  String
+  authKeys  Json?    @map("auth_keys")
+  label     String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([organizationId, channel, endpoint])
+  @@index([organizationId, contactId, channel])
+  @@index([organizationId, channel, active])
+  @@map("push_endpoints")
+}
+
+/// Visitor-site people (page open + web-push opt-in). Not CDP / Audience contacts.
+/// contactId stays null until a later explicit promote into cdp.customer_profile.
+model WebsiteContact {
+  id           BigInt    @id @default(autoincrement())
+  organizationId     BigInt    @map("organization_id")
+  visitorId    String    @map("visitor_id")
+  contactId    BigInt?   @map("contact_id")
+  email        String?
+  phone        String?
+  firstName    String?   @map("first_name")
+  lastName     String?   @map("last_name")
+  origin       String    @default("")
+  path         String?
+  userAgent    String?   @map("user_agent")
+  subscribed   Boolean   @default(false)
+  endpoint     String?
+  authKeys     Json?     @map("auth_keys")
+  platform     String?
+  visitCount   Int       @default(1) @map("visit_count")
+  firstSeenAt  DateTime  @default(now()) @map("first_seen_at")
+  lastSeenAt   DateTime  @default(now()) @map("last_seen_at")
+  subscribedAt DateTime? @map("subscribed_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  @@unique([organizationId, visitorId])
+  @@index([organizationId])
+  @@index([organizationId, contactId])
+  @@index([organizationId, email])
+  @@index([organizationId, subscribed])
+  @@map("website_contacts")
+}
+
+/// Campaign-only engagement for a shared account contact (contact_id is a ref).
+model CampaignContactEngagement {
+  id                     BigInt    @id @default(autoincrement())
+  organizationId               BigInt    @map("organization_id")
+  contactId              BigInt    @map("contact_id")
+  emailUnsubscribed      Boolean   @default(false) @map("email_unsubscribed")
+  emailUnsubscribedAt    DateTime? @map("email_unsubscribed_at")
+  emailUnsubscribeReason String?   @map("email_unsubscribe_reason")
+  lastEmailOpenedAt      DateTime? @map("last_email_opened_at")
+  lastEmailClickedAt     DateTime? @map("last_email_clicked_at")
+  emailOpenCount         Int       @default(0) @map("email_open_count")
+  emailClickCount        Int       @default(0) @map("email_click_count")
+  createdAt              DateTime  @default(now()) @map("created_at")
+  updatedAt              DateTime  @updatedAt @map("updated_at")
+
+  @@unique([organizationId, contactId])
+  @@index([organizationId])
+  @@index([organizationId, emailUnsubscribed])
+  @@map("campaign_contact_engagement")
+}
+
+model RegulatedChannelTemplate {
+  id                  BigInt                  @id @default(autoincrement())
+  organizationId            BigInt                  @map("organization_id")
+  /// sms | whatsapp
+  channel             String
+  name                String
+  /// DLT ID (SMS) or Meta template name (WhatsApp)
+  externalId          String                  @default("") @map("external_id")
+  /// Meta Graph template id (WhatsApp)
+  providerTemplateId  String?                 @map("provider_template_id")
+  language            String                  @default("en")
+  category            String                  @default("")
+  header              String                  @default("")
+  body                String
+  footer              String                  @default("")
+  /// Newline-separated button labels (WhatsApp)
+  buttons             String                  @default("")
+  status              RegulatedTemplateStatus @default(draft)
+  rejectedReason      String?                 @map("rejected_reason")
+  /// Internal only — never return to FE
+  channelConfigId     BigInt?                 @map("channel_config_id")
+  submittedAt         DateTime?               @map("submitted_at")
+  lastStatusCheckedAt DateTime?               @map("last_status_checked_at")
+  createdByUserId     BigInt?                 @map("created_by_user_id")
+  createdAt           DateTime                @default(now()) @map("created_at")
+  updatedAt           DateTime                @default(now()) @updatedAt @map("updated_at")
+  /// Campaign context when template was created/submitted from a campaign
+  campaignName        String                  @default("") @map("campaign_name")
+  goal                String                  @default("")
+  objective           String                  @default("")
+  sourceCampaignId    BigInt?                 @map("source_campaign_id")
+
+  @@index([organizationId, channel, status])
+  @@index([organizationId, channel, name])
+  @@map("regulated_channel_templates")
+}
+
+/// Marketing template library (system seeds + user uploads), scoped per organization.
+model CampaignLibraryTemplate {
+  id                 BigInt   @id @default(autoincrement())
+  organizationId     BigInt   @map("organization_id")
+  /// system | user
+  source             String
+  /// Stable seed id for system rows (null for user uploads)
+  seedSlug           String?  @map("seed_slug")
+  /// Catalog version for system reseeds (e.g. b2b-v11)
+  seedCatalog        String   @default("") @map("seed_catalog")
+  name               String
+  description        String   @default("")
+  /// Style / tone / layout guidance
+  styleNotes         String   @default("") @map("style_notes")
+  goal               String   @default("")
+  primaryChannel     String   @map("primary_channel")
+  /// Channel labels shown in UI
+  channels           Json     @default("[]")
+  audience           String   @default("")
+  flowSteps          Json     @default("[]") @map("flow_steps")
+  starterMessage     String   @default("") @map("starter_message")
+  approvalStatus     String   @default("approved") @map("approval_status")
+  bodyPreview        String   @default("") @map("body_preview")
+  /// Full message / HTML / copy body
+  contentBody        String   @default("") @map("content_body")
+  previewImage       String?  @map("preview_image")
+  /// Card preview layout meta (headline, CTA, subject, …)
+  preview            Json?
+  /// Structured channel fields (same shape as session templates — gallery + previews)
+  fields             Json?
+  /// Extra free-form metadata (tags, brand, language, …)
+  metadata           Json     @default("{}")
+  usedCount          Int      @default(0) @map("used_count")
+  externalTemplateId String   @default("") @map("external_template_id")
+  createdByUserId    BigInt?  @map("created_by_user_id")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@unique([organizationId, seedSlug])
+  @@index([organizationId, primaryChannel])
+  @@index([organizationId, source])
+  @@map("campaign_library_templates")
+}
+
+/// AI-generated campaign idea for the automatic Template Gallery (per org).
+model CampaignGalleryIdea {
+  id                BigInt   @id @default(autoincrement())
+  organizationId    BigInt   @map("organization_id")
+  ideaKey           String   @map("idea_key")
+  title             String
+  summary           String   @default("")
+  industry          String   @default("")
+  industryType      String   @default("") @map("industry_type")
+  packId            String   @default("generic-b2b") @map("pack_id")
+  imageUrl          String?  @map("image_url")
+  imageMeta         Json     @default("{}") @map("image_meta")
+  generationVersion String   @default("gallery-v1") @map("generation_version")
+  status            String   @default("active")
+  sortOrder         Int      @default(0) @map("sort_order")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@unique([organizationId, ideaKey])
+  @@index([organizationId, status, sortOrder])
+  @@map("campaign_gallery_ideas")
+}
+
+/// Background bootstrap job for Template Gallery generation (per org).
+model CampaignGalleryJob {
+  id               BigInt    @id @default(autoincrement())
+  organizationId   BigInt    @map("organization_id")
+  jobType          String    @map("job_type")
+  status           String    @default("queued")
+  channelsSnapshot Json      @default("[]") @map("channels_snapshot")
+  progress         Json      @default("{}")
+  errorMessage     String?   @map("error_message")
+  startedAt        DateTime? @map("started_at")
+  finishedAt       DateTime? @map("finished_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  @@index([organizationId, status])
+  @@map("campaign_gallery_jobs")
+}
+
+/// Reusable marketing images (Image Gallery in Template module) — forward-only catalog.
+model CampaignImageGalleryAsset {
+  id                BigInt   @id @default(autoincrement())
+  organizationId    BigInt   @map("organization_id")
+  mediaId           String   @map("media_id")
+  imageUrl          String   @map("image_url")
+  shortDescription  String   @default("") @map("short_description")
+  generationPrompt  String   @default("") @map("generation_prompt")
+  /// ai_generated | uploaded | imported
+  source            String   @default("uploaded")
+  channel           String   @default("")
+  context           Json     @default("{}")
+  reuseTags         Json     @default("{}") @map("reuse_tags")
+  /// active | archived
+  status            String   @default("active")
+  createdByUserId   BigInt?  @map("created_by_user_id")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@unique([organizationId, mediaId])
+  @@index([organizationId, status, createdAt])
+  @@map("campaign_image_gallery_assets")
+}
+
+/// Per-tenant SMS / DLT sending settings (Campaign Configuration).
+model SmsChannelSettings {
+  id        BigInt   @id @default(autoincrement())
+  organizationId  BigInt   @unique @map("organization_id")
+  /// provider, api_key, sender_id, entity_id, base_url, …
+  settings  Json     @default("{}")
+  status    String   @default("not_started")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("sms_channel_settings")
+}
+
+/// Per-company (tenant) industry pack — seeded from industry_type, grows over time.
+/// `payload` holds soft contact field hints + editable company rules (not a forced ask queue).
+model TenantIndustryPack {
+  id               BigInt   @id @default(autoincrement())
+  organizationId         BigInt   @unique @map("organization_id")
+  /// generic-b2b | generic-b2c
+  packId           String   @default("generic-b2b") @map("pack_id")
+  /// Snapshot of accounts.organizations.industry_type used for initial seed
+  seedIndustryType String   @default("") @map("seed_industry_type")
+  /// { version, mode, fields[], rules[] }
+  payload          Json     @default("{}")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@map("tenant_industry_packs")
+}
+
+/// Tenant-shared recommendation board (Campaign SPA + CRM embed).
+/// Full card JSON in `payload`; `publicId` is the frontend `rec-…` id.
+model CampaignRecommendation {
+  id              BigInt   @id @default(autoincrement())
+  organizationId        BigInt   @map("organization_id")
+  branchId        BigInt   @map("branch_id")
+  createdByUserId BigInt   @map("created_by_user_id")
+  publicId        String   @map("public_id")
+  status          String
+  title           String   @default("")
+  payload         Json     @default("{}")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@unique([organizationId, publicId])
+  @@index([organizationId, status, updatedAt(sort: Desc)])
+  @@map("campaign_recommendations")
+}
+
+/// In-app bell notifications (campaign activity, approvals, etc.).
+model AppNotification {
+  id        BigInt    @id @default(autoincrement())
+  organizationId  BigInt    @map("organization_id")
+  /// Null = visible to all users in the tenant.
+  userId    BigInt?   @map("user_id")
+  kind      String
+  title     String
+  body      String
+  href      String?
+  sourceKey String    @map("source_key")
+  createdAt DateTime  @default(now()) @map("created_at")
+  readAt    DateTime? @map("read_at")
+
+  @@unique([organizationId, sourceKey])
+  @@index([organizationId, userId, createdAt(sort: Desc)])
+  @@index([organizationId, createdAt(sort: Desc)])
+  @@map("app_notifications")
+}
+
+/// Opportunity / events (forms, webinars, …) — tenant-scoped; payload mirrors SPA OpportunityEvent.
+model CampaignOpportunityEvent {
+  id               BigInt    @id @default(autoincrement())
+  organizationId   BigInt    @map("organization_id")
+  branchId         BigInt    @map("branch_id")
+  createdByUserId  BigInt    @map("created_by_user_id")
+  publicId         String    @map("public_id")
+  kind             String    @default("form")
+  status           String    @default("draft")
+  title            String    @default("")
+  /// Globally unique when set — public /f/:slug
+  publicSlug       String?   @unique @map("public_slug")
+  launchedAt       DateTime? @map("launched_at")
+  submissionCount  Int       @default(0) @map("submission_count")
+  openCount        Int       @default(0) @map("open_count")
+  payload          Json      @default("{}")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  @@unique([organizationId, publicId])
+  @@index([organizationId, status, updatedAt(sort: Desc)])
+  @@map("campaign_opportunity_events")
+}
+
+/// Public form replies (Events → Form).
+model CampaignFormSubmission {
+  id             BigInt   @id @default(autoincrement())
+  organizationId BigInt   @map("organization_id")
+  eventPublicId  String   @map("event_public_id")
+  formSlug       String   @map("form_slug")
+  publicReplyId  String   @unique @map("public_reply_id")
+  answers        Json     @default("{}")
+  fields         Json     @default("{}")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@index([organizationId, eventPublicId, createdAt(sort: Desc)])
+  @@index([formSlug, createdAt(sort: Desc)])
+  @@map("campaign_form_submissions")
+}
+
+/// Daily campaign report email delivery log (duplicate prevention).
+model DailyReportEmailDelivery {
+  id             BigInt   @id @default(autoincrement())
+  organizationId BigInt   @map("organization_id")
+  userId         BigInt   @map("user_id")
+  /// Reporting calendar date in the recipient timezone (YYYY-MM-DD).
+  reportDate     String   @map("report_date")
+  timezone       String   @default("Asia/Kolkata")
+  recipientEmail String   @map("recipient_email")
+  status         String   @default("sent")
+  providerId     String?  @map("provider_id")
+  errorMessage   String?  @map("error_message")
+  sentAt         DateTime @default(now()) @map("sent_at")
+
+  @@unique([organizationId, userId, reportDate])
+  @@index([organizationId, reportDate])
+  @@index([sentAt(sort: Desc)])
+  @@map("daily_report_email_deliveries")
+}
+
+enum ProductCode {
+  campaign
+  crm
+}
+
+enum ProductStatus {
+  active
+  inactive
+}
+
+enum CampaignStatus {
+  draft
+  scheduled
+  live
+  completed
+  cancelled
+}
+
+enum SourceChannel {
+  standalone_campaign
+  crm_marketing
+}
+
+/// Per-tenant channel sending readiness (email filled; other channels reserved).
+enum ChannelConfigStatus {
+  not_started
+  in_progress
+  ready
+  blocked
+}
+
+/// SMS (DLT) / WhatsApp (Meta) approval templates — tenant-scoped.
+/// WhatsApp status synced from social-service; SMS status is manual.
+/// NOTE: channelConfigId resolution uses accounts.setup_channel_configs for now;
+/// config table may be swapped later (do not expose UUID to UI).
+enum RegulatedTemplateStatus {
+  draft
+  pending
+  approved
+  rejected
+  paused
+  disabled
+}
+
+

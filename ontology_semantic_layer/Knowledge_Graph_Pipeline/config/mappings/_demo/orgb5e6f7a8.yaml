@@ -1,0 +1,17 @@
+# Sample overlay -- retail tenant. Deliberately different from orga1b2c3d4 so
+# acceptance test 6 (no cross-tenant leakage) has two distinct graph shapes.
+version: 1
+layer: tenant
+database: orgb5e6f7a8
+organization_id: "b5e6f7a8"
+industry: retail
+
+products: [crm, ticketing, ccaas]
+
+extends:
+
+  crm.contacts:
+    extra_labels: [Shopper]
+    custom_properties:
+      - {name: loyalty_tier,   type: string}
+      - {name: loyalty_points, type: integer}

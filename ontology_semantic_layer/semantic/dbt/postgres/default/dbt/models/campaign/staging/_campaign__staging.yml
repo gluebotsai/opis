@@ -1,0 +1,50 @@
+version: 2
+
+models:
+  - name: stg_campaigns
+    columns:
+      - name: campaign_id
+        tests: [unique, not_null]
+
+  - name: stg_campaign_channels
+    columns:
+      - name: campaign_channel_id
+        tests: [unique, not_null]
+
+  - name: stg_campaign_send_batches
+    columns:
+      - name: batch_id
+        tests: [unique, not_null]
+
+  - name: stg_campaign_send_recipients
+    columns:
+      - name: send_recipient_id
+        tests: [unique, not_null]
+
+  - name: stg_regulated_channel_templates
+    columns:
+      - name: template_id
+        tests: [unique, not_null]
+
+  - name: stg_campaign_contact_engagement
+    columns:
+      - name: engagement_id
+        tests: [unique, not_null]
+
+  - name: stg_email_suppressions
+    columns:
+      - name: suppression_id
+        tests: [unique, not_null]
+
+  - name: stg_customer_profile
+    columns:
+      - name: contact_id
+        tests: [unique, not_null]
+
+  - name: stg_campaign_audience
+    # composite PK on source, no surrogate id — tested at mart layer via dbt_utils.unique_combination if needed
+    columns:
+      - name: campaign_id
+        tests: [not_null]
+      - name: contact_id
+        tests: [not_null]

@@ -1,0 +1,34 @@
+---
+description: Keep knowledge.md KT in sync when portals, auth, DB, or flows change
+alwaysApply: true
+---
+
+# Living Knowledge Transfer (`knowledge.md`)
+
+`knowledge.md` at the repo root is the **master KT** for Worktual My Accounts (portals, login, schemas, action→DB maps, env, API envelope).
+
+## When you MUST update it
+
+Before finishing work that changes any of the following, edit `knowledge.md` in the same change set (or immediately after):
+
+- Login, sign-in order, session keys, roles, password reset, home paths
+- Portal routes, shells, guards, or who can access what
+- Database tables, columns, statuses, migrations, schemas (`platform` / `accounts` / stubs), RLS
+- Payment / fulfillment / go-live / quotation / lead status flows
+- Important API prefixes or response envelope behavior
+- Default ports, run scripts, or critical env vars
+
+## How to update
+
+1. Use the checklist in `knowledge.md` §0 (“How to keep this file current”).
+2. Patch the affected sections; do not leave stale login or table names.
+3. Add a short row under **§17 Changelog (KT doc)** with today’s date and what changed.
+4. Bump **Last reviewed** at the top when the edit is material.
+
+## Do not
+
+- Duplicate a second conflicting “source of truth” for DB/action maps without updating `knowledge.md`.
+- Commit secrets or production passwords into `knowledge.md` (QA seed hints only, marked as such).
+---
+
+Create the rule file, then point README at knowledge.md.

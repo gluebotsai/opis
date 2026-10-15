@@ -1,0 +1,40 @@
+{
+  "conversations": [
+    {
+      "id": "task-list-open",
+      "title": "List open tasks",
+      "turns": [
+        { "role": "user", "content": "What tasks do I have open?" },
+        {
+          "role": "assistant",
+          "content": "<p>2 open tasks: call back Raj (due today) and review refund for Meera.</p>",
+          "tools": ["list_tasks"]
+        }
+      ]
+    },
+    {
+      "id": "task-complete",
+      "title": "Complete a task",
+      "turns": [
+        { "role": "user", "content": "Mark the Raj callback complete" },
+        {
+          "role": "assistant",
+          "content": "<p>Marked <strong>Call back Raj</strong> complete.</p>",
+          "tools": ["get_task", "update_task"]
+        }
+      ]
+    },
+    {
+      "id": "task-route-analytics",
+      "title": "Route a performance question from tasks",
+      "turns": [
+        { "role": "user", "content": "Show this week's first-reply SLA trend" },
+        {
+          "role": "assistant",
+          "content": "",
+          "tools": ["route_to_agent"]
+        }
+      ]
+    }
+  ]
+}

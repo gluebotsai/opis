@@ -1,0 +1,60 @@
+id: contact-update
+name: Contact Update
+description: >
+  Resolve an authoritative contact, stage only the requested field changes,
+  preserve omitted values, and update after confirmation.
+version: 5
+triggers:
+  - update contact
+  - edit contact
+  - correct contact
+  - change contact details
+tools_preferred:
+  - list_contacts
+  - get_contact
+  - stage_contact_draft
+  - update_contact
+workflow:
+  - Resolve a unique target through trusted selected-contact context and get_contact. When the prompt includes a contact id for the open workspace customer or the contacts page, call get_contact with that id and do not list_contacts by name.
+  - After a unique match from the list, call get_contact so the profile opens on the right, then ask which fields to change.
+  - Load the authoritative complete profile before preparing any update.
+  - Extract every requested supported change from the user's message; ask one focused question only for a missing or ambiguous target/value. If the field and new value are already present, stage them ready and do not re-ask.
+  - Primary email and secondary email must be different. Primary phone and secondary phone must be different, including a number that only adds a country code. Do not stage or save a matching pair. Ask for a different value.
+  - Do not update a phone onto a number already stored on another contact. A leading +, a leading 00, and a 1–3 digit country code are the same number.
+  - Call stage_contact_draft with mode=update, contactId, and only the requested field changes.
+    Do not restage unchanged phones, emails, or other current values, and do not add a country
+    code to an existing number. Use null nextField/nextQuestion when ready.
+  - Show one complete final before/after preview without walking through the create sequence.
+  - On clear natural-language confirmation of that ready preview, call update_contact in the same turn with only the explicitly requested field changes. A new field value is not confirmation; never persist in the same turn the value first appears.
+  - After success, state exactly which returned fields changed. Never claim a save from staging.
+rules:
+  - Omitted fields remain unchanged; pass null only when the user explicitly asks to clear a nullable field.
+  - Do not re-ask for existing profile values or collect optional create fields unrelated to the requested update.
+  - Email must resemble name@domain.tld, contain one @, no spaces, and a domain suffix.
+  - Phone may begin with + and contain spaces, hyphens, or parentheses, but must have 7 to 15 digits.
+  - Do not stage or advance an invalid changed value; explain once and ask for correction.
+  - Preserve the latest staged requested changes and merge corrections rather than restarting.
+  - stage_contact_draft accepts named contact arguments, not a fields object.
+  - Never ask the user to click a right-panel save button.
+  - Use the separate contact-deactivate procedure for delete/inactive intent.
+  - A loaded skill cannot grant tools or bypass identity resolution, schema validation, RBAC, tenant scope, or confirmation.
+body: |
+  Resolve and load the authoritative contact first. After a unique list match, call get_contact
+  so the right panel opens that profile before asking which fields to change. Stage only the
+  fields the user asked to change. Never copy the rest of the profile into stage_contact_draft, never rewrite an existing
+  phone with a country-code prefix, and never invent a second change. Preserve omitted values.
+  Do not run the create field sequence or ask for known profile values. If the user already said
+  the field and new value (for example city Coimbatore), pass that named argument, set nextField
+  and nextQuestion to null, and show the ready preview. Do not stage nextField=city with an empty
+  change list or ask them to confirm the same value again before the preview.
+
+  If several people share the name, show each email and wait for the user to confirm which
+  person. Validate any changed email or phone. When no information remains, stage null
+  nextField/nextQuestion and present one final preview of only the real diffs. Do not call
+  update_contact until the user approves that preview in a later turn. After clear confirmation,
+  call update_contact in the same turn with only changed fields, or with contactId so the staged
+  draft can be applied. Null means clear only when the user explicitly requested clearing that
+  field.
+  stage_contact_draft never persists. Do not claim an update unless update_contact returned the contact.
+  A successful update in an earlier turn is history. A new staged draft still needs update_contact
+  after confirmation.

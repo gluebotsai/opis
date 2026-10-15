@@ -1,0 +1,323 @@
+================================================================================
+CAMPAIGN MANAGEMENT METRICS — FEASIBILITY ANALYSIS
+================================================================================
+Source spec : /home/vectone/Downloads/campaign management.txt
+Compared to : Campaign DB schema (docs/CAMPAIGN_DATABASE_SCHEMA.md)
+              + runtime metrics (backend/src/dao/campaign-metrics.ts)
+Analysis date: 2026-08-25
+
+================================================================================
+EXECUTIVE SUMMARY
+================================================================================
+
+The analytics spec defines 35 certified metrics on conceptual grains:
+  campaign_touch, campaign_metric, campaign_performance_fact, ab_test,
+  compliance_evaluation, retrospective, campaign_schedule, contact.
+
+The Campaign microservice today stores data in 27 Prisma tables under the
+`campaign` schema plus read-only `accounts.*` and `cdp.*`. It does NOT have
+separate analytical fact tables. Send-level facts live in:
+  - campaign_send_recipients  (closest to "campaign_touch")
+  - campaigns.launch_plan.channel_run JSON  (closest to "campaign_metric" for PPC)
+  - campaign_contact_engagement + email_suppressions  (unsub / engagement at contact)
+
+RESULT COUNTS (35 metrics in spec):
+  FULLY SUPPORTED (as specified)              :  2
+  PARTIALLY SUPPORTED (approximation / gap)   : 18
+  NOT SUPPORTED (missing data model)          : 15
+
+Overall: Most volume/count metrics and email send ratios are achievable with
+mapping and formula adjustments. Financial attribution, retrospectives,
+compliance evaluations, PPC lead attribution, and several campaign taxonomy
+dimensions are NOT possible without new tables or integrations.
+
+================================================================================
+SCHEMA GAP — SPEC ENTITIES vs CURRENT DATABASE
+================================================================================
+
+Spec entity                  | Current equivalent              | Gap
+-----------------------------|----------------------------------|----------------------------------
+campaign                     | campaigns                        | Missing: category, purpose,
+                             |                                  | campaign_type, execution_type,
+                             |                                  | offering, expected_roi, budget,
+                             |                                  | completed_at (use ends_at/status)
+campaign_touch               | campaign_send_recipients         | No touch_id; status values differ
+                             |                                  | (pending/sent/failed/skipped vs
+                             |                                  | eligible/queued/delivered/suppressed)
+                             |                                  | No response column (opened/clicked/
+                             |                                  | converted/unsubscribed)
+campaign_metric              | launch_plan.channel_run (JSON)   | No normalized metric_type rows;
+                             |                                  | no computed_at dimension;
+                             |                                  | spend/impressions/conversions mainly
+                             |                                  | PPC / demo synthetic
+campaign_performance_fact    | (none)                           | No period_end fact table; CPC/CPA
+                             |                                  | computed ad hoc in API for PPC only
+ab_test                      | launch_plan.ab_* +               | No ab_test_id, started_at,
+                             | campaign_send_recipients.ab_variant| winner_decided_at, selection_metric
+compliance_evaluation        | (none)                           | No evaluation log table
+retrospective                | (none)                           | No post-campaign review entity
+campaign_schedule            | launch_plan + starts_at          | No occasion / has_occasion flag
+contact (PPC attribution)    | cdp.customer_profile             | acquisition_channel = 'campaign'
+                             |                                  | only; no sourced_from_ppc_campaign
+WebSession                   | website_contacts (partial)       | Visitor tracking only; no PPC
+                             |                                  | campaign attribution link
+template                     | regulated_channel_templates +    | Approval status exists for SMS/WA;
+                             | campaign_channel_templates       | draft templates not same grain
+
+Status vocabulary mismatch:
+  Spec live filter:  status = 'running'
+  DB enum:           status = 'live'  (also draft, scheduled, completed, cancelled)
+
+================================================================================
+METRIC-BY-METRIC FEASIBILITY (35 metrics)
+================================================================================
+
+Legend:
+  YES     = Can implement as specified with current schema + minor SQL
+  PARTIAL = Computable with mapping caveats or channel limits
+  NO      = Missing required fields, tables, or events
+
+--------------------------------------------------------------------------------
+ID                          | NAME                              | FEASIBLE | NOTES
+--------------------------------------------------------------------------------
+campaign_volume             | Campaign Volume                     | YES      | COUNT campaigns by created_at
+live_campaign_count         | Live Campaign Count                 | PARTIAL  | Use status='live' not 'running'
+scheduled_campaign_count    | Scheduled Campaign Count            | YES      | status='scheduled'
+campaign_touch_volume       | Campaign Touch Volume               | PARTIAL  | COUNT campaign_send_recipients;
+                            |                                   |          | map occurred_at -> updated_at/created_at
+audience_reached            | Unique Audience Reached             | PARTIAL  | COUNT DISTINCT contact_id WHERE
+                            |                                   |          | status IN ('sent','delivered'); no
+                            |                                   |          | delivery_status='delivered' column
+delivery_rate               | Delivery Rate                       | PARTIAL  | delivered/sent+failed; DB treats
+                            |                                   |          | sent as delivered for email; bounces
+                            |                                   |          | in skip_fail_reason not always 'failed'
+open_rate                   | Open Rate                           | PARTIAL  | IMPLEMENTED differently: unique
+                            |                                   |          | opens / delivered (campaign-metrics.ts).
+                            |                                   |          | Spec uses response IN (opened,clicked,
+                            |                                   |          | engaged,converted)/delivered — broader
+click_rate                  | Click-Through Rate (CTR)            | PARTIAL  | IMPLEMENTED: unique clicks /
+                            |                                   |          | delivered. Spec adds 'converted' in
+                            |                                   |          | numerator. Email/push/web only.
+engagement_rate             | Engagement Rate                     | PARTIAL  | No 'engaged' or per-touch response;
+                            |                                   |          | could proxy as (opens+clicks)/delivered
+                            |                                   |          | but formula differs from spec
+conversion_rate             | Conversion Rate                     | NO       | No per-recipient conversion event;
+                            |                                   |          | conversions only in PPC channel_run
+                            |                                   |          | aggregate (synthetic/demo), not touch grain
+unsubscribe_rate            | Unsubscribe Rate                    | PARTIAL  | campaign_contact_engagement has
+                            |                                   |          | email_unsubscribed but not linked to
+                            |                                   |          | specific send touch or response='unsubscribed'
+suppression_rate            | Suppression Rate                    | PARTIAL  | email_suppressions list + skipped
+                            |                                   |          | sends; no uniform delivery_status=
+                            |                                   |          | 'suppressed' on all channels; pre-send
+                            |                                   |          | block vs post-send not separated
+failure_rate                | Send Failure Rate                   | YES      | status='failed' / (sent+failed)
+                            |                                   |          | from campaign_send_recipients
+campaign_spend              | Campaign Spend                      | PARTIAL  | SUM launch_plan.channel_run.*.spend
+                            |                                   |          | (PPC mainly); no campaign_metric table;
+                            |                                   |          | email/SMS spend not tracked
+campaign_revenue            | Attributed Campaign Revenue         | NO       | No revenue metric anywhere in schema
+campaign_roi                | Campaign ROI                        | NO       | Requires revenue - spend
+campaign_roas               | Return on Ad Spend (ROAS)           | PARTIAL  | revenue/spend impossible; spend-only
+                            |                                   |          | side for PPC demo data
+expected_vs_actual_roi      | Expected vs Actual ROI Gap          | NO       | campaigns has goal/objective text only;
+                            |                                   |          | no expected_roi or actual_roi fields
+budget_utilization_rate     | Budget Utilization Rate             | PARTIAL  | PPC has daily_budget in channel_run;
+                            |                                   |          | no campaigns.budget column
+impression_volume           | Impression Volume                   | PARTIAL  | PPC channel_run.impressions (often
+                            |                                   |          | synthetic from seed); not live ad API
+cost_per_click              | Cost Per Click (CPC)                | PARTIAL  | Computed in API: spend/clicks for PPC;
+                            |                                   |          | no campaign_performance_fact.period_end
+cost_per_acquisition        | Cost Per Acquisition (CPA)          | PARTIAL  | spend/conversions for PPC aggregate;
+                            |                                   |          | conversions not verified per lead
+ppc_attributed_lead_volume  | PPC Attributed Lead Volume          | NO       | No sourced_from_ppc_campaign on contact;
+                            |                                   |          | acquisition_channel='campaign' only;
+                            |                                   |          | website_contacts not linked to PPC campaign
+ab_test_volume              | A/B Test Volume                     | PARTIAL  | launch_plan.ab_enabled + email A/B;
+                            |                                   |          | no ab_test table or ab_test_id
+ab_winner_lift              | A/B Winner Lift                     | NO       | No winner_decided_at, challenger/winner
+                            |                                   |          | metric storage, or selection_metric
+ab_test_coverage_rate       | A/B Test Coverage Rate              | PARTIAL  | Can count campaigns with ab_enabled /
+                            |                                   |          | audience threshold; no formal ABTest entity
+template_approval_rate      | Template Approval Rate              | PARTIAL  | regulated_channel_templates.status
+                            |                                   |          | (sms/whatsapp); email templates have no
+                            |                                   |          | approval_status enum matching spec
+compliance_denial_rate      | Compliance Denial Rate              | NO       | No compliance_evaluation table or
+                            |                                   |          | decision='deny' events logged
+consent_block_rate          | Consent Block Rate                  | NO       | Consent is soft filter in audience
+                            |                                   |          | (custom_fields.campaign_consent_source);
+                            |                                   |          | skips use generic reasons, not consent-tagged
+retrospective_completion_rate| Retrospective Completion Rate      | NO       | No retrospective entity on completed
+                            |                                   |          | campaigns
+goal_attainment_rate        | Goal Attainment Rate                | NO       | No retrospective.outcome (exceeded_goal,
+                            |                                   |          | met_goal); goal/objective are free text
+frequency_per_contact       | Average Campaign Frequency          | PARTIAL  | COUNT recipients / COUNT DISTINCT
+                            |                                   |          | contact_id possible across touches
+newsletter_vs_marketing_mix | Newsletter vs Marketing Mix           | NO       | No campaigns.category = newsletter
+immediate_launch_share      | Immediate Launch Share              | PARTIAL  | launch_plan.schedule_mode = 'now' vs
+                            |                                   |          | 'later'; no execution_type column
+occasion_triggered_share    | Occasion-Triggered Share            | NO       | No campaign_schedule table or has_occasion
+
+================================================================================
+SUMMARY TABLE
+================================================================================
+
+Feasibility          | Count | Metric IDs
+---------------------|-------|--------------------------------------------------
+YES                  |   2   | campaign_volume, scheduled_campaign_count,
+                     |       | failure_rate (3 if live mapped live->running)
+PARTIAL              |  18   | live_campaign_count, campaign_touch_volume,
+                     |       | audience_reached, delivery_rate, open_rate,
+                     |       | click_rate, engagement_rate, unsubscribe_rate,
+                     |       | suppression_rate, campaign_spend, campaign_roas,
+                     |       | budget_utilization_rate, impression_volume,
+                     |       | cost_per_click, cost_per_acquisition,
+                     |       | ab_test_volume, ab_test_coverage_rate,
+                     |       | template_approval_rate, frequency_per_contact,
+                     |       | immediate_launch_share
+NO                   |  15   | conversion_rate, campaign_revenue, campaign_roi,
+                     |       | expected_vs_actual_roi, ppc_attributed_lead_volume,
+                     |       | ab_winner_lift, compliance_denial_rate,
+                     |       | consent_block_rate, retrospective_completion_rate,
+                     |       | goal_attainment_rate, newsletter_vs_marketing_mix,
+                     |       | occasion_triggered_share
+                     |       | (+ campaign_roas if strict revenue required)
+
+Note: failure_rate marked YES; if strict campaign_touch.delivery_status
+vocabulary required, downgrade to PARTIAL.
+
+================================================================================
+ALLOWED DIMENSIONS — WHAT EXISTS vs WHAT SPEC EXPECTS
+================================================================================
+
+Dimension (spec)     | Available today? | Where / comment
+---------------------|------------------|----------------------------------
+tenant               | YES              | tenant_id on all campaign tables
+campaign             | YES              | campaigns.id
+channel_type         | PARTIAL          | campaign_channels.channel,
+                     |                  | campaign_send_batches.channel
+template             | PARTIAL          | template_id, regulated_channel_templates
+variant              | PARTIAL          | campaign_send_recipients.ab_variant (a/b/holdout)
+segment              | PARTIAL          | audience_filters JSON, CDP custom_fields.segment
+campaign_type        | NO               | Not on campaigns
+category             | NO               | Not on campaigns (newsletter vs marketing)
+purpose              | NO               | Not on campaigns
+execution_type       | NO               | Proxy: launch_plan.schedule_mode
+offering             | NO               | Not on campaigns
+phase                | NO               | Not on touch records
+lifecycle_stage      | NO               | Not on touch records
+jurisdiction         | NO               | Not stored
+occasion             | NO               | Not stored
+compliance_rule      | NO               | No compliance_evaluation table
+ab_test              | NO               | No ab_test entity
+
+================================================================================
+METRICS & SIGNALS IN CURRENT SYSTEM — NOT IN ANALYTICS SPEC
+================================================================================
+
+These are implemented or stored today but NOT listed in campaign management.txt:
+
+Engagement / delivery
+  - CTOR (click-to-open rate): unique clicks / unique opens
+      Source: campaign-metrics.ts engagementRates().ctor
+  - totalOpens / totalClicks (repeat opens/clicks per recipient)
+      Source: campaign_send_recipients.open_count, click_count
+  - Bounce tracking (hard/soft via skip_fail_reason patterns)
+      Source: campaign-metrics isBounceRecipient()
+  - Stub send exclusion (demo/local sends not counted as delivered)
+      Source: send-status.ts isStubProviderMessageId()
+  - Delivered definition: sent minus bounces/stubs (email worker)
+
+Operational / config
+  - Email warmup stage, hourly/daily caps, health_status, health_stats
+      Source: email_sending_caps
+  - Channel sending profile checklist readiness (email gate)
+      Source: channel_sending_profiles
+  - Template compliance notifications (pending-stuck, rejected, expired)
+      Source: app_notifications + template-compliance.ts
+
+Audience / contacts
+  - audience_count at campaign save
+  - audience_filters snapshot on campaigns
+  - Soft consent filter (campaign_consent_source in custom_fields)
+  - Website visitor / web-push opt-in (website_contacts) — not CDP audience
+
+Campaign lifecycle
+  - Campaign status: draft, cancelled (spec focuses live/scheduled/completed)
+  - source_channel: standalone_campaign vs crm_marketing
+  - Pause state on channel_run (paused, reason)
+
+Recommendations
+  - campaign_recommendations board (status, payload) — not in spec metrics
+
+================================================================================
+RECOMMENDED MAPPING (if implementing spec on current DB)
+================================================================================
+
+1. campaign_touch  :=  campaign_send_recipients
+   - touch_id      :=  id
+   - occurred_at   :=  COALESCE(updated_at, created_at)
+   - delivery_status mapping:
+       sent/delivered -> 'delivered' (email: status='sent' after provider accept)
+       failed         -> 'failed'
+       skipped        -> 'suppressed' IF skip_fail_reason matches suppress list
+       pending/queued -> 'queued'
+   - response mapping (derive, not stored):
+       open_count > 0 OR opened_at IS NOT NULL  -> include 'opened'
+       click_count > 0 OR clicked_at IS NOT NULL -> include 'clicked'
+       (no converted / engaged / unsubscribed at touch level today)
+
+2. campaign_metric  :=  UNPIVOT campaigns.launch_plan.channel_run
+   - metric_type impressions -> impressions
+   - metric_type spend       -> spend
+   - metric_type conversions -> conversions (PPC only, often synthetic)
+   - computed_at             -> campaigns.updated_at or batch scheduled_for
+
+3. live_campaign_count  :=  FILTER status = 'live' (not 'running')
+
+4. open_rate / click_rate  :=  Use existing engagementRates() (unique over
+   delivered) — document as intentional deviation from spec's broader open_rate
+   numerator.
+
+================================================================================
+WORK REQUIRED TO REACH FULL SPEC COMPLIANCE
+================================================================================
+
+Priority 1 — New tables / events
+  [ ] campaign_touch fact (or extend send_recipients with delivery_status,
+      response, suppression_reason, occurred_at semantics)
+  [ ] campaign_metric time-series (metric_type, value, computed_at, variant)
+  [ ] conversion events per touch (or webhook from CRM/commerce)
+  [ ] revenue attribution feed into campaign_metric
+  [ ] ab_test header + winner outcome tables
+  [ ] compliance_evaluation log
+  [ ] retrospective + outcome enum (exceeded_goal, met_goal, missed_goal)
+  [ ] campaign_schedule + occasion reference
+
+Priority 2 — Campaign taxonomy columns
+  [ ] category, purpose, campaign_type, execution_type, offering on campaigns
+  [ ] expected_roi, budget on campaigns
+  [ ] completed_at (or document ends_at + status='completed')
+
+Priority 3 — Attribution
+  [ ] PPC -> contact attribution (UTM / gclid on website_contacts or CDP)
+  [ ] sourced_from_ppc_campaign flag or campaign_id on customer_profile
+
+Priority 4 — Consent
+  [ ] Standardize skip_fail_reason for consent blocks
+  [ ] Per-touch consent evaluation audit
+
+================================================================================
+REFERENCES
+================================================================================
+
+  docs/CAMPAIGN_DATABASE_SCHEMA.md
+  docs/CAMPAIGN_DATABASE_SCHEMA_SAMPLES.md
+  backend/prisma/schema.prisma
+  backend/src/dao/campaign-metrics.ts
+  backend/src/helpers/send-status.ts
+  backend/prisma/seed.ts (PPC synthetic metrics in launch_plan.channel_run)
+
+================================================================================
+END OF REPORT
+================================================================================

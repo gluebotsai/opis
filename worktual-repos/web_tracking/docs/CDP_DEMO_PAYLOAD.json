@@ -1,0 +1,618 @@
+{
+  "_comment": "Worktual Web Tracking — full events_v3 demo for CDP integration. Field descriptions: docs/CDP_PAYLOAD_FIELD_REFERENCE.md. POST to /v1/tracking/nfs-ingestions. Max 100 events/batch; replay uses separate replay_chunk_v1 payload (see CDP_REPLAY_DEMO_PAYLOAD.json). Server may add organizationId and _geo.",
+  "type": "events_v3",
+  "domainId": 12345,
+  "domainName": "demo.worktual.co.uk",
+  "visitorId": "visitor_cdp_demo_001",
+  "sessionId": "session_cdp_demo_001",
+  "userId": "user_98765",
+  "anonymousId": "anon_cdp_demo_001",
+  "sdkVersion": "3.0.0",
+  "sentAt": 1730000000000,
+  "payloadId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "clientIp": "203.0.113.45",
+  "profiles": {
+    "browser": {
+      "id": "br_cdp_demo_001",
+      "fingerprint": "fp_demoabc123",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
+      "browser": "Chrome",
+      "browserVersion": "120.0.0.0",
+      "engine": "Blink",
+      "os": "Windows",
+      "device": "desktop",
+      "language": "en-GB",
+      "languages": ["en-GB", "en"],
+      "timezone": "Europe/London",
+      "screen": { "width": 1920, "height": 1080, "colorDepth": 24 },
+      "viewport": { "width": 1366, "height": 768 },
+      "dpr": 1,
+      "touch": false,
+      "cpu": 8,
+      "memory": 8,
+      "connection": { "effectiveType": "4g", "downlink": 10, "rtt": 50 }
+    },
+    "visitor": {
+      "id": "visitor_cdp_demo_001",
+      "anonymousId": "anon_cdp_demo_001",
+      "userId": "user_98765",
+      "fingerprint": "fp_demoabc123",
+      "traits": {
+        "email": "cdp.demo@worktual.co.uk",
+        "plan": "pro",
+        "company": "CDP Team",
+        "newsletter_opt_in": true
+      }
+    },
+    "session": {
+      "id": "session_cdp_demo_001",
+      "startedAt": 1729999800000,
+      "landingPath": "/blog/how-to-track-forms",
+      "landingUrl": "https://demo.worktual.co.uk/blog/how-to-track-forms?utm_source=google&utm_medium=cpc",
+      "referrer": "https://www.google.com/",
+      "referrerDomain": "www.google.com",
+      "title": "How to Track Forms | Worktual Blog"
+    },
+    "campaign": {
+      "id": "cp_cdp_demo_001",
+      "firstTouch": {
+        "utm_source": "google",
+        "utm_medium": "cpc",
+        "utm_campaign": "blog_q4",
+        "utm_term": "web analytics",
+        "utm_content": "ad_variant_a",
+        "gclid": "gclid_demo_001",
+        "fbclid": null,
+        "msclkid": null,
+        "ttclid": null,
+        "twclid": null,
+        "gbraid": null,
+        "wbraid": null,
+        "li_fat_id": null,
+        "referrer": "https://www.google.com/",
+        "capturedAt": 1729999800000
+      },
+      "lastTouch": {
+        "utm_source": "email",
+        "utm_medium": "newsletter",
+        "utm_campaign": "shop_promo",
+        "utm_term": null,
+        "utm_content": "hero_cta",
+        "gclid": null,
+        "fbclid": "fbclid_demo_001",
+        "msclkid": "msclkid_demo_001",
+        "ttclid": null,
+        "twclid": null,
+        "gbraid": null,
+        "wbraid": null,
+        "li_fat_id": "li_fat_id_demo_001",
+        "referrer": "https://mail.worktual.co.uk/",
+        "capturedAt": 1730000000000
+      }
+    },
+    "pages": {
+      "pg_blog_home": { "path": "/blog", "title": "Worktual Blog" },
+      "pg_blog_article": { "path": "/blog/how-to-track-forms", "title": "How to Track Forms" },
+      "pg_blog_contact": { "path": "/blog/contact", "title": "Contact Us" },
+      "pg_shop_list": { "path": "/shop", "title": "Shop" },
+      "pg_product_detail": { "path": "/shop/widgets/pro-analytics-kit", "title": "Pro Analytics Kit" },
+      "pg_checkout": { "path": "/checkout", "title": "Checkout" },
+      "pg_order_confirm": { "path": "/order/confirmation", "title": "Order Confirmation" }
+    },
+    "location": {
+      "source": "gps",
+      "permission": "granted",
+      "latitude": 51.5074,
+      "longitude": -0.1278,
+      "accuracy": 25,
+      "altitude": 15,
+      "altitudeAccuracy": 5,
+      "heading": 90,
+      "speed": 0,
+      "capturedAt": 1729999900000
+    }
+  },
+  "events": [
+    {
+      "eventId": "evt_001_page_view_blog",
+      "name": "page_view",
+      "ts": 1729999801000,
+      "pid": "pg_blog_article",
+      "cid": "cp_cdp_demo_001",
+      "props": { "pageName": "blog_article", "path": "/blog/how-to-track-forms", "title": "How to Track Forms" }
+    },
+    { "eventId": "evt_002_user_active", "name": "user_active", "ts": 1729999802000, "pid": "pg_blog_article", "props": {} },
+    { "eventId": "evt_003_page_visible", "name": "page_visible", "ts": 1729999802500, "pid": "pg_blog_article", "props": {} },
+    {
+      "eventId": "evt_004_scroll_milestone",
+      "name": "scroll_milestone",
+      "ts": 1729999805000,
+      "pid": "pg_blog_article",
+      "props": { "milestone": 25, "maxDepth": 25 }
+    },
+    {
+      "eventId": "evt_005_scroll_depth",
+      "name": "scroll_depth",
+      "ts": 1729999806000,
+      "pid": "pg_blog_article",
+      "props": { "milestone": 50, "maxDepth": 50 }
+    },
+    {
+      "eventId": "evt_006_click_blog",
+      "name": "click",
+      "ts": 1729999807000,
+      "pid": "pg_blog_article",
+      "props": {
+        "element": "a.read-more",
+        "text": "Read more",
+        "href": "/blog/advanced-tracking",
+        "x": 420,
+        "y": 680,
+        "pageX": 420,
+        "pageY": 1680,
+        "viewportW": 1366,
+        "viewportH": 768,
+        "elementType": "a",
+        "elementText": "Read more"
+      }
+    },
+    {
+      "eventId": "evt_007_move",
+      "name": "move",
+      "ts": 1729999808000,
+      "pid": "pg_blog_article",
+      "props": { "x": 500, "y": 400, "viewportW": 1366, "viewportH": 768 }
+    },
+    {
+      "eventId": "evt_008_hover",
+      "name": "hover",
+      "ts": 1729999809000,
+      "pid": "pg_blog_article",
+      "props": { "x": 300, "y": 200, "element": "button.share", "elementType": "button", "elementText": "Share", "href": null }
+    },
+    {
+      "eventId": "evt_009_outbound_link",
+      "name": "outbound_link",
+      "ts": 1729999810000,
+      "pid": "pg_blog_article",
+      "props": { "href": "https://partner.example.com/docs", "text": "Partner docs" }
+    },
+    {
+      "eventId": "evt_010_file_download",
+      "name": "file_download",
+      "ts": 1729999811000,
+      "pid": "pg_blog_article",
+      "props": { "href": "https://demo.worktual.co.uk/files/tracking-guide.pdf", "fileName": "tracking-guide.pdf" }
+    },
+    {
+      "eventId": "evt_011_site_search",
+      "name": "site_search",
+      "ts": 1729999812000,
+      "pid": "pg_blog_home",
+      "props": { "query": "form tracking", "formId": "site-search" }
+    },
+    {
+      "eventId": "evt_012_article_read",
+      "name": "article_read",
+      "event_mode": "custom",
+      "ts": 1729999815000,
+      "pid": "pg_blog_article",
+      "props": { "articleId": "how-to-track-forms", "category": "guides", "readPercent": 80, "timeOnPageSec": 120 }
+    },
+    {
+      "eventId": "evt_013_form_view",
+      "name": "form_view",
+      "ts": 1729999820000,
+      "pid": "pg_blog_contact",
+      "props": { "formId": "contact", "formName": "Blog contact form", "formAction": "/api/contact" }
+    },
+    {
+      "eventId": "evt_014_form_start",
+      "name": "form_start",
+      "ts": 1729999821000,
+      "pid": "pg_blog_contact",
+      "props": { "formId": "contact", "formName": "Blog contact form", "formAction": "/api/contact" }
+    },
+    {
+      "eventId": "evt_015_form_focus",
+      "name": "form_focus",
+      "ts": 1729999822000,
+      "pid": "pg_blog_contact",
+      "props": { "formId": "contact", "formName": "Blog contact form", "formAction": "/api/contact", "fieldName": "email", "fieldType": "email" }
+    },
+    {
+      "eventId": "evt_016_form_blur",
+      "name": "form_blur",
+      "ts": 1729999823000,
+      "pid": "pg_blog_contact",
+      "props": { "formId": "contact", "formName": "Blog contact form", "formAction": "/api/contact", "fieldName": "email" }
+    },
+    {
+      "eventId": "evt_017_form_change",
+      "name": "form_change",
+      "ts": 1729999824000,
+      "pid": "pg_blog_contact",
+      "props": { "formId": "contact", "formName": "Blog contact form", "formAction": "/api/contact", "fieldName": "message", "fieldType": "textarea", "fieldValue": "Hello from CDP demo" }
+    },
+    {
+      "eventId": "evt_018_form_validation",
+      "name": "form_validation",
+      "ts": 1729999825000,
+      "pid": "pg_blog_contact",
+      "props": { "formId": "contact", "formName": "Blog contact form", "formAction": "/api/contact", "fieldName": "email", "valid": true }
+    },
+    {
+      "eventId": "evt_019_form_submit",
+      "name": "form_submit",
+      "ts": 1729999826000,
+      "pid": "pg_blog_contact",
+      "props": {
+        "formId": "contact",
+        "formName": "Blog contact form",
+        "formAction": "/api/contact",
+        "fields": { "name": "CDP Demo", "email": "cdp.demo@worktual.co.uk", "message": "Hello from CDP demo" }
+      }
+    },
+    {
+      "eventId": "evt_020_form_success",
+      "name": "form_success",
+      "ts": 1729999827000,
+      "pid": "pg_blog_contact",
+      "props": {
+        "formId": "contact",
+        "formName": "Blog contact form",
+        "formAction": "/api/contact",
+        "fields": { "name": "CDP Demo", "email": "cdp.demo@worktual.co.uk" },
+        "leadId": "lead_blog_001"
+      }
+    },
+    {
+      "eventId": "evt_021_newsletter_signup",
+      "name": "newsletter_signup",
+      "event_mode": "custom",
+      "ts": 1729999828000,
+      "pid": "pg_blog_home",
+      "props": { "listId": "blog_weekly", "source": "footer_widget", "email_domain": "worktual.co.uk" }
+    },
+    {
+      "eventId": "evt_022_brochure_download",
+      "name": "brochure_download",
+      "event_mode": "custom",
+      "ts": 1729999829000,
+      "pid": "pg_blog_home",
+      "props": { "brochureId": "enterprise_2025", "format": "pdf", "language": "en" }
+    },
+    {
+      "eventId": "evt_023_page_transition",
+      "name": "page_transition",
+      "ts": 1729999830000,
+      "pid": "pg_blog_article",
+      "props": { "fromPageId": "pg_blog_article", "toPageId": "pg_shop_list", "duration": 45000 }
+    },
+    {
+      "eventId": "evt_024_page_view_shop",
+      "name": "page_view",
+      "ts": 1729999831000,
+      "pid": "pg_shop_list",
+      "cid": "cp_cdp_demo_001",
+      "props": { "pageName": "shop_listing", "path": "/shop", "title": "Shop" }
+    },
+    {
+      "eventId": "evt_025_product_view",
+      "name": "product_view",
+      "ts": 1729999832000,
+      "pid": "pg_product_detail",
+      "props": {
+        "productId": "SKU-PRO-001",
+        "productName": "Pro Analytics Kit",
+        "productCategory": "Software",
+        "productPrice": 299.99,
+        "currency": "GBP",
+        "quantity": 1,
+        "sku": "SKU-PRO-001",
+        "brand": "Worktual"
+      }
+    },
+    {
+      "eventId": "evt_026_add_to_cart",
+      "name": "add_to_cart",
+      "ts": 1729999833000,
+      "pid": "pg_product_detail",
+      "props": {
+        "productId": "SKU-PRO-001",
+        "productName": "Pro Analytics Kit",
+        "productCategory": "Software",
+        "productPrice": 299.99,
+        "currency": "GBP",
+        "quantity": 2,
+        "sku": "SKU-PRO-001",
+        "brand": "Worktual"
+      }
+    },
+    {
+      "eventId": "evt_027_remove_from_cart",
+      "name": "remove_from_cart",
+      "ts": 1729999834000,
+      "pid": "pg_product_detail",
+      "props": {
+        "productId": "SKU-PRO-001",
+        "productName": "Pro Analytics Kit",
+        "productCategory": "Software",
+        "productPrice": 299.99,
+        "currency": "GBP",
+        "quantity": 1,
+        "sku": "SKU-PRO-001",
+        "brand": "Worktual"
+      }
+    },
+    {
+      "eventId": "evt_028_begin_checkout",
+      "name": "begin_checkout",
+      "ts": 1729999835000,
+      "pid": "pg_checkout",
+      "props": {
+        "cartValue": 299.99,
+        "currency": "GBP",
+        "itemCount": 1,
+        "coupon": "BLOGREADER10"
+      }
+    },
+    {
+      "eventId": "evt_029_purchase",
+      "name": "purchase",
+      "ts": 1729999840000,
+      "pid": "pg_order_confirm",
+      "props": {
+        "orderId": "ORD-2025-CDP-001",
+        "revenue": 269.99,
+        "currency": "GBP",
+        "tax": 45.0,
+        "shipping": 5.99,
+        "products": [
+          {
+            "productId": "SKU-PRO-001",
+            "productName": "Pro Analytics Kit",
+            "productCategory": "Software",
+            "productPrice": 299.99,
+            "currency": "GBP",
+            "quantity": 1,
+            "sku": "SKU-PRO-001",
+            "brand": "Worktual"
+          }
+        ]
+      }
+    },
+    {
+      "eventId": "evt_030_refund",
+      "name": "refund",
+      "ts": 1729999900000,
+      "pid": "pg_order_confirm",
+      "props": {
+        "orderId": "ORD-2025-CDP-001",
+        "revenue": 50.0,
+        "currency": "GBP",
+        "tax": 8.33,
+        "shipping": 0,
+        "products": [{ "productId": "SKU-PRO-001", "productName": "Pro Analytics Kit", "quantity": 1 }]
+      }
+    },
+    {
+      "eventId": "evt_031_identify",
+      "name": "identify",
+      "ts": 1729999841000,
+      "pid": "pg_checkout",
+      "props": {
+        "userId": "user_98765",
+        "previousAnonymousId": "anon_cdp_demo_001",
+        "traits": { "email": "cdp.demo@worktual.co.uk", "name": "CDP Demo User", "customerType": "returning" }
+      }
+    },
+    {
+      "eventId": "evt_032_login",
+      "name": "login",
+      "ts": 1729999842000,
+      "pid": "pg_checkout",
+      "props": { "userId": "user_98765", "method": "email_password" }
+    },
+    {
+      "eventId": "evt_033_signup",
+      "name": "signup",
+      "ts": 1729999843000,
+      "pid": "pg_checkout",
+      "props": { "userId": "user_98765", "method": "email", "source": "checkout" }
+    },
+    {
+      "eventId": "evt_034_user_properties",
+      "name": "user_properties",
+      "ts": 1729999844000,
+      "pid": "pg_checkout",
+      "props": { "traits": { "plan": "pro", "lifetime_value": 269.99, "preferred_category": "Software" } }
+    },
+    {
+      "eventId": "evt_035_group",
+      "name": "group",
+      "ts": 1729999845000,
+      "pid": "pg_checkout",
+      "props": { "groupId": "org_acme_corp", "industry": "SaaS", "employees": 250 }
+    },
+    {
+      "eventId": "evt_036_alias",
+      "name": "alias",
+      "ts": 1729999846000,
+      "pid": "pg_checkout",
+      "props": { "oldId": "anon_cdp_demo_001", "newId": "user_98765" }
+    },
+    {
+      "eventId": "evt_037_logout",
+      "name": "logout",
+      "ts": 1729999901000,
+      "pid": "pg_shop_list",
+      "props": {}
+    },
+    {
+      "eventId": "evt_038_performance_vitals",
+      "name": "performance_vitals",
+      "ts": 1729999847000,
+      "pid": "pg_product_detail",
+      "props": {
+        "lcp": 2100,
+        "cls": 0.05,
+        "inp": 120,
+        "fcp": 800,
+        "ttfb": 180,
+        "lcpRating": "good",
+        "clsRating": "good",
+        "inpRating": "good"
+      }
+    },
+    {
+      "eventId": "evt_039_performance_lcp",
+      "name": "performance_lcp",
+      "ts": 1729999847100,
+      "pid": "pg_product_detail",
+      "props": { "value": 2100, "rating": "good", "lcp": 2100 }
+    },
+    {
+      "eventId": "evt_040_performance_cls",
+      "name": "performance_cls",
+      "ts": 1729999847200,
+      "pid": "pg_product_detail",
+      "props": { "value": 0.05, "rating": "good", "cls": 0.05 }
+    },
+    {
+      "eventId": "evt_041_performance_inp",
+      "name": "performance_inp",
+      "ts": 1729999847300,
+      "pid": "pg_product_detail",
+      "props": { "value": 120, "rating": "good", "inp": 120 }
+    },
+    {
+      "eventId": "evt_042_performance_fcp",
+      "name": "performance_fcp",
+      "ts": 1729999847400,
+      "pid": "pg_product_detail",
+      "props": { "value": 800, "fcp": 800 }
+    },
+    {
+      "eventId": "evt_043_performance_navigation",
+      "name": "performance_navigation",
+      "ts": 1729999847500,
+      "pid": "pg_product_detail",
+      "props": { "domContentLoaded": 650, "loadEventEnd": 1200, "ttfb": 180 }
+    },
+    {
+      "eventId": "evt_044_performance_resource",
+      "name": "performance_resource",
+      "ts": 1729999847600,
+      "pid": "pg_product_detail",
+      "props": { "name": "https://demo.worktual.co.uk/assets/app.js", "duration": 45, "transferSize": 82000 }
+    },
+    {
+      "eventId": "evt_045_performance_long_task",
+      "name": "performance_long_task",
+      "ts": 1729999847700,
+      "pid": "pg_product_detail",
+      "props": { "duration": 85, "startTime": 1500 }
+    },
+    {
+      "eventId": "evt_046_performance_memory",
+      "name": "performance_memory",
+      "ts": 1729999847800,
+      "pid": "pg_product_detail",
+      "props": { "usedJSHeapSize": 45000000, "totalJSHeapSize": 67000000 }
+    },
+    {
+      "eventId": "evt_047_error_js",
+      "name": "error",
+      "ts": 1729999848000,
+      "pid": "pg_product_detail",
+      "props": {
+        "type": "javascript",
+        "message": "Uncaught TypeError: Cannot read property 'x' of undefined",
+        "filename": "https://demo.worktual.co.uk/assets/app.js",
+        "lineno": 42,
+        "colno": 15,
+        "stack": "TypeError: Cannot read property 'x' of undefined\n    at app.js:42:15"
+      }
+    },
+    {
+      "eventId": "evt_048_error_rejection",
+      "name": "error",
+      "ts": 1729999848100,
+      "pid": "pg_product_detail",
+      "props": { "type": "unhandledrejection", "message": "Payment API failed", "stack": "Error: Payment API failed\n    at checkout.js:10:5" }
+    },
+    {
+      "eventId": "evt_049_error_fetch",
+      "name": "error",
+      "ts": 1729999848200,
+      "pid": "pg_checkout",
+      "props": { "type": "fetch", "url": "https://demo.worktual.co.uk/api/inventory", "status": 503, "statusText": "Service Unavailable" }
+    },
+    {
+      "eventId": "evt_050_error_xhr",
+      "name": "error",
+      "ts": 1729999848300,
+      "pid": "pg_checkout",
+      "props": { "type": "xhr", "url": "https://demo.worktual.co.uk/api/cart", "method": "POST", "status": 400 }
+    },
+    {
+      "eventId": "evt_051_error_resource",
+      "name": "error",
+      "ts": 1729999848400,
+      "pid": "pg_shop_list",
+      "props": { "type": "resource", "tagName": "IMG", "src": "https://demo.worktual.co.uk/images/missing-banner.png" }
+    },
+    {
+      "eventId": "evt_052_rage_click",
+      "name": "rage_click",
+      "ts": 1729999849000,
+      "pid": "pg_checkout",
+      "props": { "x": 640, "y": 320, "clickCount": 5 }
+    },
+    {
+      "eventId": "evt_053_dead_click",
+      "name": "dead_click",
+      "ts": 1729999850000,
+      "pid": "pg_checkout",
+      "props": { "x": 700, "y": 400, "reason": "no_handler" }
+    },
+    {
+      "eventId": "evt_054_form_failure",
+      "name": "form_failure",
+      "ts": 1729999851000,
+      "pid": "pg_checkout",
+      "props": { "formId": "checkout", "formName": "Checkout form", "reason": "card_declined", "errorCode": "card_declined" }
+    },
+    {
+      "eventId": "evt_055_form_abandon",
+      "name": "form_abandon",
+      "ts": 1729999852000,
+      "pid": "pg_checkout",
+      "props": { "formId": "checkout", "formName": "Checkout form", "formAction": "/api/checkout" }
+    },
+    { "eventId": "evt_056_user_idle", "name": "user_idle", "ts": 1729999890000, "pid": "pg_shop_list", "props": { "idleMs": 300000 } },
+    { "eventId": "evt_057_page_hidden", "name": "page_hidden", "ts": 1729999895000, "pid": "pg_shop_list", "props": {} },
+    { "eventId": "evt_058_heartbeat", "name": "heartbeat", "ts": 1729999902000, "pid": "pg_shop_list", "props": { "intervalMs": 30000 } },
+    {
+      "eventId": "evt_059_scroll",
+      "name": "scroll",
+      "ts": 1729999903000,
+      "pid": "pg_blog_article",
+      "props": { "scrollY": 1200, "maxDepth": 75 }
+    },
+    {
+      "eventId": "evt_060_cdp_custom_event",
+      "name": "cdp_integration_test",
+      "event_mode": "custom",
+      "ts": 1729999904000,
+      "pid": "pg_shop_list",
+      "props": {
+        "source": "cdp_team",
+        "testId": "full_schema_v1",
+        "journey": "blog_to_ecommerce",
+        "metadata": { "environment": "qa", "version": 1 }
+      }
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+roles:
+  employee:
+    level: "self"
+  agent:
+    level: "self"
+  staff:
+    level: "self"
+  team_lead:
+    level: "team"
+  supervisor:
+    level: "team"
+  manager:
+    level: "team"
+  admin:
+    level: "org"
+  executive:
+    level: "org"
+
+default_role: "employee"
+default_role_level: "self"
+
+hidden_for_non_admin:
+  labels:
+    - "Role"
+    - "Permission"
+    - "AccessRole"
+    - "StaffRole"
+    - "AccessPolicy"
+    - "Tenant"
+  properties:
+    - "password"
+    - "secret"
+    - "token"
+    - "api_key"
+    - "salary"

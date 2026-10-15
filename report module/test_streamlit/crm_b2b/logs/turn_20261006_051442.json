@@ -1,0 +1,605 @@
+{
+  "question": "how the yaswanth is performing\n\n",
+  "answer": "Yaswanth MG has 27 total opportunities with 150,000.00 in won revenue. Collected revenue for the organization is 15,000.00.\n\nThe current pipeline consists of 10 recorded deals with a total value of \u20b950,001.00 (INR) / $15,000.00 (USD), with most deals concentrated in the qualification stage. A significant portion of these deals\u2014including OrbitCRM, Vince, Lyca, and Google\u2014are currently recorded at $0 value, indicating a gap in quote attachment or line-item entry.\n\nReview the $0 deals to ensure missing quotes or line items are not preventing accurate revenue forecasting.",
+  "trace": {
+    "question": "how the yaswanth is performing",
+    "identity": {
+      "organization_id": 1000,
+      "user_id": 1000,
+      "role": "admin"
+    },
+    "model": "worktual-gemma",
+    "tasks": [
+      {
+        "status": "ok",
+        "store": "sql",
+        "sql": "WITH rpt_deals AS (\nSELECT src.id, src.organization_id, src.title, src.stage, src.amount, src.currency_code, src.stage_weight, src.weighted_amount, src.company_id, src.company_name, src.company_industry, src.location_id, src.contact_id, src.contact_name, src.contact_email, src.owner_user_id, src.owner_name, src.created_at, src.closed_at, src.close_ts, src.updated_at, src.expected_close_date, src.lost_reason, src.is_open, src.is_won, src.is_lost, src.aging_days, src.forecast_category, src.forecast_reason, src.forecast_flagged FROM (\nSELECT \n  d.id,\n  d.organization_id,\n  d.title,\n  d.stage,\n  COALESCE(d.amount, 0) AS amount,\n  CASE\n    WHEN pq.currency IS NOT NULL AND pq.currency <> 'USD' THEN pq.currency\n    WHEN o.country IS NOT NULL AND o.country <> 'US' AND cc.curr IS NOT NULL THEN cc.curr\n    WHEN pq.currency = 'USD' THEN 'USD'\n    WHEN o.country = 'US' THEN 'USD'\n    ELSE 'USD'\n  END AS currency_code,\n  CASE d.stage\n    WHEN 'qualification' THEN 0.10\n    WHEN 'discover' THEN 0.25\n    WHEN 'propose' THEN 0.50\n    WHEN 'negotiate' THEN 0.75\n    WHEN 'closed_won' THEN 1.00\n    WHEN 'closed_lost' THEN 0.00\n    ELSE 0.00\n  END AS stage_weight,\n  ROUND(COALESCE(d.amount, 0) * (\n    CASE d.stage\n      WHEN 'qualification' THEN 0.10\n      WHEN 'discover' THEN 0.25\n      WHEN 'propose' THEN 0.50\n      WHEN 'negotiate' THEN 0.75\n      WHEN 'closed_won' THEN 1.00\n      WHEN 'closed_lost' THEN 0.00\n      ELSE 0.00\n    END\n  ), 2) AS weighted_amount,\n  d.company_id,\n  c.name AS company_name,\n  c.industry AS company_industry,\n  d.location_id,\n  d.contact_id,\n  COALESCE(d.contact_name, cdp.first_name || ' ' || COALESCE(cdp.last_name, '')) AS contact_name,\n  COALESCE(d.contact_email, id_k.key_value) AS contact_email,\n  d.owner_user_id,\n  su.first_name || ' ' || COALESCE(su.last_name, '') AS owner_name,\n  d.created_at,\n  d.closed_at,\n  COALESCE(d.closed_at, d.created_at) AS close_ts,\n  d.updated_at,\n  d.expected_close_date,\n  d.lost_reason,\n  (d.stage IN ('qualification', 'discover', 'propose', 'negotiate')) AS is_open,\n  (d.stage = 'closed_won') AS is_won,\n  (d.stage = 'closed_lost') AS is_lost,\n  FLOOR(EXTRACT(EPOCH FROM (NOW() - d.created_at))/86400)::integer AS aging_days,\n  d.forecast_category,\n  d.forecast_reason,\n  d.forecast_flagged\nFROM crm.deals d\nLEFT JOIN crm.companies c ON c.id = d.company_id AND c.organization_id = d.organization_id\nLEFT JOIN accounts.setup_users su ON su.id = d.owner_user_id\nLEFT JOIN accounts.organizations o ON o.id = d.organization_id\nLEFT JOIN cdp.customer_profile cdp ON cdp.cdp_id = d.contact_id\nLEFT JOIN LATERAL (\n  SELECT ik.key_value \n  FROM cdp.identity_keys ik \n  WHERE ik.cdp_id = d.contact_id AND ik.key_type = 'email' AND ik.organization_id = d.organization_id \n  ORDER BY ik.created_at ASC \n  LIMIT 1\n) id_k ON TRUE\nLEFT JOIN LATERAL (\n  SELECT q.currency \n  FROM crm.quotes q \n  WHERE q.deal_id = d.id AND q.organization_id = d.organization_id \n  ORDER BY CASE WHEN q.status = 'accepted' THEN 1 WHEN q.status = 'sent' THEN 2 ELSE 3 END, q.updated_at DESC \n  LIMIT 1\n) pq ON TRUE\nLEFT JOIN LATERAL (\n  SELECT CASE o.country \n    WHEN 'India' THEN 'INR' \n    WHEN 'United Kingdom' THEN 'GBP' \n    WHEN 'Germany' THEN 'EUR' \n    WHEN 'Canada' THEN 'CAD' \n    WHEN 'Australia' THEN 'AUD' \n    ELSE 'USD' \n  END AS curr\n) cc ON TRUE\nWHERE d.organization_id = %(_org_id)s\n) src WHERE TRUE\n)\nSELECT COALESCE(CAST(owner_name AS TEXT), 'Unassigned') AS owner, CAST(COUNT(*) AS BIGINT) AS total_opportunities FROM rpt_deals AS deals WHERE TRUE AND TRUE AND owner_name ILIKE '%%Yaswanth%%' GROUP BY COALESCE(CAST(owner_name AS TEXT), 'Unassigned') ORDER BY 2 DESC NULLS LAST LIMIT 500",
+        "views": [
+          "deals"
+        ],
+        "guard_notes": [
+          "row cap 500 applied"
+        ],
+        "bound_params": {
+          "_org_id": 1000,
+          "_user_id": 1000,
+          "user_id": 1000,
+          "organization_id": 1000,
+          "org_id": 1000,
+          "tenant_id": 1000,
+          "current_user_id": 1000
+        },
+        "rows": [
+          {
+            "owner": "Yaswanth MG",
+            "total_opportunities": 27
+          }
+        ],
+        "kpi_id": "total_opportunities",
+        "dimension": "owner",
+        "time_status": "all_time",
+        "attempts": [
+          {
+            "raw": "{\"tool\":\"run_kpi\",\"kpi_id\":\"total_opportunities\",\"dimension\":\"owner\"}",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "total_opportunities",
+              "dimension": "owner",
+              "slot_values": {
+                "filters_sql": "owner_name ILIKE '%Yaswanth%'"
+              }
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "tool": "run_kpi",
+        "requested_kpi": "total_opportunities",
+        "requested_dimension": "owner",
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "total_opportunities",
+          "goal": "Deal counts and pipeline for Yaswanth",
+          "time": "all time",
+          "scope": "org",
+          "owner_name": "Yaswanth",
+          "dimension": null,
+          "answer_type": "breakdown",
+          "depends_on": []
+        }
+      },
+      {
+        "status": "ok",
+        "store": "sql",
+        "sql": "WITH rpt_deals AS (\nSELECT src.id, src.organization_id, src.title, src.stage, src.amount, src.currency_code, src.stage_weight, src.weighted_amount, src.company_id, src.company_name, src.company_industry, src.location_id, src.contact_id, src.contact_name, src.contact_email, src.owner_user_id, src.owner_name, src.created_at, src.closed_at, src.close_ts, src.updated_at, src.expected_close_date, src.lost_reason, src.is_open, src.is_won, src.is_lost, src.aging_days, src.forecast_category, src.forecast_reason, src.forecast_flagged FROM (\nSELECT \n  d.id,\n  d.organization_id,\n  d.title,\n  d.stage,\n  COALESCE(d.amount, 0) AS amount,\n  CASE\n    WHEN pq.currency IS NOT NULL AND pq.currency <> 'USD' THEN pq.currency\n    WHEN o.country IS NOT NULL AND o.country <> 'US' AND cc.curr IS NOT NULL THEN cc.curr\n    WHEN pq.currency = 'USD' THEN 'USD'\n    WHEN o.country = 'US' THEN 'USD'\n    ELSE 'USD'\n  END AS currency_code,\n  CASE d.stage\n    WHEN 'qualification' THEN 0.10\n    WHEN 'discover' THEN 0.25\n    WHEN 'propose' THEN 0.50\n    WHEN 'negotiate' THEN 0.75\n    WHEN 'closed_won' THEN 1.00\n    WHEN 'closed_lost' THEN 0.00\n    ELSE 0.00\n  END AS stage_weight,\n  ROUND(COALESCE(d.amount, 0) * (\n    CASE d.stage\n      WHEN 'qualification' THEN 0.10\n      WHEN 'discover' THEN 0.25\n      WHEN 'propose' THEN 0.50\n      WHEN 'negotiate' THEN 0.75\n      WHEN 'closed_won' THEN 1.00\n      WHEN 'closed_lost' THEN 0.00\n      ELSE 0.00\n    END\n  ), 2) AS weighted_amount,\n  d.company_id,\n  c.name AS company_name,\n  c.industry AS company_industry,\n  d.location_id,\n  d.contact_id,\n  COALESCE(d.contact_name, cdp.first_name || ' ' || COALESCE(cdp.last_name, '')) AS contact_name,\n  COALESCE(d.contact_email, id_k.key_value) AS contact_email,\n  d.owner_user_id,\n  su.first_name || ' ' || COALESCE(su.last_name, '') AS owner_name,\n  d.created_at,\n  d.closed_at,\n  COALESCE(d.closed_at, d.created_at) AS close_ts,\n  d.updated_at,\n  d.expected_close_date,\n  d.lost_reason,\n  (d.stage IN ('qualification', 'discover', 'propose', 'negotiate')) AS is_open,\n  (d.stage = 'closed_won') AS is_won,\n  (d.stage = 'closed_lost') AS is_lost,\n  FLOOR(EXTRACT(EPOCH FROM (NOW() - d.created_at))/86400)::integer AS aging_days,\n  d.forecast_category,\n  d.forecast_reason,\n  d.forecast_flagged\nFROM crm.deals d\nLEFT JOIN crm.companies c ON c.id = d.company_id AND c.organization_id = d.organization_id\nLEFT JOIN accounts.setup_users su ON su.id = d.owner_user_id\nLEFT JOIN accounts.organizations o ON o.id = d.organization_id\nLEFT JOIN cdp.customer_profile cdp ON cdp.cdp_id = d.contact_id\nLEFT JOIN LATERAL (\n  SELECT ik.key_value \n  FROM cdp.identity_keys ik \n  WHERE ik.cdp_id = d.contact_id AND ik.key_type = 'email' AND ik.organization_id = d.organization_id \n  ORDER BY ik.created_at ASC \n  LIMIT 1\n) id_k ON TRUE\nLEFT JOIN LATERAL (\n  SELECT q.currency \n  FROM crm.quotes q \n  WHERE q.deal_id = d.id AND q.organization_id = d.organization_id \n  ORDER BY CASE WHEN q.status = 'accepted' THEN 1 WHEN q.status = 'sent' THEN 2 ELSE 3 END, q.updated_at DESC \n  LIMIT 1\n) pq ON TRUE\nLEFT JOIN LATERAL (\n  SELECT CASE o.country \n    WHEN 'India' THEN 'INR' \n    WHEN 'United Kingdom' THEN 'GBP' \n    WHEN 'Germany' THEN 'EUR' \n    WHEN 'Canada' THEN 'CAD' \n    WHEN 'Australia' THEN 'AUD' \n    ELSE 'USD' \n  END AS curr\n) cc ON TRUE\nWHERE d.organization_id = %(_org_id)s\n) src WHERE TRUE\n)\nSELECT COALESCE(CAST(owner_name AS TEXT), 'Unassigned') AS owner, CAST(COALESCE(SUM(amount), 0) AS DECIMAL(15, 2)) AS won_revenue FROM rpt_deals AS deals WHERE is_won = TRUE AND TRUE AND TRUE AND owner_name ILIKE '%%Yaswanth%%' GROUP BY COALESCE(CAST(owner_name AS TEXT), 'Unassigned') ORDER BY 2 DESC NULLS LAST LIMIT 500",
+        "views": [
+          "deals"
+        ],
+        "guard_notes": [
+          "row cap 500 applied"
+        ],
+        "bound_params": {
+          "_org_id": 1000,
+          "_user_id": 1000,
+          "user_id": 1000,
+          "organization_id": 1000,
+          "org_id": 1000,
+          "tenant_id": 1000,
+          "current_user_id": 1000
+        },
+        "rows": [
+          {
+            "owner": "Yaswanth MG",
+            "won_revenue": "150000.00"
+          }
+        ],
+        "kpi_id": "won_revenue",
+        "dimension": "owner",
+        "time_status": "all_time",
+        "attempts": [
+          {
+            "raw": "```json\n{\"tool\":\"run_kpi\",\"kpi_id\":\"won_revenue\",\"dimension\":\"owner\"}\n```",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "won_revenue",
+              "dimension": "owner",
+              "slot_values": {
+                "filters_sql": "owner_name ILIKE '%Yaswanth%'"
+              }
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "tool": "run_kpi",
+        "requested_kpi": "won_revenue",
+        "requested_dimension": "owner",
+        "task": {
+          "id": "t2",
+          "executor": "sql",
+          "kpi": "won_revenue",
+          "goal": "Won revenue for Yaswanth",
+          "time": "all time",
+          "scope": "org",
+          "owner_name": "Yaswanth",
+          "dimension": null,
+          "answer_type": "kpi",
+          "depends_on": [
+            "t1"
+          ]
+        }
+      },
+      {
+        "status": "ok",
+        "store": "sql",
+        "sql": "WITH rpt_invoices AS (\nSELECT src.id, src.organization_id, src.invoice_number, src.order_id, src.deal_id, src.deal_title, src.company_id, src.company_name, src.status, src.approval_status, src.subtotal, src.discount_amount, src.tax_amount, src.total, src.currency_code, src.due_at, src.paid_at, src.payment_method, src.created_by_user_id, src.owner_user_id, src.owner_name, src.created_at, src.updated_at, src.is_overdue FROM (\nSELECT \n  inv.id,\n  inv.organization_id,\n  inv.number AS invoice_number,\n  inv.order_id,\n  inv.deal_id,\n  d.title AS deal_title,\n  inv.company_id,\n  c.name AS company_name,\n  inv.status,\n  inv.approval_status,\n  COALESCE(inv.total - COALESCE(inv.tax_amount, 0) + COALESCE(inv.discount_amount, 0), inv.total) AS subtotal,\n  COALESCE(inv.discount_amount, 0) AS discount_amount,\n  COALESCE(inv.tax_amount, 0) AS tax_amount,\n  COALESCE(inv.total, 0) AS total,\n  COALESCE(inv.currency, 'USD') AS currency_code,\n  inv.due_at,\n  inv.paid_at,\n  inv.payment_method,\n  inv.created_by_user_id,\n  d.owner_user_id,\n  su.first_name || ' ' || COALESCE(su.last_name, '') AS owner_name,\n  inv.created_at,\n  inv.updated_at,\n  (inv.status = 'overdue' OR (inv.status = 'sent' AND inv.due_at < NOW())) AS is_overdue\nFROM crm.invoices inv\nLEFT JOIN crm.deals d ON d.id = inv.deal_id AND d.organization_id = inv.organization_id\nLEFT JOIN crm.companies c ON c.id = inv.company_id AND c.organization_id = inv.organization_id\nLEFT JOIN accounts.setup_users su ON su.id = d.owner_user_id\nWHERE inv.organization_id = %(_org_id)s\n) src WHERE TRUE\n)\nSELECT CAST(COALESCE(SUM(total), 0) AS DECIMAL(15, 2)) AS collected_revenue, CAST(COUNT(*) AS BIGINT) AS paid_invoice_count FROM rpt_invoices AS invoices WHERE status = 'paid' AND TRUE AND TRUE AND owner_name ILIKE '%%Yaswanth%%' LIMIT 500",
+        "views": [
+          "invoices"
+        ],
+        "guard_notes": [
+          "row cap 500 applied"
+        ],
+        "bound_params": {
+          "_org_id": 1000,
+          "_user_id": 1000,
+          "user_id": 1000,
+          "organization_id": 1000,
+          "org_id": 1000,
+          "tenant_id": 1000,
+          "current_user_id": 1000
+        },
+        "rows": [
+          {
+            "collected_revenue": "15000.00",
+            "paid_invoice_count": 1
+          }
+        ],
+        "kpi_id": "collected_revenue",
+        "dimension": "owner",
+        "time_status": "all_time",
+        "attempts": [
+          {
+            "raw": "{\"tool\":\"run_kpi\",\"kpi_id\":\"collected_revenue\",\"dimension\":\"owner\"}",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "collected_revenue",
+              "dimension": "owner",
+              "slot_values": {
+                "filters_sql": "owner_name ILIKE '%Yaswanth%'"
+              }
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "tool": "run_kpi",
+        "requested_kpi": "collected_revenue",
+        "requested_dimension": "owner",
+        "task": {
+          "id": "t3",
+          "executor": "sql",
+          "kpi": "collected_revenue",
+          "goal": "Collected revenue for Yaswanth",
+          "time": "all time",
+          "scope": "org",
+          "owner_name": "Yaswanth",
+          "dimension": null,
+          "answer_type": "kpi",
+          "depends_on": [
+            "t1"
+          ]
+        }
+      },
+      {
+        "status": "ok",
+        "rows": [
+          {
+            "rep_user_id": 1006,
+            "rep_name": "Aravind Selvaraj",
+            "deal_id": "cmsypwspr004i1avw9tyswa8c",
+            "deal_title": "OrbitCRM \u2014 Karthik Reddy",
+            "deal_stage": "discover",
+            "account_name": "OrbitCRM",
+            "currency": "INR",
+            "deal_value": 0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-08-18"
+          },
+          {
+            "rep_user_id": 1006,
+            "rep_name": "Aravind Selvaraj",
+            "deal_id": "cmt3zfddn00141acun0hd9dpo",
+            "deal_title": "Vince \u2014 hariiii hariiii",
+            "deal_stage": "qualification",
+            "account_name": "Vince",
+            "currency": "INR",
+            "deal_value": 0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-08-22"
+          },
+          {
+            "rep_user_id": 1006,
+            "rep_name": "Aravind Selvaraj",
+            "deal_id": "cmt7skrx00016or0umjlffvqh",
+            "deal_title": "Unknown",
+            "deal_stage": "discover",
+            "account_name": "Unknown Account",
+            "currency": "INR",
+            "deal_value": 0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-08-24"
+          },
+          {
+            "rep_user_id": 1006,
+            "rep_name": "Aravind Selvaraj",
+            "deal_id": "cmthdpsls003xnx0ue7jvayaa",
+            "deal_title": "DemoReady Hot c123afae \u2014 Demo Hotc123afae",
+            "deal_stage": "qualification",
+            "account_name": "DemoReady Hot c123afae",
+            "currency": "INR",
+            "deal_value": 0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-08-31"
+          },
+          {
+            "rep_user_id": 1006,
+            "rep_name": "Aravind Selvaraj",
+            "deal_id": "cmtmswn88003xo40uowq3r8gp",
+            "deal_title": "Lyca \u2014 Tonny S",
+            "deal_stage": "qualification",
+            "account_name": "Lyca",
+            "currency": "INR",
+            "deal_value": 0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-09-04"
+          },
+          {
+            "rep_user_id": 1006,
+            "rep_name": "Aravind Selvaraj",
+            "deal_id": "cmtmu1of3005bo40u5e1awvt4",
+            "deal_title": "Northstar Verify \u2014 V1 Hotadaed1ac",
+            "deal_stage": "qualification",
+            "account_name": "Northstar Verify",
+            "currency": "INR",
+            "deal_value": 0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-09-04"
+          },
+          {
+            "rep_user_id": 1006,
+            "rep_name": "Aravind Selvaraj",
+            "deal_id": "cmtmwc8f9008jo40utzjyvcj4",
+            "deal_title": "Google <no-reply@accounts.google.com>",
+            "deal_stage": "qualification",
+            "account_name": "Google <no-reply@accounts.google.com> Account",
+            "currency": "INR",
+            "deal_value": 0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-09-04"
+          },
+          {
+            "rep_user_id": 1006,
+            "rep_name": "Aravind Selvaraj",
+            "deal_id": "cmtnv4r0900czo40uqe8c9zff",
+            "deal_title": "KFC \u2014 Divya Prasath",
+            "deal_stage": "qualification",
+            "account_name": "KFC",
+            "currency": "INR",
+            "deal_value": 0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-09-05"
+          },
+          {
+            "rep_user_id": 1006,
+            "rep_name": "Aravind Selvaraj",
+            "deal_id": "cmttdese80013oh0v1hssbxxt",
+            "deal_title": "<messages-noreply@linkedin.com>",
+            "deal_stage": "qualification",
+            "account_name": "<messages-noreply@linkedin.com> Account",
+            "currency": "INR",
+            "deal_value": 0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-09-09"
+          },
+          {
+            "rep_user_id": 1006,
+            "rep_name": "Aravind Selvaraj",
+            "deal_id": "cmu17ygsv007js70u7wux8u3k",
+            "deal_title": "DemoReady Hot e188bcb3 \u2014 Demo Hote188bcb3",
+            "deal_stage": "qualification",
+            "account_name": "DemoReady Hot e188bcb3",
+            "currency": "INR",
+            "deal_value": 0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-09-14"
+          },
+          {
+            "rep_user_id": 1006,
+            "rep_name": "Aravind Selvaraj",
+            "deal_id": "cmu1rff0s00ics70u4upzmjz6",
+            "deal_title": "worktual \u2014 Anjali Kumar",
+            "deal_stage": "qualification",
+            "account_name": "worktual",
+            "currency": "INR",
+            "deal_value": 0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-09-14"
+          },
+          {
+            "rep_user_id": 1006,
+            "rep_name": "Aravind Selvaraj",
+            "deal_id": "cmu1t6w9u00irs70u3xhu1vjg",
+            "deal_title": "amazon \u2014 saran s",
+            "deal_stage": "qualification",
+            "account_name": "amazon",
+            "currency": "INR",
+            "deal_value": 0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-09-14"
+          },
+          {
+            "rep_user_id": 1006,
+            "rep_name": "Aravind Selvaraj",
+            "deal_id": "cmu1yc26l00jls70udbmtskex",
+            "deal_title": "DemoReady Hot ae197d3b \u2014 Demo Hotae197d3b",
+            "deal_stage": "qualification",
+            "account_name": "DemoReady Hot ae197d3b",
+            "currency": "INR",
+            "deal_value": 0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-09-15"
+          },
+          {
+            "rep_user_id": 1006,
+            "rep_name": "Aravind Selvaraj",
+            "deal_id": "cmu2lfhrs0016ky0uhwo333v4",
+            "deal_title": "worktual \u2014 Santhosh...",
+            "deal_stage": "qualification",
+            "account_name": "worktual",
+            "currency": "INR",
+            "deal_value": 0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-09-15"
+          },
+          {
+            "rep_user_id": 1006,
+            "rep_name": "Aravind Selvaraj",
+            "deal_id": "cmu5la81n001vo50ukx6wdp4b",
+            "deal_title": "Engage Verify Co \u2014 V2 Engage4e5291be",
+            "deal_stage": "qualification",
+            "account_name": "Engage Verify Co",
+            "currency": "INR",
+            "deal_value": 0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-09-17"
+          },
+          {
+            "rep_user_id": 1006,
+            "rep_name": "Aravind Selvaraj",
+            "deal_id": "cmuc62t8y000jpg0up8lj66iw",
+            "deal_title": "contact center",
+            "deal_stage": "propose",
+            "account_name": "accenture",
+            "currency": "USD",
+            "deal_value": 15000.0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-09-22"
+          },
+          {
+            "rep_user_id": 1006,
+            "rep_name": "Aravind Selvaraj",
+            "deal_id": "cmue1j3pq000yzuzzjrr3sqm4",
+            "deal_title": "positron \u2014 vijay s",
+            "deal_stage": "propose",
+            "account_name": "positron",
+            "currency": "INR",
+            "deal_value": 0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-09-23"
+          },
+          {
+            "rep_user_id": 1006,
+            "rep_name": "Aravind Selvaraj",
+            "deal_id": "cmuebsc3500g61a0lm2ldbzat",
+            "deal_title": "Q dbg",
+            "deal_stage": "qualification",
+            "account_name": "accenture",
+            "currency": "INR",
+            "deal_value": 1.0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-09-23"
+          },
+          {
+            "rep_user_id": 1006,
+            "rep_name": "Aravind Selvaraj",
+            "deal_id": "cmueew3bw00jz1a0lk9gugqrz",
+            "deal_title": "RevFlow Deal 7d754e",
+            "deal_stage": "qualification",
+            "account_name": "accenture",
+            "currency": "INR",
+            "deal_value": 25000.0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-09-23"
+          },
+          {
+            "rep_user_id": 1006,
+            "rep_name": "Aravind Selvaraj",
+            "deal_id": "cmuef58vq00kd1a0ljzax1x3n",
+            "deal_title": "RevFlow Deal 07d467",
+            "deal_stage": "qualification",
+            "account_name": "accenture",
+            "currency": "INR",
+            "deal_value": 25000.0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-09-23"
+          },
+          {
+            "rep_user_id": 1006,
+            "rep_name": "Aravind Selvaraj",
+            "deal_id": "cmtemmxuk001pnx0ut9wmiz34",
+            "deal_title": "Engage Verify Co \u2014 V2 Engage4e5291be",
+            "deal_stage": "closed_lost",
+            "account_name": "Engage Verify Co",
+            "currency": "USD",
+            "deal_value": 0.0,
+            "lost_reason": "pricing",
+            "forecast_category": "omitted",
+            "created_date": "2026-08-29"
+          },
+          {
+            "rep_user_id": 1039,
+            "rep_name": "Sample Name",
+            "deal_id": "cmuf55xr5004oms0uxcdaa5kq",
+            "deal_title": "Zifo \u2014 Coworker coworker",
+            "deal_stage": "qualification",
+            "account_name": "Zifo",
+            "currency": "INR",
+            "deal_value": 0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-09-24"
+          },
+          {
+            "rep_user_id": 1000,
+            "rep_name": "Yaswanth MG",
+            "deal_id": "cmsrafaql00051aqrmurff1i0",
+            "deal_title": "oveledge \u2014 yaswanth guna",
+            "deal_stage": "discover",
+            "account_name": "oveledge",
+            "currency": "INR",
+            "deal_value": 0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-08-13"
+          },
+          {
+            "rep_user_id": 1000,
+            "rep_name": "Yaswanth MG",
+            "deal_id": "cmsyprbgx001w1avw1hm4pzn2",
+            "deal_title": "CloudVista Technologies \u2014 Ananya Rao",
+            "deal_stage": "propose",
+            "account_name": "CloudVista Technologies",
+            "currency": "INR",
+            "deal_value": 0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-08-18"
+          },
+          {
+            "rep_user_id": 1000,
+            "rep_name": "Yaswanth MG",
+            "deal_id": "cmsypszdb00391avwxmo9km87",
+            "deal_title": "NextGen Works \u2014 Rohan Das",
+            "deal_stage": "propose",
+            "account_name": "NextGen Works",
+            "currency": "INR",
+            "deal_value": 0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-08-18"
+          }
+        ],
+        "sql": "MATCH (u:User)\nWHERE ($can_view_all = true OR u.id = $effective_user_id)\n  AND (coalesce($rep_name, '') = '' OR toLower(u.first_name) CONTAINS toLower($rep_name) OR toLower(u.last_name) CONTAINS toLower($rep_name))\nOPTIONAL MATCH (d:Deal) WHERE d.owner_user_id = u.id\nOPTIONAL MATCH (d)-[:HAS]->(q:Quote)\nOPTIONAL MATCH (a:Account {id: d.company_id})\nWITH u, d, a, collect(q) AS quotes\nWITH u, d, a,\n     [q IN quotes WHERE toLower(q.approval_status) = 'approved'][0] AS approved_quote,\n     quotes[0] AS any_quote\nWITH u, d, a,\n     coalesce(approved_quote.currency, any_quote.currency, d.currency, $default_currency, 'INR') AS currency,\n     coalesce(approved_quote.total, any_quote.total, d.amount, 0) AS final_amount\nWHERE d IS NOT NULL\nRETURN u.id AS rep_user_id,\n       u.first_name + ' ' + coalesce(u.last_name, '') AS rep_name,\n       d.id AS deal_id,\n       d.title AS deal_title,\n       d.stage AS deal_stage,\n       coalesce(a.name, 'Unassigned Account') AS account_name,\n       currency,\n       final_amount AS deal_value,\n       d.lost_reason AS lost_reason,\n       d.forecast_category AS forecast_category,\n       toString(date(d.created_at)) AS created_date\nORDER BY rep_name, d.created_at\nLIMIT 25",
+        "tool": "kg",
+        "attempts_made": 1,
+        "kg_notes": "### Yaswanth's Deal Pipeline and Stage Distribution\n\nYaswanth's current pipeline consists of 10 recorded deals with a total combined value of \u20b950,001.00 (INR) and $15,000.00 (USD). The majority of the workload is concentrated in the `qualification` stage, with additional deals in the `discover` stage.\n\n| Metric | Value |\n| :--- | :--- |\n| **Total Deal Value** | **\u20b950,001.00 (INR) / $15,000.00 (USD)** |\n| **Total Deals Analyzed** | **10** |\n| **Primary Stage** | **qualification** |\n\n### Deal Value and $0 Opportunities\n\nA significant portion of the analyzed deals are currently recorded at $0 value, indicating a potential gap in quote attachment or line-item entry.\n\n* **$0 Value Deals:**\n    * `OrbitCRM \u2014 Karthik Reddy` (Account: OrbitCRM)\n    * `Vince \u2014 hariiii hariiii` (Account: Vince)\n    * `Unknown` (Account: Unknown Account)\n    * `DemoReady Hot c123afae \u2014 Demo Hotc123afae` (Account: DemoReady Hot c123afae)\n    * `Lyca \u2014 Tonny S` (Account: Lyca)\n    * `Northstar Verify \u2014 V1 Hotadaed1ac` (Account: Northstar Verify)\n    * `Google <no-reply@accounts.google.com>` (Account: Google <no-reply@accounts.google.com> Account)\n    * `KFC \u2014 Divya Prasath` (Account: KFC)\n    * `<messages-noreply@linkedin.com>` (Account: <messages-noreply@linkedin.com> Account)\n    * `DemoReady Hot e188bcb3 \u2014 Demo Hote188bcb3` (Account: DemoReady Hot e188bcb3)\n\n*Note: These $0 entries lack associated quote or line-item data to establish a projected revenue amount.*\n\n### Performance Diagnosis and Next Steps\n\nThe data shows a high volume of activity in the early stages (`qualification` and `discover`), but the lack of realized deal value suggests the pipeline is currently composed of top-of-funnel prospecting rather than qualified revenue opportunities.\n\n**Recommended Next Steps:**\n* **Audit Quote Data:** Review the $0 deals listed above to identify if missing quotes or line items are preventing accurate revenue forecasting.\n* **Stage Progression Review:** Evaluate the transition rate from `qualification` to later stages to ensure the high volume of early-stage deals is converting.\n* **Loss Reason Analysis:** Once deals move out of the pipeline, ensure \"Lost Reason\" is captured to differentiate between product gaps and competitive losses.",
+        "task": {
+          "id": "t4",
+          "executor": "kg",
+          "kpi": null,
+          "goal": "Analyze Yaswanth's performance: deal stages, lost reasons, activity mix, and quote status",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "why_breakdown",
+          "depends_on": [
+            "t2",
+            "t3"
+          ]
+        }
+      }
+    ],
+    "domain_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"deep\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"total_opportunities\",\n      \"goal\": \"Deal counts and pipeline for Yaswanth\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"owner_name\": \"Yaswanth\",\n      \"dimension\": null,\n      \"answer_type\": \"breakdown\",\n      \"depends_on\": []\n    },\n    {\n      \"id\": \"t2\",\n      \"executor\": \"sql\",\n      \"kpi\": \"won_revenue\",\n      \"goal\": \"Won revenue for Yaswanth\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"owner_name\": \"Yaswanth\",\n      \"dimension\": null,\n      \"answer_type\": \"kpi\",\n      \"depends_on\": [\"t1\"]\n    },\n    {\n      \"id\": \"t3\",\n      \"executor\": \"sql\",\n      \"kpi\": \"collected_revenue\",\n      \"goal\": \"Collected revenue for Yaswanth\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"owner_name\": \"Yaswanth\",\n      \"dimension\": null,\n      \"answer_type\": \"kpi\",\n      \"depends_on\": [\"t1\"]\n    },\n    {\n      \"id\": \"t4\",\n      \"executor\": \"kg\",\n      \"kpi\": null,\n      \"goal\": \"Analyze Yaswanth's performance: deal stages, lost reasons, activity mix, and quote status\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"dimension\": null,\n      \"answer_type\": \"why_breakdown\",\n      \"depends_on\": [\"t2\", \"t3\"]\n    }\n  ]\n}\n```",
+    "plan": {
+      "kind": "plan",
+      "depth": "deep",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "total_opportunities",
+          "goal": "Deal counts and pipeline for Yaswanth",
+          "time": "all time",
+          "scope": "org",
+          "owner_name": "Yaswanth",
+          "dimension": null,
+          "answer_type": "breakdown",
+          "depends_on": []
+        },
+        {
+          "id": "t2",
+          "executor": "sql",
+          "kpi": "won_revenue",
+          "goal": "Won revenue for Yaswanth",
+          "time": "all time",
+          "scope": "org",
+          "owner_name": "Yaswanth",
+          "dimension": null,
+          "answer_type": "kpi",
+          "depends_on": [
+            "t1"
+          ]
+        },
+        {
+          "id": "t3",
+          "executor": "sql",
+          "kpi": "collected_revenue",
+          "goal": "Collected revenue for Yaswanth",
+          "time": "all time",
+          "scope": "org",
+          "owner_name": "Yaswanth",
+          "dimension": null,
+          "answer_type": "kpi",
+          "depends_on": [
+            "t1"
+          ]
+        },
+        {
+          "id": "t4",
+          "executor": "kg",
+          "kpi": null,
+          "goal": "Analyze Yaswanth's performance: deal stages, lost reasons, activity mix, and quote status",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "why_breakdown",
+          "depends_on": [
+            "t2",
+            "t3"
+          ]
+        }
+      ]
+    },
+    "facts": "time_requested: all time\nperiod_applied: overall (no date filter, UTC)\ntime_status: all_time\ncatalog_kpi: total_opportunities\nRESULT: 1 group(s)\ngroup_by: owner\ntotal_total_opportunities: 27\n  Yaswanth MG: 27\n\ntime_requested: all time\nperiod_applied: overall (no date filter, UTC)\ntime_status: all_time\ncatalog_kpi: won_revenue\nRESULT: 1 group(s)\ngroup_by: owner\ntotal_won_revenue: 150000\n  Yaswanth MG: 150000.00\n\ntime_requested: all time\nperiod_applied: overall (no date filter, UTC)\ntime_status: all_time\ncatalog_kpi: collected_revenue\nRESULT: 1 group(s)\ngroup_by: owner\ntotal_collected_revenue: 15000\n  1: 15000.00\n\ntime_requested: all time\ntime_status: kg\nRESULT: 25 group(s)\ngroup_by: group\ntotal_deal_value: 65001\n  1006 / Aravind Selvaraj / cmsypwspr004i1avw9tyswa8c / OrbitCRM \u2014 Karthik Reddy / discover / OrbitCRM / INR / None / omitted / 2026-08-18: 0\n  1006 / Aravind Selvaraj / cmt3zfddn00141acun0hd9dpo / Vince \u2014 hariiii hariiii / qualification / Vince / INR / None / omitted / 2026-08-22: 0\n  1006 / Aravind Selvaraj / cmt7skrx00016or0umjlffvqh / Unknown / discover / Unknown Account / INR / None / omitted / 2026-08-24: 0\n  1006 / Aravind Selvaraj / cmthdpsls003xnx0ue7jvayaa / DemoReady Hot c123afae \u2014 Demo Hotc123afae / qualification / DemoReady Hot c123afae / INR / None / omitted / 2026-08-31: 0\n  1006 / Aravind Selvaraj / cmtmswn88003xo40uowq3r8gp / Lyca \u2014 Tonny S / qualification / Lyca / INR / None / omitted / 2026-09-04: 0\n  1006 / Aravind Selvaraj / cmtmu1of3005bo40u5e1awvt4 / Northstar Verify \u2014 V1 Hotadaed1ac / qualification / Northstar Verify / INR / None / omitted / 2026-09-04: 0\n  1006 / Aravind Selvaraj / cmtmwc8f9008jo40utzjyvcj4 / Google <no-reply@accounts.google.com> / qualification / Google <no-reply@accounts.google.com> Account / INR / None / omitted / 2026-09-04: 0\n  1006 / Aravind Selvaraj / cmtnv4r0900czo40uqe8c9zff / KFC \u2014 Divya Prasath / qualification / KFC / INR / None / omitted / 2026-09-05: 0\n  1006 / Aravind Selvaraj / cmttdese80013oh0v1hssbxxt / <messages-noreply@linkedin.com> / qualification / <messages-noreply@linkedin.com> Account / INR / None / omitted / 2026-09-09: 0\n  1006 / Aravind Selvaraj / cmu17ygsv007js70u7wux8u3k / DemoReady Hot e188bcb3 \u2014 Demo Hote188bcb3 / qualification / DemoReady Hot e188bcb3 / INR / None / omitted / 2026-09-14: 0\n  1006 / Aravind Selvaraj / cmu1rff0s00ics70u4upzmjz6 / worktual \u2014 Anjali Kumar / qualification / worktual / INR / None / omitted / 2026-09-14: 0\n  1006 / Aravind Selvaraj / cmu1t6w9u00irs70u3xhu1vjg / amazon \u2014 saran s / qualification / amazon / INR / None / omitted / 2026-09-14: 0\n  1006 / Aravind Selvaraj / cmu1yc26l00jls70udbmtskex / DemoReady Hot ae197d3b \u2014 Demo Hotae197d3b / qualification / DemoReady Hot ae197d3b / INR / None / omitted / 2026-09-15: 0\n  1006 / Aravind Selvaraj / cmu2lfhrs0016ky0uhwo333v4 / worktual \u2014 Santhosh... / qualification / worktual / INR / None / omitted / 2026-09-15: 0\n  1006 / Aravind Selvaraj / cmu5la81n001vo50ukx6wdp4b / Engage Verify Co \u2014 V2 Engage4e5291be / qualification / Engage Verify Co / INR / None / omitted / 2026-09-17: 0\n  ... 10 more groups not listed\nkg_notes:\n### Yaswanth's Deal Pipeline and Stage Distribution\n\nYaswanth's current pipeline consists of 10 recorded deals with a total combined value of \u20b950,001.00 (INR) and $15,000.00 (USD). The majority of the workload is concentrated in the `qualification` stage, with additional deals in the `discover` stage.\n\n| Metric | Value |\n| :--- | :--- |\n| **Total Deal Value** | **\u20b950,001.00 (INR) / $15,000.00 (USD)** |\n| **Total Deals Analyzed** | **10** |\n| **Primary Stage** | **qualification** |\n\n### Deal Value and $0 Opportunities\n\nA significant portion of the analyzed deals are currently recorded at $0 value, indicating a potential gap in quote attachment or line-item entry.\n\n* **$0 Value Deals:**\n    * `OrbitCRM \u2014 Karthik Reddy` (Account: OrbitCRM)\n    * `Vince \u2014 hariiii hariiii` (Account: Vince)\n    * `Unknown` (Account: Unknown Account)\n    * `DemoReady Hot c123afae \u2014 Demo Hotc123afae` (Account: DemoReady Hot c123afae)\n    * `Lyca \u2014 Tonny S` (Account: Lyca)\n    * `Northstar Verify \u2014 V1 Hotadaed1ac` (Account: Northstar Verify)\n    * `Google <no-reply@accounts.google.com>` (Account: Google <no-reply@accounts.google.com> Account)\n    * `KFC \u2014 Divya Prasath` (Account: KFC)\n    * `<messages-noreply@linkedin.com>` (Account: <messages-noreply@linkedin.com> Account)\n    * `DemoReady Hot e188bcb3 \u2014 Demo Hote188bcb3` (Account: DemoReady Hot e188bcb3)\n\n*Note: These $0 entries lack associated quote or line-item data to establish a projected revenue amount.*\n\n### Performance Diagnosis and Next Steps\n\nThe data shows a high volume of activity in the early stages (`qualification` and `discover`), but the lack of realized deal value suggests the pipeline is currently composed of top-of-funnel prospecting rather than qualified revenue opportunities.\n\n**Recommended Next Steps:**\n* **Audit Quote Data:** Review the $0 deals listed above to identify if missing quotes or line items are preventing accurate revenue forecasting.\n* **Stage Progression Review:** Evaluate the transition rate from `qualification` to later stages to ensure the high volume of early-stage deals is converting.\n* **Loss Reason Analysis:** Once deals move out of the pipeline, ensure \"Lost Reason\" is captured to differentiate between product gaps and competitive losses.",
+    "grounded": true,
+    "briefing_raw": "Yaswanth MG has 27 total opportunities with 150,000.00 in won revenue. Collected revenue for the organization is 15,000.00.\n\nThe current pipeline consists of 10 recorded deals with a total value of \u20b950,001.00 (INR) / $15,000.00 (USD), with most deals concentrated in the qualification stage. A significant portion of these deals\u2014including OrbitCRM, Vince, Lyca, and Google\u2014are currently recorded at $0 value, indicating a gap in quote attachment or line-item entry.\n\nReview the $0 deals to ensure missing quotes or line items are not preventing accurate revenue forecasting."
+  }
+}

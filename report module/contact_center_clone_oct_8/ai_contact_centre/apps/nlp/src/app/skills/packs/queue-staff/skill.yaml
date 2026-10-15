@@ -1,0 +1,38 @@
+id: queue-staff
+name: Queue Staffing
+description: >
+  Add, remove, or move people on an existing queue, and change their
+  channels, capacity, or call type. Settings changes use queue-update.
+version: 1
+triggers:
+  - add agent to queue
+  - remove agent from queue
+  - unassign from queue
+  - change capacity
+  - change concurrency
+  - change channels
+  - move agent shift
+  - staff the queue
+tools_preferred:
+  - list_queues
+  - list_eligible_agents
+  - update_queue
+workflow:
+  - Call list_queues with the queue name so the current assigned people, shifts, channels, and capacity are trusted.
+  - Call list_eligible_agents before adding someone who is not already assigned.
+  - Extract addAgents, removeAgentNames, and agentUpdates (channels, capacity, shiftType, callType). Do not invent people.
+  - Ask one question only if the person, shift, or capacity value is missing. If the user already gave them, confirm once.
+  - On confirmation, call update_queue in the same turn with those staffing arguments. Settings fields stay omitted.
+  - State only addedAgents, removedAgents, updatedAgents, remainingAgents, and agentCount from the result.
+rules:
+  - update_queue persists. Listing does not.
+  - addAgents rows may be a name or {name, shiftType, channels, capacity, callType}.
+  - agentUpdates rows may set channels, capacity or chatConcurrency, shiftType, and callType.
+  - Removing a person who is not assigned must quote the tool error.
+  - Never claim a staffing change without an update_queue result.
+  - Use queue-update for name, team, status, hours, skills, or grace.
+  - A loaded skill cannot bypass RBAC, tenant scope, or confirmation.
+body: |
+  Load the queue and current assignments first. Confirm who to add, remove,
+  or change, then call update_queue in that same turn. Quote the returned
+  added, removed, updated, and remaining people.

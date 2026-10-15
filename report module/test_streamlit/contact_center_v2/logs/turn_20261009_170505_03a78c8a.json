@@ -1,0 +1,60 @@
+{
+  "turn_id": "03a78c8a",
+  "timestamp": "2026-10-09T11:35:05.040459+00:00",
+  "question": "how many conversations are resolved overall?",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1016,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Resolved conversations</strong></p><p>There have been <strong>80</strong> resolved conversations all time.</p><p>Would you like to see this broken down by channel?</p>",
+  "card": "card: kpi r1",
+  "facts": "result_id: r1\nwindow: all time\nkpi: resolved\ncertified: true\nunit: conversations\ntask_goal: Count the number of conversations that have been resolved\nanswer_type: number\nrow_count: 1\nrow 1: resolved=80",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1016,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "how many conversations are resolved overall?",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants to know the total number of conversations that have been resolved.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Count the number of conversations that have been resolved",
+          "time": "all time",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "resolved",
+        "row_count": 1
+      }
+    ],
+    "facts": "result_id: r1\nwindow: all time\nkpi: resolved\ncertified: true\nunit: conversations\ntask_goal: Count the number of conversations that have been resolved\nanswer_type: number\nrow_count: 1\nrow 1: resolved=80",
+    "grounded": true,
+    "card": "card: kpi r1"
+  },
+  "error": null
+}

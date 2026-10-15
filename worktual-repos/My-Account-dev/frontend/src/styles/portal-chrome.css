@@ -1,0 +1,442 @@
+/**
+ * Shared Worktual chrome for non-admin portals.
+ * Canvas #F4F4F6 · Surfaces #FFFFFF · Border #C9C9CF
+ * Equal-height KPI rows · Navigable-only table hover · Native select chrome · Login polish
+ * Does not target .app-shell--admin (admin portal already enhanced).
+ */
+
+/* --- Canvas (exclude admin) --- */
+.app-shell:not(.app-shell--admin) .app-content,
+.app-shell--partner .app-content,
+.app-shell--reseller .app-content,
+.app-shell--finance .app-content,
+.app-shell--customer .app-content,
+.app-shell--sales-admin .app-content {
+  background: #f4f4f6;
+}
+
+/* --- Fixed toast top-center (works without admin-users-light.css) --- */
+.admin-users-toast {
+  align-items: flex-start;
+  animation: admin-users-toast-in 0.18s ease-out;
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(11, 11, 16, 0.16);
+  display: flex;
+  gap: 12px;
+  left: 50%;
+  max-width: min(420px, calc(100vw - 32px));
+  padding: 12px 14px;
+  position: fixed;
+  right: auto;
+  top: 24px;
+  transform: translateX(-50%);
+  z-index: 260;
+}
+
+.admin-users-toast--pill {
+  align-items: center;
+  border-radius: 999px;
+  gap: 10px;
+  max-width: min(520px, calc(100vw - 48px));
+  padding: 10px 14px 10px 18px;
+  top: 20px;
+}
+
+@keyframes admin-users-toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.admin-users-toast p {
+  flex: 1 1 auto;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.admin-users-toast__close {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  color: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  flex: 0 0 auto;
+  justify-content: center;
+  opacity: 0.75;
+  padding: 2px;
+}
+
+.admin-users-toast__close:hover {
+  opacity: 1;
+}
+
+.admin-users-toast.is-error {
+  background: #fffafb;
+  border: 1px solid color-mix(in srgb, #db4437 28%, #c9c9cf);
+  color: #c73e32;
+}
+
+.admin-users-toast.is-success {
+  background: #f6fbf9;
+  border: 1px solid color-mix(in srgb, #0f9d58 28%, #c9c9cf);
+  color: #0e8f50;
+}
+
+/* --- Equal-height card rows (strip stays content-sized; cards stretch within the row) --- */
+/* Note: `.sa-kpi-grid` is intentionally excluded — sales-oversight KPIs stay content-sized
+   (anti-stretch). See UI_UX_CONSISTENCY → Sales oversight. */
+.lead-dashboard-stats,
+.sales-dashboard-summary,
+.admin-users-kpi-grid,
+.app-shell:not(.app-shell--admin) .products-grid {
+  align-items: stretch;
+  flex: 0 0 auto;
+  grid-auto-rows: 1fr;
+  height: max-content;
+}
+
+.lead-dashboard-stats .sales-dashboard-stat-card,
+.lead-dashboard-stats .onboarding-card,
+.sales-dashboard-summary .sales-dashboard-stat-card,
+.admin-users-kpi-grid .admin-users-kpi-card,
+.app-shell:not(.app-shell--admin) .products-grid .product-card {
+  align-self: stretch;
+  height: auto;
+  min-height: 100%;
+}
+
+.sa-kpi-card {
+  background: #ffffff;
+  border: 1px solid #c9c9cf;
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+/* White surfaces on grey canvas for common panels */
+.app-shell:not(.app-shell--admin) .onboarding-card,
+.app-shell:not(.app-shell--admin) .lead-dashboard-panel,
+.app-shell:not(.app-shell--admin) .sales-dashboard-panel,
+.app-shell:not(.app-shell--admin) .sa-panel,
+.app-shell:not(.app-shell--admin) .finance-queue-detail,
+.app-shell:not(.app-shell--admin) .finance-queue-list,
+.app-shell:not(.app-shell--admin) .customer-support-detail,
+.app-shell:not(.app-shell--admin) .customer-support-form,
+.app-shell:not(.app-shell--admin) .admin-directory-panel,
+.app-shell:not(.app-shell--admin) .commission-slabs-card,
+.app-shell:not(.app-shell--admin) .table-card {
+  background: #ffffff;
+  border-color: #c9c9cf;
+  box-shadow: none;
+}
+
+.app-shell:not(.app-shell--admin) .sales-dashboard-stat-card.onboarding-card,
+.app-shell:not(.app-shell--admin) .admin-users-kpi-card {
+  background: #ffffff;
+  border: 1px solid #c9c9cf;
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+.app-shell:not(.app-shell--admin) .product-card {
+  background: #ffffff;
+  border-color: #c9c9cf;
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+.app-shell:not(.app-shell--admin) .product-card.is-selected {
+  border-color: #0b0b10;
+  box-shadow: 0 0 0 1px #0b0b10;
+}
+
+/* Page headers — title + subtitle density */
+.app-shell:not(.app-shell--admin) .page-header h1 {
+  color: #0b0b10;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 28px;
+}
+
+.app-shell:not(.app-shell--admin) .page-header__copy,
+.app-shell:not(.app-shell--admin) .page-header > div > p:not(.eyebrow) {
+  color: #3f3f49;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.app-shell:not(.app-shell--admin) .eyebrow {
+  display: none;
+}
+
+@media (max-height: 720px) {
+  .app-shell:not(.app-shell--admin) .page-header__copy {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+    overflow: hidden;
+  }
+}
+
+/* --- Native selects (non-admin shells + login) --- */
+/* One CSS chevron only — never also render a Lucide ChevronDown sibling. */
+.app-shell:not(.app-shell--admin) select,
+.login-screen select {
+  -webkit-appearance: none;
+  appearance: none;
+  background-color: var(--bg-surface);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%237E7E88' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-position: right 16px center;
+  background-repeat: no-repeat;
+  background-size: 16px 16px;
+  border-color: var(--border-default);
+  color: var(--text-primary);
+  cursor: pointer;
+  padding-left: 16px;
+  padding-right: 48px;
+}
+
+.app-shell:not(.app-shell--admin) select::-ms-expand,
+.login-screen select::-ms-expand {
+  display: none;
+}
+
+.app-shell:not(.app-shell--admin) select:hover:not(:disabled),
+.login-screen select:hover:not(:disabled) {
+  background-color: var(--bg-subtle);
+  border-color: var(--border-strong);
+}
+
+.app-shell:not(.app-shell--admin) select:focus,
+.app-shell:not(.app-shell--admin) select:focus-visible,
+.login-screen select:focus,
+.login-screen select:focus-visible {
+  border-color: #5f1fb0;
+  box-shadow: 0 0 0 3px color-mix(in srgb, #5f1fb0 18%, transparent);
+  outline: none;
+}
+
+.app-shell:not(.app-shell--admin) select:disabled,
+.login-screen select:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* --- Tables: row hover only when navigable --- */
+.app-shell:not(.app-shell--admin) .sa-table tbody tr:hover,
+.app-shell:not(.app-shell--admin) .data-table tbody tr:hover,
+.app-shell:not(.app-shell--admin) .admin-directory-table tbody tr:hover,
+.app-shell:not(.app-shell--admin) .finance-product-table tbody tr:hover,
+.app-shell:not(.app-shell--admin) .leads-table tbody tr:hover {
+  background: transparent;
+}
+
+.app-shell:not(.app-shell--admin) .sa-table tbody tr.is-clickable,
+.app-shell:not(.app-shell--admin) .sa-table tbody tr.sa-table__clickable,
+.app-shell:not(.app-shell--admin) .data-table tbody tr.is-clickable,
+.app-shell:not(.app-shell--admin) .admin-directory-table tbody tr.is-clickable,
+.app-shell:not(.app-shell--admin) .leads-table tbody tr.is-clickable,
+.app-shell:not(.app-shell--admin) .leads-table__row.is-clickable {
+  cursor: pointer;
+}
+
+.app-shell:not(.app-shell--admin) .sa-table tbody tr.is-clickable:hover,
+.app-shell:not(.app-shell--admin) .sa-table tbody tr.sa-table__clickable:hover,
+.app-shell:not(.app-shell--admin) .data-table tbody tr.is-clickable:hover,
+.app-shell:not(.app-shell--admin) .admin-directory-table tbody tr.is-clickable:hover,
+.app-shell:not(.app-shell--admin) .leads-table tbody tr.is-clickable:hover,
+.app-shell:not(.app-shell--admin) .leads-table__row.is-clickable:hover {
+  background: #f4f4f6;
+}
+
+/* Directory tables used outside admin (number-mgmt, partner commissions, finance) */
+.app-shell:not(.app-shell--admin) .admin-directory-table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+}
+
+.app-shell:not(.app-shell--admin) .admin-directory-table th,
+.app-shell:not(.app-shell--admin) .admin-directory-table td {
+  border-bottom: 1px solid #c9c9cf;
+  color: #0b0b10;
+  font-size: 0.875rem;
+  padding: 12px 16px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.app-shell:not(.app-shell--admin) .admin-directory-table th {
+  background: #f4f4f6;
+  color: #5e5e69;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.app-shell:not(.app-shell--admin) .admin-directory-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+/* --- Finance queue / partner commissions polish --- */
+.app-shell:not(.app-shell--admin) .finance-queue-page,
+.app-shell:not(.app-shell--admin) .finance-partner-commissions-page {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 24px;
+  min-height: 0;
+}
+
+.app-shell:not(.app-shell--admin) .finance-queue-panel {
+  background: #ffffff;
+  border: 1px solid #c9c9cf;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.app-shell:not(.app-shell--admin) .finance-reseller-billing.onboarding-card,
+.app-shell:not(.app-shell--admin) .finance-product-summary {
+  background: #ffffff;
+  border: 1px solid #c9c9cf;
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+/* --- Partner / reseller surfaces --- */
+.app-shell--partner .customer-portal-role-badge.is-partner {
+  background: #ffffff;
+  border-color: #c9c9cf;
+  color: #3f3f49;
+}
+
+.app-shell--partner .onboarding-card,
+.app-shell--reseller .onboarding-card,
+.app-shell--partner .admin-directory-panel,
+.app-shell--reseller .admin-directory-panel {
+  background: #ffffff;
+  border: 1px solid #c9c9cf;
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+.app-shell--partner .lead-dashboard-stats .sales-dashboard-stat-card,
+.app-shell--reseller .lead-dashboard-stats .sales-dashboard-stat-card {
+  background: #ffffff;
+  border: 1px solid #c9c9cf;
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+.app-shell--partner .data-table th,
+.app-shell--reseller .data-table th {
+  background: #f4f4f6;
+  color: #5e5e69;
+}
+
+/* --- Number management --- */
+.app-shell--finance .nm-dashboard-page,
+.app-shell--finance .nm-mapping-page,
+.app-shell--finance .nm-customer-page {
+  min-height: 0;
+}
+
+.app-shell--finance .nm-dashboard-kpi__card,
+.app-shell--finance .nm-dashboard-panel,
+.app-shell--finance .nm-mapping-panel,
+.app-shell--finance .nm-customer-info-panel,
+.app-shell--finance .nm-customer-panel {
+  background: #ffffff;
+  border: 1px solid #c9c9cf;
+  box-shadow: none;
+}
+
+/* --- Login polish --- */
+.login-screen {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.login-stage {
+  background: #f4f4f6;
+}
+
+.login-card {
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.login-card__story {
+  background: #0b0b10;
+  border-radius: 12px 0 0 12px;
+}
+
+.login-card__story h1 {
+  color: #ffffff;
+}
+
+.login-card__story h1 span {
+  background: none;
+  color: #8650de;
+  -webkit-background-clip: unset;
+  background-clip: unset;
+}
+
+.login-card__form-panel {
+  background: #ffffff;
+  border: 1px solid #c9c9cf;
+  border-left: 0;
+  border-radius: 0 12px 12px 0;
+}
+
+.login-form .primary-button {
+  background: #0b0b10;
+  color: #ffffff;
+}
+
+.login-form .primary-button:hover:not(:disabled) {
+  background: #23232b;
+}
+
+.login-form .primary-button:active:not(:disabled) {
+  background: #000000;
+}
+
+/* Violet CTA on dark header chrome — match Sign in height (48px) */
+.login-header__button {
+  background: #7423d7;
+  border-color: #7423d7;
+  color: #ffffff;
+  font-size: 16px;
+  min-height: 48px;
+  padding: 0 20px;
+}
+
+.login-header__button:hover {
+  background: #8650de;
+  border-color: #8650de;
+}
+
+.login-header__button:active {
+  background: #5f1fb0;
+  border-color: #5f1fb0;
+}
+
+@media (max-width: 960px) {
+  .login-card__story,
+  .login-card__form-panel {
+    border-radius: 12px;
+  }
+
+  .login-card__form-panel {
+    border: 1px solid #c9c9cf;
+  }
+}

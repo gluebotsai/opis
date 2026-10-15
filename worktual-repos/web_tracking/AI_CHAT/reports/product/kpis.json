@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "kpis": {
+    "unique_visitors": {
+      "label": "Unique visitors",
+      "store": "clickhouse",
+      "synonyms": ["visitors", "total visitors", "how many visitors"],
+      "allowed_answer_types": ["kpi", "breakdown"],
+      "allowed_dimensions": ["country", "device", "traffic_source", "campaign"]
+    },
+    "web_session_volume": {
+      "label": "Sessions",
+      "store": "clickhouse",
+      "synonyms": ["sessions", "how many sessions"],
+      "allowed_answer_types": ["kpi", "breakdown"]
+    },
+    "page_views": {
+      "label": "Page views",
+      "store": "clickhouse",
+      "synonyms": ["pageviews", "pages viewed"],
+      "allowed_answer_types": ["kpi", "breakdown", "ranking"],
+      "allowed_dimensions": ["page_path"]
+    },
+    "bounce_rate": {
+      "label": "Bounce rate",
+      "store": "clickhouse",
+      "allowed_answer_types": ["kpi"]
+    },
+    "online_visitors": {
+      "label": "Online visitors now",
+      "store": "clickhouse",
+      "realtime": true,
+      "allowed_answer_types": ["kpi"]
+    },
+    "product_interaction_count": {
+      "label": "Product page interactions",
+      "store": "semantic",
+      "synonyms": ["product views", "product visited", "PDP"],
+      "allowed_answer_types": ["kpi", "breakdown", "ranking"],
+      "allowed_dimensions": ["product_id", "product_name"]
+    },
+    "total_clicks": { "label": "Total clicks", "store": "clickhouse", "allowed_answer_types": ["kpi"] },
+    "total_conversions": { "label": "Conversions", "store": "clickhouse", "allowed_answer_types": ["kpi"] },
+    "new_visitor_count": { "label": "New visitors", "store": "clickhouse", "allowed_answer_types": ["kpi"] },
+    "returning_visitor_count": { "label": "Returning visitors", "store": "clickhouse", "allowed_answer_types": ["kpi"] },
+    "average_session_duration": { "label": "Average session duration", "store": "clickhouse", "allowed_answer_types": ["kpi"] }
+  }
+}

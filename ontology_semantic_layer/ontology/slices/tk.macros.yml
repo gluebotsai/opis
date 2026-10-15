@@ -1,0 +1,33 @@
+slice_id: tk.macros
+agent: Macros Specialist
+modules:
+- core
+- tk_macro
+classes:
+- Party
+- Person
+- Organization
+- Contact
+- Agent
+- Consent
+- Preference
+- Channel
+- Event
+- WorkItem
+- Location
+- Macro
+relations:
+- Person works_for Organization
+- Contact has_consent Consent
+- Contact has_preference Preference
+- Contact belongs_to Organization
+- Agent works_for Organization
+- Macro owned_by Organization
+actions:
+- action.identify
+- action.route_to_specialist
+- action.create_macro
+- action.update_macro
+- action.delete_macro
+metric_ids: []
+note: Legal slice (tools/policy). Inject pack.as_prompt() compact, not this file.

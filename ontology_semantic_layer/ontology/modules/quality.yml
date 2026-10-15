@@ -1,0 +1,33 @@
+# Module: quality
+module: quality
+layer: domain
+depends_on: [core, interaction]
+usecase: >
+  Interaction Quality Agent (sentiment API). Closure may read scores. No MCP tools.
+  Sentiment scores come from the quality API — no warehouse KPI ids in this module.
+
+classes:
+  - id: Sentiment
+    definition: Turn or session affect label and score.
+    classified_by: [sentiment]
+    properties: [label, score, grain]
+    relations:
+      of: Conversation
+
+  - id: QualityScore
+    definition: Broader QA than sentiment (future). Extends Sentiment conceptually.
+    properties: [score, rubric]
+    relations:
+      of: Conversation
+
+relations:
+  - { from: Sentiment, type: of, to: Conversation }
+  - { from: QualityScore, type: of, to: Conversation }
+
+actions:
+  - id: action.score_sentiment
+    operates_on: [Sentiment]
+    mutates: false
+    definition: Structured JSON only — no customer-visible tools.
+
+metric_ids: []

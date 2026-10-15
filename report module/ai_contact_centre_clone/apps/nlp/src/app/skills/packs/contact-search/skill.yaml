@@ -1,0 +1,48 @@
+id: contact-search
+name: Contact Search
+description: >
+  Search the tenant contact directory and load one authoritative contact profile
+  without guessing identity or profile fields.
+version: 2
+triggers:
+  - find contact
+  - search contacts
+  - list contacts
+  - contact details
+  - count contacts created
+tools_preferred:
+  - list_contacts
+  - count_contacts_created
+  - get_contact
+workflow:
+  - For today or yesterday, call count_contacts_created with period. For another range, pass inclusive startDate and endDate. Do not start a create-contact draft.
+  - Use list_contacts with the user's full name, first name, last name, email, or phone as search.
+  - Present only fields returned by list_contacts and keep internal IDs hidden unless disambiguation requires them.
+  - When one authoritative profile is needed, resolve a unique result and call get_contact.
+  - If no result exists, report that accurately and ask whether the user wants to create a contact.
+  - If sameNameMatches is present or get_contact returns ambiguous, list each person with name and
+    email and ask which email to use. Do not pick one silently.
+rules:
+  - Never infer a record from conversation memory or invent contact fields.
+  - Do not mutate a contact during search.
+  - Treat selected-contact page context as a locator, then call get_contact before profile claims.
+  - When a contact id is in the prompt (the contacts page or the open workspace customer), call
+    get_contact with that id. Do not list_contacts by that person's name, and do not report that
+    the selected contact was not found. A different person the user names is a directory search.
+  - Search by the complete spoken name (for example "Sanju Ravi"), not only the first token.
+  - A loaded skill grants no additional MCP permission or tenant access.
+body: |
+  Contact search and created-period counts are read-only. For "how many contacts were created"
+  questions, call count_contacts_created with period for today/yesterday, or inclusive ISO dates
+  for another range, and report its count. Never
+  interpret "created" in that question as an instruction to create a contact or stage a draft.
+  When a contact id is already in the prompt, including the customer open on the workspace, call
+  get_contact with that id and skip directory search. Otherwise pass the full name, email, or phone
+  to list_contacts.
+  Directory search matches first name, last name, and the combined full name, so "Sanju Ravi"
+  should find that person. Use get_contact to load one authoritative profile.
+
+  If two or more people share the same name, sameNameMatches and get_contact.ambiguous include
+  each record with its email. Show those names and emails and ask the user which email they mean.
+  Do not choose a contact from memory and do not expose internal IDs unnecessarily. For zero
+  matches, say none were found.

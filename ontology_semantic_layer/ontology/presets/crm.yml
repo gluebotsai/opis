@@ -1,0 +1,125 @@
+presets:
+  crm.super:
+    agent: CRM Super Agent
+    level: L1
+    modules:
+    - cdp
+    - identity
+    - crm_account
+    - crm_deal
+    - crm_quote
+    - crm_order
+    - crm_activity
+    - crm_lead
+    - crm_meeting
+    - hub
+    usecase: Route CRM staff chat to contacts, companies, deals, proposals, reports.
+    prompt:
+      full_ontology: true
+      full_definitions: true
+      include_module_index: true
+      include_specialist_catalog: true
+      metrics_mode: none
+      metrics: []
+      actions:
+      - route_to_specialist
+      - spoke_query
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - Route to specialists; do not run their field workflows.
+      - KPI / how-many → crm.reports or crm.reporting_mas workers, not Super.
+      route_table:
+      - Contacts → crm.contacts
+      - Companies → crm.companies
+      - Deals / pipeline → crm.deals
+      - Proposals → crm.proposals
+      - Reports → crm.reports
+  crm.deals:
+    agent: Deal Agent
+    level: L3
+    modules:
+    - cdp
+    - crm_deal
+    - crm_quote
+    - crm_activity
+    usecase: Create/update deals, stages, linked quotes and activities.
+    prompt:
+      classes:
+      - Contact
+      - Contact
+      - Account
+      - Deal
+      - Quote
+      - CrmActivity
+      actions:
+      - create_deal
+      - update_deal_stage
+      - log_activity
+      taxonomy:
+      - deal.stage
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+  crm.reports:
+    agent: CRM Reports Analytics Agent
+    level: L3
+    modules:
+    - cdp
+    - crm_deal
+    - crm_order
+    - crm_activity
+    usecase: KPIs and charts via ask_semantic — metric ids from grants at runtime.
+    prompt:
+      classes:
+      - Deal
+      - Order
+      - PerformanceReport
+      actions:
+      - ask_semantic
+      metrics_mode: headlines
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+  audit-forecast:
+    agent: CRM Forecast Audit Agent
+    level: L3
+    modules:
+    - cdp
+    - crm_deal
+    usecase: Pipeline forecast audit via ask_semantic — overlay fields only.
+    prompt:
+      classes:
+      - Deal
+      - PerformanceReport
+      actions:
+      - ask_semantic
+      metrics_mode: headlines
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+  crm.reporting_mas:
+    agent: CRM Reporting MAS
+    level: platform
+    modules:
+    - cdp
+    - identity
+    - crm_account
+    - crm_deal
+    - crm_quote
+    - crm_order
+    - crm_activity
+    - crm_lead
+    - crm_meeting
+    - hub
+    usecase: MAS catalog for KG, MetricFlow, and SQL-agent setup — not staff-chat routing.
+    prompt:
+      full_ontology: true
+      full_definitions: true
+      include_module_index: true
+      metrics_mode: full
+      metrics: []
+      actions:
+      - ask_semantic
+      - ask_ontology
+      - generate_report
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - MAS catalog / KG / MetricFlow / SQL-agent setup — not staff-chat routing.
+      - Distinct from crm.reports (runtime KPI worker; headlines only).

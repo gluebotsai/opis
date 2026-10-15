@@ -1,0 +1,13 @@
+scoped_labels:
+  Ticket:
+    anchors:
+      self:
+        predicate: "({var}.assigned_to = $scope_user_id OR {var}.agent_id = $scope_user_id OR {var}.created_by = $scope_user_id)"
+      team:
+        predicate: "({var}.queue_id IN $scope_queue_ids OR {var}.team_id IN $scope_team_ids)"
+  SupportCase:
+    anchors:
+      self:
+        predicate: "({var}.assigned_to = $scope_user_id OR {var}.agent_id = $scope_user_id OR {var}.created_by = $scope_user_id)"
+      team:
+        predicate: "({var}.queue_id IN $scope_queue_ids OR {var}.team_id IN $scope_team_ids)"

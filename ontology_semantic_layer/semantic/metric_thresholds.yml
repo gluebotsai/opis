@@ -1,0 +1,2209 @@
+version: 2026.09.3
+note: 'Platform threshold defaults. Org tenants/org{id}/org{id}_metrics.yaml overrides threshold only. Regenerate: python3
+  scripts/generate_metric_thresholds.py'
+metrics:
+  accepted_recommendations_metric:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  account_volume:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  accounts_served:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  active_agents:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  active_agents_metric:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  active_agents_setup:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  active_arr:
+    kind: amount
+    direction: contextual
+    unit: currency
+    threshold: null
+  active_customers_metric:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  active_tickets_metric:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  agent_assist_accepted_or_modified:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  agent_assist_adoption_rate:
+    kind: rate
+    direction: higher_is_better
+    unit: ratio
+    threshold:
+      warn_lt_percent: 50
+      critical_lt_percent: 30
+    source: Assist adoption floor
+  agent_assist_modification_rate:
+    kind: rate
+    direction: higher_is_worse
+    unit: ratio
+    threshold:
+      warn_percent: 25
+      critical_percent: 40
+    source: Assist edit-rate ceiling
+  agent_assist_modified:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  agent_assist_suggestions_total:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  agents_assigned_callback:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  ai_containment_rate:
+    kind: rate
+    direction: higher_is_better
+    unit: ratio
+    threshold:
+      warn_lt_percent: 60
+      critical_lt_percent: 40
+    source: AI containment floor
+  ai_handover_rate:
+    kind: rate
+    direction: higher_is_worse
+    unit: ratio
+    threshold:
+      warn_percent: 25
+      critical_percent: 40
+    source: AI handover ceiling
+  ai_only_completed_conversations:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  approval_rate:
+    kind: rate
+    direction: higher_is_better
+    unit: ratio
+    threshold:
+      warn_lt_percent: 80
+      critical_lt_percent: 60
+    source: Approval throughput floor
+  approval_volume:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  approved_metric:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  approved_template_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  assigned_tickets_metric:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  assignment_rate:
+    kind: rate
+    direction: higher_is_better
+    unit: ratio
+    threshold:
+      warn_lt_percent: 85
+      critical_lt_percent: 70
+    source: Assignment coverage floor
+  audience_reached:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  audit_event_volume:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  average_closed_deal:
+    kind: duration
+    direction: higher_is_worse
+    unit: time
+    threshold:
+      warn: 300
+      critical: 600
+    source: Generic duration band (review per metric)
+  average_contact_volume:
+    kind: duration
+    direction: higher_is_worse
+    unit: time
+    threshold:
+      warn: 300
+      critical: 600
+    source: Generic duration band (review per metric)
+  average_csat_score:
+    kind: score
+    direction: lower_is_worse
+    unit: score
+    threshold:
+      warn_lt: 3.5
+      critical_lt: 3.0
+    source: CSAT 1-5 scale
+  average_customer_contact_count:
+    kind: duration
+    direction: higher_is_worse
+    unit: time
+    threshold:
+      warn: 300
+      critical: 600
+    source: Generic duration band (review per metric)
+  average_customer_conversion_rate:
+    kind: rate
+    direction: higher_is_better
+    unit: ratio
+    threshold:
+      warn_lt_percent: 50
+      critical_lt_percent: 25
+    source: Generic rate floor (review per metric)
+  average_deal_lost:
+    kind: duration
+    direction: higher_is_worse
+    unit: time
+    threshold:
+      warn: 300
+      critical: 600
+    source: Generic duration band (review per metric)
+  average_deal_value:
+    kind: duration
+    direction: higher_is_worse
+    unit: time
+    threshold:
+      warn: 300
+      critical: 600
+    source: Generic duration band (review per metric)
+  average_deal_volume:
+    kind: duration
+    direction: higher_is_worse
+    unit: time
+    threshold:
+      warn: 300
+      critical: 600
+    source: Generic duration band (review per metric)
+  average_deal_won_rate:
+    kind: rate
+    direction: higher_is_worse
+    unit: ratio
+    threshold:
+      warn_percent: 10
+      critical_percent: 20
+    source: Generic rate ceiling (review per metric)
+  average_deals_won:
+    kind: duration
+    direction: higher_is_worse
+    unit: time
+    threshold:
+      warn: 300
+      critical: 600
+    source: Generic duration band (review per metric)
+  average_decision_hours:
+    kind: duration
+    direction: higher_is_worse
+    unit: hours
+    threshold:
+      warn: 24
+      critical: 48
+    source: Generic duration band (review per metric)
+  average_distinct_product_sold_count:
+    kind: duration
+    direction: higher_is_worse
+    unit: time
+    threshold:
+      warn: 300
+      critical: 600
+    source: Generic duration band (review per metric)
+  average_eligible_lead_count:
+    kind: duration
+    direction: higher_is_worse
+    unit: time
+    threshold:
+      warn: 300
+      critical: 600
+    source: Generic duration band (review per metric)
+  average_first_response_hours:
+    kind: duration
+    direction: higher_is_worse
+    unit: hours
+    threshold:
+      warn: 24
+      critical: 48
+    source: Generic duration band (review per metric)
+  average_first_response_minutes:
+    kind: duration
+    direction: higher_is_worse
+    unit: time
+    threshold:
+      warn: 300
+      critical: 600
+    source: Generic duration band (review per metric)
+  average_first_response_time:
+    kind: duration
+    direction: higher_is_worse
+    unit: seconds
+    threshold:
+      warn: 120
+      critical: 300
+    source: First response seconds
+  average_handle_time:
+    kind: duration
+    direction: higher_is_worse
+    unit: seconds
+    threshold:
+      warn: 360
+      critical: 600
+    source: CC AHT seconds (6/10 min)
+  average_loss_rate:
+    kind: rate
+    direction: higher_is_worse
+    unit: ratio
+    threshold:
+      warn_percent: 10
+      critical_percent: 20
+    source: Generic rate ceiling (review per metric)
+  average_mql_contact_count:
+    kind: duration
+    direction: higher_is_worse
+    unit: time
+    threshold:
+      warn: 300
+      critical: 600
+    source: Generic duration band (review per metric)
+  average_mql_rate:
+    kind: rate
+    direction: higher_is_better
+    unit: ratio
+    threshold:
+      warn_lt_percent: 50
+      critical_lt_percent: 25
+    source: Generic rate floor (review per metric)
+  average_new_lead_volume:
+    kind: duration
+    direction: higher_is_worse
+    unit: time
+    threshold:
+      warn: 300
+      critical: 600
+    source: Generic duration band (review per metric)
+  average_notes_per_ticket:
+    kind: duration
+    direction: higher_is_worse
+    unit: time
+    threshold:
+      warn: 300
+      critical: 600
+    source: Generic duration band (review per metric)
+  average_open_pipeline_value:
+    kind: duration
+    direction: higher_is_worse
+    unit: time
+    threshold:
+      warn: 300
+      critical: 600
+    source: Generic duration band (review per metric)
+  average_open_ticket_age_days:
+    kind: duration
+    direction: higher_is_worse
+    unit: hours
+    threshold:
+      warn: 24
+      critical: 48
+    source: Generic duration band (review per metric)
+  average_order_value:
+    kind: duration
+    direction: higher_is_worse
+    unit: time
+    threshold:
+      warn: 300
+      critical: 600
+    source: Generic duration band (review per metric)
+  average_overdue_hours:
+    kind: duration
+    direction: higher_is_worse
+    unit: hours
+    threshold:
+      warn: 24
+      critical: 48
+    source: Generic duration band (review per metric)
+  average_product_revenue:
+    kind: duration
+    direction: higher_is_worse
+    unit: time
+    threshold:
+      warn: 300
+      critical: 600
+    source: Generic duration band (review per metric)
+  average_proposal_acceptance_rate:
+    kind: rate
+    direction: higher_is_better
+    unit: ratio
+    threshold:
+      warn_lt_percent: 50
+      critical_lt_percent: 25
+    source: Generic rate floor (review per metric)
+  average_proposal_accepted:
+    kind: duration
+    direction: higher_is_worse
+    unit: time
+    threshold:
+      warn: 300
+      critical: 600
+    source: Generic duration band (review per metric)
+  average_proposal_sent:
+    kind: duration
+    direction: higher_is_worse
+    unit: time
+    threshold:
+      warn: 300
+      critical: 600
+    source: Generic duration band (review per metric)
+  average_resolution_hours_variance:
+    kind: duration
+    direction: higher_is_worse
+    unit: hours
+    threshold:
+      warn: 24
+      critical: 48
+    source: Generic duration band (review per metric)
+  average_resolution_time_hours:
+    kind: duration
+    direction: higher_is_worse
+    unit: hours
+    threshold:
+      warn: 48
+      critical: 72
+    source: Support resolution SLA band
+  average_sales_cycle_days:
+    kind: duration
+    direction: higher_is_worse
+    unit: hours
+    threshold:
+      warn: 24
+      critical: 48
+    source: Generic duration band (review per metric)
+  average_selling_price:
+    kind: duration
+    direction: higher_is_worse
+    unit: time
+    threshold:
+      warn: 300
+      critical: 600
+    source: Generic duration band (review per metric)
+  average_session_duration:
+    kind: rate
+    direction: higher_is_worse
+    unit: ratio
+    threshold:
+      warn_percent: 10
+      critical_percent: 20
+    source: Generic rate ceiling (review per metric)
+  average_speed_of_answer:
+    kind: duration
+    direction: higher_is_worse
+    unit: seconds
+    threshold:
+      warn: 30
+      critical: 60
+    source: ASA seconds
+  average_tickets_per_day:
+    kind: duration
+    direction: higher_is_worse
+    unit: time
+    threshold:
+      warn: 300
+      critical: 600
+    source: Generic duration band (review per metric)
+  average_units_sold:
+    kind: duration
+    direction: higher_is_worse
+    unit: time
+    threshold:
+      warn: 300
+      critical: 600
+    source: Generic duration band (review per metric)
+  average_win_rate_of_the_agent:
+    kind: rate
+    direction: higher_is_better
+    unit: ratio
+    threshold:
+      warn_lt_percent: 50
+      critical_lt_percent: 25
+    source: Generic rate floor (review per metric)
+  avg_attempt_count:
+    kind: duration
+    direction: higher_is_worse
+    unit: time
+    threshold:
+      warn: 300
+      critical: 600
+    source: Generic duration band (review per metric)
+  avg_batch_processing_seconds:
+    kind: duration
+    direction: higher_is_worse
+    unit: seconds
+    threshold:
+      warn: 300
+      critical: 600
+    source: Generic duration band (review per metric)
+  avg_cls:
+    kind: duration
+    direction: higher_is_worse
+    unit: time
+    threshold:
+      warn: 300
+      critical: 600
+    source: Generic duration band (review per metric)
+  avg_fcp_ms:
+    kind: duration
+    direction: higher_is_worse
+    unit: time
+    threshold:
+      warn: 300
+      critical: 600
+    source: Generic duration band (review per metric)
+  avg_inp_ms:
+    kind: duration
+    direction: higher_is_worse
+    unit: time
+    threshold:
+      warn: 300
+      critical: 600
+    source: Generic duration band (review per metric)
+  avg_lcp_ms:
+    kind: duration
+    direction: higher_is_worse
+    unit: time
+    threshold:
+      warn: 300
+      critical: 600
+    source: Generic duration band (review per metric)
+  avg_planned_duration_seconds:
+    kind: rate
+    direction: higher_is_worse
+    unit: ratio
+    threshold:
+      warn_percent: 10
+      critical_percent: 20
+    source: Generic rate ceiling (review per metric)
+  avg_scroll_depth:
+    kind: duration
+    direction: higher_is_worse
+    unit: time
+    threshold:
+      warn: 300
+      critical: 600
+    source: Generic duration band (review per metric)
+  avg_seconds_open_to_click:
+    kind: duration
+    direction: higher_is_worse
+    unit: seconds
+    threshold:
+      warn: 300
+      critical: 600
+    source: Generic duration band (review per metric)
+  avg_seconds_to_open:
+    kind: duration
+    direction: higher_is_worse
+    unit: seconds
+    threshold:
+      warn: 300
+      critical: 600
+    source: Generic duration band (review per metric)
+  avg_time_on_page_seconds:
+    kind: duration
+    direction: higher_is_worse
+    unit: seconds
+    threshold:
+      warn: 300
+      critical: 600
+    source: Generic duration band (review per metric)
+  avg_ttfb_ms:
+    kind: duration
+    direction: higher_is_worse
+    unit: time
+    threshold:
+      warn: 300
+      critical: 600
+    source: Generic duration band (review per metric)
+  batch_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  batch_failure_rate:
+    kind: rate
+    direction: higher_is_worse
+    unit: ratio
+    threshold:
+      warn_percent: 10
+      critical_percent: 20
+    source: Generic rate ceiling (review per metric)
+  bounce_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  bounce_rate:
+    kind: rate
+    direction: higher_is_worse
+    unit: ratio
+    threshold:
+      warn_percent: 50
+      critical_percent: 70
+    source: Web session bounce ceiling
+  bounce_share_of_suppressions:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  bounce_suppressed_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  breached_sla_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  breached_tickets_metric:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold:
+      warn: 10
+      critical: 25
+    source: SLA breach backlog
+  call_volume:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  callback_tasks:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold:
+      warn: 30
+      critical: 75
+    source: Callback backlog
+  campaign_attributed_session_rate:
+    kind: rate
+    direction: higher_is_worse
+    unit: ratio
+    threshold:
+      warn_percent: 10
+      critical_percent: 20
+    source: Generic rate ceiling (review per metric)
+  campaign_attributed_sessions:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  campaign_volume:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  cart_add_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  cart_add_rate:
+    kind: rate
+    direction: higher_is_worse
+    unit: ratio
+    threshold:
+      warn_percent: 10
+      critical_percent: 20
+    source: Generic rate ceiling (review per metric)
+  chat_volume:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  checkout_conversion_rate:
+    kind: rate
+    direction: higher_is_better
+    unit: ratio
+    threshold:
+      warn_lt_percent: 50
+      critical_lt_percent: 25
+    source: Generic rate floor (review per metric)
+  checkout_start_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  checkout_start_rate:
+    kind: rate
+    direction: higher_is_worse
+    unit: ratio
+    threshold:
+      warn_percent: 10
+      critical_percent: 20
+    source: Generic rate ceiling (review per metric)
+  click_rate:
+    kind: rate
+    direction: higher_is_better
+    unit: ratio
+    threshold:
+      warn_lt_percent: 2
+      critical_lt_percent: 0.5
+    source: Email CTR band
+  clicked_touch_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  clicks_per_session:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  closed_deals_metric:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  closed_tickets_metric:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  complaint_share_of_suppressions:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  complaint_suppressed_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  completed_deal_activities_metric:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  completed_leg_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  consent_action_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  contact_activity_volume:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  contact_volume:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  contacts_with_orders_metric:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  contract_renewal_rate:
+    kind: rate
+    direction: higher_is_better
+    unit: ratio
+    threshold:
+      warn_lt_percent: 50
+      critical_lt_percent: 25
+    source: Generic rate floor (review per metric)
+  contract_volume:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  contracts_due_for_renewal:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  conversion_rate:
+    kind: rate
+    direction: higher_is_better
+    unit: ratio
+    threshold:
+      warn_lt_percent: 50
+      critical_lt_percent: 25
+    source: Generic rate floor (review per metric)
+  csat_detractor_metric:
+    kind: score
+    direction: lower_is_worse
+    unit: score
+    threshold: null
+  csat_detractor_rate:
+    kind: rate
+    direction: higher_is_worse
+    unit: ratio
+    threshold:
+      warn_percent: 15
+      critical_percent: 25
+    source: CSAT detractor ceiling
+  csat_neutral_metric:
+    kind: score
+    direction: lower_is_worse
+    unit: score
+    threshold: null
+  csat_promoter_metric:
+    kind: score
+    direction: lower_is_worse
+    unit: score
+    threshold: null
+  csat_promoter_rate:
+    kind: rate
+    direction: higher_is_better
+    unit: ratio
+    threshold:
+      warn_lt_percent: 50
+      critical_lt_percent: 25
+    source: Generic rate floor (review per metric)
+  csat_rated_metric:
+    kind: rate
+    direction: higher_is_better
+    unit: ratio
+    threshold:
+      warn_lt_percent: 50
+      critical_lt_percent: 25
+    source: Generic rate floor (review per metric)
+  csat_response_rate:
+    kind: rate
+    direction: higher_is_better
+    unit: ratio
+    threshold:
+      warn_lt_percent: 50
+      critical_lt_percent: 25
+    source: Generic rate floor (review per metric)
+  csat_score_total:
+    kind: score
+    direction: lower_is_worse
+    unit: score
+    threshold: null
+  current_overdue_tickets_metric:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold:
+      warn: 15
+      critical: 40
+    source: Overdue backlog
+  custom_event_session_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  custom_event_session_rate:
+    kind: rate
+    direction: higher_is_worse
+    unit: ratio
+    threshold:
+      warn_percent: 10
+      critical_percent: 20
+    source: Generic rate ceiling (review per metric)
+  customer_contact_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  customer_conversion_rate:
+    kind: rate
+    direction: higher_is_better
+    unit: ratio
+    threshold:
+      warn_lt_percent: 5
+      critical_lt_percent: 2
+    source: Lead-to-customer band
+  customer_lifetime_value:
+    kind: amount
+    direction: contextual
+    unit: currency
+    threshold: null
+  customer_reply_volume:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  customers_served:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  days_sales_outstanding:
+    kind: duration
+    direction: higher_is_worse
+    unit: hours
+    threshold:
+      warn: 24
+      critical: 48
+    source: Generic duration band (review per metric)
+  days_since_last_ticket:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  days_to_pay_total:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  dead_click_rate:
+    kind: rate
+    direction: higher_is_better
+    unit: ratio
+    threshold:
+      warn_lt_percent: 50
+      critical_lt_percent: 25
+    source: Generic rate floor (review per metric)
+  dead_clicks:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  deal_activity_completion_rate:
+    kind: rate
+    direction: higher_is_better
+    unit: ratio
+    threshold:
+      warn_lt_percent: 50
+      critical_lt_percent: 25
+    source: Generic rate floor (review per metric)
+  deal_activity_volume:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  deal_volume:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  deals_with_quote_metric:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  decided_approvals_metric:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  decision_hours_total:
+    kind: duration
+    direction: higher_is_worse
+    unit: hours
+    threshold:
+      warn: 24
+      critical: 48
+    source: Generic duration band (review per metric)
+  delivery_rate:
+    kind: rate
+    direction: higher_is_better
+    unit: ratio
+    threshold:
+      warn_lt_percent: 90
+      critical_lt_percent: 80
+    source: Campaign send proxy; no delivered status in source
+  dismissed_recommendations_metric:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  distinct_agents_in_queues:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  distinct_custom_event_types:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  distinct_products_sold_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  distinct_queues_covered:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  due_today_tickets_metric:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  eligible_lead_contact_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  email_volume:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  engaged_contact_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  engaged_session_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  engagement_rate:
+    kind: rate
+    direction: higher_is_better
+    unit: ratio
+    threshold:
+      warn_lt_percent: 50
+      critical_lt_percent: 25
+    source: Generic rate floor (review per metric)
+  error_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  error_session_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  error_session_rate:
+    kind: rate
+    direction: higher_is_worse
+    unit: ratio
+    threshold:
+      warn_percent: 10
+      critical_percent: 20
+    source: Generic rate ceiling (review per metric)
+  escalation_rate:
+    kind: rate
+    direction: higher_is_worse
+    unit: ratio
+    threshold:
+      warn_percent: 10
+      critical_percent: 20
+    source: Generic rate ceiling (review per metric)
+  escalation_volume:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  events_per_session:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  facebook_volume:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  failed_batch_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  failed_touch_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  failure_rate:
+    kind: rate
+    direction: higher_is_worse
+    unit: ratio
+    threshold:
+      warn_percent: 10
+      critical_percent: 20
+    source: Generic rate ceiling (review per metric)
+  first_response_coverage_rate:
+    kind: rate
+    direction: higher_is_better
+    unit: ratio
+    threshold:
+      warn_lt_percent: 50
+      critical_lt_percent: 25
+    source: Generic rate floor (review per metric)
+  first_response_hours_total:
+    kind: duration
+    direction: higher_is_worse
+    unit: hours
+    threshold:
+      warn: 24
+      critical: 48
+    source: Generic duration band (review per metric)
+  first_response_sla_compliance_rate:
+    kind: rate
+    direction: higher_is_better
+    unit: ratio
+    threshold:
+      warn_lt_percent: 90
+      critical_lt_percent: 80
+    source: FRT SLA compliance floor
+  first_response_sla_met_metric:
+    kind: duration
+    direction: higher_is_worse
+    unit: time
+    threshold:
+      warn: 300
+      critical: 600
+    source: Generic duration band (review per metric)
+  follow_up_tasks:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  form_abandon_rate:
+    kind: rate
+    direction: higher_is_worse
+    unit: ratio
+    threshold:
+      warn_percent: 10
+      critical_percent: 20
+    source: Generic rate ceiling (review per metric)
+  form_abandons:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  form_failures:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  form_starts:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  form_submit_rate:
+    kind: rate
+    direction: higher_is_worse
+    unit: ratio
+    threshold:
+      warn_percent: 10
+      critical_percent: 20
+    source: Generic rate ceiling (review per metric)
+  form_submits:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  form_success_rate:
+    kind: rate
+    direction: higher_is_better
+    unit: ratio
+    threshold:
+      warn_lt_percent: 50
+      critical_lt_percent: 25
+    source: Generic rate floor (review per metric)
+  form_successes:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  form_views:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  franchise_node_volume:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  frequency_per_contact:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  funnel_eligible_contact_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  handled_volume:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  handling_or_wrap_seconds:
+    kind: duration
+    direction: higher_is_worse
+    unit: seconds
+    threshold:
+      warn: 300
+      critical: 600
+    source: Generic duration band (review per metric)
+  handoff_conversations:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  handover_rate:
+    kind: rate
+    direction: higher_is_worse
+    unit: ratio
+    threshold:
+      warn_percent: 25
+      critical_percent: 40
+    source: Handover ceiling
+  high_priority_open_tickets_metric:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  high_priority_ticket_volume:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  human_agent_occupancy_rate_capacity:
+    kind: rate
+    direction: higher_is_worse
+    unit: ratio
+    threshold:
+      warn_percent: 85
+      critical_percent: 92
+    source: WFM occupancy ceiling
+  human_agent_occupancy_rate_presence:
+    kind: rate
+    direction: higher_is_worse
+    unit: ratio
+    threshold:
+      warn_percent: 85
+      critical_percent: 92
+    source: WFM occupancy ceiling
+  human_handle_seconds_sum:
+    kind: duration
+    direction: higher_is_worse
+    unit: seconds
+    threshold:
+      warn: 300
+      critical: 600
+    source: Generic duration band (review per metric)
+  identified_session_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  identified_session_rate:
+    kind: rate
+    direction: higher_is_worse
+    unit: ratio
+    threshold:
+      warn_percent: 10
+      critical_percent: 20
+    source: Generic rate ceiling (review per metric)
+  identified_visitor_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  instagram_volume:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  internal_note_ratio:
+    kind: rate
+    direction: higher_is_worse
+    unit: ratio
+    threshold:
+      warn_percent: 10
+      critical_percent: 20
+    source: Generic rate ceiling (review per metric)
+  internal_note_volume:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  invoice_outstanding_amount:
+    kind: amount
+    direction: contextual
+    unit: currency
+    threshold: null
+  invoiced_product_revenue:
+    kind: amount
+    direction: contextual
+    unit: currency
+    threshold: null
+  kb_article_volume:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  kb_published_article_metric:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  kb_views_total:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  landing_page_conversion_rate:
+    kind: rate
+    direction: higher_is_better
+    unit: ratio
+    threshold:
+      warn_lt_percent: 50
+      critical_lt_percent: 25
+    source: Generic rate floor (review per metric)
+  lifetime_new_visitor_count:
+    kind: amount
+    direction: contextual
+    unit: currency
+    threshold: null
+  lifetime_order_value_total:
+    kind: amount
+    direction: contextual
+    unit: currency
+    threshold: null
+  lifetime_returning_visitor_count:
+    kind: amount
+    direction: contextual
+    unit: currency
+    threshold: null
+  logged_in_eligible_seconds:
+    kind: duration
+    direction: higher_is_worse
+    unit: seconds
+    threshold:
+      warn: 300
+      critical: 600
+    source: Generic duration band (review per metric)
+  loss_rate:
+    kind: rate
+    direction: higher_is_worse
+    unit: ratio
+    threshold:
+      warn_percent: 40
+      critical_percent: 55
+    source: Pipeline loss ceiling
+  lost_deal_amount_total:
+    kind: amount
+    direction: contextual
+    unit: currency
+    threshold: null
+  lost_deals_metric:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  macro_volume:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  missed_assignments:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  missed_contact_rate:
+    kind: rate
+    direction: higher_is_worse
+    unit: ratio
+    threshold:
+      warn_percent: 8
+      critical_percent: 15
+    source: CC routing SLA band
+  mql_contact_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  mql_rate:
+    kind: rate
+    direction: higher_is_better
+    unit: ratio
+    threshold:
+      warn_lt_percent: 10
+      critical_lt_percent: 5
+    source: Marketing qualification band
+  new_lead_volume:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  new_visitor_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  new_visitor_rate:
+    kind: rate
+    direction: higher_is_worse
+    unit: ratio
+    threshold:
+      warn_percent: 10
+      critical_percent: 20
+    source: Generic rate ceiling (review per metric)
+  note_volume:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  notification_volume:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  open_agent_tasks:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold:
+      warn: 40
+      critical: 100
+    source: Agent task backlog
+  open_conversations:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold:
+      warn: 100
+      critical: 250
+    source: CC queue depth
+  open_pipeline_value:
+    kind: amount
+    direction: contextual
+    unit: currency
+    threshold: null
+  open_rate:
+    kind: rate
+    direction: higher_is_better
+    unit: ratio
+    threshold:
+      warn_lt_percent: 15
+      critical_lt_percent: 8
+    source: Email engagement band
+  open_recommendations_metric:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  open_task_volume:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  open_ticket_age_days_total:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  open_tickets_metric:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold:
+      warn: 50
+      critical: 120
+    source: Ticket backlog band
+  opened_touch_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  order_gmv:
+    kind: amount
+    direction: contextual
+    unit: currency
+    threshold: null
+  order_volume:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  outbound_email_volume:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  page_views:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  pages_per_session:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  paid_invoices_metric:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  pending_approvals_metric:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  pending_tickets_metric:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  performance_event_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  pipeline_coverage_ratio:
+    kind: rate
+    direction: higher_is_better
+    unit: ratio
+    threshold:
+      warn_lt_percent: 50
+      critical_lt_percent: 25
+    source: Generic rate floor (review per metric)
+  poor_vitals_event_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  poor_vitals_rate:
+    kind: rate
+    direction: higher_is_worse
+    unit: ratio
+    threshold:
+      warn_percent: 10
+      critical_percent: 20
+    source: Generic rate ceiling (review per metric)
+  proactive_audit_volume:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  product_interaction_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  product_revenue:
+    kind: amount
+    direction: contextual
+    unit: currency
+    threshold: null
+  product_revenue_total:
+    kind: amount
+    direction: contextual
+    unit: currency
+    threshold: null
+  product_view_rate:
+    kind: rate
+    direction: higher_is_worse
+    unit: ratio
+    threshold:
+      warn_percent: 10
+      critical_percent: 20
+    source: Generic rate ceiling (review per metric)
+  proposal_acceptance_rate:
+    kind: rate
+    direction: higher_is_better
+    unit: ratio
+    threshold:
+      warn_lt_percent: 50
+      critical_lt_percent: 25
+    source: Generic rate floor (review per metric)
+  proposal_accepted_metric:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  proposal_sent_metric:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  purchase_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  queue_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  queue_coverage_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  queues_at_risk_metric:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  quote_to_close_rate:
+    kind: rate
+    direction: higher_is_worse
+    unit: ratio
+    threshold:
+      warn_percent: 10
+      critical_percent: 20
+    source: Generic rate ceiling (review per metric)
+  quoted_product_revenue:
+    kind: amount
+    direction: contextual
+    unit: currency
+    threshold: null
+  rage_click_rate:
+    kind: rate
+    direction: higher_is_better
+    unit: ratio
+    threshold:
+      warn_lt_percent: 50
+      critical_lt_percent: 25
+    source: Generic rate floor (review per metric)
+  rage_click_session_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  rage_clicks:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  reassignment_volume:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  recommendation_acceptance_rate:
+    kind: rate
+    direction: higher_is_better
+    unit: ratio
+    threshold:
+      warn_lt_percent: 50
+      critical_lt_percent: 25
+    source: Generic rate floor (review per metric)
+  recommendation_volume:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  rejected_metric:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  rejected_template_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  renewed_contracts_metric:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  reopen_rate:
+    kind: rate
+    direction: higher_is_worse
+    unit: ratio
+    threshold:
+      warn_percent: 8
+      critical_percent: 15
+    source: Support reopen ceiling (ITIL)
+  reopened_tickets_metric:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  repeat_customers_metric:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  repurchase_rate:
+    kind: rate
+    direction: higher_is_better
+    unit: ratio
+    threshold:
+      warn_lt_percent: 50
+      critical_lt_percent: 25
+    source: Generic rate floor (review per metric)
+  resolution_hours_total:
+    kind: duration
+    direction: higher_is_worse
+    unit: hours
+    threshold:
+      warn: 24
+      critical: 48
+    source: Generic duration band (review per metric)
+  resolution_hours_variance_total:
+    kind: duration
+    direction: higher_is_worse
+    unit: hours
+    threshold:
+      warn: 24
+      critical: 48
+    source: Generic duration band (review per metric)
+  resolution_rate:
+    kind: rate
+    direction: higher_is_better
+    unit: ratio
+    threshold:
+      warn_lt_percent: 70
+      critical_lt_percent: 50
+    source: Resolution rate floor
+  resolution_sla_compliance_rate:
+    kind: rate
+    direction: higher_is_better
+    unit: ratio
+    threshold:
+      warn_lt_percent: 85
+      critical_lt_percent: 75
+    source: Resolution SLA compliance floor
+  resolution_sla_met_metric:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  resolved_conversations_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  resolved_dispositions:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  resolved_for_avg:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  resolved_tickets_metric:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  returning_visitor_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  returning_visitor_rate:
+    kind: rate
+    direction: higher_is_worse
+    unit: ratio
+    threshold:
+      warn_percent: 10
+      critical_percent: 20
+    source: Generic rate ceiling (review per metric)
+  sales_agent_win_rate:
+    kind: rate
+    direction: higher_is_better
+    unit: ratio
+    threshold:
+      warn_lt_percent: 25
+      critical_lt_percent: 15
+    source: B2B SaaS win-rate floor
+  sales_cycle_days_total:
+    kind: duration
+    direction: higher_is_worse
+    unit: hours
+    threshold:
+      warn: 24
+      critical: 48
+    source: Generic duration band (review per metric)
+  scroll_engagement_rate:
+    kind: rate
+    direction: higher_is_better
+    unit: ratio
+    threshold:
+      warn_lt_percent: 50
+      critical_lt_percent: 25
+    source: Generic rate floor (review per metric)
+  search_session_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  search_usage_rate:
+    kind: rate
+    direction: higher_is_worse
+    unit: ratio
+    threshold:
+      warn_percent: 10
+      critical_percent: 20
+    source: Generic rate ceiling (review per metric)
+  sent_touch_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  sessions_with_cart_add:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  sessions_with_checkout_start:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  sessions_with_conversions:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  sessions_with_deep_scroll:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  sessions_with_product_views:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  signup_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  sla_at_risk_tickets_metric:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  sla_breach_rate:
+    kind: rate
+    direction: higher_is_worse
+    unit: ratio
+    threshold:
+      warn_percent: 5
+      critical_percent: 10
+    source: CC/contact-center SLA operating band
+  social_media_volume:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  suggestion_tasks:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  suppressed_email_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  suppression_rate:
+    kind: rate
+    direction: higher_is_worse
+    unit: ratio
+    threshold:
+      warn_percent: 10
+      critical_percent: 20
+    source: Generic rate ceiling (review per metric)
+  template_approval_rate:
+    kind: rate
+    direction: higher_is_worse
+    unit: ratio
+    threshold:
+      warn_percent: 10
+      critical_percent: 20
+    source: Generic rate ceiling (review per metric)
+  template_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  ticket_volume:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  tickets_created_by_me:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  tickets_created_today_metric:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  tickets_last_30_days:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  tickets_last_7_days:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  tickets_with_first_response_metric:
+    kind: duration
+    direction: higher_is_worse
+    unit: time
+    threshold:
+      warn: 300
+      critical: 600
+    source: Generic duration band (review per metric)
+  tickets_with_first_response_sla_target_metric:
+    kind: duration
+    direction: higher_is_worse
+    unit: time
+    threshold:
+      warn: 300
+      critical: 600
+    source: Generic duration band (review per metric)
+  tickets_with_resolution_sla_target_metric:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  tickets_with_resolver_metric:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  tickets_with_sla_target_metric:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  tickets_without_resolver_metric:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  tool_executions_succeeded:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  tool_executions_total:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  tool_success_rate:
+    kind: rate
+    direction: higher_is_better
+    unit: ratio
+    threshold:
+      warn_lt_percent: 95
+      critical_lt_percent: 90
+    source: Tool reliability floor
+  total_account_locations:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  total_active_agent_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  total_agent_capacity:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  total_agents:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  total_agents_setup:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  total_assignments:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  total_clicks:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  total_conversations:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  total_conversions:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  total_custom_events:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  total_events:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  total_queue_agent_assignments:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  total_queues_configured:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  total_revenue:
+    kind: amount
+    direction: contextual
+    unit: currency
+    threshold: null
+  total_sla_states:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  total_teams:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  total_transfers:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  touch_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  tracking_consent_denied_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  tracking_consent_grant_rate:
+    kind: rate
+    direction: higher_is_worse
+    unit: ratio
+    threshold:
+      warn_percent: 10
+      critical_percent: 20
+    source: Generic rate ceiling (review per metric)
+  tracking_consent_granted_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  unanswered_tickets_metric:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  unassigned_tickets_metric:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold:
+      warn: 20
+      critical: 50
+    source: Unassigned backlog
+  unassignment_rate:
+    kind: rate
+    direction: higher_is_worse
+    unit: ratio
+    threshold:
+      warn_percent: 10
+      critical_percent: 20
+    source: Generic rate ceiling (review per metric)
+  unique_contacts_handled:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  unique_contacts_touched:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  unique_visitors:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  units_sold:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  unread_notifications_metric:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  unsubscribe_rate:
+    kind: rate
+    direction: higher_is_worse
+    unit: ratio
+    threshold:
+      warn_percent: 10
+      critical_percent: 20
+    source: Generic rate ceiling (review per metric)
+  unsubscribed_contact_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  variant_click_rate:
+    kind: rate
+    direction: higher_is_better
+    unit: ratio
+    threshold:
+      warn_lt_percent: 50
+      critical_lt_percent: 25
+    source: Generic rate floor (review per metric)
+  variant_clicked_touch_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  variant_open_rate:
+    kind: rate
+    direction: higher_is_better
+    unit: ratio
+    threshold:
+      warn_lt_percent: 50
+      critical_lt_percent: 25
+    source: Generic rate floor (review per metric)
+  variant_opened_touch_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  variant_sent_touch_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  variant_touch_count:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  visitor_identification_rate:
+    kind: rate
+    direction: higher_is_worse
+    unit: ratio
+    threshold:
+      warn_percent: 10
+      critical_percent: 20
+    source: Generic rate ceiling (review per metric)
+  web_session_volume:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  online_visitors:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  webchat_volume:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  whatsapp_volume:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  won_deal_amount_total:
+    kind: amount
+    direction: contextual
+    unit: currency
+    threshold: null
+  won_deal_rate:
+    kind: rate
+    direction: higher_is_worse
+    unit: ratio
+    threshold:
+      warn_lt_percent: 25
+      critical_lt_percent: 15
+    source: B2B SaaS win-rate floor
+  won_deals_for_avg:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  won_deals_metric:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null
+  won_deals_with_accepted_quote_metric:
+    kind: count
+    direction: contextual
+    unit: count
+    threshold: null

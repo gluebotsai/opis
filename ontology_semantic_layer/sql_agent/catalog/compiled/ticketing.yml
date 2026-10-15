@@ -1,0 +1,484 @@
+version: 1
+product: ticketing
+engine: postgres
+default_schema: ticketing_marts
+tenant_column: organization_id
+tables:
+- name: mart_agent_queue_members
+  schema: ticketing_marts
+  grain: null
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: null
+  tenant_column: organization_id
+  columns:
+  - created_at
+  - myaccount_team_name
+  - organization_id
+  - queue_membership_id
+  - queue_name
+  - queue_type
+  - sla_status
+  - team_supports_ticketing
+  - user_name
+  - user_role
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - queue_name
+  - queue_type
+  - sla_status
+  - user_name
+  - user_role
+  - myaccount_team_name
+  - team_supports_ticketing
+  description: null
+- name: mart_agent_queues
+  schema: ticketing_marts
+  grain: null
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: null
+  tenant_column: organization_id
+  columns:
+  - assigned
+  - created_at
+  - external_id
+  - is_at_risk
+  - open_tickets
+  - organization_id
+  - queue_id
+  - queue_name
+  - queue_type
+  - sla_status
+  - updated_at
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - queue_name
+  - queue_type
+  - sla_status
+  description: null
+- name: mart_audit_events
+  schema: ticketing_marts
+  grain: null
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: null
+  tenant_column: organization_id
+  columns:
+  - action
+  - actor_id
+  - actor_name
+  - assignee_id
+  - assignee_name
+  - audit_event_id
+  - created_at
+  - is_assignment_event
+  - is_escalation_event
+  - organization_id
+  - queue_id
+  - queue_name
+  - ticket_channel
+  - ticket_id
+  - ticket_number
+  - ticket_priority
+  - ticket_status
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - action
+  - ticket_priority
+  - ticket_status
+  - queue_name
+  - assignee_name
+  - actor_name
+  description: null
+- name: mart_customers
+  schema: ticketing_marts
+  grain: null
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: null
+  tenant_column: organization_id
+  columns:
+  - account_id
+  - created_at
+  - customer_email
+  - customer_id
+  - customer_name
+  - external_id
+  - is_active
+  - organization_id
+  - status
+  - total_tickets
+  - updated_at
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - status
+  description: null
+- name: mart_kb_articles
+  schema: ticketing_marts
+  grain: null
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: null
+  tenant_column: organization_id
+  columns:
+  - author_id
+  - author_name
+  - category
+  - content
+  - created_at
+  - external_id
+  - is_published
+  - kb_article_id
+  - organization_id
+  - status
+  - title
+  - updated_at
+  - view_count
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - category
+  - status
+  - author_name
+  description: null
+- name: mart_macros
+  schema: ticketing_marts
+  grain: null
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: null
+  tenant_column: organization_id
+  columns:
+  - body
+  - created_at
+  - created_by_id
+  - created_by_name
+  - macro_id
+  - organization_id
+  - title
+  - updated_at
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  description: null
+- name: mart_notifications
+  schema: ticketing_marts
+  grain: null
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: null
+  tenant_column: organization_id
+  columns:
+  - created_at
+  - customer_name
+  - is_read
+  - kind
+  - message
+  - notification_id
+  - organization_id
+  - ticket_id
+  - title
+  - user_id
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - kind
+  - is_read
+  description: null
+- name: mart_outbound_emails
+  schema: ticketing_marts
+  grain: null
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: null
+  tenant_column: organization_id
+  columns:
+  - body_preview
+  - created_at
+  - error
+  - kind
+  - organization_id
+  - outbound_email_id
+  - status
+  - subject
+  - ticket_id
+  - ticket_number
+  - to_email
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - kind
+  - status
+  description: null
+- name: mart_proactive_approvals
+  schema: ticketing_marts
+  grain: null
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: null
+  tenant_column: organization_id
+  columns:
+  - agent_id
+  - approval_id
+  - created_at
+  - decided_at
+  - decision_hours
+  - is_approved
+  - is_pending
+  - is_rejected
+  - organization_id
+  - queue_id
+  - queue_name
+  - status
+  - summary
+  - ticket_id
+  - ticket_number
+  - ticket_priority
+  - ticket_status
+  - tool_name
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - agent_id
+  - created_at
+  - status
+  - tool_name
+  - ticket_priority
+  - ticket_status
+  - queue_name
+  description: null
+- name: mart_proactive_audit
+  schema: ticketing_marts
+  grain: null
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: null
+  tenant_column: organization_id
+  columns:
+  - agent_id
+  - created_at
+  - decision
+  - organization_id
+  - proactive_audit_id
+  - ticket_id
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - agent_id
+  - decision
+  - created_at
+  description: null
+- name: mart_proactive_recommendations
+  schema: ticketing_marts
+  grain: null
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: null
+  tenant_column: organization_id
+  columns:
+  - agent_id
+  - created_at
+  - is_accepted
+  - is_dismissed
+  - is_open
+  - organization_id
+  - queue_id
+  - queue_name
+  - recommendation_id
+  - status
+  - summary
+  - ticket_id
+  - ticket_number
+  - ticket_priority
+  - ticket_status
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - agent_id
+  - created_at
+  - status
+  - ticket_priority
+  - ticket_status
+  - queue_name
+  description: null
+- name: mart_ticket_notes
+  schema: ticketing_marts
+  grain: null
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: null
+  tenant_column: organization_id
+  columns:
+  - assignee_id
+  - assignee_name
+  - author_id
+  - author_name
+  - created_at
+  - is_internal_note
+  - organization_id
+  - queue_id
+  - queue_name
+  - ticket_id
+  - ticket_note_id
+  - ticket_number
+  - ticket_priority
+  - ticket_status
+  - visibility
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - visibility
+  - is_internal_note
+  - ticket_priority
+  - ticket_status
+  - queue_name
+  - assignee_name
+  - author_name
+  description: null
+- name: mart_tickets
+  schema: ticketing_marts
+  grain: ticket
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: assignee_id
+  tenant_column: organization_id
+  columns:
+  - account_name
+  - assignee_name
+  - assignee_role
+  - category
+  - channel
+  - created_at
+  - created_by_name
+  - customer_name
+  - due_at
+  - has_assignee
+  - has_csat_rating
+  - has_first_response
+  - has_resolver
+  - is_closed_by_status
+  - is_overdue
+  - organization_business_type
+  - organization_id
+  - organization_name
+  - priority
+  - queue_name
+  - queue_type
+  - resolved_at
+  - resolver_name
+  - skill
+  - status
+  - status_display_name
+  - team_supports_ticketing
+  - ticket_id
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - resolved_at
+  - due_at
+  - status
+  - status_display_name
+  - is_closed_by_status
+  - priority
+  - channel
+  - category
+  - skill
+  - assignee_name
+  - assignee_role
+  - resolver_name
+  - queue_name
+  - queue_type
+  - account_name
+  - organization_name
+  - organization_business_type
+  - team_supports_ticketing
+  - created_by_name
+  - customer_name
+  - has_assignee
+  - has_resolver
+  - has_first_response
+  - has_csat_rating
+  - is_overdue
+  description: One row per support ticket; queue, assignee, SLA flags denormalized.
+- name: mart_users
+  schema: ticketing_marts
+  grain: null
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: null
+  tenant_column: organization_id
+  columns:
+  - created_at
+  - organization_id
+  - role
+  - status
+  - user_id
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - role
+  - status
+  description: null
+joins:
+- from: mart_tickets
+  to: mart_users
+  keys:
+  - left: assignee_id
+    right: user_id
+  - left: organization_id
+    right: organization_id
+  cardinality: many_to_one
+  purpose: Ticket assignee role and name
+- from: mart_tickets
+  to: mart_agent_queues
+  keys:
+  - left: queue_id
+    right: queue_id
+  - left: organization_id
+    right: organization_id
+  cardinality: many_to_one
+  purpose: Queue type and SLA status
+- from: mart_ticket_notes
+  to: mart_tickets
+  keys:
+  - left: ticket_id
+    right: ticket_id
+  - left: organization_id
+    right: organization_id
+  cardinality: many_to_one
+  purpose: Notes on tickets
+synonyms:
+  team: queue_name
+  agent: assignee_name
+  escalation: action
+  history: audit_event

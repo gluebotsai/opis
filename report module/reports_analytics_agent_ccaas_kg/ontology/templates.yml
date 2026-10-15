@@ -1,0 +1,276 @@
+version: 1
+# Certified Cypher templates for CCaaS (Contact Center as a Service) Knowledge Graph.
+# Tenant isolation is enforced at the database level (e.g. org1012).
+
+templates:
+
+  conversation_volume_summary:
+    description: High-level overview of total customer conversations, channel distribution, and active status.
+    parameters: []
+    cypher: |
+      MATCH (c:Conversation)
+      RETURN count(c) AS total_conversations,
+             count(DISTINCT c.channel) AS channels_active,
+             count(DISTINCT c.visitor_id) AS unique_customers
+      LIMIT 100
+
+  average_handle_time:
+    description: Average Handle Time (AHT) in seconds and minutes for customer conversations, segmented by channel.
+    parameters: []
+    cypher: |
+      MATCH (c:Conversation)
+      WHERE c.created_at IS NOT NULL AND c.ended_at IS NOT NULL
+      RETURN coalesce(c.channel, 'all') AS channel,
+             count(c) AS conversations_measured,
+             round(avg(duration.between(c.created_at, c.ended_at).seconds), 1) AS avg_handle_time_seconds,
+             round(avg(duration.between(c.created_at, c.ended_at).seconds) / 60.0, 2) AS avg_handle_time_minutes,
+             min(duration.between(c.created_at, c.ended_at).seconds) AS min_duration_seconds,
+             max(duration.between(c.created_at, c.ended_at).seconds) AS max_duration_seconds
+      ORDER BY conversations_measured DESC
+  conversation_outcomes_and_reasons:
+    description: Breakdown of call/chat termination reasons, resolution outcomes, and disconnect actors.
+    parameters: []
+    cypher: |
+      MATCH (c:Conversation)
+      RETURN coalesce(c.end_reason, 'unspecified') AS end_reason,
+             coalesce(c.end_actor, 'system') AS end_actor,
+             count(*) AS conversation_count
+      ORDER BY conversation_count DESC
+      LIMIT 15
+
+  resolution_rate_and_outcomes:
+    description: First Contact Resolution (FCR) rate and breakdown of resolved vs unresolved interactions.
+    parameters: []
+    cypher: |
+      MATCH (c:Conversation)
+      WHERE c.resolution_code IS NOT NULL
+      RETURN count(c) AS total_evaluated,
+             count(CASE WHEN toLower(c.resolution_code) = 'resolved' THEN 1 END) AS resolved_count,
+             count(CASE WHEN toLower(c.resolution_code) = 'unresolved' THEN 1 END) AS unresolved_count,
+             CASE WHEN count(c) > 0 
+                  THEN round(100.0 * count(CASE WHEN toLower(c.resolution_code) = 'resolved' THEN 1 END) / count(c), 2)
+                  ELSE 0.0 
+             END AS resolution_rate_pct
+      LIMIT 10
+
+  unresolved_interaction_causes:
+    description: Explanatory root causes and narratives for why customer interactions remained unresolved.
+    parameters: []
+    cypher: |
+      MATCH (c:Conversation)
+      WHERE toLower(c.resolution_code) = 'unresolved' AND c.custom_conclusion IS NOT NULL
+      RETURN c.id AS conversation_id,
+             c.channel AS channel,
+             c.custom_conclusion AS root_cause,
+             coalesce(c.end_reason, 'unspecified') AS end_reason,
+             coalesce(c.end_actor, 'agent') AS end_actor
+      LIMIT 15
+
+  abandonment_and_disconnect_analysis:
+    description: Analysis of dropped, abandoned, or timed-out customer chats and calls, and customer-initiated disconnects.
+    parameters: []
+    cypher: |
+      MATCH (c:Conversation)
+      WHERE c.end_reason IN ['idle_timeout', 'visitor_disconnected', 'customer_abandon', 'caller_disconnected', 'customer_ended', 'browser_disconnected']
+         OR c.end_actor = 'customer'
+      RETURN coalesce(c.end_reason, 'disconnected') AS disconnect_reason,
+             coalesce(c.end_actor, 'customer') AS disconnect_actor,
+             count(*) AS dropped_conversations
+      ORDER BY dropped_conversations DESC
+      LIMIT 10
+
+  channel_distribution:
+    description: Breakdown of conversation volume across customer channels (Webchat, Voice).
+    parameters: []
+    cypher: |
+      MATCH (c:Conversation)
+      RETURN coalesce(c.channel, 'unknown') AS channel,
+             count(*) AS volume,
+             count(DISTINCT c.visitor_id) AS unique_visitors
+      ORDER BY volume DESC
+      LIMIT 10
+
+  channel_comparison_root_cause:
+    description: Multi-dimensional comparison and root-cause analysis explaining volume differences between channels (Webchat, Email, Call), analyzing conversation subjects, termination reasons, bot activity, customer disconnects, and handle times.
+    parameters: []
+    cypher: |
+      MATCH (c:Conversation)
+      WHERE c.channel IS NOT NULL
+      WITH c.channel AS channel,
+           count(c) AS conversation_volume,
+           count(DISTINCT c.visitor_id) AS unique_visitors,
+           collect(DISTINCT coalesce(c.end_reason, 'active/in_progress'))[..4] AS common_end_reasons,
+           collect(DISTINCT coalesce(c.subject, 'Storefront Live Chat'))[..4] AS sample_subjects,
+           count(CASE WHEN c.bot_active = true THEN 1 END) AS bot_active_count,
+           count(CASE WHEN toLower(c.end_actor) = 'customer' THEN 1 END) AS customer_ended_count,
+           round(avg(duration.between(c.created_at, c.ended_at).seconds), 1) AS avg_duration_seconds
+      RETURN channel,
+             conversation_volume,
+             unique_visitors,
+             bot_active_count,
+             customer_ended_count,
+             sample_subjects,
+             common_end_reasons,
+             avg_duration_seconds
+      ORDER BY conversation_volume DESC
+      LIMIT 10
+
+  queue_wait_times_and_performance:
+    description: Performance and conversation routing distribution across contact center queues.
+    parameters: []
+    cypher: |
+      MATCH (c:Conversation)-[:ROUTED_TO]->(q)
+      WHERE q:ContactCentreQueue OR q:Queue OR q:LiveRoutingProfile
+      RETURN coalesce(q.name, q.queue_name, 'Queue ' + toString(q.id)) AS queue_name,
+             count(c) AS conversations_routed,
+             count(DISTINCT c.visitor_id) AS distinct_callers
+      ORDER BY conversations_routed DESC
+      LIMIT 15
+
+  agent_workload_and_performance:
+    description: Workload distribution, conversations handled, and average handle time per support agent.
+    parameters: []
+    cypher: |
+      MATCH (c:Conversation)-[:HANDLED_BY]->(s)
+      WHERE s:ContactCentreAgent OR s:Staff OR s:ContactCentreStaff
+      RETURN coalesce(s.display_name, s.email, s.support_email, 'Agent ' + toString(s.id)) AS agent_name,
+             count(c) AS conversations_handled,
+             round(avg(duration.between(c.created_at, c.ended_at).seconds), 1) AS avg_duration_sec
+      ORDER BY conversations_handled DESC
+      LIMIT 20
+
+  unresolved_conversations_root_cause:
+    description: Deep 4-step root cause analysis of unresolved conversations, inspecting queue distribution, disconnect telemetry (end_actor, end_reason, disposition_code), agent attribution, handle times, and custom conclusions.
+    parameters: []
+    cypher: |
+      MATCH (c:Conversation)
+      WHERE toLower(c.resolution_code) = 'unresolved'
+      OPTIONAL MATCH (c)-[:ROUTED_TO]->(q)
+      OPTIONAL MATCH (c)-[:HANDLED_BY]->(a)
+      RETURN coalesce(q.name, q.queue_name, 'Queue ' + toString(c.queue_id)) AS queue_name,
+             coalesce(c.queue_id, q.id) AS queue_id,
+             coalesce(a.display_name, a.email, 'Agent ' + toString(c.assigned_agent_id)) AS agent_name,
+             coalesce(c.assigned_agent_id, a.id) AS assigned_agent_id,
+             coalesce(c.end_actor, 'unspecified') AS end_actor,
+             coalesce(c.end_reason, 'unspecified') AS end_reason,
+             coalesce(c.disposition_code, 'none') AS disposition_code,
+             count(c) AS unresolved_count,
+             round(avg(duration.between(c.created_at, c.ended_at).seconds), 1) AS avg_duration_seconds,
+             collect(DISTINCT c.custom_conclusion)[..3] AS sample_conclusions
+      ORDER BY unresolved_count DESC
+      LIMIT 15
+
+  transfer_loops_and_chained_sessions:
+    description: Analysis of transferred, continued, and chained sessions across webchat and voice, inspecting routing failure facts (no_ready_agents, live_agent_unavailable) across both sides of the continuation.
+    parameters: []
+    cypher: |
+      MATCH (c1:Conversation)-[:CONTINUES]->(c2:Conversation)
+      WITH c1, c2,
+           coalesce(c1.facts, c2.facts, []) AS combined_facts,
+           coalesce(c1.summary, c2.summary, '') AS combined_summary,
+           coalesce(c1.handoff_reason, c2.handoff_reason, 'none') AS handoff_reason
+      RETURN c1.id AS from_session_id,
+             c2.id AS to_session_id,
+             c1.channel AS channel,
+             handoff_reason,
+             combined_facts AS system_facts,
+             combined_summary AS system_summary,
+             coalesce(c1.end_actor, 'unknown') AS from_end_actor,
+             coalesce(c1.end_reason, 'unknown') AS from_end_reason,
+             coalesce(c2.end_actor, 'unknown') AS to_end_actor,
+             coalesce(c2.end_reason, 'unknown') AS to_end_reason
+      ORDER BY CASE WHEN size(combined_facts) > 0 THEN 0 ELSE 1 END, c1.id DESC
+      LIMIT 25
+
+  bot_escalation_and_missed_contacts:
+    description: Analysis of bot-to-agent escalations resulting in missed contacts, inspecting reason codes (no_ready_agents, no_agent_available) and customer drop-offs.
+    parameters: []
+    cypher: |
+      MATCH (c:Conversation)
+      WHERE c.handoff_reason IS NOT NULL 
+         OR exists((c)-[:HAS]->(:MissedContact))
+         OR any(f IN coalesce(c.facts, []) WHERE f IN ['live_agent_unavailable', 'no_ready_agents'])
+      OPTIONAL MATCH (c)-[:HAS]->(mc:MissedContact)
+      OPTIONAL MATCH (c)-[:ROUTED_TO]->(q)
+      OPTIONAL MATCH (c)-[:HANDLED_BY]->(a)
+      RETURN c.id AS conversation_id,
+             c.channel AS channel,
+             c.handoff_reason AS handoff_reason,
+             coalesce(mc.reason, 'none') AS missed_contact_reason,
+             coalesce(mc.custom_reasonCode, 'none') AS missed_reason_code,
+             coalesce(q.name, 'Support Queue') AS queue_name,
+             coalesce(a.display_name, 'None (Unassigned)') AS assigned_agent,
+             c.status AS status,
+             coalesce(c.resolution_code, 'none') AS resolution_code,
+             c.end_actor AS end_actor,
+             c.end_reason AS end_reason,
+             c.facts AS telemetry_facts,
+             c.summary AS system_summary
+      ORDER BY c.id DESC
+      LIMIT 20
+
+  bot_sessions_and_handoff_volume:
+    description: Analysis of bot sessions, message volume, and handoff triggers, verifying whether escalations occurred via handoff_reason or missed contact.
+    parameters: []
+    cypher: |
+      MATCH (c:Conversation)
+      RETURN c.channel AS channel,
+             count(c) AS total_conversations,
+             count(CASE WHEN c.handoff_reason IS NOT NULL THEN 1 END) AS handoffs_requested,
+             count(CASE WHEN exists((c)-[:HAS]->(:MissedContact)) THEN 1 END) AS missed_contacts_logged,
+             count(CASE WHEN any(f IN coalesce(c.facts, []) WHERE f = 'no_ready_agents') THEN 1 END) AS no_ready_agent_failures,
+             count(CASE WHEN c.assigned_agent_id IS NOT NULL THEN 1 END) AS transferred_to_human_staff,
+             round(avg(duration.between(c.created_at, c.ended_at).seconds), 1) AS avg_duration_seconds
+      ORDER BY total_conversations DESC
+
+
+
+  service_level_overview:
+    description: Service level adherence, SLA status distribution, and priority breakdown across conversations.
+    parameters: []
+    cypher: |
+      MATCH (c:Conversation)
+      RETURN coalesce(c.sla_status, 'normal') AS sla_status,
+             coalesce(c.priority, 0) AS priority_level,
+             count(*) AS conversation_count
+      ORDER BY conversation_count DESC
+      LIMIT 10
+
+  customer_contact_journey:
+    description: Multi-hop contact center interaction history for a specific customer profile.
+    parameters: [contact_id]
+    cypher: |
+      MATCH (ct:Contact {cdp_id: $contact_id})-[:HAS_CONVERSATION_HISTORY]->(:ConversationHistory)-[:HAS_CONVERSATION]->(c:Conversation)
+      RETURN ct.cdp_id AS contact_id,
+             coalesce(ct.first_name + ' ' + ct.last_name, 'Unknown Customer') AS customer_name,
+             c.id AS conversation_id,
+             c.channel AS channel,
+             coalesce(c.status, 'unspecified') AS status,
+             c.created_at AS interaction_time,
+             coalesce(c.end_reason, 'active') AS outcome
+      ORDER BY c.created_at DESC
+      LIMIT 20
+
+  business_hours_and_shifts:
+    description: Contact center operating hours, timezone, and morning/evening shift coverage across all 7 days.
+    parameters: []
+    cypher: |
+      MATCH (bh:BusinessHours)-[:HAS_SHIFT]->(sh:Shift)
+      RETURN bh.name AS schedule_name,
+             bh.timezone AS timezone,
+             sh.day_of_week AS day_of_week,
+             sh.shift_type AS shift_type,
+             sh.start_time AS start_time,
+             sh.end_time AS end_time
+      ORDER BY sh.day_of_week, sh.start_time
+      LIMIT 14
+
+  holiday_calendar_overview:
+    description: Official contact center holiday calendar and dates.
+    parameters: []
+    cypher: |
+      MATCH (hc:HolidayCalendar)-[:HAS_HOLIDAY]->(h:Holiday)
+      RETURN h.name AS holiday_name,
+             h.holiday_date AS holiday_date
+      ORDER BY h.holiday_date ASC
+      LIMIT 10

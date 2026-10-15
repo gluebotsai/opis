@@ -1,0 +1,518 @@
+# =============================================================================
+# CRM ontology fragment — paste under `tables:` in core.yaml
+# =============================================================================
+# Labels already defined in core (do not redefine): Tenant, User, Contact,
+# ContactPoint, Product, Order (CDP commerce projection).
+#
+# Motion coverage (same tables; FKs optional where product allows):
+#   B2B   — Company required → Deal → Proposal/Quote → SalesOrder → Invoice
+#   B2C   — Contact-first → SalesOrder (company/deal optional) → Invoice
+#   B2B2C — both paths; ContactProfile + Company share CDP/CRM ids
+#
+# Intentionally omitted from OKG (agent tools / DB only):
+#   audit_logs, api_keys, *_jobs, gmail_push_watches,
+#   user_integration_connections, domain_enrichment_cache, report_snapshots
+# =============================================================================
+
+  # ---------- crm: tenant / party overlays ----------
+  crm.organization_profiles:
+    mode: node
+    label: OrgProfile
+    key: organization_id
+    custom_field: vertical_config
+    custom_dynamic: true
+    properties: [organization_id, vertical, created_at, updated_at]
+    relationships:
+      - {type: HAS_ORG_PROFILE, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  crm.companies:
+    mode: node
+    label: Company
+    key: id
+    properties: [id, organization_id, name, domain, industry, employee_count,
+                 linkedin_url, logo_url, owner_user_id, channel_role,
+                 parent_company_id, expansion_signal, expansion_reason,
+                 expansion_draft, expansion_last_run_at, created_at, updated_at]
+    relationships:
+      - {type: HAS_COMPANY, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: OWNED_BY, direction: out, target_label: User, target_key: id, from_column: owner_user_id}
+      - {type: PARENT_COMPANY, direction: out, target_label: Company, target_key: id, from_column: parent_company_id}
+
+  crm.company_locations:
+    mode: node
+    label: CompanySite
+    key: id
+    properties: [id, organization_id, company_id, name, type, address, city,
+                 industry, employee_count, owner_user_id, created_at, updated_at]
+    relationships:
+      - {type: HAS_COMPANY_SITE, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: HAS_SITE, direction: in, target_label: Company, target_key: id, from_column: company_id}
+      - {type: OWNED_BY, direction: out, target_label: User, target_key: id, from_column: owner_user_id}
+
+  # CRM overlay for a CDP person. account_contact_id = cdp.customer_profile.cdp_id
+  # B2B: usually linked to Company (+ optional CompanySite).
+  # B2C: company_id / location_id often null; lifecycle still on this overlay.
+  crm.contact_profiles:
+    mode: node
+    label: ContactProfile
+    key: id
+    custom_field: custom_attributes
+    custom_dynamic: true
+    properties: [id, organization_id, account_contact_id, company_id, location_id,
+                 owner_user_id, created_by_user_id, lead_source, lead_status,
+                 disqualify_reason, crm_status, notes, tags, is_pinned,
+                 assignment_reason, sla_deadline, assigned_at, assignment_escalated,
+                 nurture_status, nurture_sequence_step, nurture_started_at,
+                 nurture_last_touch_at, flagged_for_review, flag_reason,
+                 lifecycle_last_action, lifecycle_last_reason, lifecycle_last_run_at,
+                 bant_budget, bant_authority, bant_need, bant_timeline,
+                 converted_deal_id, marketing_opt_out, marketing_opt_out_at,
+                 created_at, updated_at]
+    relationships:
+      - {type: HAS_CONTACT_PROFILE, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: OVERLAY_OF, direction: out, target_label: Contact, target_key: cdp_id, from_column: account_contact_id}
+      - {type: WORKS_AT, direction: out, target_label: Company, target_key: id, from_column: company_id}
+      - {type: AT_SITE, direction: out, target_label: CompanySite, target_key: id, from_column: location_id}
+      - {type: ASSIGNED_TO, direction: out, target_label: User, target_key: id, from_column: owner_user_id}
+      - {type: CREATED_BY, direction: out, target_label: User, target_key: id, from_column: created_by_user_id}
+      - {type: CONVERTED_TO, direction: out, target_label: Deal, target_key: id, from_column: converted_deal_id}
+
+  # ---------- crm: sales assignment ----------
+  crm.org_assignment_settings:
+    mode: node
+    label: AssignmentSettings
+    key: organization_id
+    custom_field: lead_icp
+    custom_dynamic: true
+    properties: [id, organization_id, senior_amount_threshold,
+                 updated_by_user_id, created_at, updated_at]
+    relationships:
+      - {type: HAS_ASSIGNMENT_SETTINGS, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: UPDATED_BY, direction: out, target_label: User, target_key: id, from_column: updated_by_user_id}
+
+  crm.sales_user_assignment_profiles:
+    mode: node
+    label: AssignmentProfile
+    key: id
+    properties: [id, organization_id, user_id, accepting_leads, max_open_deals,
+                 seniority_tier, on_pto_until, country, created_at, updated_at]
+    relationships:
+      - {type: HAS_ASSIGNMENT_PROFILE, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: FOR_USER, direction: out, target_label: User, target_key: id, from_column: user_id}
+
+  # ---------- crm: pipeline (B2B primary; B2B2C shared) ----------
+  crm.deals:
+    mode: node
+    label: Deal
+    key: id
+    properties: [id, organization_id, title, stage,
+                 {name: amount, type: decimal, scale: 2},
+                 company_id, location_id, contact_id, contact_name, contact_email,
+                 owner_user_id, notes, lost_reason, expected_close_date, closed_at,
+                 forecast_category, forecast_confidence_percent, forecast_flagged,
+                 forecast_reason, forecast_last_run_at, created_at, updated_at]
+    relationships:
+      - {type: HAS_DEAL, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: WITH_COMPANY, direction: out, target_label: Company, target_key: id, from_column: company_id}
+      - {type: AT_SITE, direction: out, target_label: CompanySite, target_key: id, from_column: location_id}
+      - {type: PRIMARY_CONTACT, direction: out, target_label: Contact, target_key: cdp_id, from_column: contact_id}
+      - {type: OWNED_BY, direction: out, target_label: User, target_key: id, from_column: owner_user_id}
+
+  crm.deal_activities:
+    mode: node
+    label: DealActivity
+    key: id
+    properties: [id, organization_id, deal_id, type, subject, body, due_at,
+                 completed_at, created_by_user_id, created_at, updated_at]
+    relationships:
+      - {type: HAS_DEAL_ACTIVITY, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: HAS_ACTIVITY, direction: in, target_label: Deal, target_key: id, from_column: deal_id}
+      - {type: CREATED_BY, direction: out, target_label: User, target_key: id, from_column: created_by_user_id}
+
+  # Timeline / inbox / tasks / meetings for a CDP contact (B2B + B2C).
+  crm.contact_activities:
+    mode: node
+    label: ContactActivity
+    key: id
+    custom_field: transcript_insights
+    custom_dynamic: true
+    properties: [id, organization_id, contact_id, type, folder, thread_id,
+                 provider_message_id, provider_thread_id, mail_provider,
+                 rfc_message_id, email_direction, needs_manual_response,
+                 subject, body, due_at, assignee_user_id, task_status,
+                 reminder_sent_at, reminder_24h_sent_at, reminder_1h_sent_at,
+                 miss_escalated_at, mom_sent_at, transcript_text, transcript_source,
+                 transcript_analyzed_at, completed_at, created_by_user_id,
+                 created_at, updated_at]
+    relationships:
+      - {type: HAS_CONTACT_ACTIVITY, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: FOR_CONTACT, direction: out, target_label: Contact, target_key: cdp_id, from_column: contact_id}
+      - {type: ASSIGNED_TO, direction: out, target_label: User, target_key: id, from_column: assignee_user_id}
+      - {type: CREATED_BY, direction: out, target_label: User, target_key: id, from_column: created_by_user_id}
+
+  # ---------- crm: catalog overlays (inventory.products = Product in core) ----------
+  crm.product_offers:
+    mode: node
+    label: ProductOffer
+    key: id
+    properties: [id, organization_id, product_id, name, code, billing_type,
+                 billing_frequency, included_qty, meter_key, sort_order, status,
+                 created_at, updated_at]
+    relationships:
+      - {type: HAS_PRODUCT_OFFER, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: FOR_PRODUCT, direction: out, target_label: Product, target_key: id, from_column: product_id}
+
+  crm.product_addons:
+    mode: node
+    label: Addon
+    key: id
+    properties: [id, organization_id, product_id, name, unit_label, meter_key,
+                 is_overage, pricing_model,
+                 {name: flat_price, type: decimal, scale: 2},
+                 {name: unit_price, type: decimal, scale: 4},
+                 step_size,
+                 {name: step_price, type: decimal, scale: 2},
+                 sort_order, created_at, updated_at]
+    relationships:
+      - {type: HAS_ADDON, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: FOR_PRODUCT, direction: out, target_label: Product, target_key: id, from_column: product_id}
+
+  crm.product_addon_tiers:
+    mode: node
+    label: AddonTier
+    key: id
+    properties: [id, organization_id, addon_id, min_qty, max_qty,
+                 {name: unit_price, type: decimal, scale: 4},
+                 created_at, updated_at]
+    relationships:
+      - {type: HAS_TIER, direction: in, target_label: Addon, target_key: id, from_column: addon_id}
+
+  crm.price_books:
+    mode: node
+    label: PriceBook
+    key: id
+    properties: [id, organization_id, name, code, currency, is_default,
+                 created_at, updated_at]
+    relationships:
+      - {type: HAS_PRICE_BOOK, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  crm.price_book_entries:
+    mode: node
+    label: PriceBookEntry
+    key: id
+    properties: [id, organization_id, price_book_id, product_id, offer_id,
+                 addon_id,
+                 {name: amount, type: decimal, scale: 2},
+                 billing_frequency, created_at, updated_at]
+    relationships:
+      - {type: LISTS, direction: in, target_label: PriceBook, target_key: id, from_column: price_book_id}
+      - {type: FOR_PRODUCT, direction: out, target_label: Product, target_key: id, from_column: product_id}
+      - {type: FOR_OFFER, direction: out, target_label: ProductOffer, target_key: id, from_column: offer_id}
+      - {type: FOR_ADDON, direction: out, target_label: Addon, target_key: id, from_column: addon_id}
+
+  # ---------- crm: documents (B2B finance path; B2B2C shared) ----------
+  crm.proposal_templates:
+    mode: node
+    label: ProposalTemplate
+    key: id
+    custom_field: sections
+    custom_dynamic: true
+    properties: [id, organization_id, name, code, kind, blueprint, assets,
+                 is_default, created_at, updated_at]
+    relationships:
+      - {type: HAS_PROPOSAL_TEMPLATE, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  crm.proposals:
+    mode: node
+    label: Proposal
+    key: id
+    custom_field: sections
+    custom_dynamic: true
+    properties: [id, organization_id, deal_id, template_id, number, title,
+                 summary, blueprint, assets, customer_name, version, status,
+                 attachment_url, shared_at, approval_status, approved_at,
+                 approved_by_user_id, created_by_user_id, created_at, updated_at]
+    relationships:
+      - {type: HAS_PROPOSAL, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: FOR_DEAL, direction: out, target_label: Deal, target_key: id, from_column: deal_id}
+      - {type: USES_TEMPLATE, direction: out, target_label: ProposalTemplate, target_key: id, from_column: template_id}
+      - {type: CREATED_BY, direction: out, target_label: User, target_key: id, from_column: created_by_user_id}
+      - {type: APPROVED_BY, direction: out, target_label: User, target_key: id, from_column: approved_by_user_id}
+
+  crm.quote_templates:
+    mode: node
+    label: QuoteTemplate
+    key: id
+    custom_field: sections
+    custom_dynamic: true
+    properties: [id, organization_id, name, code, kind, blueprint, assets,
+                 is_default, created_at, updated_at]
+    relationships:
+      - {type: HAS_QUOTE_TEMPLATE, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  crm.quotes:
+    mode: node
+    label: Quote
+    key: id
+    custom_field: document_sections
+    custom_dynamic: true
+    properties: [id, organization_id, deal_id, proposal_id, template_id, number,
+                 version, status, currency,
+                 {name: subtotal, type: decimal, scale: 2, currency_column: currency},
+                 {name: discount_pct, type: decimal, scale: 2},
+                 {name: total, type: decimal, scale: 2, currency_column: currency},
+                 valid_until, notes, blueprint, assets, customer_name,
+                 company_name, vendor_name, sent_at, accepted_at,
+                 approval_status, approval_note, approved_at, approved_by_user_id,
+                 created_by_user_id, created_at, updated_at]
+    relationships:
+      - {type: HAS_QUOTE, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: FOR_DEAL, direction: out, target_label: Deal, target_key: id, from_column: deal_id}
+      - {type: FROM_PROPOSAL, direction: out, target_label: Proposal, target_key: id, from_column: proposal_id}
+      - {type: USES_TEMPLATE, direction: out, target_label: QuoteTemplate, target_key: id, from_column: template_id}
+      - {type: CREATED_BY, direction: out, target_label: User, target_key: id, from_column: created_by_user_id}
+      - {type: APPROVED_BY, direction: out, target_label: User, target_key: id, from_column: approved_by_user_id}
+
+  crm.quote_lines:
+    mode: node
+    label: QuoteLine
+    key: id
+    properties: [id, organization_id, quote_id, product_id, name,
+                 {name: quantity, type: decimal, scale: 2},
+                 {name: unit_price, type: decimal, scale: 2},
+                 {name: amount, type: decimal, scale: 2},
+                 sort_order, created_at, updated_at]
+    relationships:
+      - {type: HAS_LINE, direction: in, target_label: Quote, target_key: id, from_column: quote_id}
+      - {type: FOR_PRODUCT, direction: out, target_label: Product, target_key: id, from_column: product_id}
+
+  # B2B: usually from accepted quote / deal + company.
+  # B2C: contact_id set; company_id / deal_id / quote_id often null.
+  # Distinct from CDP Order (cdp.orders) — CRM commercial order of record.
+  crm.sales_orders:
+    mode: node
+    label: SalesOrder
+    key: id
+    properties: [id, organization_id, deal_id, quote_id, company_id, contact_id,
+                 number, status, currency,
+                 {name: total, type: decimal, scale: 2, currency_column: currency},
+                 confirmed_at, created_by_user_id, created_at, updated_at]
+    relationships:
+      - {type: HAS_SALES_ORDER, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: FOR_DEAL, direction: out, target_label: Deal, target_key: id, from_column: deal_id}
+      - {type: FROM_QUOTE, direction: out, target_label: Quote, target_key: id, from_column: quote_id}
+      - {type: FOR_COMPANY, direction: out, target_label: Company, target_key: id, from_column: company_id}
+      - {type: PLACED_BY, direction: out, target_label: Contact, target_key: cdp_id, from_column: contact_id}
+      - {type: CREATED_BY, direction: out, target_label: User, target_key: id, from_column: created_by_user_id}
+
+  crm.order_lines:
+    mode: node
+    label: OrderLine
+    key: id
+    properties: [id, organization_id, order_id, product_id, name,
+                 {name: quantity, type: decimal, scale: 2},
+                 {name: unit_price, type: decimal, scale: 2},
+                 {name: amount, type: decimal, scale: 2},
+                 sort_order, created_at, updated_at]
+    relationships:
+      - {type: HAS_LINE, direction: in, target_label: SalesOrder, target_key: id, from_column: order_id}
+      - {type: FOR_PRODUCT, direction: out, target_label: Product, target_key: id, from_column: product_id}
+
+  crm.invoice_templates:
+    mode: node
+    label: InvoiceTemplate
+    key: id
+    custom_field: sections
+    custom_dynamic: true
+    properties: [id, organization_id, name, code, kind, blueprint, assets,
+                 is_default, created_at, updated_at]
+    relationships:
+      - {type: HAS_INVOICE_TEMPLATE, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  # Finance module: B2B / B2B2C. Not enabled for pure B2C tenants.
+  crm.invoices:
+    mode: node
+    label: Invoice
+    key: id
+    custom_field: tax_details
+    custom_dynamic: true
+    properties: [id, organization_id, order_id, deal_id, company_id, template_id,
+                 number, status, currency,
+                 {name: total, type: decimal, scale: 2, currency_column: currency},
+                 {name: discount_amount, type: decimal, scale: 2, currency_column: currency},
+                 {name: tax_amount, type: decimal, scale: 2, currency_column: currency},
+                 issue_date, payment_terms, notes, billing_address, lead_email,
+                 lead_phone, tax_id, due_at, paid_at, sections, blueprint, assets,
+                 approval_status, approved_at, approved_by_user_id, created_by_user_id,
+                 escalation_severity, escalation_reason, escalation_draft,
+                 escalation_last_run_at, created_at, updated_at]
+    relationships:
+      - {type: HAS_INVOICE, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: FOR_ORDER, direction: out, target_label: SalesOrder, target_key: id, from_column: order_id}
+      - {type: FOR_DEAL, direction: out, target_label: Deal, target_key: id, from_column: deal_id}
+      - {type: ISSUED_TO, direction: out, target_label: Company, target_key: id, from_column: company_id}
+      - {type: USES_TEMPLATE, direction: out, target_label: InvoiceTemplate, target_key: id, from_column: template_id}
+      - {type: CREATED_BY, direction: out, target_label: User, target_key: id, from_column: created_by_user_id}
+      - {type: APPROVED_BY, direction: out, target_label: User, target_key: id, from_column: approved_by_user_id}
+
+  crm.invoice_lines:
+    mode: node
+    label: InvoiceLine
+    key: id
+    properties: [id, organization_id, invoice_id, kind, product_id, addon_id,
+                 name, description,
+                 {name: quantity, type: decimal, scale: 2},
+                 {name: unit_price, type: decimal, scale: 4},
+                 {name: tax_percent, type: decimal, scale: 2},
+                 {name: amount, type: decimal, scale: 2},
+                 sort_order, created_at, updated_at]
+    relationships:
+      - {type: HAS_LINE, direction: in, target_label: Invoice, target_key: id, from_column: invoice_id}
+      - {type: FOR_PRODUCT, direction: out, target_label: Product, target_key: id, from_column: product_id}
+      - {type: FOR_ADDON, direction: out, target_label: Addon, target_key: id, from_column: addon_id}
+
+  crm.contracts:
+    mode: node
+    label: Contract
+    key: id
+    properties: [id, organization_id, company_id, deal_id, title, starts_at,
+                 ends_at,
+                 {name: arr, type: decimal, scale: 2},
+                 renew_deal_id, renewal_reminded_at, created_at, updated_at]
+    relationships:
+      - {type: HAS_CONTRACT, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: FOR_COMPANY, direction: out, target_label: Company, target_key: id, from_column: company_id}
+      - {type: FROM_DEAL, direction: out, target_label: Deal, target_key: id, from_column: deal_id}
+      - {type: RENEWED_BY, direction: out, target_label: Deal, target_key: id, from_column: renew_deal_id}
+
+  # ---------- crm: lead intelligence (agent outcomes, not job queues) ----------
+  crm.lead_enrichment_snapshots:
+    mode: node
+    label: LeadEnrichmentSnapshot
+    key: id
+    properties: [id, organization_id, contact_id, company_name, company_size,
+                 industry, company_description, products, revenue_band,
+                 seniority_tier, geography, email_domain_type,
+                 enrichment_confidence, enrichment_source, conflict_flags,
+                 enrichment_timestamp, created_at, updated_at]
+    relationships:
+      - {type: HAS_ENRICHMENT, direction: in, target_label: Contact, target_key: cdp_id, from_column: contact_id}
+
+  crm.lead_summaries:
+    mode: node
+    label: LeadSummary
+    key: id
+    properties: [id, organization_id, contact_id, summary, headline, intent,
+                 recommended_action, flags, signature, source, model,
+                 created_at, updated_at]
+    relationships:
+      - {type: HAS_LEAD_SUMMARY, direction: in, target_label: Contact, target_key: cdp_id, from_column: contact_id}
+
+  # ---------- crm: meetings / coaching / privacy / HITL ----------
+  crm.meeting_assist_sessions:
+    mode: node
+    label: MeetingAssistSession
+    key: id
+    custom_field: last_suggestions
+    custom_dynamic: true
+    properties: [id, organization_id, contact_id, activity_id, provider,
+                 external_meeting_id, join_url, host_user_id, status,
+                 started_at, ended_at, last_assist_at, meta, created_at, updated_at]
+    relationships:
+      - {type: FOR_ACTIVITY, direction: out, target_label: ContactActivity, target_key: id, from_column: activity_id}
+      - {type: FOR_CONTACT, direction: out, target_label: Contact, target_key: cdp_id, from_column: contact_id}
+      - {type: HOSTED_BY, direction: out, target_label: User, target_key: id, from_column: host_user_id}
+
+  crm.meeting_transcript_chunks:
+    mode: node
+    label: MeetingTranscriptChunk
+    key: id
+    properties: [id, organization_id, session_id, seq, speaker, speaker_email,
+                 text, spoken_at, source, created_at]
+    relationships:
+      - {type: HAS_CHUNK, direction: in, target_label: MeetingAssistSession, target_key: id, from_column: session_id}
+
+  crm.meeting_analyses:
+    mode: node
+    label: MeetingAnalysis
+    key: id
+    custom_field: evidence
+    custom_dynamic: true
+    properties: [id, organization_id, activity_id, contact_id, deal_id, outcome,
+                 bant_budget, bant_authority, bant_need, bant_timeline_text,
+                 next_step_agreed, objections_raised, confidence, analyzed_at,
+                 created_at]
+    relationships:
+      - {type: FOR_ACTIVITY, direction: out, target_label: ContactActivity, target_key: id, from_column: activity_id}
+      - {type: FOR_CONTACT, direction: out, target_label: Contact, target_key: cdp_id, from_column: contact_id}
+      - {type: FOR_DEAL, direction: out, target_label: Deal, target_key: id, from_column: deal_id}
+
+  crm.coaching_insights:
+    mode: node
+    label: CoachingInsight
+    key: id
+    properties: [id, organization_id, activity_id, contact_id, deal_id,
+                 rep_user_id, interaction_type, overall_impression,
+                 discovery_quality, objection_handling, methodology_note,
+                 talk_balance_note, strengths, growth_areas, highlighted_moment,
+                 coaching_note, analyzed_at, created_at]
+    relationships:
+      - {type: FOR_ACTIVITY, direction: out, target_label: ContactActivity, target_key: id, from_column: activity_id}
+      - {type: FOR_CONTACT, direction: out, target_label: Contact, target_key: cdp_id, from_column: contact_id}
+      - {type: FOR_DEAL, direction: out, target_label: Deal, target_key: id, from_column: deal_id}
+      - {type: FOR_USER, direction: out, target_label: User, target_key: id, from_column: rep_user_id}
+
+  crm.privacy_requests:
+    mode: node
+    label: PrivacyRequest
+    key: id
+    properties: [id, organization_id, activity_id, contact_id, request_type,
+                 confidence, status, reason, draft_confirmation,
+                 reviewed_by_user_id, reviewed_at, executed_at, created_at, updated_at]
+    relationships:
+      - {type: FOR_ACTIVITY, direction: out, target_label: ContactActivity, target_key: id, from_column: activity_id}
+      - {type: FOR_CONTACT, direction: out, target_label: Contact, target_key: cdp_id, from_column: contact_id}
+      - {type: REVIEWED_BY, direction: out, target_label: User, target_key: id, from_column: reviewed_by_user_id}
+
+  crm.process_confirmations:
+    mode: node
+    label: ProcessConfirmation
+    key: id
+    custom_field: payload
+    custom_dynamic: true
+    properties: [id, organization_id, contact_id, owner_user_id, activity_id,
+                 deal_id, action_kind, title, summary, status, decided_at,
+                 decided_by_user_id, result_note, created_at, updated_at]
+    relationships:
+      - {type: FOR_CONTACT, direction: out, target_label: Contact, target_key: cdp_id, from_column: contact_id}
+      - {type: FOR_ACTIVITY, direction: out, target_label: ContactActivity, target_key: id, from_column: activity_id}
+      - {type: FOR_DEAL, direction: out, target_label: Deal, target_key: id, from_column: deal_id}
+      - {type: OWNED_BY, direction: out, target_label: User, target_key: id, from_column: owner_user_id}
+      - {type: DECIDED_BY, direction: out, target_label: User, target_key: id, from_column: decided_by_user_id}
+
+  # ---------- crm: agent UX memory / notifications ----------
+  crm.notifications:
+    mode: node
+    label: Notification
+    key: id
+    custom_field: metadata
+    custom_dynamic: true
+    properties: [id, organization_id, recipient_user_id, actor_user_id, kind,
+                 title, body, href, entity_type, entity_id, contact_id,
+                 read_at, created_at]
+    relationships:
+      - {type: HAS_NOTIFICATION, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: NOTIFIES, direction: out, target_label: User, target_key: id, from_column: recipient_user_id}
+      - {type: ACTED_BY, direction: out, target_label: User, target_key: id, from_column: actor_user_id}
+      - {type: ABOUT_CONTACT, direction: out, target_label: Contact, target_key: cdp_id, from_column: contact_id}
+
+  # Coworker / agent durable slots. scope_type+scope_id are polymorphic
+  # (contact, deal, user, …) — resolve in the agent layer, not as fixed FKs.
+  crm.agent_memories:
+    mode: node
+    label: AgentMemory
+    key: id
+    properties: [id, organization_id, scope_type, scope_id, slot_key, slot_value,
+                 source, expires_at, created_at, updated_at]
+    relationships:
+      - {type: HAS_AGENT_MEMORY, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}

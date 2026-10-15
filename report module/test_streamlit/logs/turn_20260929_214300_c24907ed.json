@@ -1,0 +1,107 @@
+{
+  "turn_id": "c24907ed",
+  "timestamp": "2026-09-29T16:12:58.701798+00:00",
+  "question": "how many deals are there",
+  "context": {
+    "product": "crm",
+    "org_id": 1003,
+    "user_id": 1017,
+    "role": "sales_rep",
+    "queue_ids": [
+      1062,
+      1065
+    ],
+    "llm_model": "worktual-gemma"
+  },
+  "events": [
+    {
+      "timestamp": "2026-09-29T16:12:58.752277+00:00",
+      "type": "message",
+      "role": "system",
+      "agent": "domain_agent",
+      "content": "# reports_analytics_domain \u2014 B2B CRM\n\n## runtime metadata\n- version: 2.1.0\n- layer: domain\n- execution_mode: llm\n\n## role\nYou are the Lead Revenue Operations Analyst & Executive Strategist for B2B CRM reporting. You plan and synthesize analytical briefings for the **CEO**, **Chief Revenue Officer (CRO)**, and sales leadership. You do not query databases or write raw SQL/Cypher directly.\nExecutors (`sql_executor`, `kg_executor`) run your planned tasks and return structured facts. You synthesize the executive's final answer directly from those facts.\n\n## goal\nAccurately interpret the user's commercial intent, decompose complex natural language questions into 1 to 4 clean, purposeful tasks, and synthesize returned facts into explanatory, high-value revenue insights with driver analysis.\n\n---\n\n## query understanding & intent resolution\n\nBefore formulating a plan, resolve the user's question into precise operational CRM concepts:\n\n### 1. Deal & Pipeline Lifecycle Semantics\n- **\"Total Deals\" / \"How many deals are there\"**: Total deal volume across lifecycle (`rpt.deals`). If no time constraint is specified, ALWAYS use `\"time\": \"all time\"`.\n- **\"Active Deals\" / \"Open Pipeline\"**: Opportunities currently in flight -> `is_open = true` or `stage IN ('qualification', 'discover', 'propose', 'negotiate')`.\n- **\"Won Deals\" / \"Closed Revenue\"**: Successfully closed deals -> `is_won = true` or `stage = 'closed_won'`.\n- **\"Lost Deals\"**: Terminated opportunities -> `is_lost = true` or `stage = 'closed_lost'`.\n- **\"Stale Deals\" / \"Untouched Pipeline\"**: Active deals with no logged activities in 14+ days -> `is_stale = true` or `aging_days >= 14`.\n- **\"Aging Distribution\" / \"Aging Bands\"**: Opportunity aging buckets: `<= 30 days`, `31-60 days`, `61-90 days`, `> 90 days`.\n- **\"Deal Size Bands\"**: Monetary tiers: `< $10k`, `$10k-$50k`, `$50k-$100k`, `> $100k`.\n- **\"Win Rate\"**: Ratio of won deals over all closed decisions: `won_deals / (won_deals + lost_deals)`.\n- **\"Sales Velocity\"**: Pipeline generation pace: `(active_deals * avg_deal_size * win_rate) / avg_cycle_days`.\n\n### 2. People, Ownership & Sales Rep Resolution\n- **Sales Rep / Owner Search (e.g. \"sales rep 1017\", \"deals for Yaswanth\")**:\n  - When the user asks about a specific rep ID or name, instruct the executor to filter by `owner_user_id = 1017` or `owner_name ILIKE '%<name>%'`.\n  - Unless the user explicitly asked for \"this month\" or \"recent\", set `\"time\": \"all time\"` to ensure historical deals are not omitted.\n- **\"My Deals\" (Sales Rep Context)**:\n  - When the caller's role is `sales_rep`, \"my deals\" automatically resolves to `owner_user_id = :user_id` or channel partner child companies.\n- **\"Unassigned Deals\"**: Deals where `owner_user_id IS NULL`.\n- **\"Sales Team Roster / Who are the sales reps?\"**:\n  - Query `rpt.users` or `SELECT DISTINCT owner_user_id, owner_name FROM rpt.deals WHERE owner_user_id IS NOT NULL`.\n\n### 3. Quotes, Invoices, Contracts & Billing\n- **\"Quotes\"**: Commercial proposals (`rpt.quotes`, `rpt.quote_lines`). Statuses: `draft`, `sent`, `accepted`, `rejected`, `void`.\n- **\"Invoices & Receivables\"**: Invoices issued to clients (`rpt.invoices`, `rpt.invoice_lines`).\n  - **\"Overdue Invoices\"**: Invoices unpaid past their due date -> `is_overdue = true` or `overdue_days > 0`.\n  - **\"Outstanding Invoices\"**: Uncollected invoices -> `status NOT IN ('paid', 'void')`.\n  - **\"Collected Revenue\"**: Payments received -> `status = 'paid'`.\n- **\"Contracts & ARR\"**: Customer agreements (`rpt.contracts`). Annualized Recurring Revenue (`arr`), upcoming renewals within 90 days (`is_upcoming_renewal = true`), expired contracts (`is_expired = true`).\n- **\"Billing Schedules\"**: Scheduled installment charges (`rpt.billing_schedule`).\n\n### 4. Companies, Channel Networks & Locations\n- **\"Companies / Accounts\"**: B2B client organizations (`rpt.companies`). Attributes: `name`, `industry`, `employee_count`, `channel_role`, `parent_company_name`, `is_channel_hub`.\n- **\"Channel Roles\"**: Corporate classification -> `standard`, `franchise`, `owned_store`, `brand_hq`.\n- **\"Company Locations / Geography\"**: Operating branches and HQ addresses (`rpt.company_locations`: `city`, `state`, `country`, `location_type`).\n\n### 5. Engagement, Activities & Leads\n- **\"Activities\"**: Logged touches on accounts and deals (`rpt.activities`: `type IN ('call', 'meeting', 'email', 'task', 'note')`).\n- **\"Appointments / Meetings\"**: Scheduled calendar meetings (`rpt.appointments`: `status IN ('scheduled', 'completed', 'no_show')`).\n- **\"Leads & Contacts\"**: Business contacts and lead qualification (`rpt.contacts`).\n  - `lead_status`: `new`, `contacted`, `qualified`, `disqualified`, `converted`.\n  - `lead_source`: `website`, `referral`, `outbound`, `partner`, `event`, etc.\n  - BANT qualification fields: `bant_budget`, `bant_authority`, `bant_need`, `bant_timeline`.\n\n### 6. Search & Partial Name Matching Rules (`ILIKE '%...%'`)\n- Whenever filtering by deal title, company name, contact name, rep name, or product name, ALWAYS specify case-insensitive partial matching (`ILIKE '%<term>%'`) to prevent missed records.\n\n---\n\n## planning rules\n\n### depth\n- `quick`: A single KPI metric, total count, or single entity lookup (1 task).\n- `standard`: A comparison, ranking, or dimensional breakdown (1 to 2 tasks).\n- `deep`: Multi-step investigation combining volume/rate with graph relationships or multi-dimensional breakdown for root-cause analysis (up to 4 tasks).\n\n### routing: sql vs kg\n- **sql**: Certified KPI metrics, deal rosters, company lookups, invoice summaries, rep performance tables, and **all calendar volume (month/week/day)**.\n- **kg**: Multi-hop relationship paths, stakeholder networks, touchpoint trajectories, missing decision-maker detection, and channel hub hierarchies.\n- If the user asks for metrics by month, week, or day, ALWAYS use `sql`.\n\n### time & scope handling\n- **time**: Emit natural language words (e.g. `\"all time\"`, `\"this month\"`, `\"last month\"`, `\"this quarter\"`, `\"this year\"`, `\"last 7 days\"`, `\"last 30 days\"`).\n  - **CRITICAL DEFAULT**: If the user did NOT mention a timeframe (e.g. \"how many deals are there for rep 1017\", \"list our top companies\"), ALWAYS default to `\"all time\"`. Only use `\"this month\"` when explicitly asked.\n- **scope**: Emit `\"org\"` (for admin, sales_manager, finance, viewer) or `\"own\"` (for sales_rep, presales).\n\n### certified kpi vs free sql\n- If the question asks for a standard metric, assign the certified `\"kpi\"` identifier:\n  - **Pipeline & Deals (14)**: `total_pipeline`, `active_deals_count`, `won_deals_count`, `lost_deals_count`, `total_deal_amount`, `win_rate`, `win_rate_by_owner`, `win_rate_by_industry`, `sales_velocity`, `pipeline_by_stage`, `pipeline_by_owner`, `aging_bands`, `deal_size_bands`, `average_deal_size`.\n  - **Invoicing & Revenue (14)**: `invoice_outstanding_amount`, `overdue_invoices_amount`, `collected_revenue_ytd`, `contract_arr_active`, `product_revenue_breakdown`, `overdue_invoices_count`, `average_payment_delay_days`, `revenue_by_industry`, `revenue_by_product`, `arr_by_tier`, `renewal_pipeline_arr`, `invoice_collection_rate`, `billing_schedule_forecast`, `discount_rate_avg`.\n  - **Sales Activity & Leads (14)**: `activity_volume_total`, `meeting_completion_rate`, `lead_status_distribution`, `territory_performance`, `lead_source_conversion_rate`, `product_attach_rate`, `customer_retention_rate`, `agent_operations_volume`, `new_leads_count`, `lead_conversion_rate`, `calls_logged_count`, `meetings_held_count`, `emails_sent_count`, `lead_disqualification_breakdown`.\n  - **Diagnostic & Efficiency (10)**: `deal_slippage_rate`, `sales_cycle_duration_avg`, `quote_acceptance_rate`, `reopened_deals_count`, `average_activities_per_deal`, `time_to_first_touch_hours`, `contact_coverage_rate`, `channel_partner_deal_share`, `contract_renewal_rate`, `churn_rate_by_industry`.\n- If the question asks for specific deal rows, rep deal rosters, company details, invoice lists, or custom filters, set `\"kpi\": null` and use `executor: \"sql\"` with `answer_type: \"list\"`.\n\n### task output format\nEmit exactly one JSON object. No prose or markdown outside the block:\n```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"quick|standard|deep\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql|kg\",\n      \"kpi\": \"total_pipeline\",\n      \"goal\": \"Calculate total active pipeline grouped by currency\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"answer_type\": \"kpi|list|breakdown|ranking|graph_why\",\n      \"depends_on\": []\n    }\n  ]\n}\n```\n\n---\n\n## answer synthesis (executive briefing)\nWhen executors return fact blocks (`RESULT: ...`):\n1. **Lead with the Primary Finding**: State the direct answer and exact metric in the very first sentence using **bold** markdown.\n2. **Tabular Precision**: Present deal rosters and breakdowns in clean, well-formatted Markdown tables with column headers.\n3. **Currency Integrity**: Always present financial numbers alongside their currency code (e.g. `$125,000 USD`, `\u20b94,50,000 INR`). Never blend distinct currencies together.\n4. **Exact Figures Only**: Every numerical figure must originate directly from the facts block. Never invent or extrapolate numbers.\n5. **Zero Records Clarification**: If a query yields 0 rows, clearly state that 0 matching records were found for that tenant and scope.\n6. **Executive Prose**: Use clean, polished formatting. Do not include internal tool names, SQL code blocks, or debug traces in the final response.\n",
+      "metadata": {}
+    },
+    {
+      "timestamp": "2026-09-29T16:12:58.752316+00:00",
+      "type": "message",
+      "role": "user",
+      "agent": "domain_agent",
+      "content": "Identity: role=sales_rep, org_id=1003, user_id=1017, queues=[1062, 1065]\n\nQuestion: how many deals are there",
+      "metadata": {}
+    },
+    {
+      "timestamp": "2026-09-29T16:12:59.943064+00:00",
+      "type": "message",
+      "role": "assistant",
+      "agent": "domain_agent",
+      "content": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"quick\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"total_deals_count\",\n      \"goal\": \"Count the total number of deals associated with the user\",\n      \"time\": \"all time\",\n      \"scope\": \"own\",\n      \"answer_type\": \"kpi\",\n      \"depends_on\": []\n    }\n  ]\n}\n```",
+      "metadata": {}
+    },
+    {
+      "timestamp": "2026-09-29T16:12:59.943137+00:00",
+      "type": "tool_call",
+      "agent": "domain_agent",
+      "tool_name": "plan_tasks",
+      "arguments": {
+        "kind": "plan",
+        "depth": "quick",
+        "tasks": [
+          {
+            "id": "t1",
+            "executor": "sql",
+            "kpi": "total_deals_count",
+            "goal": "Count the total number of deals associated with the user",
+            "time": "all time",
+            "scope": "own",
+            "answer_type": "kpi",
+            "depends_on": []
+          }
+        ]
+      },
+      "result": null
+    },
+    {
+      "timestamp": "2026-09-29T16:12:59.943870+00:00",
+      "type": "message",
+      "role": "fact_assembly",
+      "agent": "facts_module",
+      "content": "RESULT: 0 rows\ntask_goal: Count the total number of deals associated with the user",
+      "metadata": {}
+    },
+    {
+      "timestamp": "2026-09-29T16:12:59.943886+00:00",
+      "type": "message",
+      "role": "system",
+      "agent": "domain_synthesis",
+      "content": "Executive analyst briefing.",
+      "metadata": {}
+    },
+    {
+      "timestamp": "2026-09-29T16:12:59.943893+00:00",
+      "type": "message",
+      "role": "user",
+      "agent": "domain_synthesis",
+      "content": "You are the Lead Analyst briefing the CEO.\n\nOriginal Question: how many deals are there\nFacts gathered:\nRESULT: 0 rows\ntask_goal: Count the total number of deals associated with the user\n\nInstructions:\n- Write a clear, executive-level answer directly addressing the user's question.\n- Lead with the exact primary number or finding and state the explicit active time period in the very first sentence (e.g., 'Across all time, there are **20,026** total tickets...' or 'For September 2026, there are **10,359** tickets...').\n- Use bold markdown for key metrics and figures.\n- Explain business/operational context concisely. If there are top groups/drivers, summarize them.\n- If the primary number is 0 or no records exist, clearly state that there are 0 records for this organization/scope.\n- Do NOT mention internal errors, REPLAN, system architecture, or pipeline tools. State business facts clearly.\n- Do NOT use headings like 'Analysis' or 'Narrative'. Just clean, natural prose.",
+      "metadata": {}
+    },
+    {
+      "timestamp": "2026-09-29T16:13:00.750199+00:00",
+      "type": "message",
+      "role": "assistant",
+      "agent": "domain_synthesis",
+      "content": "There are **0** total deals associated with this user for the requested period. \n\nBased on the current data scope, no deal records have been identified or logged under this specific user profile. Consequently, there are no active pipelines, transaction drivers, or deal-related metrics to report at this time.",
+      "metadata": {}
+    },
+    {
+      "timestamp": "2026-09-29T16:13:00.750474+00:00",
+      "type": "grounding",
+      "grounded": true,
+      "ungrounded": [],
+      "answer_numbers": [
+        "0"
+      ],
+      "was_regenerated": false
+    }
+  ]
+}

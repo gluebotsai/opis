@@ -1,0 +1,557 @@
+version: 1
+# Virtual reporting views for Contact Center LLM-written SQL.
+#
+# The LLM only ever sees and writes `rpt.<view>`. It never sees ccass.* or accounts.* tables directly.
+# sql_guard turns every `rpt.<view>` it uses into a scoped CTE:
+#
+#   rpt_<view> AS (SELECT <columns for this role> FROM (<source>) src WHERE <role scope>)
+#
+# Rules for `source`:
+#   - must filter the tenant with {org_id}
+#   - may use {{base_conversation}} (product/sql/_base_conversation.sql)
+#   - only `columns` below are exposed to the executor
+
+views:
+
+  conversations:
+    description: One row per customer conversation session across all channels (webchat, email, whatsapp, instagram, facebook, call).
+    source: |
+      SELECT
+        c.id,
+        c.organization_id,
+        c.channel,
+        c.contact_id,
+        c.queue_id,
+        COALESCE(q.name, 'Unassigned Queue') AS queue_name,
+        q.team_id,
+        t.name AS team_name,
+        c.assigned_agent_id,
+        c.assigned_user_id,
+        COALESCE(a.display_name, 'Unassigned') AS agent_name,
+        c.status,
+        c.priority,
+        c.subject,
+        c.handoff_reason,
+        c.bot_active,
+        c.created_at,
+        c.queued_at,
+        c.assigned_at,
+        c.first_agent_response_at,
+        c.resolved_at,
+        c.ended_at,
+        c.closed_at,
+        c.end_reason,
+        c.end_actor,
+        c.disposition_code,
+        d.category AS disposition_category,
+        d.label AS disposition_label,
+        c.resolution_code,
+        c.first_response_due_at,
+        c.resolution_due_at,
+        c.sla_status,
+        c.previous_conversation_id,
+        (c.assigned_at IS NULL AND c.queued_at IS NOT NULL AND c.ended_at IS NOT NULL AND COALESCE(c.end_reason, '') NOT IN ('superseded_by_new_voice_call', 'test_cleanup', 'bot_resolved_inactivity') AND COALESCE(c.end_actor, '') <> 'agent') AS is_abandoned
+      FROM ccass.conversations c
+      LEFT JOIN ccass.agents a ON a.id = c.assigned_agent_id
+      LEFT JOIN ccass.queues q ON q.id = c.queue_id
+      LEFT JOIN accounts.setup_teams t ON t.id = q.team_id
+      LEFT JOIN ccass.dispositions d ON d.code = c.disposition_code AND d.organization_id = c.organization_id
+      WHERE c.organization_id = {org_id}
+    columns:
+      id:                       { type: bigint, description: Internal conversation id. }
+      channel:                  { type: text, description: Communication channel, e.g. webchat, email, whatsapp, instagram, facebook, call., sample_values: true }
+      contact_id:               { type: text, description: Customer contact id in CDP. }
+      queue_id:                 { type: bigint, description: Assigned queue id. }
+      queue_name:               { type: text, description: Display name of the queue. }
+      team_id:                  { type: bigint, description: Owning team id. }
+      team_name:                { type: text, description: Display name of the team. }
+      assigned_agent_id:        { type: bigint, description: Assigned agent id. NULL = unassigned/bot. }
+      agent_name:               { type: text, description: Display name of the assigned agent. }
+      status:                   { type: text, description: Current status, e.g. bot_active, queued, assigned, active, resolved, closed., sample_values: true }
+      priority:                 { type: integer, description: Priority integer (0 = normal, 1 = high/escalated)., sample_values: true }
+      subject:                  { type: text, description: Conversation subject or topic. }
+      handoff_reason:           { type: text, description: Reason bot handed off to human agent. NULL if contained or not handed off. }
+      bot_active:               { type: boolean, description: Whether bot automation was active. }
+      created_at:               { type: timestamptz, description: Conversation creation timestamp (UTC). Default date column. }
+      queued_at:                { type: timestamptz, description: Timestamp when entered agent routing queue. }
+      assigned_at:              { type: timestamptz, description: Timestamp when assigned to human agent. }
+      first_agent_response_at:  { type: timestamptz, description: Timestamp of first human agent response. }
+      resolved_at:              { type: timestamptz, description: Timestamp when marked resolved. }
+      ended_at:                 { type: timestamptz, description: Timestamp when conversation ended. }
+      closed_at:                { type: timestamptz, description: Timestamp when closed. }
+      end_reason:               { type: text, description: Reason conversation ended, e.g. agent_completed, customer_ended, abandoned, idle_timeout, session_expired., sample_values: true }
+      end_actor:                { type: text, description: Actor who ended session, e.g. agent, customer, bot, system., sample_values: true }
+      disposition_code:         { type: text, description: Disposition code assigned, e.g. issue_resolved, follow_up_required., sample_values: true }
+      disposition_category:     { type: text, description: Disposition category, e.g. resolution, follow_up, transfer, closure., sample_values: true }
+      disposition_label:        { type: text, description: Human readable label of the disposition. }
+      resolution_code:          { type: text, description: Final resolution code. }
+      first_response_due_at:    { type: timestamptz, description: SLA target time for first human reply. }
+      resolution_due_at:        { type: timestamptz, description: SLA target time for full resolution. }
+      sla_status:               { type: text, description: SLA tracking status, e.g. not_started, on_track, warning, breached, met., sample_values: true }
+      previous_conversation_id: { type: bigint, description: ID of prior conversation if this is a reopened contact. }
+      is_abandoned:             { type: boolean, description: Whether conversation was abandoned in queue before agent pickup. }
+
+
+  conversation_facts:
+    description: One row per conversation with certified SLA compliance, durations in seconds, and status flags. Always prefer these certified fields.
+    source: |
+      {{base_conversation}}
+    columns:
+      conversation_id:          { type: bigint, description: Same as rpt.conversations.id. }
+      channel:                  { type: text, description: Communication channel. }
+      contact_id:               { type: text, description: Customer contact id. }
+      queue_id:                 { type: bigint, description: Queue id. }
+      queue_name:               { type: text, description: Queue name. }
+      team_id:                  { type: bigint, description: Team id. }
+      team_name:                { type: text, description: Team name. }
+      assigned_agent_id:        { type: bigint, description: Assigned agent id. }
+      agent_name:               { type: text, description: Assigned agent name. }
+      status:                   { type: text, description: Conversation status. }
+      priority:                 { type: integer, description: Priority level. }
+      created_at:               { type: timestamptz, description: Created timestamp. }
+      queued_at:                { type: timestamptz, description: Queued timestamp. }
+      assigned_at:              { type: timestamptz, description: Assigned timestamp. }
+      first_agent_response_at:  { type: timestamptz, description: First agent response timestamp. }
+      resolved_at:              { type: timestamptz, description: Resolved timestamp. }
+      ended_at:                 { type: timestamptz, description: Ended timestamp. }
+      end_reason:               { type: text, description: End reason. }
+      end_actor:                { type: text, description: End actor. }
+      disposition_code:         { type: text, description: Disposition code. }
+      disposition_category:     { type: text, description: Disposition category. }
+      disposition_label:        { type: text, description: Human-readable disposition label. }
+      resolution_code:          { type: text, description: Final resolution code (e.g. resolved, unresolved). }
+      subject:                  { type: text, description: Conversation subject. }
+      handoff_reason:           { type: text, description: Bot handoff reason. }
+      previous_conversation_id: { type: bigint, description: ID of previous conversation if reopened. }
+      first_response_at:        { type: timestamptz, description: First response timestamp. }
+      first_response_due_at:    { type: timestamptz, description: First response SLA deadline. }
+      resolution_due_at:        { type: timestamptz, description: Resolution SLA deadline. }
+      sla_status:               { type: text, description: SLA status. }
+      speed_to_answer_seconds:   { type: numeric, description: Seconds from queued to assigned (ASA). }
+      first_response_seconds:   { type: numeric, description: Seconds from queued to first agent reply. }
+      resolution_duration_seconds: { type: numeric, description: Seconds from created to resolved. }
+      handle_time_seconds:      { type: numeric, description: Handle time in seconds (ended minus assigned plus ACW). }
+      is_active:                { type: boolean, description: True if status is active only. Not queued, assigned, or bot_active. }
+      is_resolved:              { type: boolean, description: True if status is resolved. }
+      is_closed:                { type: boolean, description: True if status is closed. }
+      is_resolved_or_closed:    { type: boolean, description: True if status is resolved or closed. }
+      is_bot_only:              { type: boolean, description: True if no agent was ever assigned. }
+      is_handed_off:            { type: boolean, description: True if assigned to a human agent. }
+      is_reopened:              { type: boolean, description: True if previous_conversation_id is present. }
+      is_high_priority:         { type: boolean, description: True if priority >= 1. }
+      is_abandoned:             { type: boolean, description: True if customer abandoned in queue before agent assignment. }
+      first_response_sla_met:    { type: boolean, description: True if first agent reply occurred on or before due date. }
+      first_response_sla_missed: { type: boolean, description: True if first reply missed or overdue. }
+      first_response_at_risk:    { type: boolean, description: True if nearing first-response breach (warning status). }
+      resolution_sla_met:       { type: boolean, description: True if resolved on or before due date. }
+      resolution_sla_missed:    { type: boolean, description: True if resolution missed or overdue. }
+      resolution_at_risk:       { type: boolean, description: True if nearing resolution breach (warning status). }
+      sla_breached:             { type: boolean, description: True if SLA status is breached. }
+      has_sla:                  { type: boolean, description: True if SLA policy applies. }
+
+  assignments:
+    description: One row per routing offer/assignment to an agent.
+    source: |
+      SELECT
+        ca.id AS assignment_id,
+        ca.organization_id,
+        ca.conversation_id,
+        ca.queue_id,
+        ca.agent_id,
+        COALESCE(a.display_name, 'Unknown Agent') AS agent_name,
+        ca.state,
+        ca.reason,
+        ca.offered_at,
+        ca.accepted_at,
+        ca.rejected_at,
+        ca.expired_at,
+        ca.ended_at
+      FROM ccass.conversation_assignments ca
+      LEFT JOIN ccass.agents a ON a.id = ca.agent_id
+      WHERE ca.organization_id = {org_id}
+    columns:
+      assignment_id:    { type: bigint, description: Assignment record id. }
+      conversation_id:  { type: bigint, description: Conversation id. }
+      queue_id:         { type: bigint, description: Queue id. }
+      agent_id:         { type: bigint, description: Target agent id. }
+      agent_name:       { type: text, description: Agent display name. }
+      state:            { type: text, description: Assignment state, e.g. offered, accepted, rejected, expired, ended., sample_values: true }
+      reason:           { type: text, description: State change reason. }
+      offered_at:       { type: timestamptz, description: Timestamp offer was made to agent. }
+      accepted_at:      { type: timestamptz, description: Timestamp offer was accepted. }
+      rejected_at:      { type: timestamptz, description: Timestamp offer was rejected. }
+      expired_at:       { type: timestamptz, description: Timestamp offer timed out. }
+
+  transfers:
+    description: One row per conversation transfer between agents or queues.
+    source: |
+      SELECT
+        ct.id AS transfer_id,
+        ct.organization_id,
+        ct.conversation_id,
+        ct.from_queue_id,
+        COALESCE(fq.name, 'Unknown') AS from_queue_name,
+        ct.to_queue_id,
+        COALESCE(tq.name, 'Unknown') AS to_queue_name,
+        ct.from_agent_id,
+        COALESCE(fa.display_name, 'Unknown') AS from_agent_name,
+        ct.accepted_agent_id AS to_agent_id,
+        COALESCE(ta.display_name, 'Unknown') AS to_agent_name,
+        ct.state,
+        ct.outcome_reason,
+        ct.requested_at,
+        ct.completed_at,
+        ct.cancelled_at
+      FROM ccass.conversation_transfers ct
+      LEFT JOIN ccass.queues fq ON fq.id = ct.from_queue_id
+      LEFT JOIN ccass.queues tq ON tq.id = ct.to_queue_id
+      LEFT JOIN ccass.agents fa ON fa.id = ct.from_agent_id
+      LEFT JOIN ccass.agents ta ON ta.id = ct.accepted_agent_id
+      WHERE ct.organization_id = {org_id}
+    columns:
+      transfer_id:      { type: bigint, description: Transfer record id. }
+      conversation_id:  { type: bigint, description: Conversation id. }
+      from_queue_id:    { type: bigint, description: Source queue id. }
+      from_queue_name:  { type: text, description: Source queue name. }
+      to_queue_id:      { type: bigint, description: Target queue id. }
+      to_queue_name:    { type: text, description: Target queue name. }
+      from_agent_id:    { type: bigint, description: Originating agent id. }
+      from_agent_name:  { type: text, description: Originating agent name. }
+      to_agent_id:      { type: bigint, description: Receiving agent id. }
+      to_agent_name:    { type: text, description: Receiving agent name. }
+      state:            { type: text, description: Transfer state, e.g. requested, offered, accepted, completed, cancelled., sample_values: true }
+      outcome_reason:   { type: text, description: Reason or outcome explanation. }
+      requested_at:     { type: timestamptz, description: Transfer request timestamp. }
+      completed_at:     { type: timestamptz, description: Transfer completion timestamp. }
+
+  presence:
+    description: Agent presence state segments with computed duration in seconds.
+    source: |
+      SELECT
+        p.id,
+        p.organization_id,
+        p.agent_id,
+        COALESCE(a.display_name, 'Unknown') AS agent_name,
+        p.new_state AS presence_state,
+        p.reason_code,
+        p.source,
+        p.started_at,
+        COALESCE(
+          LEAD(p.started_at) OVER (PARTITION BY p.agent_id, p.organization_id ORDER BY p.started_at),
+          NOW()
+        ) AS ended_at,
+        EXTRACT(EPOCH FROM (
+          COALESCE(
+            LEAD(p.started_at) OVER (PARTITION BY p.agent_id, p.organization_id ORDER BY p.started_at),
+            NOW()
+          ) - p.started_at
+        )) AS duration_seconds
+      FROM ccass.agent_presence_history p
+      LEFT JOIN ccass.agents a ON a.id = p.agent_id
+      WHERE p.organization_id = {org_id}
+    columns:
+      id:               { type: bigint, description: Presence history id. }
+      agent_id:         { type: bigint, description: Agent id. }
+      agent_name:       { type: text, description: Agent display name. }
+      presence_state:   { type: text, description: State name, e.g. ready, busy, break, away, after_contact_work, not_ready, offline., sample_values: true }
+      reason_code:      { type: text, description: Specific reason code for pause or break. }
+      source:           { type: text, description: Transition source, e.g. agent, system, timeout. }
+      started_at:       { type: timestamptz, description: Segment start timestamp. }
+      ended_at:         { type: timestamptz, description: Segment end timestamp. }
+      duration_seconds: { type: numeric, description: Segment duration in seconds. }
+
+  messages:
+    description: Messages exchanged within customer conversations.
+    source: |
+      SELECT
+        id AS message_id,
+        organization_id,
+        conversation_id,
+        sender_type,
+        recipient_type,
+        direction,
+        visibility,
+        message_type,
+        body,
+        created_at
+      FROM ccass.conversation_messages
+      WHERE organization_id = {org_id}
+    columns:
+      message_id:       { type: bigint, description: Message id. }
+      conversation_id:  { type: bigint, description: Conversation id. }
+      sender_type:      { type: text, description: Sender classification, e.g. customer, agent, bot, system., sample_values: true }
+      direction:        { type: text, description: Inbound from customer or outbound to customer., sample_values: true }
+      visibility:       { type: text, description: Customer visible vs internal staff note., sample_values: true }
+      message_type:     { type: text, description: Type of message, e.g. text, image, file. }
+      body:             { type: text, description: Text content of the message. }
+      created_at:       { type: timestamptz, description: Message timestamp. }
+
+  bot_turns:
+    description: NLP bot turns, intent recognitions, confidence scores, and latency.
+    source: |
+      SELECT
+        id AS turn_id,
+        organization_id,
+        conversation_id,
+        turn_number,
+        intent,
+        confidence,
+        skill_key,
+        handoff_recommended,
+        handoff_reason,
+        latency_ms,
+        grounded,
+        guard_passed,
+        sentiment,
+        created_at
+      FROM ccass.nlp_turns
+      WHERE organization_id = {org_id}
+    columns:
+      turn_id:              { type: bigint, description: Bot turn id. }
+      conversation_id:      { type: bigint, description: Conversation id. }
+      turn_number:          { type: integer, description: Sequence number within session. }
+      intent:               { type: text, description: Detected intent name. }
+      confidence:           { type: numeric, description: Intent confidence score (0.0 to 1.0). }
+      skill_key:            { type: text, description: Bot skill executed. }
+      handoff_recommended:  { type: boolean, description: Whether bot recommended transferring to agent. }
+      handoff_reason:       { type: text, description: Handoff trigger reason. }
+      latency_ms:           { type: integer, description: Model response latency in milliseconds. }
+      grounded:             { type: boolean, description: Whether response was verified grounded against knowledge base. }
+      guard_passed:         { type: boolean, description: Whether safety guardrail checks passed. }
+      sentiment:            { type: text, description: Turn sentiment label. }
+      created_at:           { type: timestamptz, description: Turn creation timestamp. }
+
+  copilot_turns:
+    description: Agent copilot suggestions, agent acceptance, and latency.
+    source: |
+      SELECT
+        ct.id AS turn_id,
+        ct.organization_id,
+        ct.session_id,
+        ct.conversation_id,
+        cs.user_id AS agent_id,
+        ct.turn_type,
+        ct.skill_key,
+        ct.accepted,
+        ct.latency_ms,
+        ct.created_at
+      FROM ccass.copilot_turns ct
+      LEFT JOIN ccass.copilot_sessions cs ON cs.id = ct.session_id
+      WHERE ct.organization_id = {org_id}
+    columns:
+      turn_id:          { type: bigint, description: Copilot turn id. }
+      session_id:       { type: bigint, description: Agent assist session id. }
+      conversation_id:  { type: bigint, description: Conversation id. }
+      agent_id:         { type: bigint, description: Agent user id. }
+      turn_type:        { type: text, description: Suggestion type, e.g. response, next_best_action, summarization. }
+      skill_key:        { type: text, description: Skill or tool invoked. }
+      accepted:         { type: boolean, description: True if agent accepted and used the suggestion. }
+      latency_ms:       { type: integer, description: Copilot response latency in milliseconds. }
+      created_at:       { type: timestamptz, description: Turn timestamp. }
+
+  missed_contacts:
+    description: Inbound offers missed by agents (timeouts, rejects, unavailable).
+    source: |
+      SELECT
+        m.id AS missed_id,
+        m.organization_id,
+        m.agent_id,
+        COALESCE(a.display_name, 'Unknown') AS agent_name,
+        m.conversation_id,
+        m.queue_id,
+        COALESCE(q.name, 'Unknown') AS queue_name,
+        m.channel,
+        m.reason,
+        m.offered_at,
+        m.missed_at,
+        m.acknowledged_at
+      FROM ccass.agent_missed_contacts m
+      LEFT JOIN ccass.agents a ON a.id = m.agent_id
+      LEFT JOIN ccass.queues q ON q.id = m.queue_id
+      WHERE m.organization_id = {org_id}
+    columns:
+      missed_id:        { type: bigint, description: Missed record id. }
+      agent_id:         { type: bigint, description: Agent id. }
+      agent_name:       { type: text, description: Agent display name. }
+      conversation_id:  { type: bigint, description: Conversation id. }
+      queue_id:         { type: bigint, description: Queue id. }
+      queue_name:       { type: text, description: Queue name. }
+      channel:          { type: text, description: Contact channel. }
+      reason:           { type: text, description: Cause for miss, e.g. offer_timeout, manual_reject, no_agent_available., sample_values: true }
+      offered_at:       { type: timestamptz, description: Time contact was offered. }
+      missed_at:        { type: timestamptz, description: Time offer was marked missed. }
+
+  calls:
+    description: Telephony Call Detail Records (CDR) with durations in seconds.
+    source: |
+      SELECT
+        c.id AS call_id,
+        c.domain_id AS organization_id,
+        c.session_id,
+        (c.is_inbound = 1) AS is_inbound,
+        c.customer_number,
+        c.agent_ext,
+        c.queue_id,
+        COALESCE(q.name, 'Voice Queue') AS queue_name,
+        ROUND((COALESCE(c.recording_duration, 0) / 1000.0)::numeric, 1) AS recording_duration_seconds,
+        ROUND((COALESCE(c.agent_hold_duration, 0) / 1000.0)::numeric, 1) AS hold_duration_seconds,
+        ROUND((COALESCE(c.call_duration, 0) / 1000.0)::numeric, 1) AS call_duration_seconds,
+        c.created_at AS session_start_time
+      FROM ccass.call_cdr c
+      LEFT JOIN ccass.queues q ON q.id = c.queue_id
+      WHERE c.domain_id = {org_id}
+    columns:
+      call_id:                    { type: bigint, description: CDR call id. }
+      session_id:                 { type: text, description: External telephony session id. }
+      is_inbound:                 { type: boolean, description: True for inbound call, false for outbound. }
+      customer_number:            { type: text, description: Caller phone number. }
+      agent_ext:                  { type: text, description: Agent telephone extension. }
+      queue_id:                   { type: bigint, description: Queue id. }
+      queue_name:                 { type: text, description: Queue name. }
+      recording_duration_seconds: { type: numeric, description: Audio call duration in seconds. }
+      hold_duration_seconds:      { type: numeric, description: Time caller spent on hold in seconds. }
+      call_duration_seconds:      { type: numeric, description: Total telephony session time in seconds. }
+      session_start_time:         { type: timestamptz, description: Call start timestamp. }
+
+  agents:
+    description: Active agents published for routing.
+    source: |
+      SELECT
+        a.id,
+        a.organization_id,
+        a.display_name,
+        a.email,
+        a.status,
+        a.setup_user_id,
+        u.ext AS phone_ext,
+        a.created_at
+      FROM ccass.agents a
+      LEFT JOIN accounts.setup_users u ON u.id = a.setup_user_id
+      WHERE a.organization_id = {org_id}
+    columns:
+      id:           { type: bigint, description: Agent id. }
+      display_name: { type: text, description: Agent full name. }
+      email:        { type: text, description: Agent work email. }
+      status:       { type: text, description: Status, e.g. active, inactive., sample_values: true }
+      phone_ext:    { type: integer, description: Telephone extension. }
+      created_at:   { type: timestamptz, description: Profile creation timestamp. }
+
+  queues:
+    description: Active queues configured for conversation routing.
+    source: |
+      SELECT
+        q.id,
+        q.organization_id,
+        q.name AS queue_name,
+        q.team_id,
+        t.name AS team_name,
+        q.status,
+        q.published_at
+      FROM ccass.queues q
+      LEFT JOIN accounts.setup_teams t ON t.id = q.team_id
+      WHERE q.organization_id = {org_id}
+    columns:
+      id:           { type: bigint, description: Queue id. }
+      queue_name:   { type: text, description: Queue display name. }
+      team_id:      { type: bigint, description: Owning team id. }
+      team_name:    { type: text, description: Owning team display name. }
+      status:       { type: text, description: Queue status, e.g. active, inactive., sample_values: true }
+      published_at: { type: timestamptz, description: Queue publication timestamp. }
+
+  sentiment:
+    description: Customer and agent sentiment scoring per turn.
+    source: |
+      SELECT
+        id AS turn_id,
+        organization_id,
+        conversation_id,
+        customer_label,
+        customer_score,
+        agent_label,
+        agent_score,
+        created_at
+      FROM ccass.conversation_sentiment_turns
+      WHERE organization_id = {org_id}
+    columns:
+      turn_id:          { type: bigint, description: Sentiment turn id. }
+      conversation_id:  { type: bigint, description: Conversation id. }
+      customer_label:   { type: text, description: "Customer sentiment classification: positive, neutral, negative, very_negative.", sample_values: true }
+      customer_score:   { type: integer, description: Sentiment score on numeric scale. }
+      agent_label:      { type: text, description: Agent sentiment label. }
+      created_at:       { type: timestamptz, description: Analysis timestamp. }
+
+  tasks:
+    description: Agent tasks including callbacks, follow-ups, and escalations.
+    source: |
+      SELECT
+        id AS task_id,
+        organization_id,
+        assigned_user_id,
+        conversation_id,
+        task_type,
+        status,
+        priority,
+        source,
+        channel,
+        due_at,
+        completed_at,
+        dismissed_at,
+        created_at
+      FROM ccass.agent_tasks
+      WHERE organization_id = {org_id}
+    columns:
+      task_id:          { type: bigint, description: Task id. }
+      assigned_user_id: { type: bigint, description: Assigned user id. }
+      conversation_id:  { type: bigint, description: Associated conversation id. }
+      task_type:        { type: text, description: Type of task, e.g. callback, follow_up, escalation., sample_values: true }
+      status:           { type: text, description: Task status, e.g. open, completed, dismissed., sample_values: true }
+      priority:         { type: text, description: Priority rating, e.g. normal, high, critical. }
+      channel:          { type: text, description: Originating channel. }
+      due_at:           { type: timestamptz, description: Scheduled due time. }
+      completed_at:     { type: timestamptz, description: Completion timestamp. }
+
+  capacity:
+    description: Live agent channel concurrency capacity and current active loads.
+    source: |
+      SELECT
+        id,
+        organization_id,
+        agent_id,
+        channel,
+        max_concurrency,
+        reserved_count,
+        active_count,
+        updated_at
+      FROM ccass.agent_capacity
+      WHERE organization_id = {org_id}
+    columns:
+      id:               { type: bigint, description: Capacity record id. }
+      agent_id:         { type: bigint, description: Agent id. }
+      channel:          { type: text, description: Channel name. }
+      max_concurrency:  { type: integer, description: Maximum allowed concurrent conversations. }
+      active_count:     { type: integer, description: Currently active conversation count. }
+      updated_at:       { type: timestamptz, description: Last capacity heartbeat timestamp. }
+
+  routing_attempts:
+    description: Routing engine assignment attempts and outcomes.
+    source: |
+      SELECT
+        id AS attempt_id,
+        organization_id,
+        conversation_id,
+        queue_id,
+        agent_id,
+        attempt_number,
+        outcome,
+        created_at,
+        completed_at
+      FROM ccass.routing_attempts
+      WHERE organization_id = {org_id}
+    columns:
+      attempt_id:       { type: bigint, description: Routing attempt id. }
+      conversation_id:  { type: bigint, description: Conversation id. }
+      queue_id:         { type: bigint, description: Evaluated queue id. }
+      agent_id:         { type: bigint, description: Target agent id. }
+      attempt_number:   { type: integer, description: Sequence of this routing trial. }
+      outcome:          { type: text, description: Attempt outcome, e.g. assigned, skipped, timeout, overflow., sample_values: true }
+      created_at:       { type: timestamptz, description: Attempt start timestamp. }

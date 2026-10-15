@@ -1,0 +1,27 @@
+{
+  "conversations": [
+    {
+      "id": "general-greeting",
+      "title": "Greeting",
+      "turns": [
+        { "role": "user", "content": "Hi" },
+        {
+          "role": "assistant",
+          "content": "<p>Hi — I can help with contacts, queues, tasks, inbox, monitoring, or performance. What do you need?</p>"
+        }
+      ]
+    },
+    {
+      "id": "general-handoff-contact",
+      "title": "Handoff a contact request",
+      "turns": [
+        { "role": "user", "content": "Update Priya Sharma's email" },
+        {
+          "role": "assistant",
+          "content": "",
+          "tools": ["route_to_agent"]
+        }
+      ]
+    }
+  ]
+}

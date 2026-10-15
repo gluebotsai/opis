@@ -1,0 +1,60 @@
+{
+  "turn_id": "aa49a6c0",
+  "timestamp": "2026-10-09T11:42:16.953708+00:00",
+  "question": "what is the reopen rate.. ",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1016,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Reopen rate</strong></p><p>The reopen rate for all time is <strong>41.2%</strong>.</p><p>Would you like to see this rate broken down by channel?</p>",
+  "card": "card: kpi r1",
+  "facts": "result_id: r1\nwindow: all time\nkpi: reopen_rate\ncertified: true\nunit: percent\ntask_goal: Calculate the reopen rate for all conversations.\nanswer_type: percentage\nrow_count: 1\nrow 1: reopen_n=33; resolved_n=80; rate_pct=41.2",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1016,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "what is the reopen rate.. ",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants to know the reopen rate overall.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Calculate the reopen rate for all conversations.",
+          "time": "all time",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "percentage"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "reopen_rate",
+        "row_count": 1
+      }
+    ],
+    "facts": "result_id: r1\nwindow: all time\nkpi: reopen_rate\ncertified: true\nunit: percent\ntask_goal: Calculate the reopen rate for all conversations.\nanswer_type: percentage\nrow_count: 1\nrow 1: reopen_n=33; resolved_n=80; rate_pct=41.2",
+    "grounded": true,
+    "card": "card: kpi r1"
+  },
+  "error": null
+}

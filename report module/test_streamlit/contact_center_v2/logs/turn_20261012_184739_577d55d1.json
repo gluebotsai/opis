@@ -1,0 +1,61 @@
+{
+  "turn_id": "577d55d1",
+  "timestamp": "2026-10-12T13:17:39.604729+00:00",
+  "question": "how many conversations are there in the september ?",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1036,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "kind chat HTML\n\n<p>I'm sorry, I couldn't process that request. Could you please specify which year you are referring to for September?</p>",
+  "card": "card: none",
+  "facts": "result_id: r1\ntask_goal: Count the number of conversations started.\nEXECUTION_ERROR\nerror_type: REPLAN\nmessage: unsupported time expression: 'september'",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1036,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "how many conversations are there in the september ?",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants to know the total number of conversations that occurred during September.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Count the number of conversations started.",
+          "time": "september",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "free_sql_fallback": true,
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "error",
+        "error_type": "REPLAN",
+        "certified": null,
+        "kpi_id": null,
+        "row_count": 0
+      }
+    ],
+    "facts": "result_id: r1\ntask_goal: Count the number of conversations started.\nEXECUTION_ERROR\nerror_type: REPLAN\nmessage: unsupported time expression: 'september'",
+    "grounded": true,
+    "card": "card: none"
+  },
+  "error": null
+}

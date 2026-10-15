@@ -1,0 +1,685 @@
+presets:
+  cc.super:
+    agent: Contact Center Super Agent
+    level: L1
+    modules:
+    - core
+    - identity
+    - interaction
+    - knowledge
+    - ticket
+    - followup
+    - queue
+    - workforce
+    - quality
+    - performance
+    - compliance
+    - booking
+    - hub
+    usecase: Route domain, apply consent/recording, coordinate bot↔human, escalate
+      to Hub.
+    prompt:
+      full_ontology: true
+      full_definitions: true
+      include_module_index: true
+      include_specialist_catalog: true
+      metrics_mode: none
+      metrics: []
+      actions:
+      - route_to_specialist
+      - handoff
+      - check_compliance
+      - spoke_query
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - Route to an L3 specialist; do not run their field workflows.
+      - Handoff is live-agent transfer; route_to_specialist is LLM-to-LLM.
+      - Cross-spoke or weak identity → spoke_query.
+      - KPI / how-many → cc.reporting or cc.reporting_mas workers, not Super.
+      route_table:
+      - FAQ / bot chat → cc.ai_support
+      - Identify / merge → cc.identity
+      - Inbox assist → cc.coworker
+      - Tasks / callback → cc.followup | cc.recovery
+      - Queue staffing → cc.queue
+      - Presence / logout → cc.presence
+      - KPIs / anomaly → cc.reporting | cc.anomaly
+      - Book / demo → cc.booking
+      - Ticketing staff chat → tk.super
+      - Cross-spoke / policy → hub.orchestrator
+  cc.omnichannel:
+    agent: Omnichannel Engagement Domain Agent
+    level: L2
+    modules:
+    - core
+    - identity
+    - interaction
+    - knowledge
+    - ticket
+    - booking
+    usecase: Supervise AI Support, channel adaptation, identification.
+    prompt:
+      classes:
+      - Contact
+      - Contact
+      - Conversation
+      - KnowledgeArticle
+      - Ticket
+      - Appointment
+      actions:
+      - route_to_specialist
+      - handoff
+      - identify
+      taxonomy:
+      - channel
+      - intent
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+      route_table:
+      - Support FAQ / ticket → cc.ai_support
+      - Identity → cc.identity
+      - Booking → cc.booking
+      - Channel style → cc.channel_adaptation
+  cc.ai_support:
+    agent: AI Support Agent
+    level: L3
+    nlp_ids:
+    - support_bot
+    - custom_lola_sales
+    - custom_lola_service
+    modules:
+    - core
+    - identity
+    - interaction
+    - knowledge
+    - ticket
+    usecase: Customer-facing bot — FAQ, enrich, ticket, live-agent handoff. No queue
+      mutate.
+    prompt:
+      classes:
+      - Contact
+      - Contact
+      - Consent
+      - Conversation
+      - Intent
+      - KnowledgeArticle
+      - Ticket
+      actions:
+      - identify
+      - contact_enrich
+      - get_organization_details
+      - get_organization_knowledge
+      - create_ticket
+      - get_ticket_status
+      - handoff
+      taxonomy:
+      - channel
+      - intent
+      - knowledge.module
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - Do not invent FAQ; one knowledge.module per turn.
+      - No queue, presence, logout, navigate, deals, or campaigns.
+      - Handoff only when customer asks or accepts.
+      - Ticket actions require identityResolved.
+  cc.channel_adaptation:
+    agent: Channel Adaptation Agent
+    level: L3
+    modules:
+    - core
+    - interaction
+    usecase: Adapt style/latency for voice, webchat, social. No mutations.
+    prompt:
+      classes:
+      - Conversation
+      - Conversation
+      - Channel
+      actions:
+      - adapt_channel
+      taxonomy:
+      - channel
+      relations_only_if_both_ends_in_classes: true
+  cc.identity:
+    agent: Customer Identification and Merge Agent
+    level: L3
+    nlp_ids:
+    - contact
+    - contact_enrich
+    modules:
+    - core
+    - identity
+    usecase: Match, enrich, create/update contact. Merge approval-gated.
+    prompt:
+      classes:
+      - Contact
+      - Contact
+      - ContactDraft
+      - Identity
+      actions:
+      - list_contacts
+      - get_contact
+      - stage_contact_draft
+      - create_contact
+      - update_contact
+      - contact_enrich
+      - merge_contacts
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - list/get before answering; never invent contacts.
+      - create/update require userConfirmed; merge requires approvalGranted.
+  cc.interaction_ops:
+    agent: Interaction Operations Domain Agent
+    level: L2
+    modules:
+    - core
+    - identity
+    - interaction
+    - followup
+    - quality
+    - workforce
+    usecase: Supervise recovery, follow-up, closure.
+    prompt:
+      classes:
+      - Contact
+      - Conversation
+      - Callback
+      - Task
+      - Agent
+      - Sentiment
+      actions:
+      - route_to_specialist
+      - callback
+      - assign_recovery
+      taxonomy:
+      - channel
+      - callback.due
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+      route_table:
+      - Missed contact → cc.recovery
+      - Tasks → cc.followup
+      - Wrap-up → cc.closure
+  cc.recovery:
+    agent: Interaction Recovery Agent
+    level: L3
+    nlp_ids:
+    - proactive
+    modules:
+    - core
+    - identity
+    - interaction
+    - followup
+    - workforce
+    usecase: Assign callback owner + due + channel for missed contacts.
+    prompt:
+      classes:
+      - Contact
+      - Conversation
+      - Callback
+      - Agent
+      actions:
+      - assign_recovery
+      - callback
+      taxonomy:
+      - channel
+      - callback.due
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - Pick exactly one Agent by setupUserId.
+      - Skip if no outreach identity.
+  cc.followup:
+    agent: Follow-Up Management Agent
+    level: L3
+    nlp_ids:
+    - task
+    modules:
+    - core
+    - followup
+    - interaction
+    usecase: List/open/update tasks; no queue or campaign types.
+    prompt:
+      classes:
+      - Task
+      - Callback
+      - Conversation
+      - Contact
+      actions:
+      - list_tasks
+      - get_task
+      - update_task
+      - open_task_workspace
+      - navigate
+      taxonomy:
+      - callback.due
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - list/get before counts; update_task only complete|dismiss|accept-suggestion.
+  cc.closure:
+    agent: Interaction Closure Agent
+    level: L3
+    modules:
+    - core
+    - interaction
+    - quality
+    usecase: Disposition, wrap-up, outcome summary.
+    prompt:
+      classes:
+      - Conversation
+      - Disposition
+      - WrapUp
+      - Sentiment
+      actions:
+      - summarize_conversation
+      taxonomy:
+      - disposition
+      - sentiment
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+  cc.agent_assist:
+    agent: Agent Assist Domain Agent
+    level: L2
+    modules:
+    - core
+    - identity
+    - interaction
+    - knowledge
+    - ticket
+    - followup
+    - quality
+    usecase: Supervise inbox coworker, compliance, quality.
+    prompt:
+      classes:
+      - Conversation
+      - Contact
+      - KnowledgeArticle
+      - Task
+      - Ticket
+      actions:
+      - route_to_specialist
+      - suggest_reply
+      taxonomy:
+      - intent
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+      route_table:
+      - Inbox draft → cc.coworker
+      - Quality score → cc.quality
+      - Compliance → cc.compliance
+  cc.coworker:
+    agent: Support Agent Coworker
+    level: L3
+    nlp_ids:
+    - general
+    - inbox
+    modules:
+    - core
+    - identity
+    - interaction
+    - knowledge
+    - followup
+    usecase: Assist human agent — context, suggest reply, enrich, route specialists.
+    prompt:
+      classes:
+      - Contact
+      - Contact
+      - Conversation
+      - KnowledgeArticle
+      - Task
+      actions:
+      - get_conversation_context
+      - suggest_reply
+      - summarize_conversation
+      - contact_enrich
+      - get_organization_knowledge
+      - navigate
+      - route_to_specialist
+      taxonomy:
+      - intent
+      - knowledge.module
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - suggest_reply drafts only — does not send.
+      - get_organization_knowledge once, one module.
+      - route_to_specialist is not live-agent handoff.
+  cc.coworker.general:
+    agent: Support Agent Coworker (general)
+    level: L3
+    nlp_ids:
+    - general
+    modules:
+    - core
+    - knowledge
+    usecase: Org/nav + route_to_agent only.
+    prompt:
+      classes:
+      - Organization
+      - KnowledgeArticle
+      - OrganizationDirectory
+      actions:
+      - get_organization_details
+      - get_organization_knowledge
+      - navigate
+      - route_to_specialist
+      taxonomy:
+      - knowledge.module
+      relations_only_if_both_ends_in_classes: true
+  cc.compliance:
+    agent: Real-Time Compliance Agent
+    level: L3
+    modules:
+    - core
+    - interaction
+    - compliance
+    usecase: Disclosures and prohibited language on live turns.
+    prompt:
+      classes:
+      - Conversation
+      - Consent
+      - RecordingPolicy
+      - ComplianceViolation
+      actions:
+      - check_compliance
+      - block_risky_action
+      taxonomy:
+      - channel
+      relations_only_if_both_ends_in_classes: true
+  cc.quality:
+    agent: Interaction Quality Agent
+    level: L3
+    nlp_ids:
+    - sentiment
+    modules:
+    - core
+    - interaction
+    - quality
+    usecase: Sentiment / QA score. No MCP mutations.
+    prompt:
+      classes:
+      - Conversation
+      - Sentiment
+      actions:
+      - score_sentiment
+      taxonomy:
+      - sentiment
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+  cc.wfm:
+    agent: Workforce Management Domain Agent
+    level: L2
+    modules:
+    - core
+    - queue
+    - workforce
+    - performance
+    usecase: Supervise queues, presence, forecasting.
+    prompt:
+      classes:
+      - Queue
+      - Agent
+      - AgentPresence
+      - Anomaly
+      actions:
+      - route_to_specialist
+      taxonomy:
+      - presence
+      - queue.status
+      - conversation.direction
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+      route_table:
+      - Queue setup → cc.queue
+      - Presence / logout → cc.presence
+      - Forecast → cc.forecast
+  cc.queue:
+    agent: Queue Management Agent
+    level: L3
+    nlp_ids:
+    - queue
+    modules:
+    - core
+    - queue
+    - workforce
+    usecase: Create/update/delete queues and staffing.
+    prompt:
+      classes:
+      - Queue
+      - Team
+      - Shift
+      - QueueDraft
+      - Agent
+      actions:
+      - list_queues
+      - stage_queue_draft
+      - create_queue
+      - update_queue_status
+      - delete_queue
+      - list_presence
+      taxonomy:
+      - queue.status
+      - staffingMode
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - create_queue requires draftComplete and userConfirmed.
+      - Do not invent agent names; list_eligible_agents first.
+  cc.presence:
+    agent: Agent Presence Monitoring Agent
+    level: L3
+    nlp_ids:
+    - monitoring
+    modules:
+    - core
+    - identity
+    - followup
+    - workforce
+    - performance
+    - hub
+    usecase: Snapshot, callback, presence, logout, alert ack; may Hub-escalate ops.
+    prompt:
+      classes:
+      - Agent
+      - AgentPresence
+      - MonitoringSnapshot
+      - Callback
+      - Contact
+      - Anomaly
+      - HubRequest
+      actions:
+      - get_monitoring_snapshot
+      - set_presence
+      - force_logout
+      - callback
+      - acknowledge_escalation
+      - spoke_query
+      taxonomy:
+      - presence
+      - channel
+      - callback.due
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - Snapshot before answering wait/missed/SLA/presence.
+      - setupUserId is not agentId.
+      - force_logout requires supervisorAuthorized and Hub when policy says.
+  cc.forecast:
+    agent: Forecasting and Scheduling Agent
+    level: L3
+    modules:
+    - core
+    - queue
+    - workforce
+    - performance
+    usecase: Demand forecast and staffing recommendations.
+    prompt:
+      classes:
+      - Queue
+      - Agent
+      - PerformanceReport
+      actions:
+      - ask_semantic
+      taxonomy:
+      - channel
+      - conversation.direction
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+  cc.performance:
+    agent: Performance Intelligence Domain Agent
+    level: L2
+    modules:
+    - core
+    - performance
+    - workforce
+    - queue
+    - interaction
+    usecase: Supervise reporting and anomaly detection.
+    prompt:
+      classes:
+      - PerformanceReport
+      - Anomaly
+      - Queue
+      actions:
+      - route_to_specialist
+      - ask_semantic
+      taxonomy:
+      - anomaly.severity
+      - conversation.direction
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+      route_table:
+      - KPI / chart → cc.reporting
+      - Breach → cc.anomaly
+  cc.reporting:
+    agent: Scheduled Reporting Agent
+    level: L3
+    nlp_ids:
+    - analytics
+    modules:
+    - core
+    - performance
+    - workforce
+    - queue
+    usecase: KPIs/charts. Uses semantic metric ids from this slice only.
+    prompt:
+      classes:
+      - PerformanceReport
+      - Anomaly
+      - Queue
+      - Agent
+      actions:
+      - ask_semantic
+      - ask_ontology
+      - generate_report
+      - route_to_specialist
+      taxonomy:
+      - channel
+      - conversation.direction
+      - anomaly.severity
+      metrics_mode: headlines
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - Path S (ask_semantic) first for KPIs.
+      - Path O (ask_ontology) only for why/how — do not mix in one turn.
+      - Never expose SQL or raw UUIDs.
+      - Period volume by channel/day/week → total_conversations + filters.channel
+        + time.grain; not open_conversations.
+      - Inbound vs outbound volume → total_conversations + filters.direction (inbound|outbound)
+        or group_by direction; callback tasks use callback_tasks metric.
+      - open_conversations is a snapshot (not resolved/closed) — do not use time.grain
+        for queue-depth series; use total_conversations for period volume trends.
+      - Assignment metrics (AHT, missed_contact_rate) group_by agent_name; conversation
+        metrics use assigned_agent_name.
+  cc.anomaly:
+    agent: Operational Anomaly Agent
+    level: L3
+    modules:
+    - core
+    - performance
+    - workforce
+    - queue
+    - interaction
+    - hub
+    usecase: Detect SLA/containment/queue breaches; Hub run-pipeline when cross-spoke.
+    prompt:
+      classes:
+      - Anomaly
+      - Queue
+      - Conversation
+      - HubRequest
+      actions:
+      - investigate_anomaly
+      - run_pipeline
+      - spoke_query
+      taxonomy:
+      - anomaly.severity
+      - channel
+      - conversation.direction
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - Investigate locally first; Hub when cross-spoke or policy needs strategy.
+  cc.booking:
+    agent: Lola Booking Agent
+    level: L3
+    nlp_ids:
+    - custom_lola_booking
+    modules:
+    - core
+    - identity
+    - interaction
+    - booking
+    usecase: Validate identity, calendar, book/reschedule, callback/live agent.
+    prompt:
+      classes:
+      - Contact
+      - Contact
+      - Consent
+      - Appointment
+      - Conversation
+      actions:
+      - validate_identity_field
+      - check_availability
+      - book_appointment
+      - reschedule_appointment
+      - contact_enrich
+      - handoff
+      taxonomy:
+      - channel
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - book_appointment requires identityResolved.
+      - Do not claim saved until BOOK_APPOINTMENT succeeds.
+  cc.reporting_mas:
+    agent: Contact Centre Reporting MAS
+    level: platform
+    modules:
+    - identity
+    - interaction
+    - knowledge
+    - ticket
+    - followup
+    - queue
+    - workforce
+    - quality
+    - performance
+    - compliance
+    - booking
+    - hub
+    usecase: MAS catalog for KG, MetricFlow, and SQL-agent setup — not staff-chat routing.
+    prompt:
+      full_ontology: true
+      full_definitions: true
+      include_module_index: true
+      metrics_mode: full
+      metrics: []
+      actions:
+      - ask_semantic
+      - ask_ontology
+      - generate_report
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - MAS catalog / KG / MetricFlow / SQL-agent setup — not staff-chat routing.
+      - Distinct from cc.reporting (runtime KPI worker; headlines only).

@@ -1,0 +1,15 @@
+name: ccass.queues
+alias: q
+schema: ccass
+grain: queue
+purpose: Published queue catalog.
+aliases: [queue]
+columns:
+  - { name: id, type: bigint, pk: true, description: Queue id }
+  - { name: organization_id, type: bigint, description: Tenant id }
+  - { name: name, type: text, description: Queue display name }
+  - { name: status, type: text, values: [active, inactive], description: Published status }
+  - { name: team_id, type: bigint, description: Owning team }
+sample_rows:
+  - { id: 7, name: Omnichannel Support, status: active }
+  - { id: 9, name: Specialist Billing, status: active }

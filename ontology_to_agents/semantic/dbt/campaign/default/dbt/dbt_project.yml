@@ -1,0 +1,32 @@
+name: campaign_default_dbt
+profile: campaign_default_dbt
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  campaign_default_dbt:
+    semantic_layer:
+      +materialized: view
+  postgres_warehouse_dbt:
+    shared:
+      +enabled: true
+    campaign:
+      +enabled: true
+    ticketing:
+      +enabled: false
+    ccaas:
+      +enabled: false
+    crm:
+      +enabled: false
+
+tests:
+  postgres_warehouse_dbt:
+    +enabled: false

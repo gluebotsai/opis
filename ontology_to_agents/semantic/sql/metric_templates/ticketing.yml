@@ -1,0 +1,1186 @@
+metrics:
+  open_tickets_metric:
+    product: ticketing
+    result_column: open_tickets_metric
+    default_zero: true
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT COUNT(ticket_id)::bigint AS open_tickets_metric
+
+      FROM ticketing_marts.mart_tickets
+
+      WHERE organization_id = %s AND lower(status) = ''open''{{extra_where}}
+
+      '
+  sla_breach_rate:
+    product: ticketing
+    result_column: sla_breach_rate
+    default_zero: true
+    time_column: created_at
+    table: mart_tickets
+    sql: "SELECT\n  COUNT(*) FILTER (WHERE is_breached_proxy = true)::float\n  / NULLIF(COUNT(*)\
+      \ FILTER (WHERE has_resolution_sla_target = true), 0)\n  AS sla_breach_rate\n\
+      FROM ticketing_marts.mart_tickets\nWHERE organization_id = %s{{extra_where}}\n"
+  average_resolution_time_hours:
+    product: ticketing
+    result_column: average_resolution_time_hours
+    time_column: resolved_at
+    table: mart_tickets
+    sql: "SELECT\n  SUM(resolution_hours)::float\n  / NULLIF(COUNT(*) FILTER (WHERE\
+      \ resolved_at IS NOT NULL), 0)\n  AS average_resolution_time_hours\nFROM ticketing_marts.mart_tickets\n\
+      WHERE organization_id = %s{{extra_where}}\n"
+  average_csat_score:
+    product: ticketing
+    result_column: average_csat_score
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT AVG(csat_score)::float AS average_csat_score
+
+      FROM ticketing_marts.mart_tickets
+
+      WHERE organization_id = %s AND csat_score IS NOT NULL{{extra_where}}
+
+      '
+  high_priority_ticket_volume:
+    product: ticketing
+    result_column: high_priority_ticket_volume
+    default_zero: true
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT COUNT(ticket_id)::bigint AS high_priority_ticket_volume
+
+      FROM ticketing_marts.mart_tickets
+
+      WHERE organization_id = %s AND lower(priority) IN (''high'', ''urgent''){{extra_where}}
+
+      '
+  reopen_rate:
+    product: ticketing
+    result_column: reopen_rate
+    time_column: created_at
+    table: mart_tickets
+    sql: "SELECT\n  COUNT(*) FILTER (WHERE is_reopened = true)::float\n  / NULLIF(COUNT(*)\
+      \ FILTER (WHERE is_resolved = true), 0) AS reopen_rate\nFROM ticketing_marts.mart_tickets\n\
+      WHERE organization_id = %s{{extra_where}}\n"
+  ticket_volume:
+    product: ticketing
+    result_column: ticket_volume
+    default_zero: true
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT COUNT(ticket_id)::bigint AS ticket_volume
+
+      FROM ticketing_marts.mart_tickets
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  tickets_created_by_me:
+    product: ticketing
+    result_column: tickets_created_by_me
+    default_zero: true
+    time_column: created_at
+    table: mart_tickets
+    row_scope_column: created_by_id
+    sql: 'SELECT COUNT(ticket_id)::bigint AS tickets_created_by_me
+
+      FROM ticketing_marts.mart_tickets
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  resolution_rate:
+    product: ticketing
+    result_column: resolution_rate
+    time_column: created_at
+    table: mart_tickets
+    sql: "SELECT\n  COUNT(*) FILTER (WHERE is_resolved = true)::float\n  / NULLIF(COUNT(*),\
+      \ 0) AS resolution_rate\nFROM ticketing_marts.mart_tickets\nWHERE organization_id\
+      \ = %s{{extra_where}}\n"
+  sla_at_risk_tickets_metric:
+    product: ticketing
+    result_column: sla_at_risk_tickets_metric
+    default_zero: true
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT COUNT(ticket_id)::bigint AS sla_at_risk_tickets_metric
+
+      FROM ticketing_marts.mart_tickets
+
+      WHERE organization_id = %s AND is_sla_at_risk = true{{extra_where}}
+
+      '
+  unanswered_tickets_metric:
+    product: ticketing
+    result_column: unanswered_tickets_metric
+    default_zero: true
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT COUNT(ticket_id)::bigint AS unanswered_tickets_metric
+
+      FROM ticketing_marts.mart_tickets
+
+      WHERE organization_id = %s AND has_first_response = false{{extra_where}}
+
+      '
+  average_tickets_per_day:
+    product: ticketing
+    result_column: average_tickets_per_day
+    time_column: created_at
+    table: mart_tickets
+    sql: "SELECT\n  (COUNT(DISTINCT ticket_id)::float\n   / NULLIF(COUNT(DISTINCT\
+      \ (created_at::date)), 0))\n  AS average_tickets_per_day\nFROM ticketing_marts.mart_tickets\n\
+      WHERE organization_id = %s{{extra_where}}\n"
+    default_zero: true
+  accepted_recommendations_metric:
+    product: ticketing
+    result_column: accepted_recommendations_metric
+    time_column: created_at
+    table: mart_proactive_recommendations
+    sql: 'SELECT COUNT(*) FILTER (WHERE is_accepted)::bigint AS accepted_recommendations_metric
+
+      FROM ticketing_marts.mart_proactive_recommendations
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  accounts_served:
+    product: ticketing
+    result_column: accounts_served
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT COUNT(DISTINCT account_id)::bigint AS accounts_served
+
+      FROM ticketing_marts.mart_tickets
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  active_agents_metric:
+    product: ticketing
+    result_column: active_agents_metric
+    time_column: created_at
+    table: mart_users
+    sql: 'SELECT COUNT(*) FILTER (WHERE is_active and role = ''agent'')::bigint AS
+      active_agents_metric
+
+      FROM ticketing_marts.mart_users
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  active_customers_metric:
+    product: ticketing
+    result_column: active_customers_metric
+    time_column: created_at
+    table: mart_customers
+    sql: 'SELECT COUNT(*) FILTER (WHERE is_active)::bigint AS active_customers_metric
+
+      FROM ticketing_marts.mart_customers
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  active_tickets_metric:
+    product: ticketing
+    result_column: active_tickets_metric
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT COUNT(*) FILTER (WHERE is_pending)::bigint AS active_tickets_metric
+
+      FROM ticketing_marts.mart_tickets
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  approval_rate:
+    product: ticketing
+    result_column: approval_rate
+    time_column: created_at
+    table: mart_proactive_approvals
+    sql: "SELECT\n  (COUNT(*) FILTER (WHERE is_approved)::bigint)::float\n  / NULLIF((COUNT(DISTINCT\
+      \ approval_id)::bigint), 0) AS approval_rate\nFROM ticketing_marts.mart_proactive_approvals\n\
+      WHERE organization_id = %s{{extra_where}}\n"
+    default_zero: true
+  approval_volume:
+    product: ticketing
+    result_column: approval_volume
+    time_column: created_at
+    table: mart_proactive_approvals
+    sql: 'SELECT COUNT(DISTINCT approval_id)::bigint AS approval_volume
+
+      FROM ticketing_marts.mart_proactive_approvals
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  approved_metric:
+    product: ticketing
+    result_column: approved_metric
+    time_column: created_at
+    table: mart_proactive_approvals
+    sql: 'SELECT COUNT(*) FILTER (WHERE is_approved)::bigint AS approved_metric
+
+      FROM ticketing_marts.mart_proactive_approvals
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  assigned_tickets_metric:
+    product: ticketing
+    result_column: assigned_tickets_metric
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT COUNT(*) FILTER (WHERE has_assignee)::bigint AS assigned_tickets_metric
+
+      FROM ticketing_marts.mart_tickets
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  assignment_rate:
+    product: ticketing
+    result_column: assignment_rate
+    time_column: created_at
+    table: mart_tickets
+    sql: "SELECT\n  (COUNT(*) FILTER (WHERE has_assignee)::bigint)::float\n  / NULLIF((COUNT(DISTINCT\
+      \ ticket_id)::bigint), 0) AS assignment_rate\nFROM ticketing_marts.mart_tickets\n\
+      WHERE organization_id = %s{{extra_where}}\n"
+    default_zero: true
+  audit_event_volume:
+    product: ticketing
+    result_column: audit_event_volume
+    time_column: created_at
+    table: mart_audit_events
+    sql: 'SELECT COUNT(DISTINCT audit_event_id)::bigint AS audit_event_volume
+
+      FROM ticketing_marts.mart_audit_events
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  average_decision_hours:
+    product: ticketing
+    result_column: average_decision_hours
+    time_column: created_at
+    table: mart_proactive_approvals
+    sql: 'SELECT ((SELECT SUM(decision_hours) FROM ticketing_marts.mart_proactive_approvals
+      WHERE organization_id = %s{{extra_where}}) / (SELECT COUNT(*) FILTER (WHERE
+      decision_hours is not null)::bigint FROM ticketing_marts.mart_proactive_approvals
+      WHERE organization_id = %s{{extra_where}}))::float AS average_decision_hours
+
+      '
+    default_zero: true
+  average_first_response_hours:
+    product: ticketing
+    result_column: average_first_response_hours
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT ((SELECT SUM(first_response_hours) FROM ticketing_marts.mart_tickets
+      WHERE organization_id = %s{{extra_where}}) / (SELECT COUNT(*) FILTER (WHERE
+      has_first_response)::bigint FROM ticketing_marts.mart_tickets WHERE organization_id
+      = %s{{extra_where}}))::float AS average_first_response_hours
+
+      '
+    default_zero: true
+  average_first_response_minutes:
+    product: ticketing
+    result_column: average_first_response_minutes
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT (((SELECT SUM(first_response_hours) FROM ticketing_marts.mart_tickets
+      WHERE organization_id = %s{{extra_where}}) * 60) / (SELECT COUNT(*) FILTER (WHERE
+      has_first_response)::bigint FROM ticketing_marts.mart_tickets WHERE organization_id
+      = %s{{extra_where}}))::float AS average_first_response_minutes
+
+      '
+    default_zero: true
+  average_notes_per_ticket:
+    product: ticketing
+    result_column: average_notes_per_ticket
+    time_column: created_at
+    table: mart_ticket_notes
+    sql: "SELECT\n  (SELECT COUNT(DISTINCT ticket_note_id)::bigint FROM ticketing_marts.mart_ticket_notes\
+      \ WHERE organization_id = %s{{extra_where}})::float\n  / NULLIF((SELECT COUNT(DISTINCT\
+      \ ticket_id)::bigint FROM ticketing_marts.mart_tickets WHERE organization_id\
+      \ = %s{{extra_where}}), 0)\n  AS average_notes_per_ticket\n"
+    default_zero: true
+  average_open_ticket_age_days:
+    product: ticketing
+    result_column: average_open_ticket_age_days
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT ((SELECT SUM(case when is_open then extract(epoch from (now() - created_at))
+      / 86400.0 end) FROM ticketing_marts.mart_tickets WHERE organization_id = %s{{extra_where}})
+      / (SELECT COUNT(*) FILTER (WHERE is_open)::bigint FROM ticketing_marts.mart_tickets
+      WHERE organization_id = %s{{extra_where}}))::float AS average_open_ticket_age_days
+
+      '
+    default_zero: true
+  average_overdue_hours:
+    product: ticketing
+    result_column: average_overdue_hours
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT AVG(overdue_hours)::float AS average_overdue_hours
+
+      FROM ticketing_marts.mart_tickets
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  average_resolution_hours_variance:
+    product: ticketing
+    result_column: average_resolution_hours_variance
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT ((SELECT SUM(resolution_hours_variance) FROM ticketing_marts.mart_tickets
+      WHERE organization_id = %s{{extra_where}}) / (SELECT COUNT(*) FILTER (WHERE
+      resolution_hours_variance is not null)::bigint FROM ticketing_marts.mart_tickets
+      WHERE organization_id = %s{{extra_where}}))::float AS average_resolution_hours_variance
+
+      '
+    default_zero: true
+  breached_tickets_metric:
+    product: ticketing
+    result_column: breached_tickets_metric
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT COUNT(*) FILTER (WHERE is_breached_proxy)::bigint AS breached_tickets_metric
+
+      FROM ticketing_marts.mart_tickets
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  closed_tickets_metric:
+    product: ticketing
+    result_column: closed_tickets_metric
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT COUNT(*) FILTER (WHERE is_closed)::bigint AS closed_tickets_metric
+
+      FROM ticketing_marts.mart_tickets
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  csat_detractor_metric:
+    product: ticketing
+    result_column: csat_detractor_metric
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT COUNT(*) FILTER (WHERE csat_score <= 2)::bigint AS csat_detractor_metric
+
+      FROM ticketing_marts.mart_tickets
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  csat_detractor_rate:
+    product: ticketing
+    result_column: csat_detractor_rate
+    time_column: created_at
+    table: mart_tickets
+    sql: "SELECT\n  (COUNT(*) FILTER (WHERE csat_score <= 2)::bigint)::float\n  /\
+      \ NULLIF((COUNT(*) FILTER (WHERE has_csat_score)::bigint), 0) AS csat_detractor_rate\n\
+      FROM ticketing_marts.mart_tickets\nWHERE organization_id = %s{{extra_where}}\n"
+    default_zero: true
+  csat_neutral_metric:
+    product: ticketing
+    result_column: csat_neutral_metric
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT COUNT(*) FILTER (WHERE csat_score = 3)::bigint AS csat_neutral_metric
+
+      FROM ticketing_marts.mart_tickets
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  csat_promoter_metric:
+    product: ticketing
+    result_column: csat_promoter_metric
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT COUNT(*) FILTER (WHERE csat_score >= 4)::bigint AS csat_promoter_metric
+
+      FROM ticketing_marts.mart_tickets
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  csat_promoter_rate:
+    product: ticketing
+    result_column: csat_promoter_rate
+    time_column: created_at
+    table: mart_tickets
+    sql: "SELECT\n  (COUNT(*) FILTER (WHERE csat_score >= 4)::bigint)::float\n  /\
+      \ NULLIF((COUNT(*) FILTER (WHERE has_csat_score)::bigint), 0) AS csat_promoter_rate\n\
+      FROM ticketing_marts.mart_tickets\nWHERE organization_id = %s{{extra_where}}\n"
+    default_zero: true
+  csat_rated_metric:
+    product: ticketing
+    result_column: csat_rated_metric
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT COUNT(*) FILTER (WHERE has_csat_score)::bigint AS csat_rated_metric
+
+      FROM ticketing_marts.mart_tickets
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  csat_response_rate:
+    product: ticketing
+    result_column: csat_response_rate
+    time_column: created_at
+    table: mart_tickets
+    sql: "SELECT\n  (COUNT(*) FILTER (WHERE has_csat_score)::bigint)::float\n  / NULLIF((COUNT(*)\
+      \ FILTER (WHERE is_resolved)::bigint), 0) AS csat_response_rate\nFROM ticketing_marts.mart_tickets\n\
+      WHERE organization_id = %s{{extra_where}}\n"
+    default_zero: true
+  csat_score_total:
+    product: ticketing
+    result_column: csat_score_total
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT SUM(csat_score) AS csat_score_total
+
+      FROM ticketing_marts.mart_tickets
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  current_overdue_tickets_metric:
+    product: ticketing
+    result_column: current_overdue_tickets_metric
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT COUNT(*) FILTER (WHERE is_overdue)::bigint AS current_overdue_tickets_metric
+
+      FROM ticketing_marts.mart_tickets
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  customer_reply_volume:
+    product: ticketing
+    result_column: customer_reply_volume
+    time_column: created_at
+    table: mart_ticket_notes
+    sql: 'SELECT COUNT(*) FILTER (WHERE not is_internal_note)::bigint AS customer_reply_volume
+
+      FROM ticketing_marts.mart_ticket_notes
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  customers_served:
+    product: ticketing
+    result_column: customers_served
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT COUNT(DISTINCT customer_id)::bigint AS customers_served
+
+      FROM ticketing_marts.mart_tickets
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  days_since_last_ticket:
+    product: ticketing
+    result_column: days_since_last_ticket
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT MIN(extract(epoch from (now() - created_at)) / 86400.0)::float AS
+      days_since_last_ticket
+
+      FROM ticketing_marts.mart_tickets
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  decided_approvals_metric:
+    product: ticketing
+    result_column: decided_approvals_metric
+    time_column: created_at
+    table: mart_proactive_approvals
+    sql: 'SELECT COUNT(*) FILTER (WHERE decision_hours is not null)::bigint AS decided_approvals_metric
+
+      FROM ticketing_marts.mart_proactive_approvals
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  decision_hours_total:
+    product: ticketing
+    result_column: decision_hours_total
+    time_column: created_at
+    table: mart_proactive_approvals
+    sql: 'SELECT SUM(decision_hours) AS decision_hours_total
+
+      FROM ticketing_marts.mart_proactive_approvals
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  dismissed_recommendations_metric:
+    product: ticketing
+    result_column: dismissed_recommendations_metric
+    time_column: created_at
+    table: mart_proactive_recommendations
+    sql: 'SELECT COUNT(*) FILTER (WHERE is_dismissed)::bigint AS dismissed_recommendations_metric
+
+      FROM ticketing_marts.mart_proactive_recommendations
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  distinct_agents_in_queues:
+    product: ticketing
+    result_column: distinct_agents_in_queues
+    time_column: created_at
+    table: mart_agent_queue_members
+    sql: 'SELECT COUNT(DISTINCT user_id)::bigint AS distinct_agents_in_queues
+
+      FROM ticketing_marts.mart_agent_queue_members
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  distinct_queues_covered:
+    product: ticketing
+    result_column: distinct_queues_covered
+    time_column: created_at
+    table: mart_agent_queue_members
+    sql: 'SELECT COUNT(DISTINCT queue_id)::bigint AS distinct_queues_covered
+
+      FROM ticketing_marts.mart_agent_queue_members
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  due_today_tickets_metric:
+    product: ticketing
+    result_column: due_today_tickets_metric
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT COUNT(*) FILTER (WHERE is_due_today)::bigint AS due_today_tickets_metric
+
+      FROM ticketing_marts.mart_tickets
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  escalation_rate:
+    product: ticketing
+    result_column: escalation_rate
+    time_column: created_at
+    table: mart_audit_events
+    sql: "SELECT\n  (SELECT COUNT(*) FILTER (WHERE is_escalation_event)::bigint FROM\
+      \ ticketing_marts.mart_audit_events WHERE organization_id = %s{{extra_where}})::float\n\
+      \  / NULLIF((SELECT COUNT(DISTINCT ticket_id)::bigint FROM ticketing_marts.mart_tickets\
+      \ WHERE organization_id = %s{{extra_where}}), 0)\n  AS escalation_rate\n"
+    default_zero: true
+  escalation_volume:
+    product: ticketing
+    result_column: escalation_volume
+    time_column: created_at
+    table: mart_audit_events
+    sql: 'SELECT COUNT(*) FILTER (WHERE is_escalation_event)::bigint AS escalation_volume
+
+      FROM ticketing_marts.mart_audit_events
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  first_response_coverage_rate:
+    product: ticketing
+    result_column: first_response_coverage_rate
+    time_column: created_at
+    table: mart_tickets
+    sql: "SELECT\n  (COUNT(*) FILTER (WHERE has_first_response)::bigint)::float\n\
+      \  / NULLIF((COUNT(DISTINCT ticket_id)::bigint), 0) AS first_response_coverage_rate\n\
+      FROM ticketing_marts.mart_tickets\nWHERE organization_id = %s{{extra_where}}\n"
+    default_zero: true
+  first_response_hours_total:
+    product: ticketing
+    result_column: first_response_hours_total
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT SUM(first_response_hours) AS first_response_hours_total
+
+      FROM ticketing_marts.mart_tickets
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  first_response_sla_compliance_rate:
+    product: ticketing
+    result_column: first_response_sla_compliance_rate
+    time_column: created_at
+    table: mart_tickets
+    sql: "SELECT\n  (COUNT(*) FILTER (WHERE has_first_response and sla_first_response_hours\
+      \ is not null and first_response_hours <= sla_first_response_hours)::bigint)::float\n\
+      \  / NULLIF((COUNT(*) FILTER (WHERE has_first_response and sla_first_response_hours\
+      \ is not null)::bigint), 0) AS first_response_sla_compliance_rate\nFROM ticketing_marts.mart_tickets\n\
+      WHERE organization_id = %s{{extra_where}}\n"
+    default_zero: true
+  first_response_sla_met_metric:
+    product: ticketing
+    result_column: first_response_sla_met_metric
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT COUNT(*) FILTER (WHERE has_first_response and sla_first_response_hours
+      is not null and first_response_hours <= sla_first_response_hours)::bigint AS
+      first_response_sla_met_metric
+
+      FROM ticketing_marts.mart_tickets
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  internal_note_ratio:
+    product: ticketing
+    result_column: internal_note_ratio
+    time_column: created_at
+    table: mart_ticket_notes
+    sql: "SELECT\n  (COUNT(*) FILTER (WHERE is_internal_note)::bigint)::float\n  /\
+      \ NULLIF((COUNT(DISTINCT ticket_note_id)::bigint), 0) AS internal_note_ratio\n\
+      FROM ticketing_marts.mart_ticket_notes\nWHERE organization_id = %s{{extra_where}}\n"
+    default_zero: true
+  internal_note_volume:
+    product: ticketing
+    result_column: internal_note_volume
+    time_column: created_at
+    table: mart_ticket_notes
+    sql: 'SELECT COUNT(*) FILTER (WHERE is_internal_note)::bigint AS internal_note_volume
+
+      FROM ticketing_marts.mart_ticket_notes
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  kb_article_volume:
+    product: ticketing
+    result_column: kb_article_volume
+    time_column: created_at
+    table: mart_kb_articles
+    sql: 'SELECT COUNT(DISTINCT kb_article_id)::bigint AS kb_article_volume
+
+      FROM ticketing_marts.mart_kb_articles
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  kb_published_article_metric:
+    product: ticketing
+    result_column: kb_published_article_metric
+    time_column: created_at
+    table: mart_kb_articles
+    sql: 'SELECT COUNT(*) FILTER (WHERE is_published)::bigint AS kb_published_article_metric
+
+      FROM ticketing_marts.mart_kb_articles
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  kb_views_total:
+    product: ticketing
+    result_column: kb_views_total
+    time_column: created_at
+    table: mart_kb_articles
+    sql: 'SELECT SUM(view_count) AS kb_views_total
+
+      FROM ticketing_marts.mart_kb_articles
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  macro_volume:
+    product: ticketing
+    result_column: macro_volume
+    time_column: created_at
+    table: mart_macros
+    sql: 'SELECT COUNT(DISTINCT macro_id)::bigint AS macro_volume
+
+      FROM ticketing_marts.mart_macros
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  note_volume:
+    product: ticketing
+    result_column: note_volume
+    time_column: created_at
+    table: mart_ticket_notes
+    sql: 'SELECT COUNT(DISTINCT ticket_note_id)::bigint AS note_volume
+
+      FROM ticketing_marts.mart_ticket_notes
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  notification_volume:
+    product: ticketing
+    result_column: notification_volume
+    time_column: created_at
+    table: mart_notifications
+    sql: 'SELECT COUNT(DISTINCT notification_id)::bigint AS notification_volume
+
+      FROM ticketing_marts.mart_notifications
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  open_recommendations_metric:
+    product: ticketing
+    result_column: open_recommendations_metric
+    time_column: created_at
+    table: mart_proactive_recommendations
+    sql: 'SELECT COUNT(*) FILTER (WHERE is_open)::bigint AS open_recommendations_metric
+
+      FROM ticketing_marts.mart_proactive_recommendations
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  open_ticket_age_days_total:
+    product: ticketing
+    result_column: open_ticket_age_days_total
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT SUM(case when is_open then extract(epoch from (now() - created_at))
+      / 86400.0 end) AS open_ticket_age_days_total
+
+      FROM ticketing_marts.mart_tickets
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  outbound_email_volume:
+    product: ticketing
+    result_column: outbound_email_volume
+    time_column: created_at
+    table: mart_outbound_emails
+    sql: 'SELECT COUNT(DISTINCT outbound_email_id)::bigint AS outbound_email_volume
+
+      FROM ticketing_marts.mart_outbound_emails
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  pending_approvals_metric:
+    product: ticketing
+    result_column: pending_approvals_metric
+    time_column: created_at
+    table: mart_proactive_approvals
+    sql: 'SELECT COUNT(*) FILTER (WHERE is_pending)::bigint AS pending_approvals_metric
+
+      FROM ticketing_marts.mart_proactive_approvals
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  pending_tickets_metric:
+    product: ticketing
+    result_column: pending_tickets_metric
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT COUNT(*) FILTER (WHERE is_pending)::bigint AS pending_tickets_metric
+
+      FROM ticketing_marts.mart_tickets
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  proactive_audit_volume:
+    product: ticketing
+    result_column: proactive_audit_volume
+    time_column: created_at
+    table: mart_proactive_audit
+    sql: 'SELECT COUNT(DISTINCT proactive_audit_id)::bigint AS proactive_audit_volume
+
+      FROM ticketing_marts.mart_proactive_audit
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  queue_count:
+    product: ticketing
+    result_column: queue_count
+    time_column: created_at
+    table: mart_agent_queues
+    sql: 'SELECT COUNT(DISTINCT queue_id)::bigint AS queue_count
+
+      FROM ticketing_marts.mart_agent_queues
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  queue_coverage_count:
+    product: ticketing
+    result_column: queue_coverage_count
+    time_column: created_at
+    table: mart_agent_queue_members
+    sql: 'SELECT COUNT(DISTINCT queue_membership_id)::bigint AS queue_coverage_count
+
+      FROM ticketing_marts.mart_agent_queue_members
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  queues_at_risk_metric:
+    product: ticketing
+    result_column: queues_at_risk_metric
+    time_column: created_at
+    table: mart_agent_queues
+    sql: 'SELECT COUNT(*) FILTER (WHERE is_at_risk)::bigint AS queues_at_risk_metric
+
+      FROM ticketing_marts.mart_agent_queues
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  reassignment_volume:
+    product: ticketing
+    result_column: reassignment_volume
+    time_column: created_at
+    table: mart_audit_events
+    sql: 'SELECT COUNT(*) FILTER (WHERE is_assignment_event)::bigint AS reassignment_volume
+
+      FROM ticketing_marts.mart_audit_events
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  recommendation_acceptance_rate:
+    product: ticketing
+    result_column: recommendation_acceptance_rate
+    time_column: created_at
+    table: mart_proactive_recommendations
+    sql: "SELECT\n  (COUNT(*) FILTER (WHERE is_accepted)::bigint)::float\n  / NULLIF((COUNT(DISTINCT\
+      \ recommendation_id)::bigint), 0) AS recommendation_acceptance_rate\nFROM ticketing_marts.mart_proactive_recommendations\n\
+      WHERE organization_id = %s{{extra_where}}\n"
+    default_zero: true
+  recommendation_volume:
+    product: ticketing
+    result_column: recommendation_volume
+    time_column: created_at
+    table: mart_proactive_recommendations
+    sql: 'SELECT COUNT(DISTINCT recommendation_id)::bigint AS recommendation_volume
+
+      FROM ticketing_marts.mart_proactive_recommendations
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  rejected_metric:
+    product: ticketing
+    result_column: rejected_metric
+    time_column: created_at
+    table: mart_proactive_approvals
+    sql: 'SELECT COUNT(*) FILTER (WHERE is_rejected)::bigint AS rejected_metric
+
+      FROM ticketing_marts.mart_proactive_approvals
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  reopened_tickets_metric:
+    product: ticketing
+    result_column: reopened_tickets_metric
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT COUNT(*) FILTER (WHERE is_reopened)::bigint AS reopened_tickets_metric
+
+      FROM ticketing_marts.mart_tickets
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  resolution_hours_total:
+    product: ticketing
+    result_column: resolution_hours_total
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT SUM(resolution_hours) AS resolution_hours_total
+
+      FROM ticketing_marts.mart_tickets
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  resolution_hours_variance_total:
+    product: ticketing
+    result_column: resolution_hours_variance_total
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT SUM(resolution_hours_variance) AS resolution_hours_variance_total
+
+      FROM ticketing_marts.mart_tickets
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  resolution_sla_compliance_rate:
+    product: ticketing
+    result_column: resolution_sla_compliance_rate
+    time_column: created_at
+    table: mart_tickets
+    sql: "SELECT\n  (COUNT(*) FILTER (WHERE is_resolution_sla_met)::bigint)::float\n\
+      \  / NULLIF((COUNT(*) FILTER (WHERE resolution_hours_variance is not null)::bigint),\
+      \ 0) AS resolution_sla_compliance_rate\nFROM ticketing_marts.mart_tickets\n\
+      WHERE organization_id = %s{{extra_where}}\n"
+    default_zero: true
+  resolution_sla_met_metric:
+    product: ticketing
+    result_column: resolution_sla_met_metric
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT COUNT(*) FILTER (WHERE is_resolution_sla_met)::bigint AS resolution_sla_met_metric
+
+      FROM ticketing_marts.mart_tickets
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  resolved_for_avg:
+    product: ticketing
+    result_column: resolved_for_avg
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT COUNT(*) FILTER (WHERE is_resolved)::bigint AS resolved_for_avg
+
+      FROM ticketing_marts.mart_tickets
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  resolved_tickets_metric:
+    product: ticketing
+    result_column: resolved_tickets_metric
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT COUNT(*) FILTER (WHERE is_resolved)::bigint AS resolved_tickets_metric
+
+      FROM ticketing_marts.mart_tickets
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  ticket_active_days:
+    product: ticketing
+    result_column: ticket_active_days
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT COUNT(DISTINCT cast(created_at as date))::bigint AS ticket_active_days
+
+      FROM ticketing_marts.mart_tickets
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  tickets_created_today_metric:
+    product: ticketing
+    result_column: tickets_created_today_metric
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT COUNT(*) FILTER (WHERE date(created_at) = current_date)::bigint AS
+      tickets_created_today_metric
+
+      FROM ticketing_marts.mart_tickets
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  tickets_last_30_days:
+    product: ticketing
+    result_column: tickets_last_30_days
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT COUNT(*) FILTER (WHERE created_at >= now() - interval ''30 days'')::bigint
+      AS tickets_last_30_days
+
+      FROM ticketing_marts.mart_tickets
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  tickets_last_7_days:
+    product: ticketing
+    result_column: tickets_last_7_days
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT COUNT(*) FILTER (WHERE created_at >= now() - interval ''7 days'')::bigint
+      AS tickets_last_7_days
+
+      FROM ticketing_marts.mart_tickets
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  tickets_with_first_response_metric:
+    product: ticketing
+    result_column: tickets_with_first_response_metric
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT COUNT(*) FILTER (WHERE has_first_response)::bigint AS tickets_with_first_response_metric
+
+      FROM ticketing_marts.mart_tickets
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  tickets_with_first_response_sla_target_metric:
+    product: ticketing
+    result_column: tickets_with_first_response_sla_target_metric
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT COUNT(*) FILTER (WHERE has_first_response and sla_first_response_hours
+      is not null)::bigint AS tickets_with_first_response_sla_target_metric
+
+      FROM ticketing_marts.mart_tickets
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  tickets_with_resolution_sla_target_metric:
+    product: ticketing
+    result_column: tickets_with_resolution_sla_target_metric
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT COUNT(*) FILTER (WHERE has_resolution_sla_target)::bigint AS tickets_with_resolution_sla_target_metric
+
+      FROM ticketing_marts.mart_tickets
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  tickets_with_resolver_metric:
+    product: ticketing
+    result_column: tickets_with_resolver_metric
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT COUNT(*) FILTER (WHERE has_resolver)::bigint AS tickets_with_resolver_metric
+
+      FROM ticketing_marts.mart_tickets
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  tickets_with_sla_target_metric:
+    product: ticketing
+    result_column: tickets_with_sla_target_metric
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT COUNT(*) FILTER (WHERE resolution_hours_variance is not null)::bigint
+      AS tickets_with_sla_target_metric
+
+      FROM ticketing_marts.mart_tickets
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  tickets_without_resolver_metric:
+    product: ticketing
+    result_column: tickets_without_resolver_metric
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT COUNT(*) FILTER (WHERE not has_resolver)::bigint AS tickets_without_resolver_metric
+
+      FROM ticketing_marts.mart_tickets
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  unassigned_tickets_metric:
+    product: ticketing
+    result_column: unassigned_tickets_metric
+    time_column: created_at
+    table: mart_tickets
+    sql: 'SELECT COUNT(*) FILTER (WHERE not has_assignee and not is_closed)::bigint
+      AS unassigned_tickets_metric
+
+      FROM ticketing_marts.mart_tickets
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  unassignment_rate:
+    product: ticketing
+    result_column: unassignment_rate
+    time_column: created_at
+    table: mart_tickets
+    sql: "SELECT\n  (COUNT(*) FILTER (WHERE not has_assignee and not is_closed)::bigint)::float\n\
+      \  / NULLIF((COUNT(DISTINCT ticket_id)::bigint), 0) AS unassignment_rate\nFROM\
+      \ ticketing_marts.mart_tickets\nWHERE organization_id = %s{{extra_where}}\n"
+    default_zero: true
+  unread_notifications_metric:
+    product: ticketing
+    result_column: unread_notifications_metric
+    time_column: created_at
+    table: mart_notifications
+    sql: 'SELECT COUNT(*) FILTER (WHERE not is_read)::bigint AS unread_notifications_metric
+
+      FROM ticketing_marts.mart_notifications
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true

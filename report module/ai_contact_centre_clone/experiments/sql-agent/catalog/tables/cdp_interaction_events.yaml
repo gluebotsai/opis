@@ -1,0 +1,15 @@
+name: cdp.interaction_events
+alias: ie
+schema: cdp
+grain: event
+purpose: Chronological projected events for an interaction.
+time_columns: [occurred_at]
+columns:
+  - { name: id, type: uuid, pk: true, description: Event id }
+  - { name: organization_id, type: uuid, description: Tenant id }
+  - { name: interaction_id, type: uuid, fk: cdp.interactions.id, description: Parent interaction }
+  - { name: conversation_id, type: uuid, description: Conversation }
+  - { name: event_type, type: text, description: Event type }
+  - { name: occurred_at, type: timestamptz, description: When }
+sample_rows:
+  - { id: "bbbbbbbb-0001", interaction_id: "aaaaaaaa-0001", conversation_id: 101, event_type: assigned, occurred_at: "2026-09-07T10:02:00Z" }

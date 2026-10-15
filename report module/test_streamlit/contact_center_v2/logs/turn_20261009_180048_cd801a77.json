@@ -1,0 +1,63 @@
+{
+  "turn_id": "cd801a77",
+  "timestamp": "2026-10-09T12:30:48.892378+00:00",
+  "question": "Which interaction types take the longest to resolve?",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1018,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Resolution duration by interaction type</strong></p><p>The average resolution duration is not available in Contact Center reports for all time.</p><p>Would you like to see the average handle time or average first response time instead?</p>",
+  "card": "card: none",
+  "facts": "result_id: r1\nwindow: all time\ncertified: false\ntask_goal: Rank interaction types by average resolution duration.\nanswer_type: number\nUNAVAILABLE\nreason: Average resolution duration is not in Contact Center reports.",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1018,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "Which interaction types take the longest to resolve?",
+    "plan": {
+      "kind": "plan",
+      "understanding": "Identify the interaction types with the highest average resolution duration.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Rank interaction types by average resolution duration.",
+          "time": "all time",
+          "scope": "org",
+          "slice": [
+            "channel"
+          ],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "unavailable": true,
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "unavailable",
+        "error_type": null,
+        "certified": false,
+        "kpi_id": null,
+        "row_count": 0
+      }
+    ],
+    "facts": "result_id: r1\nwindow: all time\ncertified: false\ntask_goal: Rank interaction types by average resolution duration.\nanswer_type: number\nUNAVAILABLE\nreason: Average resolution duration is not in Contact Center reports.",
+    "grounded": true,
+    "card": "card: none"
+  },
+  "error": null
+}

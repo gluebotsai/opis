@@ -1,0 +1,54 @@
+name: Deploy
+
+# Runs after merge to main. Build, migrate, release, and health checks live in scripts/deploy.sh.
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+
+env:
+  DEPLOY_ROOT: /home/worktual/REBUILD/POC/worktual-accounts
+  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres_myaccount_qa
+  MAIL_API_PORT: "3002"
+  SYSTEMD_SCOPE: system
+  SERVE_FRONTEND_ON_MAIL_API: "true"
+
+jobs:
+  deploy:
+    name: Deploy to self-hosted
+    runs-on: self-hosted
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install system packages (optional)
+        continue-on-error: true
+        run: |
+          if sudo -n true 2>/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y rsync curl lsof ca-certificates
+          else
+            echo "No passwordless sudo — skipping apt install."
+            echo "If deploy fails, run once on the server:"
+            echo "  sudo apt-get install -y rsync curl lsof"
+          fi
+
+      - name: Ensure system prerequisites
+        run: ./scripts/ensure-prerequisites.sh
+
+      - name: Install systemd units
+        run: ./scripts/install-systemd.sh
+
+      - name: Run deployment script
+        run: ./scripts/deploy.sh

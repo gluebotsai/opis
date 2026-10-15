@@ -1,0 +1,1806 @@
+version: 2
+
+# ==============================================================================
+# WORKTUAL WEB TRACKING — SEMANTIC LAYER (ClickHouse-aligned)
+# Entities / dimensions / measures for analytical marts over web_tracking silver.
+# Tier-1 bounce & duration MUST match v_session_bounce (dashboard truth).
+# Certified KPI execution is via ClickHouse SQL templates (not MetricFlow).
+# ==============================================================================
+
+semantic_models:
+
+  # ----------------------------------------------------------------------------
+  # 1. SESSIONS SEMANTIC MODEL
+  # ----------------------------------------------------------------------------
+  - name: sem_web_sessions
+    description: "Session grain model. Bounce/duration/pageviews from v_session_bounce; exit_page derived from page views; is_online_flag = active in last 5 minutes."
+    model: ref('mart_web_sessions')
+    defaults:
+      agg_time_dimension: started_at
+
+    entities:
+      - name: session
+        type: primary
+        expr: session_id
+      - name: visitor
+        type: foreign
+        expr: visitor_id
+      - name: website
+        type: foreign
+        expr: website_id
+      - name: organization
+        type: foreign
+        expr: organization_id
+
+    dimensions:
+      - name: started_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: created_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: updated_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: ended_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: organization_id
+        type: categorical
+      - name: website_id
+        type: categorical
+      - name: session_id
+        type: categorical
+      - name: visitor_id
+        type: categorical
+      - name: user_id
+        type: categorical
+      - name: wt_campaign_id
+        type: categorical
+      - name: wt_contact_id
+        type: categorical
+      - name: device
+        type: categorical
+      - name: browser
+        type: categorical
+      - name: browser_version
+        type: categorical
+      - name: platform
+        type: categorical
+      - name: country
+        type: categorical
+      - name: city
+        type: categorical
+      - name: region
+        type: categorical
+      - name: utm_source
+        type: categorical
+      - name: utm_medium
+        type: categorical
+      - name: utm_campaign
+        type: categorical
+      - name: utm_term
+        type: categorical
+      - name: utm_content
+        type: categorical
+      - name: referrer
+        type: categorical
+      - name: referrer_domain
+        type: categorical
+      - name: entry_page
+        type: categorical
+      - name: exit_page
+        type: categorical
+      - name: is_bounce_flag
+        type: categorical
+      - name: is_engaged_flag
+        type: categorical
+      - name: is_online_flag
+        type: categorical
+      - name: is_first_session_flag
+        type: categorical
+      - name: has_rage_clicks
+        type: categorical
+      - name: has_dead_clicks
+        type: categorical
+      - name: has_deep_scroll
+        type: categorical
+      - name: has_conversion
+        type: categorical
+      - name: has_purchase
+        type: categorical
+      - name: has_checkout_start
+        type: categorical
+      - name: has_cart_add
+        type: categorical
+      - name: has_product_view
+        type: categorical
+      - name: has_form_start
+        type: categorical
+      - name: has_form_submit
+        type: categorical
+      - name: has_form_failure
+        type: categorical
+      - name: has_form_abandon
+        type: categorical
+      - name: has_search
+        type: categorical
+      - name: has_error
+        type: categorical
+      - name: is_campaign_attributed
+        type: categorical
+      - name: is_identified
+        type: categorical
+
+    measures:
+      - name: session_volume
+        agg: count_distinct
+        expr: session_id
+      - name: session_visitor_count
+        agg: count_distinct
+        expr: visitor_id
+      - name: bounce_session_count
+        agg: sum
+        expr: is_bounce_flag
+      - name: engaged_session_count
+        agg: sum
+        expr: is_engaged_flag
+      - name: online_visitor_count
+        agg: count_distinct
+        expr: "case when is_online_flag = 1 then visitor_id end"
+      - name: online_session_count
+        agg: sum
+        expr: is_online_flag
+      - name: new_visitor_sessions
+        agg: count_distinct
+        expr: "case when is_first_session_flag = 1 then visitor_id end"
+      - name: returning_visitor_sessions
+        agg: count_distinct
+        expr: "case when is_first_session_flag = 0 then visitor_id end"
+      - name: session_duration_sum
+        agg: sum
+        expr: duration_seconds
+      - name: avg_session_duration_seconds
+        agg: average
+        expr: duration_seconds
+      - name: session_page_views_sum
+        agg: sum
+        expr: page_view_count
+      - name: session_clicks_sum
+        agg: sum
+        expr: total_clicks
+      - name: sessions_with_rage_clicks
+        agg: sum
+        expr: has_rage_clicks
+      - name: session_rage_clicks_sum
+        agg: sum
+        expr: rage_click_count
+      - name: sessions_with_dead_clicks
+        agg: sum
+        expr: has_dead_clicks
+      - name: session_dead_clicks_sum
+        agg: sum
+        expr: dead_click_count
+      - name: sessions_with_deep_scroll
+        agg: sum
+        expr: has_deep_scroll
+      - name: sessions_with_conversions
+        agg: sum
+        expr: has_conversion
+      - name: session_revenue_sum
+        agg: sum
+        expr: total_revenue
+      - name: session_purchases_sum
+        agg: sum
+        expr: purchase_count
+      - name: sessions_with_checkout_start
+        agg: sum
+        expr: has_checkout_start
+      - name: sessions_with_cart_add
+        agg: sum
+        expr: has_cart_add
+      - name: sessions_with_product_views
+        agg: sum
+        expr: has_product_view
+      - name: sessions_with_search
+        agg: sum
+        expr: has_search
+      - name: sessions_with_errors
+        agg: sum
+        expr: has_error
+      - name: sessions_with_form_abandon
+        agg: sum
+        expr: has_form_abandon
+      - name: sessions_with_form_failure
+        agg: sum
+        expr: has_form_failure
+      - name: sessions_attributed_to_campaign
+        agg: sum
+        expr: is_campaign_attributed
+      - name: sessions_identified_count
+        agg: sum
+        expr: is_identified
+
+  # ----------------------------------------------------------------------------
+  # 2. VISITORS SEMANTIC MODEL
+  # ----------------------------------------------------------------------------
+  - name: sem_web_visitors
+    description: "Visitor 360 profile model with lifetime activity, loyalty, and identification status."
+    model: ref('mart_web_visitors')
+    defaults:
+      agg_time_dimension: last_seen_at
+
+    entities:
+      - name: visitor
+        type: primary
+        expr: visitor_id
+      - name: website
+        type: foreign
+        expr: website_id
+      - name: organization
+        type: foreign
+        expr: organization_id
+
+    dimensions:
+      - name: last_seen_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: first_seen_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: organization_id
+        type: categorical
+      - name: website_id
+        type: categorical
+      - name: visitor_id
+        type: categorical
+      - name: user_id
+        type: categorical
+      - name: anonymous_id
+        type: categorical
+      - name: country
+        type: categorical
+      - name: is_identified_flag
+        type: categorical
+      - name: is_returning_visitor
+        type: categorical
+        # Lifetime as-of-now flag (has this visitor EVER had >1 session).
+        # Period new/returning (≤1 / >1 sessions in window) = SQL templates.
+
+    measures:
+      - name: visitor_volume
+        agg: count_distinct
+        expr: visitor_id
+      - name: lifetime_new_visitor_flag_count
+        agg: count
+        expr: "case when is_returning_visitor = 0 then visitor_id end"
+      - name: lifetime_returning_visitor_flag_count
+        agg: count
+        expr: "case when is_returning_visitor = 1 then visitor_id end"
+      - name: identified_visitors
+        agg: count
+        expr: "case when is_identified_flag = 1 then visitor_id end"
+      - name: visitor_lifetime_sessions_sum
+        agg: sum
+        expr: lifetime_sessions
+      - name: visitor_lifetime_revenue_sum
+        agg: sum
+        expr: lifetime_revenue
+
+  # ----------------------------------------------------------------------------
+  # 3. PAGE VIEWS SEMANTIC MODEL
+  # ----------------------------------------------------------------------------
+  - name: sem_page_views
+    description: "Page load event model for content dwell time and reading scroll depth."
+    model: ref('mart_page_views')
+    defaults:
+      agg_time_dimension: created_at
+
+    entities:
+      - name: page_view
+        type: primary
+        expr: page_view_id
+      - name: session
+        type: foreign
+        expr: session_id
+      - name: visitor
+        type: foreign
+        expr: visitor_id
+      - name: website
+        type: foreign
+        expr: website_id
+      - name: organization
+        type: foreign
+        expr: organization_id
+
+    dimensions:
+      - name: created_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: organization_id
+        type: categorical
+      - name: website_id
+        type: categorical
+      - name: page_view_id
+        type: categorical
+      - name: session_id
+        type: categorical
+      - name: visitor_id
+        type: categorical
+      - name: page_path
+        type: categorical
+      - name: page_title
+        type: categorical
+      - name: referrer
+        type: categorical
+      - name: device
+        type: categorical
+      - name: country
+        type: categorical
+      - name: utm_source
+        type: categorical
+      - name: utm_medium
+        type: categorical
+      - name: utm_campaign
+        type: categorical
+
+    measures:
+      - name: page_view_count
+        agg: count
+        expr: page_view_id
+      - name: time_on_page_sum
+        agg: sum
+        expr: time_on_page_sec
+      - name: avg_time_on_page
+        agg: average
+        expr: time_on_page_sec
+      - name: avg_page_scroll_depth
+        agg: average
+        expr: max_scroll_depth
+
+  # ----------------------------------------------------------------------------
+  # 4. INTERACTION EVENTS SEMANTIC MODEL
+  # ----------------------------------------------------------------------------
+  - name: sem_interaction_events
+    description: "Interaction event model for click heatmaps, rage clicks, and dead clicks."
+    model: ref('mart_interaction_events')
+    defaults:
+      agg_time_dimension: created_at
+
+    entities:
+      - name: interaction_event
+        type: primary
+        expr: event_id
+      - name: page_view
+        type: foreign
+        expr: page_view_id
+      - name: session
+        type: foreign
+        expr: session_id
+      - name: visitor
+        type: foreign
+        expr: visitor_id
+      - name: website
+        type: foreign
+        expr: website_id
+      - name: organization
+        type: foreign
+        expr: organization_id
+
+    dimensions:
+      - name: created_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: organization_id
+        type: categorical
+      - name: website_id
+        type: categorical
+      - name: event_id
+        type: categorical
+      - name: page_view_id
+        type: categorical
+      - name: session_id
+        type: categorical
+      - name: visitor_id
+        type: categorical
+      - name: event_type
+        type: categorical
+      - name: element
+        type: categorical
+      - name: element_type
+        type: categorical
+      - name: element_text
+        type: categorical
+      - name: page_path
+        type: categorical
+      - name: device
+        type: categorical
+      - name: country
+        type: categorical
+      - name: reason
+        type: categorical
+
+    measures:
+      - name: interaction_count
+        agg: count
+        expr: event_id
+      - name: total_clicks
+        agg: count
+        expr: "case when event_type = 'click' then event_id end"
+      - name: rage_clicks
+        agg: count
+        expr: "case when event_type = 'rage_click' then event_id end"
+      - name: dead_clicks
+        agg: count
+        expr: "case when event_type = 'dead_click' then event_id end"
+
+  # ----------------------------------------------------------------------------
+  # 5. FORM EVENTS SEMANTIC MODEL
+  # ----------------------------------------------------------------------------
+  - name: sem_form_events
+    description: "Form funnel event model for views, starts, submits, successes, and abandons."
+    model: ref('mart_form_events')
+    defaults:
+      agg_time_dimension: created_at
+
+    entities:
+      - name: form_event
+        type: primary
+        expr: event_id
+      - name: page_view
+        type: foreign
+        expr: page_view_id
+      - name: session
+        type: foreign
+        expr: session_id
+      - name: visitor
+        type: foreign
+        expr: visitor_id
+      - name: website
+        type: foreign
+        expr: website_id
+      - name: organization
+        type: foreign
+        expr: organization_id
+
+    dimensions:
+      - name: created_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: organization_id
+        type: categorical
+      - name: website_id
+        type: categorical
+      - name: event_id
+        type: categorical
+      - name: form_id
+        type: categorical
+      - name: page_view_id
+        type: categorical
+      - name: session_id
+        type: categorical
+      - name: visitor_id
+        type: categorical
+      - name: event_type
+        type: categorical
+      - name: form_name
+        type: categorical
+      - name: field_name
+        type: categorical
+      - name: page_path
+        type: categorical
+      - name: device
+        type: categorical
+      - name: country
+        type: categorical
+
+    measures:
+      - name: form_views
+        agg: count
+        expr: "case when event_type = 'form_view' then event_id end"
+      - name: form_starts
+        agg: count
+        expr: "case when event_type = 'form_start' then event_id end"
+      - name: form_submits
+        agg: count
+        expr: "case when event_type = 'form_submit' then event_id end"
+      - name: form_successes
+        agg: count
+        expr: "case when event_type = 'form_success' then event_id end"
+      - name: form_failures
+        agg: count
+        expr: "case when event_type = 'form_failure' then event_id end"
+      - name: form_abandons
+        agg: count
+        expr: "case when event_type = 'form_abandon' then event_id end"
+
+  # ----------------------------------------------------------------------------
+  # 6. CONVERSION EVENTS SEMANTIC MODEL
+  # ----------------------------------------------------------------------------
+  - name: sem_conversion_events
+    description: "Monetary conversion and goal completion model."
+    model: ref('mart_conversion_events')
+    defaults:
+      agg_time_dimension: created_at
+
+    entities:
+      - name: conversion
+        type: primary
+        expr: conversion_id
+      - name: page_view
+        type: foreign
+        expr: page_view_id
+      - name: session
+        type: foreign
+        expr: session_id
+      - name: visitor
+        type: foreign
+        expr: visitor_id
+      - name: website
+        type: foreign
+        expr: website_id
+      - name: organization
+        type: foreign
+        expr: organization_id
+
+    dimensions:
+      - name: created_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: organization_id
+        type: categorical
+      - name: website_id
+        type: categorical
+      - name: conversion_id
+        type: categorical
+      - name: product_id
+        type: categorical
+      - name: page_view_id
+        type: categorical
+      - name: session_id
+        type: categorical
+      - name: visitor_id
+        type: categorical
+      - name: conversion_type
+        type: categorical
+      - name: currency
+        type: categorical
+      - name: utm_source
+        type: categorical
+      - name: utm_campaign
+        type: categorical
+      - name: device
+        type: categorical
+      - name: country
+        type: categorical
+
+    measures:
+      - name: conversion_count
+        agg: count
+        expr: conversion_id
+      - name: total_revenue
+        agg: sum
+        expr: value
+      - name: purchases
+        agg: count
+        expr: "case when conversion_type = 'purchase' then conversion_id end"
+      - name: signups
+        agg: count
+        expr: "case when conversion_type = 'signup' then conversion_id end"
+      - name: checkout_starts
+        agg: count
+        expr: "case when conversion_type = 'begin_checkout' then conversion_id end"
+      - name: cart_adds
+        agg: count
+        expr: "case when conversion_type = 'add_to_cart' then conversion_id end"
+
+  # ----------------------------------------------------------------------------
+  # 7. PRODUCT INTERACTIONS SEMANTIC MODEL
+  # ----------------------------------------------------------------------------
+  - name: sem_product_interactions
+    description: "Ecommerce product interaction and browsing model."
+    model: ref('mart_product_interactions')
+    defaults:
+      agg_time_dimension: created_at
+
+    entities:
+      - name: interaction
+        type: primary
+        expr: interaction_id
+      - name: page_view
+        type: foreign
+        expr: page_view_id
+      - name: session
+        type: foreign
+        expr: session_id
+      - name: visitor
+        type: foreign
+        expr: visitor_id
+      - name: website
+        type: foreign
+        expr: website_id
+      - name: organization
+        type: foreign
+        expr: organization_id
+
+    dimensions:
+      - name: created_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: organization_id
+        type: categorical
+      - name: website_id
+        type: categorical
+      - name: interaction_id
+        type: categorical
+      - name: product_id
+        type: categorical
+      - name: product_sku
+        type: categorical
+      - name: product_name
+        type: categorical
+      - name: product_category
+        type: categorical
+      - name: product_brand
+        type: categorical
+      - name: currency
+        type: categorical
+      - name: section
+        type: categorical
+      - name: device
+        type: categorical
+      - name: country
+        type: categorical
+
+    measures:
+      - name: product_interaction_count
+        agg: count
+        expr: interaction_id
+      - name: avg_product_price
+        agg: average
+        expr: product_price
+
+  # ----------------------------------------------------------------------------
+  # 8. PERFORMANCE EVENTS SEMANTIC MODEL
+  # ----------------------------------------------------------------------------
+  - name: sem_performance_events
+    description: "Core Web Vitals and frontend rendering timing model."
+    model: ref('mart_performance_events')
+    defaults:
+      agg_time_dimension: created_at
+
+    entities:
+      - name: performance_event
+        type: primary
+        expr: event_id
+      - name: page_view
+        type: foreign
+        expr: page_view_id
+      - name: session
+        type: foreign
+        expr: session_id
+      - name: visitor
+        type: foreign
+        expr: visitor_id
+      - name: website
+        type: foreign
+        expr: website_id
+      - name: organization
+        type: foreign
+        expr: organization_id
+
+    dimensions:
+      - name: created_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: organization_id
+        type: categorical
+      - name: website_id
+        type: categorical
+      - name: event_id
+        type: categorical
+      - name: page_view_id
+        type: categorical
+      - name: session_id
+        type: categorical
+      - name: visitor_id
+        type: categorical
+      - name: metric_name
+        type: categorical
+      - name: rating
+        type: categorical
+      - name: page_path
+        type: categorical
+      - name: device
+        type: categorical
+
+    measures:
+      - name: performance_event_count
+        agg: count
+        expr: event_id
+      - name: poor_vitals_count
+        agg: count
+        expr: "case when rating = 'poor' then event_id end"
+      - name: avg_lcp_value
+        agg: average
+        expr: "case when metric_name = 'LCP' then metric_value end"
+      - name: avg_fcp_value
+        agg: average
+        expr: "case when metric_name = 'FCP' then metric_value end"
+      - name: avg_cls_value
+        agg: average
+        expr: "case when metric_name = 'CLS' then metric_value end"
+      - name: avg_inp_value
+        agg: average
+        expr: "case when metric_name = 'INP' then metric_value end"
+      - name: avg_ttfb_value
+        agg: average
+        expr: "case when metric_name = 'TTFB' then metric_value end"
+
+  # ----------------------------------------------------------------------------
+  # 9. ERROR EVENTS SEMANTIC MODEL
+  # ----------------------------------------------------------------------------
+  - name: sem_error_events
+    description: "Frontend JavaScript exception and resource error model."
+    model: ref('mart_error_events')
+    defaults:
+      agg_time_dimension: created_at
+
+    entities:
+      - name: error_event
+        type: primary
+        expr: event_id
+      - name: page_view
+        type: foreign
+        expr: page_view_id
+      - name: session
+        type: foreign
+        expr: session_id
+      - name: visitor
+        type: foreign
+        expr: visitor_id
+      - name: website
+        type: foreign
+        expr: website_id
+      - name: organization
+        type: foreign
+        expr: organization_id
+
+    dimensions:
+      - name: created_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: organization_id
+        type: categorical
+      - name: website_id
+        type: categorical
+      - name: event_id
+        type: categorical
+      - name: page_view_id
+        type: categorical
+      - name: session_id
+        type: categorical
+      - name: visitor_id
+        type: categorical
+      - name: error_type
+        type: categorical
+      - name: message
+        type: categorical
+      - name: page_path
+        type: categorical
+      - name: device
+        type: categorical
+      - name: browser
+        type: categorical
+
+    measures:
+      - name: error_event_count
+        agg: count
+        expr: event_id
+
+  # ----------------------------------------------------------------------------
+  # 10. COOKIE OPERATIONS SEMANTIC MODEL
+  # ----------------------------------------------------------------------------
+  - name: sem_cookie_operations
+    description: "Cookie consent and audit trail model."
+    model: ref('mart_cookie_operations')
+    defaults:
+      agg_time_dimension: created_at
+
+    entities:
+      - name: cookie_operation
+        type: primary
+        expr: event_id
+      - name: session
+        type: foreign
+        expr: session_id
+      - name: visitor
+        type: foreign
+        expr: visitor_id
+      - name: website
+        type: foreign
+        expr: website_id
+      - name: organization
+        type: foreign
+        expr: organization_id
+
+    dimensions:
+      - name: created_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: organization_id
+        type: categorical
+      - name: website_id
+        type: categorical
+      - name: event_id
+        type: categorical
+      - name: session_id
+        type: categorical
+      - name: visitor_id
+        type: categorical
+      - name: action
+        type: categorical
+      - name: cookie_name
+        type: categorical
+      - name: page_path
+        type: categorical
+
+    measures:
+      - name: consent_action_count
+        agg: count
+        expr: event_id
+      - name: consent_granted_count
+        agg: count
+        expr: "case when action = 'consent_granted' then event_id end"
+      - name: consent_denied_count
+        agg: count
+        expr: "case when action = 'consent_denied' then event_id end"
+
+  # ----------------------------------------------------------------------------
+  # 11. REPLAY CHUNKS SEMANTIC MODEL
+  # ----------------------------------------------------------------------------
+  - name: sem_replay_chunks
+    description: "Session replay chunk index and recording model."
+    model: ref('mart_replay_chunks')
+    defaults:
+      agg_time_dimension: created_at
+
+    entities:
+      - name: chunk
+        type: primary
+        expr: chunk_id
+      - name: page_view
+        type: foreign
+        expr: page_view_id
+      - name: session
+        type: foreign
+        expr: session_id
+      - name: visitor
+        type: foreign
+        expr: visitor_id
+      - name: website
+        type: foreign
+        expr: website_id
+      - name: organization
+        type: foreign
+        expr: organization_id
+
+    dimensions:
+      - name: created_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: organization_id
+        type: categorical
+      - name: website_id
+        type: categorical
+      - name: chunk_id
+        type: categorical
+      - name: payload_id
+        type: categorical
+      - name: session_id
+        type: categorical
+      - name: page_view_id
+        type: categorical
+      - name: visitor_id
+        type: categorical
+      - name: encoding
+        type: categorical
+      - name: source
+        type: categorical
+
+    measures:
+      - name: replay_chunk_count
+        agg: count
+        expr: chunk_id
+      - name: replay_events_recorded_sum
+        agg: sum
+        expr: event_count
+
+  # ----------------------------------------------------------------------------
+  # 12. WEBSITES SEMANTIC MODEL
+  # ----------------------------------------------------------------------------
+  - name: sem_web_sites
+    description: "Tracked website entity profile model."
+    model: ref('mart_web_sites')
+    defaults:
+      agg_time_dimension: created_at
+
+    entities:
+      - name: website
+        type: primary
+        expr: website_id
+      - name: organization
+        type: foreign
+        expr: organization_id
+
+    dimensions:
+      - name: created_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: organization_id
+        type: categorical
+      - name: website_id
+        type: categorical
+      - name: website_url
+        type: categorical
+      - name: site_type
+        type: categorical
+      - name: status
+        type: categorical
+
+    measures:
+      - name: website_count
+        agg: count_distinct
+        expr: website_id
+
+  # ----------------------------------------------------------------------------
+  # 13. CUSTOM EVENTS SEMANTIC MODEL
+  # ----------------------------------------------------------------------------
+  - name: sem_custom_events
+    description: "Arbitrary business events dispatched via WebtualAnalytics.track(), sliceable by event_name. Enables full 360 coverage for custom conversions/funnels beyond the built-in event types (site_search, etc.)."
+    model: ref('mart_custom_events')
+    defaults:
+      agg_time_dimension: created_at
+
+    entities:
+      - name: custom_event
+        type: primary
+        expr: event_id
+      - name: page_view
+        type: foreign
+        expr: page_view_id
+      - name: session
+        type: foreign
+        expr: session_id
+      - name: visitor
+        type: foreign
+        expr: visitor_id
+      - name: website
+        type: foreign
+        expr: website_id
+      - name: organization
+        type: foreign
+        expr: organization_id
+
+    dimensions:
+      - name: created_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: organization_id
+        type: categorical
+      - name: website_id
+        type: categorical
+      - name: event_id
+        type: categorical
+      - name: page_view_id
+        type: categorical
+      - name: session_id
+        type: categorical
+      - name: visitor_id
+        type: categorical
+      - name: event_name
+        type: categorical
+      - name: device
+        type: categorical
+      - name: country
+        type: categorical
+
+    measures:
+      - name: custom_event_count
+        agg: count
+        expr: event_id
+      - name: distinct_custom_event_names
+        agg: count_distinct
+        expr: event_name
+      - name: sessions_with_custom_events
+        agg: count_distinct
+        expr: session_id
+      - name: visitors_with_custom_events
+        agg: count_distinct
+        expr: visitor_id
+
+  # ----------------------------------------------------------------------------
+  # 14. KNOWN USERS SEMANTIC MODEL
+  # ----------------------------------------------------------------------------
+  - name: sem_known_users
+    description: "Authenticated user ↔ visitor identity mappings (email, phone, traits) from dim_known_users."
+    model: ref('mart_known_users')
+    defaults:
+      agg_time_dimension: last_identified_at
+
+    entities:
+      - name: known_user
+        type: primary
+        expr: known_user_key
+      - name: visitor
+        type: foreign
+        expr: visitor_id
+      - name: website
+        type: foreign
+        expr: website_id
+      - name: organization
+        type: foreign
+        expr: organization_id
+
+    dimensions:
+      - name: last_identified_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: first_identified_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: organization_id
+        type: categorical
+      - name: website_id
+        type: categorical
+      - name: user_id
+        type: categorical
+      - name: visitor_id
+        type: categorical
+      - name: email
+        type: categorical
+      - name: phone
+        type: categorical
+      - name: method
+        type: categorical
+      - name: last_event_type
+        type: categorical
+      - name: has_email
+        type: categorical
+      - name: has_phone
+        type: categorical
+
+    measures:
+      - name: known_user_mapping_count
+        agg: count
+        expr: user_id
+      - name: known_user_distinct_count
+        agg: count_distinct
+        expr: user_id
+      - name: known_visitor_distinct_count
+        agg: count_distinct
+        expr: visitor_id
+
+  # ----------------------------------------------------------------------------
+  # 15. ECOMMERCE DAILY SEMANTIC MODEL
+  # ----------------------------------------------------------------------------
+  - name: sem_ecommerce_daily
+    description: "Daily e-commerce rollup from ecommerce view (product funnel + purchases + revenue)."
+    model: ref('mart_ecommerce')
+    defaults:
+      agg_time_dimension: event_date
+
+    entities:
+      - name: ecommerce_day
+        type: primary
+        expr: ecommerce_day_key
+      - name: website
+        type: foreign
+        expr: website_id
+
+    dimensions:
+      - name: event_date
+        type: time
+        type_params:
+          time_granularity: day
+      - name: website_id
+        type: categorical
+
+    measures:
+      - name: ecommerce_product_views_sum
+        agg: sum
+        expr: product_views
+      - name: ecommerce_cart_adds_sum
+        agg: sum
+        expr: cart_adds
+      - name: ecommerce_checkout_starts_sum
+        agg: sum
+        expr: checkout_starts
+      - name: ecommerce_purchases_sum
+        agg: sum
+        expr: purchases
+      - name: ecommerce_purchase_revenue_sum
+        agg: sum
+        expr: purchase_revenue
+      - name: ecommerce_refunds_sum
+        agg: sum
+        expr: refunds
+
+# METRICS SPECIFICATION
+# ==============================================================================
+metrics:
+
+  # ----------------------------------------------------------------------------
+  # A. Web Overview & Core Traffic
+  # ----------------------------------------------------------------------------
+  - name: web_session_volume
+    type: simple
+    label: "Web Session Volume"
+    description: "Total number of distinct browsing sessions initiated on tracked websites."
+    type_params:
+      measure: session_volume
+
+  - name: unique_visitors
+    type: simple
+    label: "Unique Visitors"
+    description: "Distinct visitors from sessions (uniqExact visitor_id on dim_sessions grain) — never count() rows."
+    type_params:
+      measure: session_visitor_count
+
+  - name: page_views
+    type: simple
+    label: "Page Views"
+    description: "Total count of individual page load events."
+    type_params:
+      measure: page_view_count
+
+  - name: average_session_duration
+    type: simple
+    label: "Average Session Duration"
+    description: "Average activity-span session duration in seconds from v_session_bounce (not dim_sessions.duration_seconds)."
+    type_params:
+      measure: avg_session_duration_seconds
+
+  - name: pages_per_session
+    type: ratio
+    label: "Pages per Session"
+    description: "Average number of page views loaded per browsing session."
+    type_params:
+      numerator: page_views
+      denominator: web_session_volume
+
+  - name: bounce_count
+    type: simple
+    label: "Bounce Count"
+    description: "Sessions with exactly 1 pageview AND activity-span duration < 10s (v_session_bounce only)."
+    type_params:
+      measure: bounce_session_count
+
+  - name: bounce_rate
+    type: ratio
+    label: "Bounce Rate"
+    description: "Bounce sessions / sessions from v_session_bounce (1 pageview AND duration < 10s). Never dim_sessions.is_bounce."
+    type_params:
+      numerator: bounce_count
+      denominator: web_session_volume
+
+  - name: online_visitors
+    type: simple
+    label: "Online Visitors"
+    description: "Distinct visitors with session activity in the last 5 minutes (greatest(updated_at, coalesce(ended_at, updated_at)))."
+    type_params:
+      measure: online_visitor_count
+
+  - name: engaged_session_count
+    type: simple
+    label: "Engaged Session Count"
+    description: "Sessions that are not bounces per v_session_bounce (inverse of bounce)."
+    type_params:
+      measure: engaged_session_count
+
+  - name: engagement_rate
+    type: ratio
+    label: "Engagement Rate"
+    description: "Percentage of sessions that are not bounces (1 - bounce_rate)."
+    type_params:
+      numerator: engaged_session_count
+      denominator: web_session_volume
+
+  - name: total_events
+    type: simple
+    label: "Total Events"
+    description: "Total count of captured interaction events."
+    type_params:
+      measure: interaction_count
+
+  - name: events_per_session
+    type: ratio
+    label: "Events per Session"
+    description: "Average count of captured events per session."
+    type_params:
+      numerator: total_events
+      denominator: web_session_volume
+
+  # ----------------------------------------------------------------------------
+  # B. Visitor Identity & Loyalty
+  # ----------------------------------------------------------------------------
+  - name: new_visitor_count
+    type: simple
+    label: "New Visitor Count"
+    description: >
+      Period new visitors: visitors with exactly 1 session in the filtered window
+      (SQL templates). This MF measure uses is_first_session_flag (lifetime first-ever)
+      as a fallback approximation only — prefer SQL template path.
+    type_params:
+      measure: new_visitor_sessions
+
+  - name: returning_visitor_count
+    type: simple
+    label: "Returning Visitor Count"
+    description: >
+      Period returning visitors: visitors with >1 session in the filtered window
+      (SQL templates). MF measure uses non-first-ever sessions as approximation only.
+    type_params:
+      measure: returning_visitor_sessions
+
+  - name: new_visitor_rate
+    type: ratio
+    label: "New Visitor Rate"
+    description: "Percentage of unique visitors in the period who are first-time visitors."
+    type_params:
+      numerator: new_visitor_count
+      denominator: unique_visitors
+
+  - name: returning_visitor_rate
+    type: ratio
+    label: "Returning Visitor Rate"
+    description: "Percentage of unique visitors in the period who have visited more than once."
+    type_params:
+      numerator: returning_visitor_count
+      denominator: unique_visitors
+
+  - name: lifetime_new_visitor_count
+    type: simple
+    label: "Lifetime New Visitor Count (profile snapshot)"
+    description: "As-of-now count of visitors whose lifetime session total is still 1 (i.e. have never returned). NOT period-scoped — reflects current visitor state regardless of date filter. Use new_visitor_count for period-based reporting."
+    type_params:
+      measure: lifetime_new_visitor_flag_count
+
+  - name: lifetime_returning_visitor_count
+    type: simple
+    label: "Lifetime Returning Visitor Count (profile snapshot)"
+    description: "As-of-now count of visitors whose lifetime session total is 2+. NOT period-scoped — reflects current visitor state regardless of date filter. Use returning_visitor_count for period-based reporting."
+    type_params:
+      measure: lifetime_returning_visitor_flag_count
+
+  - name: identified_visitor_count
+    type: simple
+    label: "Identified Visitor Count"
+    description: "Count of visitors resolved to a known user_id via identify() or login."
+    type_params:
+      measure: identified_visitors
+
+  - name: visitor_identification_rate
+    type: ratio
+    label: "Visitor Identification Rate"
+    description: "Percentage of unique visitors resolved to a known user_id."
+    type_params:
+      numerator: identified_visitor_count
+      denominator: unique_visitors
+
+  - name: identified_session_count
+    type: simple
+    label: "Identified Session Count"
+    description: "Count of browsing sessions linked to a known user_id or Worktual Campaign contact_id."
+    type_params:
+      measure: sessions_identified_count
+
+  - name: identified_session_rate
+    type: ratio
+    label: "Identified Session Rate"
+    description: "Percentage of sessions linked to a known user_id or Worktual Campaign contact_id."
+    type_params:
+      numerator: identified_session_count
+      denominator: web_session_volume
+
+  # ----------------------------------------------------------------------------
+  # C. Traffic Acquisition & Marketing Attribution
+  # ----------------------------------------------------------------------------
+  - name: campaign_attributed_sessions
+    type: simple
+    label: "Campaign Attributed Sessions"
+    description: "Count of sessions arriving via marketing UTM parameters or Worktual Campaign tracking links."
+    type_params:
+      measure: sessions_attributed_to_campaign
+
+  - name: campaign_attributed_session_rate
+    type: ratio
+    label: "Campaign Attributed Session Rate"
+    description: "Percentage of total sessions driven by marketing campaigns."
+    type_params:
+      numerator: campaign_attributed_sessions
+      denominator: web_session_volume
+
+  - name: landing_page_conversion_rate
+    type: ratio
+    label: "Landing Page Conversion Rate"
+    description: "Percentage of sessions entering through a specific page that completed a conversion goal."
+    type_params:
+      numerator: total_conversions
+      denominator: web_session_volume
+
+  # ----------------------------------------------------------------------------
+  # D. User Experience & Frustration Signals
+  # ----------------------------------------------------------------------------
+  - name: total_clicks
+    type: simple
+    label: "Total Clicks"
+    description: "Total count of click interactions captured on site elements."
+    type_params:
+      measure: total_clicks
+
+  - name: clicks_per_session
+    type: ratio
+    label: "Clicks per Session"
+    description: "Average number of user clicks performed per session."
+    type_params:
+      numerator: total_clicks
+      denominator: web_session_volume
+
+  - name: rage_clicks
+    type: simple
+    label: "Rage Click Count"
+    description: "Total rapid, repeated click clusters on the same element within a short timeframe."
+    type_params:
+      measure: rage_clicks
+
+  - name: rage_click_session_count
+    type: simple
+    label: "Sessions with Rage Clicks"
+    description: "Count of browsing sessions that experienced at least one rage click incident."
+    type_params:
+      measure: sessions_with_rage_clicks
+
+  - name: rage_click_rate
+    type: ratio
+    label: "Rage Click Rate"
+    description: "Percentage of sessions experiencing rage click incidents."
+    type_params:
+      numerator: rage_click_session_count
+      denominator: web_session_volume
+
+  - name: dead_clicks
+    type: simple
+    label: "Dead Click Count"
+    description: "Total clicks registered on non-interactive elements producing no DOM action."
+    type_params:
+      measure: dead_clicks
+
+  - name: dead_click_session_count
+    type: simple
+    label: "Sessions with Dead Clicks"
+    description: "Count of browsing sessions that experienced at least one dead click."
+    type_params:
+      measure: sessions_with_dead_clicks
+
+  - name: dead_click_rate
+    type: ratio
+    label: "Dead Click Rate"
+    description: "Percentage of sessions with at least one dead click (not dead_clicks/total_clicks)."
+    type_params:
+      numerator: dead_click_session_count
+      denominator: web_session_volume
+
+  - name: avg_scroll_depth
+    type: simple
+    label: "Average Scroll Depth"
+    description: "Mean maximum vertical scroll depth percentage reached per page view."
+    type_params:
+      measure: avg_page_scroll_depth
+
+  - name: sessions_with_deep_scroll
+    type: simple
+    label: "Sessions with Deep Scroll"
+    description: "Count of sessions reaching at least 50% vertical scroll depth."
+    type_params:
+      measure: sessions_with_deep_scroll
+
+  - name: scroll_engagement_rate
+    type: ratio
+    label: "Scroll Engagement Rate"
+    description: "Percentage of sessions reaching at least 50% vertical scroll depth."
+    type_params:
+      numerator: sessions_with_deep_scroll
+      denominator: web_session_volume
+
+  - name: avg_time_on_page_seconds
+    type: simple
+    label: "Average Time on Page"
+    description: "Average duration in seconds visitors spend actively viewing a specific page."
+    type_params:
+      measure: avg_time_on_page
+
+  # ----------------------------------------------------------------------------
+  # E. Form Funnel & Lead Capture
+  # ----------------------------------------------------------------------------
+  - name: form_views
+    type: simple
+    label: "Form Views"
+    description: "Count of times a tracked form became visible in the visitor's viewport."
+    type_params:
+      measure: form_views
+
+  - name: form_starts
+    type: simple
+    label: "Form Starts"
+    description: "Count of initial user interactions with a form."
+    type_params:
+      measure: form_starts
+
+  - name: form_submits
+    type: simple
+    label: "Form Submits"
+    description: "Total attempts to submit a completed form."
+    type_params:
+      measure: form_submits
+
+  - name: form_successes
+    type: simple
+    label: "Form Successes"
+    description: "Count of form submissions that succeeded without validation or server error."
+    type_params:
+      measure: form_successes
+
+  - name: form_failures
+    type: simple
+    label: "Form Failures"
+    description: "Count of form submission attempts rejected due to validation errors or server failures."
+    type_params:
+      measure: form_failures
+
+  - name: form_abandons
+    type: simple
+    label: "Form Abandons"
+    description: "Count of forms that were viewed or started but left without submitting."
+    type_params:
+      measure: form_abandons
+
+  - name: form_submit_rate
+    type: ratio
+    label: "Form Submit Rate"
+    description: "Percentage of form views that result in a submission attempt."
+    type_params:
+      numerator: form_submits
+      denominator: form_views
+
+  - name: form_success_rate
+    type: ratio
+    label: "Form Success Rate"
+    description: "Percentage of form submissions that successfully succeed without errors."
+    type_params:
+      numerator: form_successes
+      denominator: form_submits
+
+  - name: form_abandon_rate
+    type: ratio
+    label: "Form Abandon Rate"
+    description: "Percentage of started forms that are abandoned before completing submission."
+    type_params:
+      numerator: form_abandons
+      denominator: form_starts
+
+  # ----------------------------------------------------------------------------
+  # F. Ecommerce & Conversions
+  # ----------------------------------------------------------------------------
+  - name: total_conversions
+    type: simple
+    label: "Total Conversions"
+    description: "Total count of successful business conversions completed on site."
+    type_params:
+      measure: conversion_count
+
+  - name: sessions_with_conversions
+    type: simple
+    label: "Sessions with Conversions"
+    description: "Count of browsing sessions that achieve at least one conversion goal."
+    type_params:
+      measure: sessions_with_conversions
+
+  - name: conversion_rate
+    type: ratio
+    label: "Conversion Rate"
+    description: "Percentage of browsing sessions that achieve at least one conversion goal."
+    type_params:
+      numerator: sessions_with_conversions
+      denominator: web_session_volume
+
+  - name: total_revenue
+    type: simple
+    label: "Total Revenue"
+    description: "Sum of monetary transaction value across completed conversion events."
+    type_params:
+      measure: total_revenue
+
+  - name: total_conversion_value
+    type: simple
+    label: "Total Conversion Value"
+    description: "Alias of total_revenue — sum(value) on fact_conversion_events."
+    type_params:
+      measure: total_revenue
+
+  - name: purchase_count
+    type: simple
+    label: "Purchase Count"
+    description: "Total count of completed purchase conversion events."
+    type_params:
+      measure: purchases
+
+  - name: average_order_value
+    type: ratio
+    label: "Average Order Value"
+    description: "Average monetary revenue generated per completed purchase order."
+    type_params:
+      numerator: total_revenue
+      denominator: purchase_count
+
+  - name: signup_count
+    type: simple
+    label: "Signup Count"
+    description: "Total count of completed user registration or signup conversions."
+    type_params:
+      measure: signups
+
+  - name: checkout_start_count
+    type: simple
+    label: "Checkout Start Count"
+    description: "Count of conversion events with conversion_type = 'begin_checkout'."
+    type_params:
+      measure: checkout_starts
+
+  - name: sessions_with_checkout_start
+    type: simple
+    label: "Sessions with Checkout Start"
+    description: "Count of sessions that initiate the checkout process."
+    type_params:
+      measure: sessions_with_checkout_start
+
+  - name: checkout_start_rate
+    type: ratio
+    label: "Checkout Start Rate"
+    description: "Percentage of sessions that initiate the checkout process."
+    type_params:
+      numerator: sessions_with_checkout_start
+      denominator: web_session_volume
+
+  - name: checkout_conversion_rate
+    type: ratio
+    label: "Checkout Conversion Rate"
+    description: "Percentage of initiated checkouts that successfully result in a completed purchase."
+    type_params:
+      numerator: purchase_count
+      denominator: checkout_start_count
+
+  - name: cart_add_count
+    type: simple
+    label: "Cart Add Count"
+    description: "Count of times products were added to a shopping cart."
+    type_params:
+      measure: cart_adds
+
+  - name: sessions_with_cart_add
+    type: simple
+    label: "Sessions with Cart Add"
+    description: "Count of sessions containing at least one add-to-cart interaction."
+    type_params:
+      measure: sessions_with_cart_add
+
+  - name: cart_add_rate
+    type: ratio
+    label: "Cart Add Rate"
+    description: "Percentage of sessions containing at least one add-to-cart interaction."
+    type_params:
+      numerator: sessions_with_cart_add
+      denominator: web_session_volume
+
+  - name: product_interaction_count
+    type: simple
+    label: "Product Interaction Count"
+    description: "Total count of product impressions, views, and clicks recorded."
+    type_params:
+      measure: product_interaction_count
+
+  - name: sessions_with_product_views
+    type: simple
+    label: "Sessions with Product Views"
+    description: "Count of browsing sessions that view at least one product."
+    type_params:
+      measure: sessions_with_product_views
+
+  - name: product_view_rate
+    type: ratio
+    label: "Product View Rate"
+    description: "Percentage of browsing sessions that view at least one product."
+    type_params:
+      numerator: sessions_with_product_views
+      denominator: web_session_volume
+
+  # ----------------------------------------------------------------------------
+  # G. Core Web Vitals & Site Performance
+  # ----------------------------------------------------------------------------
+  - name: avg_lcp_ms
+    type: simple
+    label: "Average Largest Contentful Paint (LCP)"
+    description: "Average Largest Contentful Paint metric in milliseconds."
+    type_params:
+      measure: avg_lcp_value
+
+  - name: avg_fcp_ms
+    type: simple
+    label: "Average First Contentful Paint (FCP)"
+    description: "Average First Contentful Paint metric in milliseconds."
+    type_params:
+      measure: avg_fcp_value
+
+  - name: avg_cls
+    type: simple
+    label: "Average Cumulative Layout Shift (CLS)"
+    description: "Average Cumulative Layout Shift score measuring visual stability."
+    type_params:
+      measure: avg_cls_value
+
+  - name: avg_inp_ms
+    type: simple
+    label: "Average Interaction to Next Paint (INP)"
+    description: "Average Interaction to Next Paint responsiveness latency in milliseconds."
+    type_params:
+      measure: avg_inp_value
+
+  - name: avg_ttfb_ms
+    type: simple
+    label: "Average Time to First Byte (TTFB)"
+    description: "Average Time to First Byte in milliseconds."
+    type_params:
+      measure: avg_ttfb_value
+
+  - name: poor_vitals_event_count
+    type: simple
+    label: "Poor Web Vitals Event Count"
+    description: "Count of Web Vitals metric events flagged with rating = 'poor'."
+    type_params:
+      measure: poor_vitals_count
+
+  - name: performance_event_count
+    type: simple
+    label: "Performance Event Count"
+    description: "Total count of Core Web Vitals and performance measurement events."
+    type_params:
+      measure: performance_event_count
+
+  - name: poor_vitals_rate
+    type: ratio
+    label: "Poor Web Vitals Rate"
+    description: "Percentage of captured Core Web Vitals measurements rated as poor."
+    type_params:
+      numerator: poor_vitals_event_count
+      denominator: performance_event_count
+
+  # ----------------------------------------------------------------------------
+  # H. Application Stability & Frontend Errors
+  # ----------------------------------------------------------------------------
+  - name: error_count
+    type: simple
+    label: "Total Frontend Errors"
+    description: "Total count of uncaught JavaScript and network resource errors."
+    type_params:
+      measure: error_event_count
+
+  - name: error_session_count
+    type: simple
+    label: "Sessions with Errors"
+    description: "Count of browsing sessions that encountered one or more frontend JavaScript errors."
+    type_params:
+      measure: sessions_with_errors
+
+  - name: error_session_rate
+    type: ratio
+    label: "Error Session Rate"
+    description: "Percentage of browsing sessions impacted by client-side errors."
+    type_params:
+      numerator: error_session_count
+      denominator: web_session_volume
+
+  # ----------------------------------------------------------------------------
+  # I. Consent & Custom Events
+  # ----------------------------------------------------------------------------
+  - name: tracking_consent_granted_count
+    type: simple
+    label: "Tracking Consent Granted Count"
+    description: "Count of cookie consent audit records where action = 'consent_granted'."
+    type_params:
+      measure: consent_granted_count
+
+  - name: tracking_consent_denied_count
+    type: simple
+    label: "Tracking Consent Denied Count"
+    description: "Count of cookie consent audit records where action = 'consent_denied'."
+    type_params:
+      measure: consent_denied_count
+
+  - name: consent_action_count
+    type: simple
+    label: "Consent Action Count"
+    description: "Total count of cookie consent audit records."
+    type_params:
+      measure: consent_action_count
+
+  - name: tracking_consent_grant_rate
+    type: ratio
+    label: "Tracking Consent Grant Rate"
+    description: "Percentage of captured consent interactions where tracking consent was granted."
+    type_params:
+      numerator: tracking_consent_granted_count
+      denominator: consent_action_count
+
+  - name: search_session_count
+    type: simple
+    label: "Sessions with Search"
+    description: "Count of browsing sessions that triggered a site_search custom event."
+    type_params:
+      measure: sessions_with_search
+
+  - name: search_usage_rate
+    type: ratio
+    label: "Search Usage Rate"
+    description: "Percentage of browsing sessions that performed an internal site search."
+    type_params:
+      numerator: search_session_count
+      denominator: web_session_volume
+
+  - name: total_custom_events
+    type: simple
+    label: "Total Custom Events"
+    description: "Total count of all custom business events dispatched via WebtualAnalytics.track(), across every event_name."
+    type_params:
+      measure: custom_event_count
+
+  - name: distinct_custom_event_types
+    type: simple
+    label: "Distinct Custom Event Types"
+    description: "Count of distinct event_name values seen in the period. Use with an event_name group-by/filter to analyze any individual custom event (funnels, feature usage, etc.) beyond the built-in event types."
+    type_params:
+      measure: distinct_custom_event_names
+
+  - name: custom_event_session_count
+    type: simple
+    label: "Sessions with Any Custom Event"
+    description: "Count of distinct sessions that triggered at least one custom event. Filter/group by event_name for a specific event's session reach."
+    type_params:
+      measure: sessions_with_custom_events
+
+  - name: custom_event_session_rate
+    type: ratio
+    label: "Custom Event Session Rate"
+    description: "Percentage of browsing sessions that triggered at least one custom event. Filter/group by event_name for a specific event's adoption rate."
+    type_params:
+      numerator: custom_event_session_count
+      denominator: web_session_volume
+

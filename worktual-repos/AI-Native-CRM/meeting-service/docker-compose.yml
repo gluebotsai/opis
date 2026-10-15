@@ -1,0 +1,258 @@
+# meeting-service + Redis + Postgres + Whisper adapter + Vexa Lite on crm-meetings.
+# Host ports: meeting-service 8030/8031, whisper-adapter 8032, Vexa gateway 18056.
+# Meeting Postgres/Redis stay internal. Vexa has its own Postgres and MinIO
+# (do not point Vexa at the meeting database).
+# meeting-service talks to Vexa at http://vexa-lite:8056. Live PCM is injected
+# after start by scripts/patch-vexa-live-pcm.sh (stock vexaai/vexa-lite has no
+# Worktual forwarder). Stop any standalone container named vexa-lite first.
+
+name: meeting-service
+
+networks:
+  crm-meetings:
+    name: crm-meetings
+
+services:
+  postgres:
+    image: postgres:16.6-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: meeting
+      POSTGRES_PASSWORD: meeting
+      POSTGRES_DB: meeting_service
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks: [crm-meetings]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U meeting -d meeting_service"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  redis:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redisdata:/data
+    networks: [crm-meetings]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  whisper-adapter:
+    build: ./deploy/whisper-adapter
+    restart: unless-stopped
+    environment:
+      WHISPER_UPSTREAM_URL: http://173.234.75.165:7789/v1/audio/translations
+      WHISPER_UPSTREAM_TOKEN: EMPTY
+      WHISPER_UPSTREAM_MODEL: worktual-large-v3
+    ports:
+      - "8032:8000"
+    networks: [crm-meetings]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz')"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  meeting-service:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - ./app/static:/app/app/static:ro
+    environment:
+      DATABASE_URL: postgresql+psycopg://meeting:meeting@postgres:5432/meeting_service
+      REDIS_URL: redis://redis:6379/0
+      WHISPER_BASE_URL: http://whisper-adapter:8000
+      WHISPER_API_TOKEN: EMPTY
+      WHISPER_MODEL: worktual-large-v3
+      ENABLE_TEST_UI: "true"
+      CRM_BOT_BASE_URL: http://host.docker.internal:4000
+      CRM_USERS_BASE_URL: http://host.docker.internal:4000
+      VEXA_API_BASE: http://vexa-lite:8056
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "8030:8030"
+      - "8031:8030"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      whisper-adapter:
+        condition: service_started
+      vexa-lite:
+        condition: service_started
+    networks: [crm-meetings]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8030/healthz"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+
+  meeting-worker:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://meeting:meeting@postgres:5432/meeting_service
+      REDIS_URL: redis://redis:6379/0
+      WHISPER_BASE_URL: http://whisper-adapter:8000
+      ENABLE_TEST_UI: "false"
+      VEXA_API_BASE: http://vexa-lite:8056
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command: ["python", "-m", "app.worker"]
+    healthcheck:
+      disable: true
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      meeting-service:
+        condition: service_healthy
+    networks: [crm-meetings]
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+
+  # Vexa Lite control plane. Bots are sibling containers spawned via docker.sock.
+  vexa-postgres:
+    image: postgres:17-alpine
+    container_name: vexa-lite-postgres
+    restart: unless-stopped
+    command: ["postgres", "-c", "idle_in_transaction_session_timeout=60000"]
+    environment:
+      POSTGRES_DB: vexa
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      TZ: UTC
+      PGTZ: UTC
+    volumes:
+      - vexa-pgdata:/var/lib/postgresql/data
+    networks: [crm-meetings]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d vexa"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  vexa-minio:
+    image: quay.io/minio/minio:latest
+    container_name: vexa-lite-minio
+    restart: unless-stopped
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: vexa-access-key
+      MINIO_ROOT_PASSWORD: vexa-secret-key
+    volumes:
+      - vexa-miniodata:/data
+    networks: [crm-meetings]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  vexa-minio-init:
+    image: quay.io/minio/mc:latest
+    depends_on:
+      vexa-minio:
+        condition: service_healthy
+    networks: [crm-meetings]
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        mc alias set vexa http://vexa-minio:9000 vexa-access-key vexa-secret-key
+        mc mb --ignore-existing vexa/vexa
+    restart: "no"
+
+  vexa-lite:
+    image: vexaai/vexa-lite:${VEXA_IMAGE_TAG:-v012}
+    container_name: vexa-lite
+    restart: unless-stopped
+    shm_size: "2gb"
+    ports:
+      - "18056:8056"
+    environment:
+      DB_HOST: vexa-postgres
+      DB_PORT: "5432"
+      DB_NAME: vexa
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      ADMIN_API_TOKEN: ${VEXA_ADMIN_TOKEN:-dev-admin-token-local}
+      ADMIN_TOKEN: ${VEXA_ADMIN_TOKEN:-dev-admin-token-local}
+      INTERNAL_API_SECRET: ${VEXA_INTERNAL_API_SECRET:-local-vexa-internal-secret}
+      TRANSCRIPTION_SERVICE_URL: http://whisper-adapter:8000
+      TRANSCRIPTION_SERVICE_TOKEN: EMPTY
+      TRANSCRIPTION_MODEL: worktual-large-v3
+      MINIO_ENDPOINT: vexa-minio:9000
+      MINIO_ACCESS_KEY: vexa-access-key
+      MINIO_SECRET_KEY: vexa-secret-key
+      MINIO_BUCKET: vexa
+      MINIO_SECURE: "false"
+      VEXA_PUBLIC_API_URL: http://localhost:18056
+      VEXA_LIVE_PCM_WS_BASE: ws://meeting-service:8030
+      VEXA_LIVE_PCM_BOT_KEY: ${CRM_BOT_API_KEY:-local-meeting-bot-key}
+      DEFAULT_BOT_NAME: Worktual Notetaker
+      BROWSER_IMAGE: vexaai/vexa-bot:${VEXA_IMAGE_TAG:-v012}
+      IMAGE_TAG: ${VEXA_IMAGE_TAG:-v012}
+      VEXA_ENV: development
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      vexa-postgres:
+        condition: service_healthy
+      vexa-minio-init:
+        condition: service_completed_successfully
+      whisper-adapter:
+        condition: service_started
+    networks: [crm-meetings]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8056/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 90s
+
+volumes:
+  pgdata:
+  redisdata:
+  vexa-pgdata:
+  vexa-miniodata:

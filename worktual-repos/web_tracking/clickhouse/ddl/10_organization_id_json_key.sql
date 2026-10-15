@@ -1,0 +1,19 @@
+-- Payload JSON key: organization_id (snake_case, matches ClickHouse column name)
+-- Legacy ingest JSON organizationId (camelCase) still parsed via coalesce in MVs.
+--
+-- Live migration (MV recreate + historical backfill):
+--   bash scripts/migrate_clickhouse_organization_id.sh
+--
+-- Manual steps:
+--   1) clickhouse/ddl/04b_organization_id_columns.sql
+--   2) clickhouse/ddl/12_recreate_mv_organization_id.sql
+--   3) clickhouse/ddl/05_materialized_views_pipeline.sql
+--   4) clickhouse/ddl/06_recreate_mv_profile_fix.sql
+--   5) clickhouse/ddl/07_replay_chunks.sql
+--   6) clickhouse/ddl/12b_backfill_organization_id.sql
+--
+-- MV extraction pattern:
+--   nullIf(coalesce(
+--     JSONExtractUInt(payload, 'organization_id'),
+--     JSONExtractUInt(payload, 'organizationId')
+--   ), 0)

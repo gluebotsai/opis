@@ -1,0 +1,324 @@
+# =============================================================================
+# domains/real-estate.yaml
+#   effective(org) = core.yaml + domains/real-estate.yaml [+ org<id>.yaml]
+#   Conformance rules R1-R6 as documented in domains/healthcare.yaml §header.
+#
+# RE-VERIFIED against the updated core (catalog-hub revision):
+#   * ccass.conversations now declares queue_id / assigned_agent_id /
+#     assigned_user_id — the old C3 patch is CLOSED.
+#   * Tenant-scoped nodes now hang off SetupCatalog / ContactCenterCatalog /
+#     DataPlatformCatalog / CampaignCatalog / TicketCatalog /
+#     WebTrackingCatalog. No pack node may attach directly to Tenant (C5).
+#   * access: now uses core's own L1/L2/L3 sensitivity scale and carries
+#     domain + module, matching the shape of core `access:` blocks.
+#   * Customer / Offering / StaffRole / TicketAgent are domain `common` in core.
+#   * accounts.organization_locations is STILL commented out, and consent_json
+#     is STILL absent from cdp.customer_profile — those blockers remain valid.
+#
+# ONTOLOGIST'S NOTE
+#   The strongest fit in this vertical is that inventory.products IS the
+#   listing. price, sku, category, subcategory, brand, specifications,
+#   image_url, product_url, status, stock_on_hand and billing_type are all
+#   core columns that map cleanly onto a unit for sale or rent — and
+#   billing_type one_time vs recurring is exactly the sale/lease split.
+#   crm.contract_billing_schedules (next_billing_date) is a genuine rent
+#   schedule. What core cannot give us is the physical asset behind the
+#   listing: building, floor plan, title, ownership. Those stay unmodelled.
+# =============================================================================
+
+industry: real_estate
+pack_version: "2026.09.02"
+requires_core: ">=3"
+layer: domain
+
+applies_when:
+  accounts.organizations.industry_type:
+    [real estate, realty, property, proptech, brokerage, housing, developer,
+     construction and real estate, facility management, co-working, coworking,
+     property management, land, estate agency, lettings]
+
+variant_key: accounts.organizations.business_type
+variants:
+  b2c:
+    # residential brokerage / developer selling or letting to individuals
+    anchor_entities: [Customer, Offering, Opportunity, Meeting, Contract, SupportCase]
+    naming_overrides:
+      Customer: {primary: Buyer / Tenant, aliases: [buyer, tenant, applicant, prospect]}
+    de_emphasise: [Account, Quote, LoyaltyTier]
+  b2b:
+    # commercial leasing, institutional investors, corporate real estate
+    anchor_entities: [Account, Customer, Opportunity, Quote, Contract, Invoice]
+    naming_overrides:
+      Account: {primary: Corporate Client, aliases: [occupier, investor, landlord, developer]}
+      Customer: {primary: Client Customer, aliases: [decision maker, facilities head]}
+      Opportunity:    {primary: Transaction, aliases: [mandate, requirement, deal]}
+    de_emphasise: [LoyaltyTier]
+  b2b2c:
+    # brokerage network / franchise agencies / channel partners
+    anchor_entities: [Account, Customer, Offering, Opportunity, Contract]
+    naming_overrides:
+      Account: {primary: Channel Partner, aliases: [franchise, agency, broker firm]}
+    de_emphasise: []
+
+# =============================================================================
+# 1. NAMING
+# =============================================================================
+naming:
+  Customer:       {primary: Client,   aliases: [buyer, tenant, seller, landlord, applicant, lead]}
+  Lead:          {primary: Enquiry,  aliases: [enquiry, walk-in, site enquiry]}
+  Customer:      {primary: Client,   aliases: [buyer, tenant, owner]}
+  Offering:       {primary: Listing,  aliases: [property, unit, flat, apartment, plot, listing, space]}
+  OfferingPlan:  {primary: Payment Plan, aliases: [scheme, plan, package]}
+  Account:       {primary: Account,  aliases: [developer, agency, corporate client, landlord]}
+  CompanySite:   {primary: Office / Site, aliases: [branch, sales gallery, site office]}
+  Opportunity:          {primary: Transaction, aliases: [deal, booking, requirement, mandate]}
+  Quote:         {primary: Offer,    aliases: [quotation, cost sheet, proposal]}
+  Contract:      {primary: Agreement, aliases: [tenancy, lease, sale agreement, allotment]}
+  BillingSchedule: {primary: Payment Schedule, aliases: [rent schedule, milestone plan, emi schedule]}
+  Invoice:       {primary: Invoice,  aliases: [rent demand, demand note, bill]}
+  Meeting:   {primary: Site Visit, aliases: [viewing, inspection, walkthrough, meeting]}
+  SupportCase:        {primary: Service Request, aliases: [maintenance request, complaint, case]}
+  Conversation:  {primary: Enquiry Conversation, aliases: [chat, call]}
+  Campaign:      {primary: Campaign, aliases: [launch campaign, inventory push]}
+  KnowledgeArticle: {primary: Guide, aliases: [buyer guide, faq, area guide]}
+  Employee:          {primary: StaffRole,    aliases: [broker, consultant, relationship manager, employee]}
+  StaffRole:         {primary: Support Advisor, aliases: [call centre agent, advisor]}
+  TicketAgent:   {primary: Facility Coordinator, aliases: [helpdesk agent, coordinator]}
+  Team:          {primary: Sales Team, aliases: [team, desk, region]}
+  AudienceSegment:       {primary: Client AudienceSegment, aliases: [buyer segment, audience]}
+
+role_naming:
+  match_on: [AccessRole.name, AccessRole.product_id]                          # [core: accounts.setup_roles]
+  aliases:
+    sales_rep:     [Property Consultant, broker, sales agent]
+    sales_manager: [Sales Manager, closing manager]
+    marketing:     [Marketing Manager, campaign lead]
+    finance:       [Collections / Finance]
+    agent:         [Support Advisor, front desk]
+    resolver:      [Facility Manager]
+    admin:         [Administrator]
+
+# =============================================================================
+# 2. EXTRA LABELS
+# =============================================================================
+extends:
+
+  inventory.products:
+    extra_labels:
+      - {label: Listing}
+      - {label: SaleListing,      when: {billing_type: [one_time]}}       # [core: billing_type]
+      - {label: RentalListing,    when: {billing_type: [recurring]}}      # rent cycle = billing_frequency
+      - {label: AvailableListing, when: {status: [active]}}               # [core: status]
+      - {label: ArchivedListing,  when: {status: [archived]}}
+      - {label: ProjectInventory, when: {stock_on_hand: not_null}}        # [core: stock_on_hand] units left
+      - {label: ConfigurableUnit, when: {product_type: [customizable]}}   # [core: product_type]
+    promote_property_to_node:
+      category:    {label: PropertyType,    key: slug, name_from: category,    edge: OF_PROPERTY_TYPE}
+      subcategory: {label: PropertySubtype, key: slug, name_from: subcategory, edge: OF_PROPERTY_SUBTYPE}
+      brand:       {label: Development,     key: slug, name_from: brand,       edge: IN_DEVELOPMENT}
+    derive_hierarchy:
+      - {from: PropertySubtype, to: PropertyType, edge: PARENT_PROPERTY_TYPE}
+    note: >-
+      brand is used by this vertical as the project / development name, which is
+      how a listing rolls up to a launch. specifications carries beds/baths/area
+      as free text — it is a property, not a node, and is not parsed here.
+
+  crm.deals:
+    extra_labels:
+      - {label: PropertyTransaction}
+      - {label: WonTransaction,  when: {stage: [closed_won]}}             # [core: stage]
+      - {label: LostTransaction, when: {stage: [closed_lost]}}
+      - {label: ActivePipeline,  when: {stage: [qualification, discover, propose, negotiate]}}
+
+  crm.contracts:
+    extra_labels:
+      - {label: Agreement}
+      - {label: ActiveTenancy,    when: {status: [active], billing_frequency: [monthly, quarterly]}}
+      - {label: ActiveSaleAgreement, when: {status: [active], billing_frequency: [annual]}}
+      - {label: TerminatedAgreement, when: {status: [cancelled, canceled, expired]}}
+      - {label: AutoRenewing,     when: {auto_renew: [true]}}             # [core: auto_renew]
+    note: >-
+      ends_at drives renewal / expiry questions ("which tenancies expire in 90
+      days"). renew_deal_id already links the renewal transaction in core.
+
+  crm.contract_billing_schedules:
+    extra_labels:
+      - {label: PaymentSchedule}
+      - {label: ActiveSchedule, when: {status: [active]}}                 # [core: status]
+    note: next_billing_date is the rent / milestone due date. Genuine core fit.
+
+  crm.appointments:
+    extra_labels:
+      - {label: SiteVisit}
+      - {label: CompletedVisit, when: {status: [completed]}}              # [core: status]
+      - {label: MissedVisit,    when: {status: [no_show]}}
+      - {label: ScheduledVisit, when: {status: [scheduled]}}
+      - {label: VirtualTour,    when: {provider: [google_meet, zoom, teams]}}  # [core: provider]
+
+  crm.invoices:
+    extra_labels:
+      - {label: DemandNote}
+      - {label: OverdueDemand, when: {status: [overdue]}}                 # [core: status]
+      - {label: SettledDemand, when: {status: [paid]}}
+
+  ticketing.tickets:
+    extra_labels:
+      - {label: ServiceRequest}
+      - {label: MaintenanceRequest, when: {category: [maintenance, repairs, housekeeping, amenities]}}
+      - {label: TenancyQuery,       when: {category: [tenancy, lease, renewal, notice]}}
+      - {label: PaymentQuery,       when: {category: [payment, rent, dues, billing]}}
+      - {label: DocumentationQuery, when: {category: [documentation, registration, handover, noc]}}
+
+  ccass.conversations:
+    extra_labels: [{label: EnquiryConversation}]
+
+  cdp.customer_profile:
+    extra_labels: [{label: PropertyClient}]
+    custom_fields:                        # allowed: core sets custom_dynamic: true
+      whitelist: [client_ref, preferred_locality, property_type_interest,
+                  possession_timeline, purpose, configuration_interest,
+                  source_channel_partner, site_visit_done]
+      identity: [client_ref]
+      promote_to_node:
+        preferred_locality:     {label: Locality,     key: slug, edge: INTERESTED_IN_LOCALITY}
+        property_type_interest: {label: PropertyType, key: slug, edge: INTERESTED_IN_TYPE}
+      blocklist:
+        # Buyer financial profiling and any protected attribute used for
+        # tenant screening must never enter the graph.
+        [income, salary, annual_income, credit_score, cibil, bank_balance,
+         loan_eligibility, net_worth, pan, aadhaar, passport_number,
+         religion, caste, nationality, marital_status, family_composition]
+      blocklist_action: drop_silently_and_log
+    note: >-
+      property_type_interest promotes onto the SAME PropertyType node the
+      catalog uses, so "which buyers want the type this listing is" is one hop.
+
+  crm.contact_profiles:
+    extra_labels:
+      - {label: ClientOverlay}
+      - {label: MarketingSuppressed, when: {marketing_opt_out: [true]}}   # [core: marketing_opt_out]
+
+# =============================================================================
+# 3. VOCABULARIES
+# =============================================================================
+vocabularies:
+  ticket.category:                                                # [core: ticketing.tickets.category]
+    canonical: [maintenance, repairs, housekeeping, amenities, tenancy, lease,
+                renewal, notice, payment, rent, dues, documentation,
+                registration, handover, noc, parking, complaint, general]
+  conversation.intent:                                            # [core: supported_intents]
+    canonical: [availability_check, price_enquiry, book_site_visit, floor_plan_request,
+                payment_plan, loan_assistance, possession_status, rent_negotiation,
+                maintenance_issue, agreement_renewal, document_request]
+  campaign.goal:                                                  # [core: campaign.campaigns.goal]
+    canonical: [new_launch, inventory_clearance, site_visit_drive, festive_offer,
+                renewal_reminder, referral_drive, price_revision_alert,
+                channel_partner_activation, possession_announcement]
+  journey_state.current_stage:                                    # [core: journey_states.current_stage]
+    canonical: [enquiry, qualified, site_visit_scheduled, site_visited,
+                negotiation, booked, agreement_signed, possession, tenanted,
+                renewal_due, lost]
+  contact.lead_source:                                            # [core: crm.contact_profiles.lead_source]
+    canonical: [portal_listing, website, walk_in, channel_partner, referral,
+                paid_ads, social, hoarding_event, call_centre, repeat_client]
+  deal.stage:                                                     # [core: crm.deals.stage]
+    labels: {qualification: "Enquiry qualified", discover: "Site visit / shortlisting",
+             propose: "Cost sheet / offer issued", negotiate: "Price negotiation",
+             closed_won: "Booked / agreement signed", closed_lost: "Dropped"}
+  contract.billing_frequency:                                     # [core: crm.contracts.billing_frequency]
+    labels: {monthly: "Monthly rent", quarterly: "Quarterly rent", annual: "Annual / sale milestone"}
+
+# =============================================================================
+# 4. DERIVED LABELS — batch lane
+# =============================================================================
+derived_labels:
+  lane: batch
+  Customer:
+    source: cdp.gold_customer_metrics                             # [core: DailyEngagementMetric]
+    rules:
+      - {label: FirstTimeBuyer, when: "total_orders == 1"}
+      - {label: RepeatInvestor, when: "total_orders >= 2"}
+      - {label: DormantEnquiry, when: "last_event_at < now() - 120d and total_orders == 0"}
+      - {label: HighValueClient,when: "total_spend >= p90(total_spend)"}
+      - {label: AtRiskClient,   when: "churn_score >= 0.7"}
+    exclusive_groups: [[FirstTimeBuyer, RepeatInvestor]]
+
+# =============================================================================
+# 5. METRICS
+# =============================================================================
+metrics:
+  extend_synonyms:
+    order_volume: [bookings, transactions closed, units sold]
+    average_order_value: [average ticket size, average deal value]
+    win_rate: [conversion rate, enquiry to booking rate]
+  add:
+    - metric_id: site_visit_conversion_rate
+      canonical_name: Site Visit Conversion Rate
+      synonyms: [visit to booking, how many visits convert, walkthrough conversion]
+      unit: ratio
+      route: graph
+      computed_from: [Meeting, Opportunity]
+      direction: higher_is_better
+      caveat: proxy
+    - metric_id: listing_availability_rate
+      canonical_name: Available Inventory Share
+      synonyms: [how much inventory is left, unsold units, available listings]
+      unit: ratio
+      route: graph
+      computed_from: [Offering]
+      direction: neutral
+    - metric_id: tenancy_renewal_due_count
+      canonical_name: Tenancies Due for Renewal
+      synonyms: [leases expiring, renewals coming up, expiring agreements]
+      unit: count
+      route: graph
+      computed_from: [Contract]
+      direction: neutral
+    - metric_id: maintenance_request_share
+      canonical_name: Maintenance Request Share
+      synonyms: [how many tickets are maintenance, repair volume share]
+      unit: ratio
+      route: graph
+      computed_from: [SupportCase]
+      direction: lower_is_better
+
+# =============================================================================
+# 6. ACCESS — tighten only
+# =============================================================================
+access:
+  PropertyType:    {domain: common, module: core, sensitivity: L1}
+  PropertySubtype: {domain: common, module: core, sensitivity: L1}
+  Development:     {domain: common, module: core, sensitivity: L1}
+  Locality:        {domain: common, module: core, sensitivity: L1}
+  tighten:
+    EngagementActivity: {sensitivity: L3, deny_properties: [transcript_text]}
+  never_grant: [Listing, PropertyClient, ServiceRequest]
+
+compliance:
+  regimes: [GDPR, DPDP, RERA, fair_housing]
+  notes:
+    - "Fair-housing / anti-discrimination: the blocklist exists to stop protected attributes reaching a tenant-screening or targeting decision."
+    - RERA-style disclosure obligations attach to the listing, which lives in
+      inventory.products; no registration-number field exists (see not_modelled).
+
+# =============================================================================
+# 7. NOT MODELLED
+# =============================================================================
+not_modelled:
+  blocked_on_core:
+    - {concept: Office / Site, blocker: "accounts.organization_locations mapping commented out in core; branch/sales-gallery node unavailable."}
+    - {concept: Consent, blocker: "cdp.customer_profile.consent_json not in core properties."}
+    - {concept: "SupportCase -> Agreement / Listing", blocker: "ticketing.tickets carries no reference to a contract or unit; a maintenance request cannot be traced to the tenancy it concerns."}
+  no_source:
+    - {concept: Property / Building (physical asset), severity: critical, note: "the listing is modelled; the asset behind it — building, tower, floor, plot — is not. Two listings of the same flat across time cannot be linked."}
+    - {concept: Ownership / Title, severity: high, note: "who owns the unit, landlord vs seller, has no table."}
+    - {concept: Unit configuration / Floor plan, severity: high, note: "beds, baths, carpet area live as free text in specifications; not parsed, not queryable."}
+    - {concept: Maintenance work order, severity: medium, note: "the ticket exists; the work order, vendor, parts and cost do not."}
+    - {concept: Broker commission / Payout, severity: medium}
+    - {concept: Rent roll / Arrears ledger, severity: medium, note: "BillingSchedule gives the plan; realised collection against it does not exist."}
+    - {concept: Site visit outcome, severity: medium, note: "appointment status gives attended / no-show; feedback, shortlist and objection do not exist."}
+    - {concept: Channel partner hierarchy, severity: low, note: "crm.companies.channel_role + parent_company_id partially cover this in b2b2c."}
+
+# =============================================================================
+# 8. ASSUMES — same C1-C4 / E1-E7 / R1-R6 as domains/healthcare.yaml §8
+# =============================================================================

@@ -1,0 +1,22 @@
+# Ecommerce overlay — labels + extra terms only. Do not fork Contact.
+pack: ecommerce
+extends_ontology: cc
+businessTypes: [b2c, b2b2c]
+
+labels:
+  Contact: Buyer
+  Contact: Shopper
+  Ticket: Case
+  Appointment: Appointment
+
+taxonomy_adds:
+  intent:
+    - order_status
+    - return
+    - refund
+  ticket.category:
+    - shipping
+    - returns
+    - catalog
+
+modules: []

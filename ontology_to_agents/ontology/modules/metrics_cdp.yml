@@ -1,0 +1,27 @@
+# Customer-spine metric ids — compute lives in product MetricFlow packages.
+# Control plane intersects with tenant SKUs (cdp + engine product per metric).
+module: metrics_cdp
+layer: domain
+depends_on:
+- core
+- cdp
+usecase: Certified cross-product customer metrics for CDP profile agents.
+metric_ids:
+# Campaign engagement (requires campaign SKU)
+- delivery_rate
+- open_rate
+- click_rate
+- engaged_contact_count
+- unsubscribe_rate
+# Web tracking (requires web-tracking SKU)
+- web_session_volume
+- unique_visitors
+- bounce_rate
+- visitor_identification_rate
+- campaign_attributed_session_rate
+# CRM contact funnel (requires crm SKU)
+- contact_volume
+- new_lead_volume
+- mql_rate
+- mql_contact_count
+- customer_conversion_rate

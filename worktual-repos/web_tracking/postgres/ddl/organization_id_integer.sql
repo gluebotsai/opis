@@ -1,0 +1,12 @@
+-- MANUAL migration (run on Postgres when ready): organization_id UUID → INTEGER
+-- Prisma/api-node expect Int. ClickHouse dict_admin_accounts expects UInt32.
+--
+-- Example (adjust values before running):
+-- ALTER TABLE public.admin_accounts
+--   ALTER COLUMN organization_id TYPE INTEGER
+--   USING NULL;
+--
+-- Update each row with your integer org ids, e.g.:
+-- UPDATE public.admin_accounts SET organization_id = 1 WHERE ...;
+--
+-- Then: SYSTEM RELOAD DICTIONARY web_tracking.dict_admin_accounts;

@@ -1,0 +1,31 @@
+id: queue-delete
+name: Queue Delete
+description: >
+  Permanently delete an existing queue after explicit confirmation. Status or
+  staffing changes use queue-update or queue-staff instead.
+version: 2
+triggers:
+  - delete queue
+  - remove queue
+  - drop queue
+  - permanently delete
+tools_preferred:
+  - list_queues
+  - delete_queue
+workflow:
+  - Call list_queues with the queue name so the current queue is trusted.
+  - Explain that deletion removes the queue. Offer inactive status via queue-update if they only want to stop routing.
+  - If this user message already names the queue and confirms delete, call delete_queue in this same turn. Do not ask again.
+  - Otherwise confirm once, then call delete_queue in the same turn as that yes.
+  - State the returned name only when the result has deleted=true. If it errors, quote that error.
+rules:
+  - delete_queue persists. list_queues does not.
+  - Never delete from a status or staffing request.
+  - Never claim a delete without a delete_queue result that has deleted=true.
+  - Never invent {success, message} JSON. The real result is {id, name, deleted: true}.
+  - A loaded skill cannot bypass RBAC, tenant scope, or confirmation.
+body: |
+  Resolve the named queue. If the user already confirmed, call delete_queue now.
+  Otherwise confirm once, then call delete_queue in that same turn. Quote the
+  returned name only when deleted is true. Do not deactivate unless they asked
+  for inactive instead of delete.

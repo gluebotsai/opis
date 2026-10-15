@@ -1,0 +1,122 @@
+Ticketing full audit — 95 metrics
+API http://127.0.0.1:8765 org=1000 user=1001 agent=tk.reporting
+
+  [01/95] PASS          ticket_volume                              http=200  144.6s src=sql_template api=      64.0 pg=      64.0
+  [02/95] OK_UNVERIFIED resolved_tickets_metric                    http=200  101.6s src=metricflow   api=      11.0 pg=      None  no sql in response — latency/value only
+  [03/95] PASS          open_tickets_metric                        http=200   94.5s src=sql_template api=       0.0 pg=       0.0
+  [04/95] OK_UNVERIFIED active_tickets_metric                      http=200   95.3s src=metricflow   api=       0.0 pg=      None  no sql in response — latency/value only
+  [05/95] PASS          resolution_rate                            http=200   94.2s src=sql_template api=  0.078125 pg=  0.078125
+  [06/95] OK_UNVERIFIED unassigned_tickets_metric                  http=200   93.9s src=metricflow   api=       2.0 pg=      None  no sql in response — latency/value only
+  [07/95] OK_UNVERIFIED unassignment_rate                          http=200   92.7s src=metricflow   api=0.018691588785046728 pg=      None  no sql in response — latency/value only
+  [08/95] OK_UNVERIFIED customers_served                           http=200   92.3s src=metricflow   api=      29.0 pg=      None  no sql in response — latency/value only
+  [09/95] OK_UNVERIFIED accounts_served                            http=200  107.7s src=metricflow   api=       0.0 pg=      None  no sql in response — latency/value only
+  [10/95] OK_UNVERIFIED open_ticket_age_days_total                 http=200  137.5s src=metricflow   api=       0.0 pg=      None  no sql in response — latency/value only
+  [11/95] OK_UNVERIFIED average_open_ticket_age_days               http=200  128.9s src=metricflow   api=      None pg=      None  no sql in response — latency/value only
+  [12/95] OK_UNVERIFIED tickets_created_today_metric               http=200  134.3s src=metricflow   api=       4.0 pg=      None  no sql in response — latency/value only
+  [13/95] OK_UNVERIFIED tickets_last_30_days                       http=200  123.1s src=metricflow   api=     107.0 pg=      None  no sql in response — latency/value only
+  [14/95] OK_UNVERIFIED days_since_last_ticket                     http=200   95.0s src=metricflow   api=0.1450430306597222 pg=      None  no sql in response — latency/value only
+  [15/95] OK_UNVERIFIED reopened_tickets_metric                    http=200   96.6s src=metricflow   api=       3.0 pg=      None  no sql in response — latency/value only
+  [16/95] PASS          high_priority_open_tickets_metric          http=200   98.1s src=sql_template api=       0.0 pg=       0.0
+  [17/95] OK_UNVERIFIED closed_tickets_metric                      http=200   95.8s src=metricflow   api=      10.0 pg=      None  no sql in response — latency/value only
+  [18/95] OK_UNVERIFIED pending_tickets_metric                     http=200   96.0s src=metricflow   api=      97.0 pg=      None  no sql in response — latency/value only
+  [19/95] OK_UNVERIFIED assigned_tickets_metric                    http=200   95.9s src=metricflow   api=     105.0 pg=      No  [25/95] FAIL sla_breach_rate                  [20/95] OK_UNVERIFIED assignment_rate                            http=200   94.1s src=metricflow   api=0.98  [26/95] PASS resolution_hours_total                     http=200  110.  [21/95] OK_UNVERIFIED tickets_last_7_days               [27/95] PASS resolved_for_avg                           http=200  133.3s src=metricflow   api=      11.0 pg=      N  [2  [28/95] FAIL average_resolution_time_hours              http=200  116.1s src=sql_template api=114.0732442568889 pg=      None  pg_exec: list index out of range
+  [29/95] PASS first_response_hours_total                 http=200  130.1s src=metricflow   api=1044.5057645308334 pg=      None
+  [30/95] PASS tickets_with_first_response_metric         http=200  136.9s src=metricflow   api=      57.0 pg=      None
+  [31/95] PASS average_first_response_hours               http=200  130.9s src=metricflow   api=18.324662535628654 pg=      None
+  [32/95] PASS average_first_response_minutes             http=200  136.9s src=metricflow   api=1099.4797521377193 pg=      None
+  [33/95] PASS first_response_sla_met_metric              http=200  130.3s src=metricflow   api=      49.0 pg=      None
+  [34/95] PASS tickets_with_first_response_sla_target_metric http=200  124.6s src=metricflow   api=      57.0 pg=      None
+  [35/95] PASS first_response_sla_compliance_rate         http=200  132.5s src=metricflow   api=0.8596491228070176 pg=      None
+  [36/95] PASS first_response_coverage_rate               http=200  100.7s src=metricflow   api=0.5327102803738317 pg=      None
+  [37/95] PASS resolution_hours_variance_total            http=200  134.3s src=metricflow   api=574.2847095372222 pg=      None
+  [38/95] PASS tickets_with_sla_target_metric             http=200  117.3s src=metricflow   api=      10.0 pg=      None
+  [39/95] PASS average_resolution_hours_variance          http=200  121.8s src=metricflow   api=57.428470953722226 pg=      None
+  [40/95] PASS tickets_with_resolution_sla_target_metric  http=200   96.4s src=metricflow   api=      10.0 pg=      None
+  [41/95] PASS resolution_sla_met_metric                  http=200   92.0s src=metricflow   api=       4.0 pg=      None
+  [42/95] PASS resolution_sla_compliance_rate             http=200  128.8s src=metricflow   api=       0.4 pg=      None
+  [43/95] PASS due_today_tickets_metric                   http=200  135.6s src=metricflow   api=       0.0 pg=      None
+  [44/95] PASS current_overdue_tickets_metric             http=200  135.5s src=metricflow   api=      89.0 pg=      None
+  [45/95] FAIL unanswered_tickets_metric                  http=200  138.9s src=sql_template api=      39.0 pg=      None  pg_exec: list index out of range
+  [46/95] FAIL sla_at_risk_tickets_metric                 http=200  136.1s src=sql_template api=       0.0 pg=      None  pg_exec: list index out of range
+  [47/95] PASS average_overdue_hours                      http=200  135.1s src=metricflow   api=111.26386448953704 pg=      None
+  [48/95] PASS queues_at_risk_metric                      http=200  134.2s src=metricflow   api=       0.0 pg=      None
+  [49/95] PASS csat_score_total                           http=200  136.9s src=metricflow   api=      13.0 pg=      None
+  [50/95] PASS csat_rated_metric                          http=200  135.0s src=metricflow   api=       3.0 pg=      None
+  [51/95] FAIL average_csat_score                         http=200  128.1s src=sql_template api=      None pg=      None  pg_exec: list index out of range
+  [52/95] PASS csat_response_rate                         http=200  126.6s src=metricflow   api=0.2727272727272727 pg=      None
+  [53/95] PASS csat_promoter_metric                       http=200  136.8s src=metricflow   api=       3.0 pg=      None
+  [54/95] PASS csat_neutral_metric                        http=200  141.0s src=metricflow   api=       0.0 pg=      None
+  [55/95] PASS csat_detractor_metric                      http=200  134.5s src=metricflow   api=       0.0 pg=      None
+  [56/95] PASS csat_promoter_rate                         http=200  135.0s src=metricflow   api=       1.0 pg=      None
+  [57/95] PASS csat_detractor_rate                        http=200  127.6s src=metricflow   api=       0.0 pg=      None
+  [58/95] FAIL reopen_rate                                http=200  136.8s src=sql_template api=       0.2 pg=      None  pg_exec: list index out of range
+  [59/95] PASS queue_coverage_count                       http=200  137.7s src=metricflow   api=      42.0 pg=      None
+  [60/95] PASS distinct_agents_in_queues                  http=200  136.1s src=metricflow   api=       5.0 pg=      None
+  [61/95] PASS distinct_queues_covered                    http=200  136.3s src=metricflow   api=      16.0 pg=      None
+  [62/95] PASS tickets_with_resolver_metric               http=200  135.3s src=metricflow   api=     103.0 pg=      None
+  [63/95] PASS tickets_without_resolver_metric            http=200  137.1s src=metricflow   api=       4.0 pg=      None
+  [64/95] PASS active_agents_metric                       http=200  125.3s src=metricflow   api=       1.0 pg=      None
+  [65/95] PASS queue_count                                http=200  134.8s src=metricflow   api=      19.0 pg=      None
+  [66/95] PASS note_volume                                http=200  135.8s src=metricflow   api=      43.0 pg=      None
+  [67/95] PASS internal_note_volume                       http=200  136.2s src=metricflow   api=      25.0 pg=      None
+  [68/95] PASS customer_reply_volume                      http=200  135.1s src=metricflow   api=      18.0 pg=      None
+  [69/95] PASS internal_note_ratio                        http=200  135.3s src=metricflow   api=0.5813953488372093 pg=      None
+  [70/95] PASS average_notes_per_ticket                   http=200  136.5s src=metricflow   api=0.40186915887850466 pg=      None
+  [71/95] PASS notification_volume                        http=200  135.5s src=metricflow   api=     762.0 pg=      None
+  [72/95] PASS unread_notifications_metric                http=200  136.2s src=metricflow   api=     762.0 pg=      None
+  [73/95] PASS outbound_email_volume                      http=200  135.7s src=metricflow   api=     779.0 pg=      None
+  [74/95] PASS audit_event_volume                         http=200  136.7s src=metricflow   api=     329.0 pg=      None
+  [75/95] PASS escalation_volume                          http=200  135.4s src=metricflow   api=       4.0 pg=      None
+  [76/95] PASS reassignment_volume                        http=200  135.8s src=metricflow   api=      44.0 pg=      None
+  [77/95] PASS escalation_rate                            http=200  133.7s src=metricflow   api=0.037383177570093455 pg=      None
+  [78/95] PASS kb_article_volume                          http=200  134.8s src=metricflow   api=      28.0 pg=      None
+  [79/95] PASS kb_published_article_metric                http=200  135.8s src=metricflow   api=       0.0 pg=      None
+  [80/95] PASS kb_views_total                             http=200  136.7s src=metricflow   api=      59.0 pg=      None
+  [81/95] PASS macro_volume                               http=200  137.0s src=metricflow   api=      12.0 pg=      None
+  [82/95] PASS recommendation_volume                      http=200  135.6s src=metricflow   api=     791.0 pg=      None
+  [83/95] PASS accepted_recommendations_metric            http=200  135.8s src=metricflow   api=       0.0 pg=      None
+  [84/95] PASS dismissed_recommendations_metric           http=200  136.6s src=metricflow   api=       0.0 pg=      None
+  [85/95] PASS open_recommendations_metric                http=200  136.1s src=metricflow   api=     791.0 pg=      None
+  [86/95] PASS recommendation_acceptance_rate             http=200  134.8s src=metricflow   api=       0.0 pg=      None
+  [87/95] PASS approval_volume                            http=200  135.2s src=metricflow   api=     309.0 pg=      None
+  [88/95] PASS approved_metric                            http=200  135.4s src=metricflow   api=      25.0 pg=      None
+  [89/95] PASS rejected_metric                            http=200  136.1s src=metricflow   api=      86.0 pg=      None
+  [90/95] PASS pending_approvals_metric                   http=200  134.7s src=metricflow   api=     198.0 pg=      None
+  [91/95] PASS approval_rate                              http=200  138.2s src=metricflow   api=0.08090614886731391 pg=      None
+  [92/95] PASS decision_hours_total                       http=200  136.2s src=metricflow   api=       0.0 pg=      None
+  [93/95] PASS decided_approvals_metric                   http=200  137.0s src=metricflow   api=     309.0 pg=      None
+  [94/95] PASS average_decision_hours                     http=200  135.6s src=metricflow   api=       0.0 pg=      None
+  [95/95] PASS proactive_audit_volume                     http=200  137.4s src=metricflow   api=    5611.0 pg=      None
+
+Summary: 95/95 HTTP 200, 84/95 PG match
+Latency: min=39.6s avg=126.2s p50=135.1s p95=138.2s max=228.4s total=11985s
+JSON: /home/vectone/Uday/ontology_semantic_layer/scripts/ticketing_all_metrics_audit.json
+Markdown: /home/vectone/Uday/ontology_semantic_layer/scripts/ticketing_all_metrics_audit.md
+response — latency/value only
+  [74/95] OK_UNVERIFIED audit_event_volume                         http=200  136.8s src=metricflow   api=     329.0 pg=      None  no sql in response — latency/value only
+  [75/95] OK_UNVERIFIED escalation_volume                          http=200  135.4s src=metricflow   api=       4.0 pg=      None  no sql in response — latency/value only
+  [76/95] OK_UNVERIFIED reassignment_volume                        http=200  134.1s src=metricflow   api=      44.0 pg=      None  no sql in response — latency/value only
+  [77/95] OK_UNVERIFIED escalation_rate                            http=200  135.0s src=metricflow   api=0.037383177570093455 pg=      None  no sql in response — latency/value only
+  [78/95] OK_UNVERIFIED kb_article_volume                          http=200  134.8s src=metricflow   api=      28.0 pg=      None  no sql in response — latency/value only
+  [79/95] OK_UNVERIFIED kb_published_article_metric                http=200  136.2s src=metricflow   api=       0.0 pg=      None  no sql in response — latency/value only
+  [80/95] OK_UNVERIFIED kb_views_total                             http=200  135.0s src=metricflow   api=      59.0 pg=      None  no sql in response — latency/value only
+  [81/95] OK_UNVERIFIED macro_volume                               http=200  134.7s src=metricflow   api=      12.0 pg=      None  no sql in response — latency/value only
+  [82/95] OK_UNVERIFIED recommendation_volume                      http=200  136.2s src=metricflow   api=     791.0 pg=      None  no sql in response — latency/value only
+  [83/95] OK_UNVERIFIED accepted_recommendations_metric            http=200  136.7s src=metricflow   api=       0.0 pg=      None  no sql in response — latency/value only
+  [84/95] OK_UNVERIFIED dismissed_recommendations_metric           http=200  137.0s src=metricflow   api=       0.0 pg=      None  no sql in response — latency/value only
+  [85/95] OK_UNVERIFIED open_recommendations_metric                http=200  136.4s src=metricflow   api=     792.0 pg=      None  no sql in response — latency/value only
+  [86/95] OK_UNVERIFIED recommendation_acceptance_rate             http=200  136.8s src=metricflow   api=       0.0 pg=      None  no sql in response — latency/value only
+  [87/95] OK_UNVERIFIED approval_volume                            http=200  137.2s src=metricflow   api=     309.0 pg=      None  no sql in response — latency/value only
+  [88/95] OK_UNVERIFIED approved_metric                            http=200  135.7s src=metricflow   api=      25.0 pg=      None  no sql in response — latency/value only
+  [89/95] OK_UNVERIFIED rejected_metric                            http=200  136.4s src=metricflow   api=      86.0 pg=      None  no sql in response — latency/value only
+  [90/95] OK_UNVERIFIED pending_approvals_metric                   http=200  103.4s src=metricflow   api=     198.0 pg=      None  no sql in response — latency/value only
+  [91/95] OK_UNVERIFIED approval_rate                              http=200   40.4s src=metricflow   api=0.08090614886731391 pg=      None  no sql in response — latency/value only
+  [92/95] OK_UNVERIFIED decision_hours_total                       http=200   38.8s src=metricflow   api=       0.0 pg=      None  no sql in response — latency/value only
+  [93/95] OK_UNVERIFIED decided_approvals_metric                   http=200   39.1s src=metricflow   api=     309.0 pg=      None  no sql in response — latency/value only
+  [94/95] OK_UNVERIFIED average_decision_hours                     http=200   38.8s src=metricflow   api=       0.0 pg=      None  no sql in response — latency/value only
+  [95/95] OK_UNVERIFIED proactive_audit_volume                     http=200   39.1s src=metricflow   api=    5611.0 pg=      None  no sql in response — latency/value only
+
+Summary: 95/95 HTTP 200, 10/10 PG verified match (85 unverified — no SQL in response)
+Latency: min=38.8s avg=121.6s p50=134.8s p95=138.3s max=144.6s total=11548s
+JSON: /home/vectone/Uday/ontology_semantic_layer/scripts/ticketing_all_metrics_audit.json
+Markdown: /home/vectone/Uday/ontology_semantic_layer/scripts/ticketing_all_metrics_audit.md

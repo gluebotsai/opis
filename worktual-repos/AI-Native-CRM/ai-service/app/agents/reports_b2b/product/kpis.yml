@@ -1,0 +1,948 @@
+version: 1
+# Certified KPIs for B2B CRM. SQL templates live in sql/<id>.sql. Role visibility lives in access.yml.
+
+kpis:
+  # -------------------------------------------------------------------------
+  # 1. Dashboard Metrics
+  # -------------------------------------------------------------------------
+  total_opportunities:
+    label: "Total opportunities"
+    family: "volume"
+    aggregation: "count"
+    unit: "deals"
+    direction: "none"
+    default_time_column: "created_at"
+    allowed_date_columns: [created_at, closed_at, updated_at]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: [stage, owner, company, industry, month, week, day]
+    synonyms: [total deals, total opportunities, number of deals, how many deals, deal count]
+    definition:
+      numerator: "COUNT of deals in scope"
+      denominator: "none"
+      includes: "all deals in scoped row set"
+      excludes: "none"
+
+  active_opportunities:
+    label: "Active opportunities"
+    family: "volume"
+    aggregation: "count"
+    unit: "deals"
+    direction: "higher_is_better"
+    default_time_column: "created_at"
+    allowed_date_columns: [created_at, updated_at]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: [stage, owner, company, industry, month]
+    synonyms: [active deals, open deals, open opportunities, pipeline deal count, my open deals]
+    definition:
+      numerator: "COUNT of open deals in the caller's deal scope"
+      denominator: "none"
+      includes: "open deals. sales_rep and presales include only deals they own"
+      excludes: "closed_won, closed_lost. sales_rep and presales also exclude unassigned deals and deals owned by someone else"
+
+  total_pipeline:
+    label: "Total pipeline"
+    family: "pipeline"
+    aggregation: "sum"
+    unit: "currency"
+    direction: "higher_is_better"
+    default_time_column: "created_at"
+    allowed_date_columns: [created_at, expected_close_date]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: [stage, owner, company, industry, currency, month]
+    synonyms: [pipeline value, open pipeline, unweighted pipeline, pipeline amount]
+    definition:
+      numerator: "SUM of amount on open deals"
+      denominator: "none"
+      includes: "stage in (qualification, discover, propose, negotiate)"
+      excludes: "closed_won, closed_lost"
+
+  weighted_pipeline:
+    label: "Weighted pipeline"
+    family: "pipeline"
+    aggregation: "sum"
+    unit: "currency"
+    direction: "higher_is_better"
+    default_time_column: "created_at"
+    allowed_date_columns: [created_at, expected_close_date]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: [stage, owner, company, industry, currency, month]
+    synonyms: [weighted pipeline value, forecast pipeline, probability weighted pipeline]
+    definition:
+      numerator: "SUM of (amount * stage_weight) on open deals"
+      denominator: "none"
+      includes: "stage weights (qualification 0.10, discover 0.25, propose 0.50, negotiate 0.75)"
+      excludes: "closed_won, closed_lost"
+
+  won_revenue:
+    label: "Won revenue"
+    family: "revenue"
+    aggregation: "sum"
+    unit: "currency"
+    direction: "higher_is_better"
+    default_time_column: "close_ts"
+    allowed_date_columns: [close_ts, closed_at, created_at]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: [owner, company, industry, currency, month]
+    synonyms: [closed won revenue, won deals amount, closed revenue, bookings]
+    definition:
+      numerator: "SUM of amount on closed_won deals whose close timestamp is in period"
+      denominator: "none"
+      includes: "stage = closed_won"
+      excludes: "open deals, closed_lost"
+
+  won_deal_count:
+    label: "Won deal count"
+    family: "volume"
+    aggregation: "count"
+    unit: "deals"
+    direction: "higher_is_better"
+    default_time_column: "close_ts"
+    allowed_date_columns: [close_ts, closed_at, created_at]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: [owner, company, industry, currency, month]
+    synonyms: [won deals, how many won deals, closed won count, number of won deals]
+    definition:
+      numerator: "COUNT of closed_won deals whose close timestamp is in period"
+      denominator: "none"
+      includes: "stage = closed_won"
+      excludes: "open deals, closed_lost, revenue sums"
+
+  lost_revenue:
+    label: "Lost revenue"
+    family: "revenue"
+    aggregation: "sum"
+    unit: "currency"
+    direction: "lower_is_better"
+    default_time_column: "close_ts"
+    allowed_date_columns: [close_ts, closed_at, created_at]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: [owner, company, industry, lost_reason, currency, month]
+    synonyms: [lost deal amount, closed lost revenue, lost pipeline]
+    definition:
+      numerator: "SUM of amount on closed_lost deals whose close timestamp is in period"
+      denominator: "none"
+      includes: "stage = closed_lost"
+      excludes: "open deals, closed_won"
+
+  lost_deal_count:
+    label: "Lost deal count"
+    family: "volume"
+    aggregation: "count"
+    unit: "deals"
+    direction: "lower_is_better"
+    default_time_column: "close_ts"
+    allowed_date_columns: [close_ts, closed_at, created_at]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: [owner, company, industry, lost_reason, currency, month]
+    synonyms: [lost deals, how many lost deals, closed lost count, number of lost deals]
+    definition:
+      numerator: "COUNT of closed_lost deals whose close timestamp is in period"
+      denominator: "none"
+      includes: "stage = closed_lost"
+      excludes: "open deals, closed_won, revenue sums"
+
+  win_rate:
+    label: "Deal win rate"
+    family: "conversion"
+    aggregation: "rate"
+    unit: "percent"
+    direction: "higher_is_better"
+    default_time_column: "close_ts"
+    allowed_date_columns: [close_ts, closed_at, created_at]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: [owner, company, industry, month]
+    synonyms: [deal win rate, opportunity win rate, win percentage, closing rate]
+    definition:
+      numerator: "COUNT(closed_won)"
+      denominator: "COUNT(closed_won) + COUNT(closed_lost)"
+      includes: "decided deals in period"
+      excludes: "open deals"
+
+  average_deal_size:
+    label: "Average deal size"
+    family: "pipeline"
+    aggregation: "avg"
+    unit: "currency"
+    direction: "higher_is_better"
+    default_time_column: "created_at"
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: [stage, owner, industry, currency]
+    synonyms: [avg deal size, average opportunity size, mean deal value]
+    definition:
+      numerator: "total_pipeline"
+      denominator: "active_opportunities"
+      includes: "open deals"
+      excludes: "closed_won, closed_lost"
+
+  average_probability:
+    label: "Average probability"
+    family: "health"
+    aggregation: "avg"
+    unit: "percent"
+    direction: "higher_is_better"
+    default_time_column: "created_at"
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: [owner, industry]
+    synonyms: [avg probability, pipeline health, average stage weight]
+    definition:
+      numerator: "AVG(stage_weight) * 100 on open deals"
+      denominator: "none"
+      includes: "open deals"
+      excludes: "closed_won, closed_lost"
+
+  average_aging:
+    label: "Average aging"
+    family: "health"
+    aggregation: "avg"
+    unit: "days"
+    direction: "lower_is_better"
+    default_time_column: "created_at"
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: [stage, owner, industry]
+    synonyms: [avg deal age, average deal aging, pipeline age]
+    definition:
+      numerator: "AVG(aging_days) on open deals"
+      denominator: "none"
+      includes: "open deals"
+      excludes: "closed deals"
+
+  high_probability_deals:
+    label: "High-probability deals"
+    family: "pipeline"
+    aggregation: "count"
+    unit: "deals"
+    direction: "higher_is_better"
+    default_time_column: "created_at"
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: [owner, company, currency]
+    synonyms: [hot deals, late stage deals, negotiate deals]
+    definition:
+      numerator: "COUNT of open deals where stage_weight >= 0.75 (stage = negotiate)"
+      denominator: "none"
+      includes: "negotiate stage"
+      excludes: "qualification, discover, propose"
+
+  new_pipeline_month:
+    label: "New pipeline this month"
+    family: "pipeline"
+    aggregation: "sum"
+    unit: "currency"
+    direction: "higher_is_better"
+    default_time_column: "created_at"
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: [owner, industry, currency]
+    synonyms: [new pipeline created, fresh pipeline, current month pipeline]
+    definition:
+      numerator: "SUM(amount) on deals created in current calendar month"
+      denominator: "none"
+      includes: "all stages created this month"
+      excludes: "older deals"
+
+  sales_velocity:
+    label: "Sales velocity"
+    family: "velocity"
+    aggregation: "scalar"
+    unit: "currency_per_day"
+    direction: "higher_is_better"
+    default_time_column: "close_ts"
+    allowed_date_columns: [close_ts, created_at]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: []
+    synonyms: [pipeline velocity, revenue velocity]
+    definition:
+      numerator: "(active_opportunities * (win_rate / 100) * average_deal_size)"
+      denominator: "average_cycle_days"
+      includes: "active deals, period win rate, won deal cycle length"
+      excludes: "none"
+
+  pipeline_by_stage:
+    label: "Pipeline by stage"
+    family: "breakdown"
+    aggregation: "breakdown"
+    unit: "mixed"
+    direction: "none"
+    default_time_column: "created_at"
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: []
+    synonyms: [sales funnel, deal funnel, pipeline stage breakdown]
+    definition:
+      numerator: "COUNT and SUM(amount) grouped by stage"
+      denominator: "none"
+      includes: "open stages and closed_won"
+      excludes: "none"
+
+  win_loss_split:
+    label: "Win and loss split"
+    family: "conversion"
+    aggregation: "breakdown"
+    unit: "deals"
+    direction: "none"
+    default_time_column: "close_ts"
+    allowed_date_columns: [close_ts, created_at]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: [owner, industry, month]
+    synonyms: [won vs lost, win loss ratio, decided deals]
+    definition:
+      numerator: "COUNT(closed_won) and COUNT(closed_lost)"
+      denominator: "none"
+      includes: "decided deals"
+      excludes: "open deals"
+
+  aging_bands:
+    label: "Aging bands"
+    family: "health"
+    aggregation: "breakdown"
+    unit: "deals"
+    direction: "none"
+    default_time_column: "created_at"
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: []
+    synonyms: [deal age distribution, aging buckets, deal age breakdown]
+    definition:
+      numerator: "COUNT of open deals in age buckets: 0-30, 31-60, 61-90, 91+ days"
+      denominator: "none"
+      includes: "open deals"
+      excludes: "closed deals"
+
+  deal_size_bands:
+    label: "Deal size bands"
+    family: "pipeline"
+    aggregation: "breakdown"
+    unit: "deals"
+    direction: "none"
+    default_time_column: "created_at"
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: []
+    synonyms: [deal size distribution, deal value buckets]
+    definition:
+      numerator: "COUNT of open deals in amount buckets: small (<500k), mid (500k-2.5M), large (>2.5M)"
+      denominator: "none"
+      includes: "open deals"
+      excludes: "closed deals"
+
+  pipeline_by_owner:
+    label: "Pipeline by owner"
+    family: "breakdown"
+    aggregation: "breakdown"
+    unit: "currency"
+    direction: "none"
+    default_time_column: "created_at"
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: []
+    synonyms: [pipeline by rep, rep pipeline breakdown, leaderboard]
+    definition:
+      numerator: "SUM(amount) on open deals grouped by owner_name, top 10"
+      denominator: "none"
+      includes: "open deals"
+      excludes: "closed deals"
+
+  lost_reasons:
+    label: "Lost reasons"
+    family: "breakdown"
+    aggregation: "breakdown"
+    unit: "deals"
+    direction: "none"
+    default_time_column: "close_ts"
+    allowed_date_columns: [close_ts, created_at]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: []
+    synonyms: [why deals lost, loss reasons, lost deal analysis]
+    definition:
+      numerator: "COUNT of closed_lost deals grouped by lost_reason, top 8"
+      denominator: "none"
+      includes: "closed_lost deals"
+      excludes: "open, won"
+
+  won_revenue_trend:
+    label: "Won revenue trend"
+    family: "trend"
+    aggregation: "trend"
+    unit: "currency"
+    direction: "higher_is_better"
+    default_time_column: "close_ts"
+    allowed_date_columns: [close_ts]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: []
+    synonyms: [monthly won revenue, 6 month revenue trend, revenue history]
+    definition:
+      numerator: "SUM(amount) on closed_won deals grouped by month for last 6 months"
+      denominator: "none"
+      includes: "closed_won deals"
+      excludes: "open, lost"
+
+  top_open_opportunities:
+    label: "Top open opportunities"
+    family: "ranking"
+    aggregation: "ranking"
+    unit: "deals"
+    direction: "higher_is_better"
+    default_time_column: "created_at"
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: []
+    synonyms: [top deals, largest deals, biggest opportunities]
+    definition:
+      numerator: "Top 10 open deals ordered by amount DESC"
+      denominator: "none"
+      includes: "open deals"
+      excludes: "closed deals"
+
+  # -------------------------------------------------------------------------
+  # 2. Core Metrics Beyond Dashboard
+  # -------------------------------------------------------------------------
+  avg_sales_cycle:
+    label: "Average sales cycle"
+    family: "velocity"
+    aggregation: "avg"
+    unit: "days"
+    direction: "lower_is_better"
+    default_time_column: "close_ts"
+    allowed_date_columns: [close_ts, created_at]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: [owner, industry]
+    synonyms: [sales cycle length, time to win, deal cycle time]
+    definition:
+      numerator: "AVG(closed_at - created_at) in days for closed_won deals"
+      denominator: "none"
+      includes: "closed_won deals with positive duration"
+      excludes: "open, lost"
+
+  quote_acceptance_rate:
+    label: "Quote acceptance rate"
+    family: "conversion"
+    aggregation: "rate"
+    unit: "percent"
+    direction: "higher_is_better"
+    default_time_column: "created_at"
+    allowed_date_columns: [created_at, updated_at]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: [owner, month]
+    synonyms: [quote accept rate, quotes accepted versus rejected, quote conversion]
+    definition:
+      numerator: "COUNT(quotes with status = 'accepted')"
+      denominator: "COUNT(quotes with status in ('accepted', 'rejected'))"
+      includes: "decided quotes"
+      excludes: "draft, sent, void"
+
+  open_quote_value:
+    label: "Open quote value"
+    family: "commercial"
+    aggregation: "sum"
+    unit: "currency"
+    direction: "none"
+    default_time_column: "created_at"
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: [owner, currency]
+    synonyms: [quotes outstanding, uncommitted quote amount, pending quotes]
+    definition:
+      numerator: "SUM(total) on quotes where status in ('draft', 'sent')"
+      denominator: "none"
+      includes: "draft and sent quotes"
+      excludes: "accepted, rejected, void"
+
+  expected_close_value:
+    label: "Expected close value"
+    family: "pipeline"
+    aggregation: "sum"
+    unit: "currency"
+    direction: "none"
+    default_time_column: "expected_close_date"
+    allowed_date_columns: [expected_close_date]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: [owner, month, currency]
+    synonyms: [expected revenue this month, closing forecast, expected close amount]
+    definition:
+      numerator: "SUM(amount) on open deals whose expected_close_date is in period"
+      denominator: "none"
+      includes: "open deals with expected_close_date"
+      excludes: "closed deals"
+
+  lead_count:
+    label: "Lead count"
+    family: "volume"
+    aggregation: "count"
+    unit: "contacts"
+    direction: "higher_is_better"
+    default_time_column: "created_at"
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: [owner, lead_status, lead_source, region, country, month, week, day]
+    synonyms: [how many leads, total leads, number of leads]
+    definition:
+      numerator: "COUNT of active contacts whose contact_type is lead"
+      denominator: "none"
+      includes: "active leads the user owns or created; admin sees the organization"
+      excludes: "contacts, prospects, customers; channel-company people the user does not own or create; deleted contacts; this is not unassigned_leads"
+
+  lead_status_mix:
+    label: "Lead status mix"
+    family: "breakdown"
+    aggregation: "breakdown"
+    unit: "contacts"
+    direction: "none"
+    default_time_column: "created_at"
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: [lead_status, lead_source, owner]
+    synonyms: [lead funnel, contact status breakdown, lead status distribution]
+    definition:
+      numerator: "COUNT of active leads grouped by lead_status"
+      denominator: "none"
+      includes: "contact_type = lead and crm_status = active"
+      excludes: "contacts who are not leads; deleted contacts"
+
+  unassigned_leads:
+    label: "Unassigned leads"
+    family: "volume"
+    aggregation: "count"
+    unit: "contacts"
+    direction: "lower_is_better"
+    default_time_column: "created_at"
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: [lead_source]
+    synonyms: [unowned leads, unassigned contacts, orphan leads]
+    definition:
+      numerator: "COUNT of active leads with owner_user_id IS NULL and lead_status not in ('converted', 'disqualified')"
+      denominator: "none"
+      includes: "active unassigned leads (contact_type = lead)"
+      excludes: "converted, disqualified, people who are not leads"
+
+  days_since_last_touch:
+    label: "Days since last touch"
+    family: "health"
+    aggregation: "avg"
+    unit: "days"
+    direction: "lower_is_better"
+    default_time_column: "created_at"
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: [owner, stage]
+    synonyms: [last activity age, touch recency, days without touch]
+    definition:
+      numerator: "AVG days since latest activity on open deals/contacts"
+      denominator: "none"
+      includes: "logged activities"
+      excludes: "none"
+
+  activity_volume:
+    label: "Activity volume"
+    family: "volume"
+    aggregation: "count"
+    unit: "activities"
+    direction: "higher_is_better"
+    default_time_column: "created_at"
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: [type, owner, activity_source, month]
+    synonyms: [logged activities, sales touches, calls and meetings, touch count]
+    definition:
+      numerator: "COUNT of logged activities in period grouped by type"
+      denominator: "none"
+      includes: "calls, meetings, emails, sms, notes, tasks"
+      excludes: "none"
+
+  open_task_count:
+    label: "Open task count"
+    family: "volume"
+    aggregation: "count"
+    unit: "tasks"
+    direction: "lower_is_better"
+    default_time_column: "created_at"
+    allowed_date_columns: [created_at, due_at]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: [task_status]
+    synonyms: [pending tasks, open tasks, todo count]
+    definition:
+      numerator: "COUNT of contact activities with type = 'task' and task_status in ('open', 'in_progress')"
+      denominator: "none"
+      includes: "open, in_progress tasks"
+      excludes: "completed tasks"
+
+  invoice_outstanding:
+    label: "Invoice outstanding"
+    family: "finance"
+    aggregation: "sum"
+    unit: "currency"
+    direction: "lower_is_better"
+    default_time_column: "created_at"
+    allowed_date_columns: [created_at, due_at]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: []
+    synonyms: [accounts receivable, outstanding revenue, unpaid invoices, ar balance]
+    definition:
+      numerator: "SUM(total) on invoices with status in ('sent', 'overdue')"
+      denominator: "none"
+      includes: "sent and overdue invoices"
+      excludes: "paid, draft, void"
+
+  overdue_amount:
+    label: "Overdue amount"
+    family: "finance"
+    aggregation: "sum"
+    unit: "currency"
+    direction: "lower_is_better"
+    default_time_column: "due_at"
+    allowed_date_columns: [due_at, created_at]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: []
+    synonyms: [overdue invoices, past due amount, overdue collections]
+    definition:
+      numerator: "SUM(total) on invoices where status = 'overdue' or (status = 'sent' and due_at < NOW())"
+      denominator: "none"
+      includes: "past due invoices"
+      excludes: "paid, draft, void"
+
+  collected_revenue:
+    label: "Collected revenue"
+    family: "finance"
+    aggregation: "sum"
+    unit: "currency"
+    direction: "higher_is_better"
+    default_time_column: "paid_at"
+    allowed_date_columns: [paid_at, created_at]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: []
+    synonyms: [cash collected, invoice payments, paid revenue, receipts, company top line, top line, top-line, collected revenue]
+    definition:
+      numerator: "SUM(total) on invoices with status = 'paid' whose paid_at is in period"
+      denominator: "none"
+      includes: "paid invoices"
+      excludes: "unpaid, draft, void"
+
+  approval_queue:
+    label: "Approval queue"
+    family: "operations"
+    aggregation: "count"
+    unit: "invoices"
+    direction: "lower_is_better"
+    default_time_column: "created_at"
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: []
+    synonyms: [pending invoice approvals, finance approval queue, unapproved invoices]
+    definition:
+      numerator: "COUNT of invoices with approval_status = 'pending_approval'"
+      denominator: "none"
+      includes: "pending approval invoices"
+      excludes: "drafting, approved"
+
+  contract_arr:
+    label: "Contract ARR"
+    family: "revenue"
+    aggregation: "sum"
+    unit: "currency"
+    direction: "higher_is_better"
+    default_time_column: "starts_at"
+    allowed_date_columns: [starts_at, created_at]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: [company, billing_frequency]
+    synonyms: [annual recurring revenue, active arr, subscription arr]
+    definition:
+      numerator: "SUM(arr) on contracts where status = 'active'"
+      denominator: "none"
+      includes: "active contracts"
+      excludes: "expired, cancelled"
+
+  renewal_book:
+    label: "Renewal book"
+    family: "revenue"
+    aggregation: "sum"
+    unit: "currency"
+    direction: "higher_is_better"
+    default_time_column: "ends_at"
+    allowed_date_columns: [ends_at]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: [company, month]
+    synonyms: [upcoming renewals, expiring contracts, renewal arr]
+    definition:
+      numerator: "COUNT and SUM(arr) on active contracts whose ends_at is in asked period"
+      denominator: "none"
+      includes: "active contracts expiring in window"
+      excludes: "already expired"
+
+  product_revenue:
+    label: "Product revenue"
+    family: "revenue"
+    aggregation: "breakdown"
+    unit: "currency"
+    direction: "higher_is_better"
+    default_time_column: "inv.created_at"
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: []
+    synonyms: [revenue by product, product sales mix, product revenue breakdown]
+    definition:
+      numerator: "SUM(amount) on invoice_lines for paid invoices grouped by product"
+      denominator: "none"
+      includes: "paid invoice lines"
+      excludes: "unpaid"
+
+  average_discount:
+    label: "Average discount"
+    family: "commercial"
+    aggregation: "avg"
+    unit: "percent"
+    direction: "lower_is_better"
+    default_time_column: "created_at"
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: [owner, month]
+    synonyms: [avg discount percent, average discounting, quote discount]
+    definition:
+      numerator: "AVG(discount_pct) on sent or accepted quotes"
+      denominator: "none"
+      includes: "sent, accepted quotes"
+      excludes: "void"
+
+  # -------------------------------------------------------------------------
+  # 3. Next-Tier Metrics & Refusals
+  # -------------------------------------------------------------------------
+  forecast_vs_target:
+    label: "Forecast versus target"
+    family: "pipeline"
+    aggregation: "scalar"
+    unit: "currency"
+    direction: "higher_is_better"
+    default_time_column: "created_at"
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: []
+    synonyms: [forecast attainment, pipeline vs quota]
+    definition:
+      numerator: "weighted_pipeline (target table is unpopulated)"
+      denominator: "none"
+      includes: "open deals"
+      excludes: "none"
+
+  territory_performance:
+    label: "Territory performance"
+    family: "breakdown"
+    aggregation: "breakdown"
+    unit: "currency"
+    direction: "higher_is_better"
+    default_time_column: "d.created_at"
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: []
+    synonyms: [regional revenue, geography performance, location breakdown]
+    definition:
+      numerator: "SUM(amount) on deals grouped by company location city/industry"
+      denominator: "none"
+      includes: "deals tied to locations"
+      excludes: "none"
+
+  lead_source_conversion:
+    label: "Lead source conversion"
+    family: "conversion"
+    aggregation: "breakdown"
+    unit: "mixed"
+    direction: "higher_is_better"
+    default_time_column: "created_at"
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: []
+    synonyms: [channel conversion, source roi, lead source effectiveness]
+    definition:
+      numerator: "COUNT of leads and converted leads grouped by CRM lead_source"
+      denominator: "none"
+      includes: "active leads (contact_type = lead); CRM lead_source, not CDP acquisition_channel"
+      excludes: "deleted contacts; people who are not leads"
+
+  attach_rate:
+    label: "Attach rate"
+    family: "commercial"
+    aggregation: "rate"
+    unit: "percent"
+    direction: "higher_is_better"
+    default_time_column: "created_at"
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: []
+    synonyms: [addon attach rate, cross sell rate, addon rate]
+    definition:
+      numerator: "COUNT(invoices with addon line)"
+      denominator: "COUNT(paid invoices)"
+      includes: "paid invoices"
+      excludes: "unpaid"
+
+  customer_retention:
+    label: "Customer retention"
+    family: "retention"
+    aggregation: "rate"
+    unit: "percent"
+    direction: "higher_is_better"
+    default_time_column: "ends_at"
+    allowed_date_columns: [ends_at]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: []
+    synonyms: [contract renewal rate, retention rate, arr retention]
+    definition:
+      numerator: "COUNT(contracts active and auto_renew)"
+      denominator: "COUNT(contracts reaching ends_at)"
+      includes: "active and expired contracts"
+      excludes: "none"
+
+  meeting_completion:
+    label: "Meeting completion"
+    family: "activity"
+    aggregation: "rate"
+    unit: "percent"
+    direction: "higher_is_better"
+    default_time_column: "starts_at"
+    allowed_date_columns: [starts_at]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: [host]
+    synonyms: [meeting completion rate, completed appointments, held meetings]
+    definition:
+      numerator: "COUNT(appointments completed or with meeting activity)"
+      denominator: "COUNT(appointments scheduled)"
+      includes: "scheduled appointments"
+      excludes: "canceled"
+
+  agent_operations:
+    label: "Automation job operations"
+    family: "operations"
+    aggregation: "breakdown"
+    unit: "jobs"
+    direction: "none"
+    default_time_column: "created_at"
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: []
+    synonyms: [automation agent jobs, background jobs, enrichment jobs, scoring jobs, automation run count, system agent operations]
+    definition:
+      numerator: "COUNT of background agent jobs grouped by job_type and status"
+      denominator: "none"
+      includes: "enrichment, scoring, nurture, lifecycle automation jobs"
+      excludes: "human sales representatives, deal owners, salesperson performance"
+
+  # Refusal definitions (explicitly marked as missing inputs)
+  quota_attainment:
+    label: "Quota attainment"
+    family: "refusal"
+    aggregation: "refusal"
+    unit: "percent"
+    direction: "none"
+    default_time_column: "created_at"
+    allowed_date_columns: []
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: []
+    synonyms: [rep quota attainment, rep target attainment]
+    definition:
+      numerator: "undefined (CRM does not store monthly sales targets per rep)"
+      denominator: "undefined"
+      includes: "none"
+      excludes: "all"
+
+  stage_conversion:
+    label: "Stage conversion"
+    family: "refusal"
+    aggregation: "refusal"
+    unit: "percent"
+    direction: "none"
+    default_time_column: "created_at"
+    allowed_date_columns: []
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: []
+    synonyms: [stage to stage conversion, funnel conversion rate]
+    definition:
+      numerator: "undefined (CRM does not store deal stage history transitions)"
+      denominator: "undefined"
+      includes: "none"
+      excludes: "all"
+
+  won_reason_mix:
+    label: "Won reason mix"
+    family: "refusal"
+    aggregation: "refusal"
+    unit: "deals"
+    direction: "none"
+    default_time_column: "created_at"
+    allowed_date_columns: []
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: []
+    synonyms: [why we win, won reasons]
+    definition:
+      numerator: "undefined (CRM does not store won_reason column)"
+      denominator: "undefined"
+      includes: "none"
+      excludes: "all"
+
+  time_in_stage:
+    label: "Time in stage"
+    family: "refusal"
+    aggregation: "refusal"
+    unit: "days"
+    direction: "none"
+    default_time_column: "created_at"
+    allowed_date_columns: []
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: []
+    synonyms: [stage duration, days per stage]
+    definition:
+      numerator: "undefined (CRM does not store stage transition history)"
+      denominator: "undefined"
+      includes: "none"
+      excludes: "all"
+
+  campaign_attribution:
+    label: "Campaign attribution"
+    family: "refusal"
+    aggregation: "refusal"
+    unit: "currency"
+    direction: "none"
+    default_time_column: "created_at"
+    allowed_date_columns: []
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: []
+    synonyms: [campaign roi, marketing attribution, first touch roi]
+    definition:
+      numerator: "undefined (CRM does not store marketing campaign spend attribution chain)"
+      denominator: "undefined"
+      includes: "none"
+      excludes: "all"
+
+  email_open_rate:
+    label: "Email open rate"
+    family: "refusal"
+    aggregation: "refusal"
+    unit: "percent"
+    direction: "none"
+    default_time_column: "created_at"
+    allowed_date_columns: []
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: []
+    synonyms: [email open tracking, email click rate]
+    definition:
+      numerator: "undefined (CRM does not store email open/click tracking events on contact activities)"
+      denominator: "undefined"
+      includes: "none"
+      excludes: "all"
+
+  sequence_compliance:
+    label: "Sequence compliance"
+    family: "refusal"
+    aggregation: "refusal"
+    unit: "percent"
+    direction: "none"
+    default_time_column: "created_at"
+    allowed_date_columns: []
+    allowed_scope_levels: [org, own, channel, team]
+    allowed_dimensions: []
+    synonyms: [cadence compliance, repeat activity compliance]
+    definition:
+      numerator: "undefined (CRM does not store closed sequence repeat outcome tables)"
+      denominator: "undefined"
+      includes: "none"
+      excludes: "all"

@@ -1,0 +1,612 @@
+# Certified Cypher Templates for CRM B2B Knowledge Graph Agent
+
+templates:
+  deal_root_cause_loss:
+    description: "Root cause analysis of closed lost deals grouped by empirical lost reason."
+    cypher: |
+      MATCH (d:Deal)
+      WHERE toLower(d.stage) = 'closed_lost'
+        AND ($can_view_all = true OR d.owner_user_id = $effective_user_id)
+      OPTIONAL MATCH (d)-[:HAS]->(q:Quote)
+      WITH d, collect(q) AS quotes
+      WITH d,
+           [q IN quotes WHERE q.approval_status = 'approved'][0] AS approved_quote,
+           quotes[0] AS any_quote
+      WITH d,
+           coalesce(approved_quote.currency, any_quote.currency, d.currency, $default_currency, 'INR') AS currency,
+           coalesce(d.amount, approved_quote.total, any_quote.total, 0) AS final_amount
+      RETURN coalesce(d.lost_reason, 'Unspecified') AS lost_reason,
+             currency,
+             count(d) AS lost_deals_count,
+             sum(coalesce(final_amount, 0)) AS total_lost_amount,
+             collect({
+               deal_id: d.id,
+               title: d.title,
+               amount: final_amount,
+               currency: currency,
+               lost_reason: d.lost_reason,
+               closed_at: d.closed_at
+             })[0..5] AS sample_deals
+      ORDER BY total_lost_amount DESC
+
+  deal_forecast_risk_and_stall:
+    description: "Analysis of open deals flagged with forecast risk or stalling in pipeline."
+    cypher: |
+      MATCH (d:Deal)
+      WHERE toLower(d.stage) IN ['qualification', 'discover', 'propose', 'negotiate']
+        AND ($can_view_all = true OR d.owner_user_id = $effective_user_id)
+        AND (d.forecast_flagged = true OR toLower(d.forecast_category) = 'omitted')
+        AND (coalesce($deal_title, '') = '' OR toLower(d.title) CONTAINS toLower($deal_title))
+      OPTIONAL MATCH (d)-[:HAS]->(q:Quote)
+      WITH d, collect(q) AS quotes
+      WITH d,
+           [q IN quotes WHERE q.approval_status = 'approved'][0] AS approved_quote,
+           quotes[0] AS any_quote
+      WITH d,
+           coalesce(approved_quote.currency, any_quote.currency, d.currency, $default_currency, 'INR') AS currency,
+           coalesce(approved_quote.total, any_quote.total, d.amount, 0) AS final_amount
+      RETURN d.id AS deal_id,
+             d.title AS title,
+             d.stage AS stage,
+             final_amount AS amount,
+             currency,
+             d.forecast_category AS forecast_category,
+             coalesce(d.forecast_reason, 'No forecast reason recorded') AS forecast_reason,
+             d.forecast_confidence_percent AS confidence_percent,
+             d.updated_at AS last_updated,
+             d.created_at AS created_at
+      ORDER BY amount DESC
+      LIMIT 20
+
+  open_pipeline_health:
+    description: "Breakdown of active pipeline by stage with fixed stage probabilities and weighted amounts."
+    cypher: |
+      MATCH (d:Deal)
+      WHERE toLower(d.stage) IN ['qualification', 'discover', 'propose', 'negotiate']
+        AND ($can_view_all = true OR d.owner_user_id = $effective_user_id)
+      OPTIONAL MATCH (d)-[:HAS]->(q:Quote)
+      WITH d, collect(q) AS quotes
+      WITH d,
+           [q IN quotes WHERE q.approval_status = 'approved'][0] AS approved_quote,
+           quotes[0] AS any_quote
+      WITH d,
+           coalesce(approved_quote.currency, any_quote.currency, d.currency, $default_currency, 'INR') AS currency,
+           coalesce(approved_quote.total, any_quote.total, d.amount, 0) AS final_amount
+      WITH currency,
+           d.stage AS stage,
+           count(d) AS deal_count,
+           sum(coalesce(final_amount, 0)) AS stage_amount,
+           CASE toLower(d.stage)
+             WHEN 'qualification' THEN 0.10
+             WHEN 'discover' THEN 0.25
+             WHEN 'propose' THEN 0.50
+             WHEN 'negotiate' THEN 0.75
+             ELSE 0.0
+           END AS stage_weight
+      RETURN stage,
+             currency,
+             deal_count,
+             stage_amount,
+             stage_weight,
+             round(stage_amount * stage_weight) AS weighted_amount
+      ORDER BY stage_weight DESC
+
+  top_open_opportunities:
+    description: "Top open opportunities by deal amount with company, stage, and owner."
+    cypher: |
+      MATCH (d:Deal)
+      WHERE toLower(d.stage) IN ['qualification', 'discover', 'propose', 'negotiate']
+        AND ($can_view_all = true OR d.owner_user_id = $effective_user_id)
+      OPTIONAL MATCH (a:Account {id: d.company_id})
+      OPTIONAL MATCH (d)-[:HAS]->(q:Quote)
+      WITH d, a, collect(q) AS quotes
+      WITH d, a,
+           [q IN quotes WHERE q.approval_status = 'approved'][0] AS approved_quote,
+           quotes[0] AS any_quote
+      WITH d, a,
+           coalesce(approved_quote.currency, any_quote.currency, d.currency, $default_currency, 'INR') AS currency,
+           coalesce(approved_quote.total, any_quote.total, d.amount, 0) AS final_amount
+      RETURN d.id AS deal_id,
+             d.title AS deal_title,
+             coalesce(a.name, 'Unassigned Account') AS company_name,
+             d.stage AS stage,
+             final_amount AS amount,
+             currency,
+             d.updated_at AS last_updated,
+             d.owner_user_id AS owner_user_id
+      ORDER BY amount DESC
+      LIMIT 10
+
+  deal_commercial_path_walk:
+    description: "Complete commercial traversal across the B2B chain for a deal: Deal -> Quote -> SalesOrder -> Invoice -> Contract."
+    cypher: |
+      MATCH (d:Deal)
+      WHERE ($can_view_all = true OR d.owner_user_id = $effective_user_id)
+        AND (d.id = $deal_id OR d.title CONTAINS $deal_title)
+      OPTIONAL MATCH (d)-[:HAS]->(q:Quote)
+      OPTIONAL MATCH (d)-[:HAS]->(p:Proposal)
+      OPTIONAL MATCH (inv:Invoice {deal_id: d.id})
+      OPTIONAL MATCH (c:Contract)-[:FROM_DEAL]->(d)
+      RETURN d.id AS deal_id,
+             d.title AS deal_title,
+             d.stage AS deal_stage,
+             coalesce(d.amount, q.total, 0) AS deal_amount,
+             coalesce(q.currency, $default_currency, 'INR') AS deal_currency,
+             collect(DISTINCT {
+               quote_id: q.id,
+               quote_number: q.number,
+               quote_status: q.status,
+               quote_total: q.total,
+               quote_currency: coalesce(q.currency, $default_currency, 'INR')
+             }) AS quotes,
+             collect(DISTINCT {
+               proposal_id: p.id,
+               proposal_title: p.title,
+               proposal_status: p.status
+             }) AS proposals,
+             collect(DISTINCT {
+               invoice_id: inv.id,
+               invoice_number: inv.number,
+               invoice_status: inv.status,
+               approval_status: inv.approval_status,
+               invoice_total: inv.total,
+               invoice_currency: coalesce(inv.currency, inv.total_currency, $default_currency, 'INR'),
+               due_at: inv.due_at
+             }) AS invoices,
+             collect(DISTINCT {
+               contract_id: c.id,
+               contract_status: c.status,
+               title: c.title,
+               ends_at: c.ends_at
+             }) AS contracts
+      LIMIT 5
+
+  quote_acceptance_and_friction:
+    description: "Quote status breakdown, acceptance rate, and discount friction on quotes."
+    cypher: |
+      MATCH (q:Quote)
+      OPTIONAL MATCH (d:Deal {id: q.deal_id})
+      WHERE ($can_view_all = true OR d.owner_user_id = $effective_user_id)
+      RETURN coalesce(q.status, 'draft') AS quote_status,
+             coalesce(q.currency, $default_currency, 'INR') AS currency,
+             count(q) AS quote_count,
+             sum(coalesce(q.total, 0)) AS total_quote_value,
+             avg(coalesce(q.discount_pct, 0.0)) AS avg_discount_pct,
+             collect({
+               quote_number: q.number,
+               customer_name: q.customer_name,
+               total: q.total,
+               currency: coalesce(q.currency, $default_currency, 'INR'),
+               discount_pct: q.discount_pct,
+               approval_status: q.approval_status
+             })[0..3] AS sample_quotes
+      ORDER BY quote_count DESC
+
+  invoice_outstanding_and_due:
+    description: "Outstanding and unpaid invoices with payment deadlines and company details."
+    cypher: |
+      MATCH (i:Invoice)
+      OPTIONAL MATCH (d:Deal {id: i.deal_id})
+      OPTIONAL MATCH (a:Account {id: i.company_id})
+      WHERE toLower(i.status) IN ['sent', 'overdue']
+        AND ($can_view_all = true OR d.owner_user_id = $effective_user_id)
+      RETURN i.id AS invoice_id,
+             i.number AS invoice_number,
+             coalesce(a.name, 'Unknown Account') AS company_name,
+             i.status AS status,
+             i.approval_status AS approval_status,
+             coalesce(i.total, 0) AS amount,
+             coalesce(i.currency, i.total_currency, $default_currency, 'INR') AS currency,
+             i.due_at AS due_date,
+             coalesce(i.escalation_reason, 'No escalation note') AS escalation_reason
+      ORDER BY due_date ASC
+      LIMIT 25
+
+  overdue_invoice_aging_and_risk:
+    description: "Overdue invoices past payment due date with risk escalation details."
+    cypher: |
+      MATCH (i:Invoice)
+      OPTIONAL MATCH (d:Deal {id: i.deal_id})
+      OPTIONAL MATCH (a:Account {id: i.company_id})
+      WHERE (toLower(i.status) = 'overdue' OR (toLower(i.status) = 'sent' AND i.due_at < datetime()))
+        AND ($can_view_all = true OR d.owner_user_id = $effective_user_id)
+      RETURN i.id AS invoice_id,
+             i.number AS invoice_number,
+             coalesce(a.name, 'Unknown Account') AS company_name,
+             coalesce(i.total, 0) AS overdue_amount,
+             coalesce(i.currency, i.total_currency, $default_currency, 'INR') AS currency,
+             i.due_at AS due_date,
+             coalesce(i.escalation_severity, 'standard') AS risk_severity,
+             coalesce(i.escalation_reason, 'Invoice payment deadline passed') AS escalation_reason
+      ORDER BY overdue_amount DESC
+      LIMIT 20
+
+  collected_revenue_mix:
+    description: "Paid invoices summary and cash collection breakdown by payment method and billing kind."
+    cypher: |
+      MATCH (i:Invoice)
+      OPTIONAL MATCH (d:Deal {id: i.deal_id})
+      WHERE toLower(i.status) = 'paid'
+        AND ($can_view_all = true OR d.owner_user_id = $effective_user_id)
+      RETURN coalesce(i.payment_terms, 'standard') AS payment_terms,
+             count(i) AS paid_invoices_count,
+             sum(coalesce(i.total, 0)) AS collected_amount,
+             coalesce(i.currency, i.total_currency, $default_currency, 'INR') AS currency
+      ORDER BY collected_amount DESC
+
+  finance_approval_queue:
+    description: "Invoices currently pending finance approval before customer delivery."
+    cypher: |
+      MATCH (i:Invoice)
+      OPTIONAL MATCH (d:Deal {id: i.deal_id})
+      OPTIONAL MATCH (a:Account {id: i.company_id})
+      WHERE toLower(i.approval_status) = 'pending_approval'
+        AND ($can_view_all = true OR d.owner_user_id = $effective_user_id)
+      RETURN i.id AS invoice_id,
+             i.number AS invoice_number,
+             coalesce(a.name, 'Unknown Account') AS company_name,
+             i.status AS status,
+             coalesce(i.total, 0) AS total_amount,
+             coalesce(i.currency, i.total_currency, $default_currency, 'INR') AS currency,
+             i.created_at AS submitted_at,
+             i.created_by_user_id AS submitted_by_user_id
+      ORDER BY submitted_at ASC
+      LIMIT 20
+
+  contract_arr_and_renewals:
+    description: "Active contracts overview and upcoming contract renewals."
+    cypher: |
+      MATCH (c:Contract)
+      OPTIONAL MATCH (d:Deal {id: c.deal_id})
+      OPTIONAL MATCH (a:Account {id: c.company_id})
+      WHERE toLower(c.status) = 'active'
+        AND ($can_view_all = true OR d.owner_user_id = $effective_user_id)
+      RETURN c.id AS contract_id,
+             coalesce(c.title, 'Contract Agreement') AS contract_title,
+             coalesce(a.name, 'Unknown Company') AS company_name,
+             c.status AS status,
+             c.starts_at AS starts_at,
+             c.ends_at AS ends_at,
+             c.auto_renew AS auto_renew,
+             c.created_at AS created_at
+      ORDER BY c.created_at DESC
+      LIMIT 20
+
+  customer_account_commercial_summary:
+    description: "360-degree commercial profile of an account: company data, linked deals, quotes, and billing."
+    cypher: |
+      MATCH (a:Account)
+      WHERE (a.id = $company_id OR toLower(a.name) CONTAINS toLower($company_name))
+      OPTIONAL MATCH (d:Deal {company_id: a.id})
+      WHERE ($can_view_all = true OR d.owner_user_id = $effective_user_id)
+      OPTIONAL MATCH (d)-[:HAS]->(q:Quote)
+      WITH a, d, collect(q) AS quotes
+      WITH a, d,
+           [q IN quotes WHERE q.approval_status = 'approved'][0] AS approved_quote,
+           quotes[0] AS any_quote
+      WITH a, d,
+           coalesce(approved_quote.currency, any_quote.currency, d.currency, $default_currency, 'INR') AS deal_currency,
+           coalesce(approved_quote.total, any_quote.total, d.amount, 0) AS deal_amount
+      OPTIONAL MATCH (inv:Invoice {company_id: a.id})
+      WHERE ($can_view_all = true OR inv.created_by_user_id = $effective_user_id)
+      WITH a,
+           count(DISTINCT d) AS total_deals,
+           coalesce(deal_currency, $default_currency, 'INR') AS deal_currency,
+           sum(coalesce(deal_amount, 0)) AS total_deal_value,
+           count(DISTINCT inv) AS total_invoices,
+           coalesce(inv.currency, inv.total_currency, $default_currency, 'INR') AS invoice_currency,
+           sum(CASE WHEN toLower(inv.status) = 'paid' THEN coalesce(inv.total, 0) ELSE 0 END) AS total_paid_revenue
+      RETURN a.id AS account_id,
+             a.name AS company_name,
+             a.channel_role AS channel_role,
+             a.domain AS domain,
+             a.industry AS industry,
+             total_deals,
+             deal_currency,
+             total_deal_value,
+             total_invoices,
+             invoice_currency,
+             total_paid_revenue
+      LIMIT 10
+
+  contact_timeline_and_bant:
+    description: "Contact lead profile, BANT qualification status, source, and recent timeline activities."
+    cypher: |
+      MATCH (sp:SalesProfile)
+      WHERE ($can_view_all = true OR sp.owner_user_id = $effective_user_id)
+        AND (sp.id = $contact_id OR sp.account_contact_id = $cdp_id)
+      OPTIONAL MATCH (c:Contact {cdp_id: sp.account_contact_id})
+      OPTIONAL MATCH (m:Meeting {contact_id: sp.id})
+      RETURN sp.id AS contact_profile_id,
+             coalesce(c.first_name + ' ' + c.last_name, 'Unknown Contact') AS full_name,
+             sp.lead_status AS lead_status,
+             sp.lead_source AS lead_source,
+             sp.bant_budget AS budget_confirmed,
+             sp.bant_authority AS authority_confirmed,
+             sp.bant_need AS need_confirmed,
+             sp.bant_timeline AS timeline_confirmed,
+             coalesce(sp.flag_reason, 'None') AS flag_reason,
+             count(DISTINCT m) AS total_meetings
+      LIMIT 10
+
+  lead_status_mix:
+    description: "Distribution of active CRM contact profiles across lead statuses."
+    cypher: |
+      MATCH (sp:SalesProfile)
+      WHERE coalesce(toLower(sp.crm_status), 'active') = 'active'
+        AND ($can_view_all = true OR sp.owner_user_id = $effective_user_id)
+      RETURN coalesce(sp.lead_status, 'new') AS lead_status,
+             count(sp) AS contact_count
+      ORDER BY contact_count DESC
+
+  unassigned_leads_pool:
+    description: "Active leads without an assigned sales owner available in the pool."
+    cypher: |
+      MATCH (sp:SalesProfile)
+      WHERE sp.owner_user_id IS NULL
+        AND NOT toLower(coalesce(sp.lead_status, 'new')) IN ['converted', 'disqualified']
+      OPTIONAL MATCH (c:Contact {cdp_id: sp.account_contact_id})
+      RETURN sp.id AS contact_profile_id,
+             coalesce(c.first_name + ' ' + c.last_name, 'Unassigned Lead') AS contact_name,
+             sp.lead_status AS lead_status,
+             sp.lead_source AS lead_source,
+             sp.created_at AS created_at
+      ORDER BY sp.created_at DESC
+      LIMIT 25
+
+  lead_source_conversion:
+    description: "Lead counts and converted deals grouped by lead acquisition source."
+    cypher: |
+      MATCH (sp:SalesProfile)
+      WHERE ($can_view_all = true OR sp.owner_user_id = $effective_user_id)
+      WITH coalesce(sp.lead_source, 'Unknown') AS lead_source,
+           count(sp) AS total_leads,
+           count(sp.converted_deal_id) AS converted_deals_count
+      RETURN lead_source,
+             total_leads,
+             converted_deals_count,
+             round((toFloat(converted_deals_count) / toFloat(total_leads)) * 100, 2) AS conversion_rate_percent
+      ORDER BY total_leads DESC
+
+  open_task_and_touch_cadence:
+    description: "Open operational tasks and overdue action items across contacts."
+    cypher: |
+      MATCH (t:Task)
+      WHERE toLower(t.status) IN ['open', 'in_progress']
+        AND ($can_view_all = true OR t.assigned_user_id = $effective_user_id)
+      RETURN t.id AS task_id,
+             t.summary AS summary,
+             t.status AS status,
+             t.priority AS priority,
+             t.due_at AS due_date,
+             t.assigned_user_id AS assigned_user_id,
+             CASE WHEN t.due_at < datetime() THEN true ELSE false END AS is_overdue
+      ORDER BY t.due_at ASC
+      LIMIT 25
+
+  sales_velocity_breakdown:
+    description: "Components of sales velocity: open opportunities, win rate, and average deal size."
+    cypher: |
+      MATCH (d:Deal)
+      WHERE ($can_view_all = true OR d.owner_user_id = $effective_user_id)
+      OPTIONAL MATCH (d)-[:HAS]->(q:Quote)
+      WITH d, collect(q) AS quotes
+      WITH d,
+           [q IN quotes WHERE q.approval_status = 'approved'][0] AS approved_quote,
+           quotes[0] AS any_quote
+      WITH d,
+           coalesce(approved_quote.currency, any_quote.currency, d.currency, $default_currency, 'INR') AS currency,
+           coalesce(approved_quote.total, any_quote.total, d.amount, 0) AS final_amount
+      WITH currency,
+           count(CASE WHEN toLower(d.stage) IN ['qualification', 'discover', 'propose', 'negotiate'] THEN 1 END) AS active_opportunities,
+           sum(CASE WHEN toLower(d.stage) IN ['qualification', 'discover', 'propose', 'negotiate'] THEN coalesce(final_amount, 0) ELSE 0 END) AS total_pipeline,
+           count(CASE WHEN toLower(d.stage) = 'closed_won' THEN 1 END) AS won_count,
+           count(CASE WHEN toLower(d.stage) IN ['closed_won', 'closed_lost'] THEN 1 END) AS decided_count
+      RETURN currency,
+             active_opportunities,
+             total_pipeline,
+             won_count,
+             decided_count,
+             CASE WHEN decided_count > 0 THEN round((toFloat(won_count) / toFloat(decided_count)) * 100, 2) ELSE 0.0 END AS win_rate_percent,
+             CASE WHEN active_opportunities > 0 THEN round(toFloat(total_pipeline) / toFloat(active_opportunities), 2) ELSE 0.0 END AS avg_deal_size
+
+  pipeline_by_owner:
+    description: "Open pipeline value and deal volume grouped by assigned sales representative."
+    cypher: |
+      MATCH (d:Deal)
+      WHERE toLower(d.stage) IN ['qualification', 'discover', 'propose', 'negotiate']
+        AND ($can_view_all = true OR d.owner_user_id = $effective_user_id)
+      OPTIONAL MATCH (d)-[:HAS]->(q:Quote)
+      WITH d, collect(q) AS quotes
+      WITH d,
+           [q IN quotes WHERE q.approval_status = 'approved'][0] AS approved_quote,
+           quotes[0] AS any_quote
+      WITH d,
+           coalesce(approved_quote.currency, any_quote.currency, d.currency, $default_currency, 'INR') AS currency,
+           coalesce(approved_quote.total, any_quote.total, d.amount, 0) AS final_amount
+      RETURN coalesce(d.owner_user_id, 0) AS owner_user_id,
+             currency,
+             count(d) AS open_deals_count,
+             sum(coalesce(final_amount, 0)) AS total_pipeline_value
+      ORDER BY total_pipeline_value DESC, open_deals_count DESC
+      LIMIT 10
+
+  deal_aging_bands:
+    description: "Open deals grouped into standard aging bands based on days since creation."
+    cypher: |
+      MATCH (d:Deal)
+      WHERE toLower(d.stage) IN ['qualification', 'discover', 'propose', 'negotiate']
+        AND ($can_view_all = true OR d.owner_user_id = $effective_user_id)
+      OPTIONAL MATCH (d)-[:HAS]->(q:Quote)
+      WITH d, collect(q) AS quotes
+      WITH d,
+           [q IN quotes WHERE q.approval_status = 'approved'][0] AS approved_quote,
+           quotes[0] AS any_quote
+      WITH d,
+           coalesce(approved_quote.currency, any_quote.currency, d.currency, $default_currency, 'INR') AS currency,
+           coalesce(approved_quote.total, any_quote.total, d.amount, 0) AS final_amount
+      WITH d, currency, final_amount, duration.inDays(datetime(d.created_at), datetime()).days AS age_days
+      WITH currency,
+           CASE
+             WHEN age_days <= 30 THEN '0-30 days'
+             WHEN age_days <= 60 THEN '31-60 days'
+             WHEN age_days <= 90 THEN '61-90 days'
+             ELSE '91+ days'
+           END AS aging_band,
+           count(d) AS deals_count,
+           sum(coalesce(final_amount, 0)) AS total_amount
+      RETURN aging_band,
+             currency,
+             deals_count,
+             total_amount
+      ORDER BY aging_band ASC
+
+  product_revenue_breakdown:
+    description: "Product revenue mix and quantity breakdown from billed invoices."
+    cypher: |
+      MATCH (p:Product)
+      RETURN p.id AS product_id,
+             p.name AS product_name,
+              p.category AS category,
+              p.billing_type AS billing_type,
+              p.status AS status,
+              coalesce(p.price, 0) AS price,
+              coalesce(p.currency, $default_currency, 'INR') AS currency
+       LIMIT 20
+
+  product_revenue_from_closed_deals:
+    description: "Product revenue attribution and sales breakdown from closed-won deals traversing quotes and line items."
+    cypher: |
+      MATCH (d:Deal)
+      WHERE toLower(d.stage) = 'closed_won'
+        AND ($can_view_all = true OR d.owner_user_id = $effective_user_id)
+      OPTIONAL MATCH (d)-[:HAS]->(q:Quote)
+      OPTIONAL MATCH (q)-[:HAS]->(li:LineItem)
+      OPTIONAL MATCH (p:Product) WHERE p.id = li.product_id OR (li)-[:FOR_PRODUCT]->(p)
+      OPTIONAL MATCH (a:Account {id: d.company_id})
+      RETURN coalesce(p.name, 'No Product Line Item (' + coalesce(d.title, 'Deal') + ')') AS product_name,
+             coalesce(a.name, 'Unknown Account') AS company_name,
+             coalesce(d.title, 'Untitled Deal') AS deal_title,
+             coalesce(q.currency, $default_currency, 'INR') AS currency,
+             count(DISTINCT d) AS won_deals_count,
+             sum(coalesce(li.amount, d.amount, 0)) AS realized_revenue
+      ORDER BY realized_revenue DESC
+      LIMIT 100
+
+  deals_by_period_or_month:
+    description: "Breakdown of deals by creation or closure year and month across pipeline stages."
+    cypher: |
+      MATCH (d:Deal)
+      WHERE ($can_view_all = true OR d.owner_user_id = $effective_user_id)
+      OPTIONAL MATCH (d)-[:HAS]->(q:Quote)
+      WITH d, collect(q) AS quotes
+      WITH d,
+           [q IN quotes WHERE q.approval_status = 'approved'][0] AS approved_quote,
+           quotes[0] AS any_quote
+      WITH d,
+           coalesce(approved_quote.currency, any_quote.currency, d.currency, $default_currency, 'INR') AS currency,
+           coalesce(approved_quote.total, any_quote.total, d.amount, 0) AS final_amount
+      WITH d, currency, final_amount,
+           datetime(coalesce(d.closed_at, d.created_at)).year AS deal_year,
+           datetime(coalesce(d.closed_at, d.created_at)).month AS deal_month
+      RETURN deal_year AS year,
+             deal_month AS month,
+             currency,
+             count(d) AS deal_count,
+             count(CASE WHEN toLower(d.stage) = 'closed_won' THEN 1 END) AS won_count,
+             count(CASE WHEN toLower(d.stage) = 'closed_lost' THEN 1 END) AS lost_count,
+             count(CASE WHEN toLower(d.stage) IN ['qualification', 'discover', 'propose', 'negotiate'] THEN 1 END) AS open_count,
+             sum(coalesce(final_amount, 0)) AS total_amount,
+             collect({
+               deal_id: d.id,
+               title: d.title,
+               stage: d.stage,
+               amount: final_amount,
+               currency: currency,
+               created_at: d.created_at,
+               closed_at: d.closed_at
+             })[0..5] AS sample_deals
+      ORDER BY year DESC, month DESC
+
+  won_deals_overview:
+    description: "List and summary of closed won deals with deal value, closed date, and account information."
+    cypher: |
+      MATCH (d:Deal)
+      WHERE toLower(d.stage) = 'closed_won'
+        AND ($can_view_all = true OR d.owner_user_id = $effective_user_id)
+      OPTIONAL MATCH (a:Account {id: d.company_id})
+      OPTIONAL MATCH (d)-[:HAS]->(q:Quote)
+      WITH d, a, collect(q) AS quotes
+      WITH d, a,
+           [q IN quotes WHERE q.approval_status = 'approved'][0] AS approved_quote,
+           quotes[0] AS any_quote
+      WITH d, a,
+           coalesce(approved_quote.currency, any_quote.currency, d.currency, $default_currency, 'INR') AS currency,
+           coalesce(approved_quote.total, any_quote.total, d.amount, 0) AS final_amount
+      RETURN d.id AS deal_id,
+              d.title AS deal_title,
+              coalesce(a.name, 'Unassigned Account') AS company_name,
+              d.stage AS stage,
+              final_amount AS amount,
+              currency,
+              d.closed_at AS closed_at,
+              d.owner_user_id AS owner_user_id
+      ORDER BY amount DESC
+      LIMIT 25
+
+  open_deals_overview:
+    description: "Overview and count of all active open deals in pipeline across qualification, discover, propose, and negotiate stages."
+    cypher: |
+      MATCH (d:Deal)
+      WHERE toLower(d.stage) IN ['qualification', 'discover', 'propose', 'negotiate']
+        AND ($can_view_all = true OR d.owner_user_id = $effective_user_id)
+      OPTIONAL MATCH (a:Account {id: d.company_id})
+      OPTIONAL MATCH (d)-[:HAS]->(q:Quote)
+      WITH d, a, collect(q) AS quotes
+      WITH d, a,
+           [q IN quotes WHERE q.approval_status = 'approved'][0] AS approved_quote,
+           quotes[0] AS any_quote
+      WITH d, a,
+           coalesce(approved_quote.currency, any_quote.currency, d.currency, $default_currency, 'INR') AS currency,
+           coalesce(approved_quote.total, any_quote.total, d.amount, 0) AS final_amount
+      RETURN d.id AS deal_id,
+             d.title AS deal_title,
+             coalesce(a.name, 'Unassigned Account') AS company_name,
+             d.stage AS stage,
+             final_amount AS amount,
+             currency,
+             d.updated_at AS last_updated,
+             d.created_at AS created_at,
+             d.owner_user_id AS owner_user_id
+      ORDER BY amount DESC
+      LIMIT 50
+
+  deals_by_day_or_date:
+    description: "Breakdown of deals created by specific calendar day or date, ordered by volume of deals created."
+    cypher: |
+      MATCH (d:Deal)
+      WHERE ($can_view_all = true OR d.owner_user_id = $effective_user_id)
+        AND (coalesce($target_date, '') = '' OR toString(date(d.created_at)) = $target_date)
+      OPTIONAL MATCH (d)-[:HAS]->(q:Quote)
+      WITH d, collect(q) AS quotes
+      WITH d,
+           [q IN quotes WHERE q.approval_status = 'approved'][0] AS approved_quote,
+           quotes[0] AS any_quote
+      WITH d,
+           coalesce(approved_quote.currency, any_quote.currency, d.currency, $default_currency, 'INR') AS currency,
+           coalesce(approved_quote.total, any_quote.total, d.amount, 0) AS final_amount
+      WITH toString(date(d.created_at)) AS created_date,
+           count(d) AS deals_created_count,
+           collect({
+             deal_id: d.id,
+             title: d.title,
+             stage: d.stage,
+             amount: final_amount,
+             currency: currency,
+             created_at: d.created_at
+           }) AS sample_deals
+      RETURN created_date AS date,
+             deals_created_count,
+             sample_deals
+      ORDER BY deals_created_count DESC, date DESC
+      LIMIT 25

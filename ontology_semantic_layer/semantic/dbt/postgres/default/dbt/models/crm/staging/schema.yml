@@ -1,0 +1,128 @@
+version: 2
+
+models:
+  - name: stg_contact_profiles
+    columns:
+      - name: contact_profile_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: stg_deals
+    columns:
+      - name: deal_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: stg_quotes
+    columns:
+      - name: quote_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: stg_proposals
+    columns:
+      - name: proposal_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: stg_sales_orders
+    columns:
+      - name: order_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: stg_invoices
+    columns:
+      - name: invoice_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: stg_crm_setup_users
+    columns:
+      - name: user_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: stg_crm_organizations
+    columns:
+      - name: organization_id
+        tests: [unique, not_null]
+
+  - name: stg_products
+    columns:
+      - name: product_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: stg_order_lines
+    columns:
+      - name: order_line_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: stg_quote_lines
+    columns:
+      - name: quote_line_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: stg_invoice_lines
+    columns:
+      - name: invoice_line_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: stg_companies
+    columns:
+      - name: company_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: stg_company_locations
+    columns:
+      - name: location_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: stg_contracts
+    columns:
+      - name: contract_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: stg_deal_activities
+    columns:
+      - name: deal_activity_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: stg_contact_activities
+    columns:
+      - name: contact_activity_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: stg_lead_scoring_jobs
+    columns:
+      - name: lead_scoring_job_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+      - name: contact_id
+        tests: [not_null]

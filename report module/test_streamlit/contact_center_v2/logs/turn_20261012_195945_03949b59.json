@@ -1,0 +1,61 @@
+{
+  "turn_id": "03949b59",
+  "timestamp": "2026-10-12T14:29:45.012679+00:00",
+  "question": "how many conversation are there in october alone",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1014,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Conversation count for October</strong></p><p>The conversation count for October is not available in Contact Center reports because the specific year was not provided.</p><p>Would you like to see the conversation count for all time instead?</p>",
+  "card": "card: none",
+  "facts": "result_id: r1\ntask_goal: Count the number of started conversations.\nEXECUTION_ERROR\nerror_type: REPLAN\nmessage: unsupported time expression: 'october'",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1014,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "how many conversation are there in october alone",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants to know the total number of started conversations that occurred during the month of October.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Count the number of started conversations.",
+          "time": "october",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "free_sql_fallback": true,
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "error",
+        "error_type": "REPLAN",
+        "certified": null,
+        "kpi_id": null,
+        "row_count": 0
+      }
+    ],
+    "facts": "result_id: r1\ntask_goal: Count the number of started conversations.\nEXECUTION_ERROR\nerror_type: REPLAN\nmessage: unsupported time expression: 'october'",
+    "grounded": true,
+    "card": "card: none"
+  },
+  "error": null
+}

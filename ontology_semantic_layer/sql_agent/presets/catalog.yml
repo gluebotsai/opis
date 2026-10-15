@@ -1,0 +1,358 @@
+version: 1
+presets:
+  tk.tickets:
+    product: ticketing
+    purpose: List tickets with status, assignee, priority, queue
+    tables: [tickets]
+    default_table: tickets
+    default_select:
+      - ticket_number
+      - subject
+      - status
+      - priority
+      - channel
+      - assignee_name
+      - resolver_name
+      - queue_name
+      - customer_name
+      - due_at
+      - created_at
+      - updated_at
+      - id
+
+  tk.queue:
+    product: ticketing
+    purpose: Queue depth, membership, SLA status
+    tables: [agent_queues, agent_queue_members]
+    default_table: agent_queues
+    default_select:
+      - id
+      - queue_name
+      - type
+      - sla_status
+      - open_tickets
+      - assigned
+
+  tk.notes:
+    product: ticketing
+    purpose: Ticket comments, replies, internal notes
+    tables: [ticket_notes, tickets]
+    default_table: ticket_notes
+    default_select:
+      - id
+      - ticket_id
+      - author_name
+      - visibility
+      - created_at
+
+  tk.audit:
+    product: ticketing
+    purpose: Ticket history, escalations, audit trail
+    tables: [audit_events]
+    default_table: audit_events
+    default_select:
+      - id
+      - ticket_id
+      - action
+      - queue_name
+      - actor_name
+      - created_at
+
+  tk.contacts:
+    product: ticketing
+    purpose: Support contact profiles
+    tables: [contact_profile]
+    default_table: contact_profile
+    default_select:
+      - id
+      - cdp_id
+      - status
+      - total_tickets
+      - account_id
+
+  tk.accounts:
+    product: ticketing
+    purpose: B2B client accounts
+    tables: [ticketing_accounts]
+    default_table: ticketing_accounts
+    default_select:
+      - id
+      - name
+      - status
+
+  tk.statuses:
+    product: ticketing
+    purpose: Org ticket status catalog
+    tables: [ticket_statuses]
+    default_table: ticket_statuses
+    default_select:
+      - status
+      - display_name
+      - is_terminal
+      - active
+
+  tk.kb:
+    product: ticketing
+    purpose: Knowledge base articles
+    tables: [kb_articles]
+    default_table: kb_articles
+    default_select:
+      - id
+      - title
+      - status
+      - category
+
+  tk.macros:
+    product: ticketing
+    purpose: Saved reply macros
+    tables: [macros]
+    default_table: macros
+    default_select:
+      - id
+      - name
+
+  cc.conversations:
+    product: ccaas
+    purpose: List contact-centre conversations
+    tables: [mart_conversations]
+    default_table: mart_conversations
+    default_select:
+      - conversation_id
+      - channel
+      - status
+      - queue_name
+      - assigned_agent_name
+      - created_at
+
+  cc.queue:
+    product: ccaas
+    purpose: CCaaS queue configuration and depth
+    tables: [mart_setup_ccaas_queues, mart_conversation_sla_state, mart_conversations]
+    default_table: mart_setup_ccaas_queues
+    default_select:
+      - queue_id
+      - queue_name
+      - status
+      - organization_id
+
+  cc.sla:
+    product: ccaas
+    purpose: Conversation SLA state and breach tracking
+    tables: [mart_conversation_sla_state]
+    default_table: mart_conversation_sla_state
+    default_select:
+      - conversation_id
+      - queue_id
+      - breached_at
+      - updated_at
+      - sla_policy_id
+
+  cc.assignments:
+    product: ccaas
+    purpose: Agent conversation assignments
+    tables: [mart_conversation_assignments]
+    default_table: mart_conversation_assignments
+    default_select:
+      - assignment_id
+      - conversation_id
+      - agent_id
+      - offered_at
+      - accepted_at
+      - state
+
+  cc.tasks:
+    product: ccaas
+    purpose: Agent tasks and follow-ups
+    tables: [mart_agent_tasks]
+    default_table: mart_agent_tasks
+    default_select:
+      - task_id
+      - assigned_user_id
+      - status
+      - due_at
+      - created_at
+
+  cc.presence:
+    product: ccaas
+    purpose: Agent presence and availability
+    tables: [mart_agent_presence_history]
+    default_table: mart_agent_presence_history
+    default_select:
+      - agent_id
+      - new_state
+      - started_at
+      - ended_at
+      - is_logged_in_eligible
+
+  cc.agent_assist:
+    product: ccaas
+    purpose: Copilot assist suggestions and skill executions
+    tables: [mart_copilot_turns, mart_copilot_skill_executions]
+    default_table: mart_copilot_turns
+    default_select:
+      - suggestion_id
+      - conversation_id
+      - suggestion_text
+      - suggestion_disposition
+      - created_at
+
+  cc.agents:
+    product: ccaas
+    purpose: CCaaS agent roster
+    tables: [mart_agents, mart_setup_users]
+    default_table: mart_agents
+    default_select:
+      - agent_id
+      - agent_name
+      - status
+      - created_at
+
+  crm.deals:
+    product: crm
+    purpose: CRM pipeline and deal lists
+    tables: [mart_deals]
+    default_table: mart_deals
+    default_select:
+      - deal_id
+      - stage
+      - owner_name
+      - deal_status_proxy
+      - created_at
+
+  crm.contacts:
+    product: crm
+    purpose: CRM contact and lead lists
+    tables: [mart_contacts]
+    default_table: mart_contacts
+    default_select:
+      - contact_id
+      - lifecycle_stage
+      - lead_status
+      - owner_name
+      - created_at
+
+  crm.companies:
+    product: crm
+    purpose: CRM company accounts
+    tables: [mart_companies]
+    default_table: mart_companies
+    default_select:
+      - company_id
+      - company_industry
+      - owner_name
+      - created_at
+
+  crm.orders:
+    product: crm
+    purpose: CRM orders and revenue
+    tables: [mart_orders]
+    default_table: mart_orders
+    default_select:
+      - order_id
+      - order_status
+      - created_by_name
+      - created_at
+
+  crm.engagement:
+    product: crm
+    purpose: CRM engagement activities
+    tables: [mart_contact_activities]
+    default_table: mart_contact_activities
+    default_select:
+      - contact_activity_id
+      - activity_type
+      - created_at
+      - organization_id
+
+  camp.overview:
+    product: campaign
+    purpose: Marketing campaign overview lists
+    tables: [mart_campaign_overview]
+    default_table: mart_campaign_overview
+    default_select:
+      - campaign_id
+      - campaign_name
+      - campaign_status
+      - source_channel
+      - created_at
+
+  camp.touch:
+    product: campaign
+    purpose: Campaign touch and send performance
+    tables: [mart_campaign_touch_performance]
+    default_table: mart_campaign_touch_performance
+    default_select:
+      - campaign_id
+      - touch_count
+      - sent_touch_count
+      - open_rate
+      - click_rate
+
+  camp.delivery:
+    product: campaign
+    purpose: Campaign batch delivery health
+    tables: [mart_campaign_batch_health]
+    default_table: mart_campaign_batch_health
+    default_select:
+      - campaign_id
+      - channel_name
+      - batch_failure_rate
+      - completed_batch_count
+      - failed_batch_count
+
+  wt.sessions:
+    product: webtracking
+    purpose: Web session activity lists
+    tables: [mart_web_sessions]
+    default_table: mart_web_sessions
+    default_select:
+      - session_id
+      - visitor_id
+      - device
+      - country
+      - utm_source
+      - started_at
+
+  wt.visitors:
+    product: webtracking
+    purpose: Visitor profiles and counts
+    tables: [mart_web_visitors]
+    default_table: mart_web_visitors
+    default_select:
+      - visitor_id
+      - first_seen_at
+      - last_seen_at
+      - country
+      - is_returning_visitor
+
+  wt.conversions:
+    product: webtracking
+    purpose: Goal conversions and funnel events
+    tables: [mart_conversion_events]
+    default_table: mart_conversion_events
+    default_select:
+      - conversion_id
+      - session_id
+      - conversion_type
+      - created_at
+      - visitor_id
+
+  wt.pageviews:
+    product: webtracking
+    purpose: Page view events
+    tables: [mart_page_views]
+    default_table: mart_page_views
+    default_select:
+      - page_view_id
+      - session_id
+      - page_path
+      - created_at
+      - visitor_id
+
+  metric.certified:
+    product: any
+    purpose: Certified KPI templates (SQL agent owned)
+    tables: []
+    default_table: null
+    default_select: []
+    certified_only: true

@@ -1,0 +1,40 @@
+{
+  "conversations": [
+    {
+      "id": "inbox-summarize",
+      "title": "Summarize the open conversation",
+      "turns": [
+        { "role": "user", "content": "Summarize this conversation" },
+        {
+          "role": "assistant",
+          "content": "<p>Customer asked about invoice #4412. Agent confirmed a billing delay and offered a callback today.</p>",
+          "tools": ["summarize_conversation"]
+        }
+      ]
+    },
+    {
+      "id": "inbox-suggest-reply",
+      "title": "Suggest a customer reply",
+      "turns": [
+        { "role": "user", "content": "Draft a reply confirming we will call back this afternoon" },
+        {
+          "role": "assistant",
+          "content": "<p>Suggested reply: we will call this afternoon about invoice #4412. You can send it from the composer.</p>",
+          "tools": ["get_conversation_context", "suggest_reply"]
+        }
+      ]
+    },
+    {
+      "id": "inbox-route-workforce",
+      "title": "Route queue staffing from an open conversation",
+      "turns": [
+        { "role": "user", "content": "Add another agent to the Support queue" },
+        {
+          "role": "assistant",
+          "content": "",
+          "tools": ["route_to_agent"]
+        }
+      ]
+    }
+  ]
+}

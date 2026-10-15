@@ -1,0 +1,372 @@
+# =============================================================================
+# CDP Ontology Knowledge Graph — additions for core.yaml
+# =============================================================================
+# How to insert:
+#   1) Copy every entry under stub_labels: into core.yaml → stub_labels
+#   2) Copy the Contact relationship patch into cdp.customer_profile.relationships
+#   3) Paste the entire tables: block under the existing CDP section
+#      (after cdp.order_items, before inventory.products)
+#
+# Naming rules used here:
+#   - Domain / industry neutral (no retail/healthcare/finance jargon)
+#   - Agent-readable nouns for nodes; verb phrases for relationships
+#   - Reuses existing hub labels: Contact, Tenant, Channel, Segment, Product
+#   - Does NOT redefine: Campaign, Interaction, Product, ContactActivity, Order
+# =============================================================================
+
+# ---------- 1) APPEND to stub_labels: ----------------------------------------
+stub_labels:
+  # Synthetic collection hubs (keyed by parent so MERGE converges)
+  EventHistory: {key: cdp_id}
+  SessionHistory: {key: cdp_id}
+  JourneyHistory: {key: cdp_id}
+  MetricHistory: {key: cdp_id}
+  MemoryCollection: {key: cdp_id}
+  OrgMetricCatalog: {key: organization_id}
+  AnomalyCatalog: {key: organization_id}
+
+
+# ---------- 2) PATCH Contact (cdp.customer_profile) — ADD these relationships
+# under existing relationships: (do not remove HAS_INSIGHTS / etc.)
+#
+# relationships_to_add_on_contact:
+#   - {type: HAS_RECEIVED_CAMPAIGNS, direction: out, target_label: ReceivedCampaigns, target_key: cdp_id, from_column: cdp_id, create_target: true}
+#   - {type: HAS_EVENTS, direction: out, target_label: EventHistory, target_key: cdp_id, from_column: cdp_id, create_target: true}
+#   - {type: HAS_SESSIONS, direction: out, target_label: SessionHistory, target_key: cdp_id, from_column: cdp_id, create_target: true}
+#   - {type: HAS_JOURNEY_HISTORY, direction: out, target_label: JourneyHistory, target_key: cdp_id, from_column: cdp_id, create_target: true}
+#   - {type: HAS_METRIC_HISTORY, direction: out, target_label: MetricHistory, target_key: cdp_id, from_column: cdp_id, create_target: true}
+#   - {type: HAS_MEMORY, direction: out, target_label: MemoryCollection, target_key: cdp_id, from_column: cdp_id, create_target: true}
+
+
+# ---------- 3) APPEND under tables: (CDP metric / behavior / persona block) ---
+tables:
+
+  # ===========================================================================
+  # CDP — sources & identity graph
+  # ===========================================================================
+
+  cdp.source_systems:
+    mode: node
+    label: SourceSystem
+    key: source_id
+    custom_field: custom_fields
+    custom_dynamic: true
+    properties: [source_id, organization_id, source_name, source_type, active, created_at]
+    relationships:
+      - {type: HAS_SOURCE_SYSTEM, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  # Links two Contact profiles (merge / probabilistic / deterministic identity)
+  cdp.identity_links:
+    mode: relationship_only
+    from_label: Contact
+    from_key: cdp_id
+    from_column: cdp_id
+    to_label: Contact
+    to_key: cdp_id
+    to_column: linked_cdp_id
+    type: LINKED_TO
+
+  # ===========================================================================
+  # CDP — behavior (events, sessions, touchpoints, journey)
+  # ===========================================================================
+
+  cdp.customer_events:
+    mode: node
+    label: CustomerEvent
+    key: event_id
+    custom_field: custom_fields
+    custom_dynamic: true
+    properties: [event_id, cdp_id, organization_id, event_name, event_category,
+                 source_name, source_event_id, channel, visitor_id, session_id,
+                 page_path, page_title, referrer, utm_source, utm_medium,
+                 utm_campaign, device_type, browser, country, occurred_at,
+                 ingested_at, amount, currency, quantity, status, reference_id]
+    relationships:
+      - {type: CONTAINS, direction: in, target_label: EventHistory, target_key: cdp_id, from_column: cdp_id, create_target: true}
+      - {type: FOR_CONTACT, direction: out, target_label: Contact, target_key: cdp_id, from_column: cdp_id}
+      - {type: THROUGH, direction: out, target_label: Channel, target_key: name, from_column: channel, create_target: true}
+      - {type: FROM_SOURCE, direction: out, target_label: SourceSystem, target_key: source_name, from_column: source_name, create_target: true}
+      - {type: IN_SESSION, direction: out, target_label: CustomerSession, target_key: session_id, from_column: session_id}
+
+  cdp.customer_sessions:
+    mode: node
+    label: CustomerSession
+    key: session_id
+    custom_field: custom_fields
+    custom_dynamic: true
+    properties: [session_id, cdp_id, organization_id, visitor_id, started_at, ended_at,
+                 duration_seconds, entry_page, exit_page, pageview_count, is_bounce,
+                 referrer, referrer_domain, utm_source, utm_medium, utm_campaign,
+                 device_type, browser, platform, language, country, region, city, created_at]
+    relationships:
+      - {type: CONTAINS, direction: in, target_label: SessionHistory, target_key: cdp_id, from_column: cdp_id, create_target: true}
+      - {type: FOR_CONTACT, direction: out, target_label: Contact, target_key: cdp_id, from_column: cdp_id}
+
+  # Distinct from Interaction (CCAAS/service conversation projection already in core)
+  cdp.customer_interactions:
+    mode: node
+    label: CustomerTouchpoint
+    key: interaction_id
+    custom_field: custom_fields
+    custom_dynamic: true
+    properties: [interaction_id, cdp_id, organization_id, interaction_source,
+                 interaction_type, channel, direction, page_path, element_name,
+                 agent_id, session_id, sentiment_score, summary, started_at, ended_at]
+    relationships:
+      - {type: CONTAINS, direction: in, target_label: InteractionHistory, target_key: cdp_id, from_column: cdp_id, create_target: true}
+      - {type: FOR_CONTACT, direction: out, target_label: Contact, target_key: cdp_id, from_column: cdp_id}
+      - {type: THROUGH, direction: out, target_label: Channel, target_key: name, from_column: channel, create_target: true}
+      - {type: IN_SESSION, direction: out, target_label: CustomerSession, target_key: session_id, from_column: session_id}
+
+  # Current lifecycle stage for a contact (one active state per journey_name)
+  cdp.journey_states:
+    mode: node
+    label: JourneyState
+    key: id
+    # ETL: synthesize id = "{organization_id}:{cdp_id}:{journey_name}"
+    properties: [id, cdp_id, organization_id, journey_name, current_stage, entered_at, updated_at]
+    relationships:
+      - {type: HAS_JOURNEY_STATE, direction: in, target_label: Contact, target_key: cdp_id, from_column: cdp_id}
+
+  cdp.customer_journey:
+    mode: node
+    label: JourneyEvent
+    key: journey_event_id
+    custom_field: custom_fields
+    custom_dynamic: true
+    properties: [journey_event_id, cdp_id, organization_id, journey_name, journey_channel,
+                 touchpoint, from_stage, to_stage, trigger_event, session_id, source, occurred_at]
+    relationships:
+      - {type: CONTAINS, direction: in, target_label: JourneyHistory, target_key: cdp_id, from_column: cdp_id, create_target: true}
+      - {type: FOR_CONTACT, direction: out, target_label: Contact, target_key: cdp_id, from_column: cdp_id}
+      - {type: THROUGH, direction: out, target_label: Channel, target_key: name, from_column: journey_channel, create_target: true}
+      - {type: IN_SESSION, direction: out, target_label: CustomerSession, target_key: session_id, from_column: session_id}
+
+  # ===========================================================================
+  # CDP — metrics (primary path for metric WH questions)
+  # Contact -[:HAS_METRICS]-> CustomerMetric
+  # Contact -[:HAS_METRIC_HISTORY]-> MetricHistory -[:CONTAINS]-> DailyMetric
+  # Tenant  -[:HAS_ORG_METRICS]-> OrgMetricCatalog -[:CONTAINS]-> OrgMetric
+  # ===========================================================================
+
+  # Latest rolled-up customer metrics (spend, orders, churn, LTV, journey stage)
+  cdp.gold_customer_metrics:
+    mode: node
+    label: CustomerMetric
+    key: cdp_id
+    properties: [cdp_id, organization_id, total_events, total_orders,
+                 {name: total_spend, type: decimal, scale: 2},
+                 {name: avg_order_value, type: decimal, scale: 2},
+                 last_event_at, last_purchase_at, engagement_score, value_score,
+                 loyalty_score, churn_score, purchase_probability, predicted_ltv,
+                 journey_stage, segment_count, updated_at]
+    relationships:
+      - {type: HAS_METRICS, direction: in, target_label: Contact, target_key: cdp_id, from_column: cdp_id}
+
+  # Daily metric series for trend / “why changed” questions
+  cdp.customer_metrics:
+    mode: node
+    label: DailyMetric
+    key: id
+    # ETL: synthesize id = "{cdp_id}:{metric_date}"
+    properties: [id, metric_date, cdp_id, organization_id, session_count,
+                 total_page_views, avg_session_duration, bounce_rate, avg_scroll_depth,
+                 conversion_count, engagement_score, value_score, loyalty_score,
+                 campaign_engagement_score, last_seen_days]
+    relationships:
+      - {type: CONTAINS, direction: in, target_label: MetricHistory, target_key: cdp_id, from_column: cdp_id, create_target: true}
+      - {type: FOR_CONTACT, direction: out, target_label: Contact, target_key: cdp_id, from_column: cdp_id}
+
+  # Organization-scoped named metrics (campaign / funnel rollups by metric_key)
+  cdp.gold_campaign_lookup:
+    mode: node
+    label: OrgMetric
+    key: id
+    # ETL: synthesize id = "{organization_id}:{metric_key}"
+    properties: [id, organization_id, metric_key, metric_label, metric_value, updated_at]
+    relationships:
+      - {type: CONTAINS, direction: in, target_label: OrgMetricCatalog, target_key: organization_id, from_column: organization_id, create_target: true}
+      - {type: HAS_ORG_METRICS, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  # ===========================================================================
+  # CDP — personas (buyer / user archetypes — industry neutral)
+  # Contact -[:HAS_PERSONA]-> Persona
+  # ===========================================================================
+
+  cdp.persona_definitions:
+    mode: node
+    label: Persona
+    key: persona_id
+    custom_field: custom_fields
+    custom_dynamic: true
+    properties: [persona_id, organization_id, persona_key, name, summary, industry,
+                 persona_type, status, version, confidence, evidence_count,
+                 decision_role, model_version, created_at, updated_at]
+    relationships:
+      - {type: DEFINES_PERSONA, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  cdp.customer_persona_assignments:
+    mode: relationship_only
+    from_label: Contact
+    from_key: cdp_id
+    from_column: cdp_id
+    to_label: Persona
+    to_key: persona_id
+    to_column: persona_id
+    type: HAS_PERSONA
+    # ETL: prefer rows where is_active = true
+    # optional relationship props: confidence, drift_score, assignment_source, assigned_at
+
+  cdp.persona_snapshots:
+    mode: node
+    label: PersonaEvidence
+    key: snapshot_id
+    properties: [snapshot_id, organization_id, cdp_id, persona_id, inference_run_id,
+                 confidence, model_version, inference_path, created_at]
+    relationships:
+      - {type: HAS_PERSONA_EVIDENCE, direction: in, target_label: Contact, target_key: cdp_id, from_column: cdp_id}
+      - {type: FOR_PERSONA, direction: out, target_label: Persona, target_key: persona_id, from_column: persona_id}
+
+  # ===========================================================================
+  # CDP — memory & activation (agent context / next actions)
+  # ===========================================================================
+
+  # Past experiences / notable moments for a contact
+  cdp.episodic_memory:
+    table: episodic_memory
+    mode: node
+    label: ExperienceMemory
+    key: memory_id
+    properties: [memory_id, organization_id, cdp_id, event_id, summary,
+                 importance_score, sentiment, occurred_at, recorded_at]
+    relationships:
+      - {type: CONTAINS, direction: in, target_label: MemoryCollection, target_key: cdp_id, from_column: cdp_id, create_target: true}
+      - {type: FOR_CONTACT, direction: out, target_label: Contact, target_key: cdp_id, from_column: cdp_id}
+
+  # Durable facts known about a contact
+  cdp.semantic_memory:
+    table: semantic_memory
+    mode: node
+    label: KnownFact
+    key: memory_id
+    properties: [memory_id, organization_id, cdp_id, fact, confidence, source, created_at]
+    relationships:
+      - {type: CONTAINS, direction: in, target_label: MemoryCollection, target_key: cdp_id, from_column: cdp_id, create_target: true}
+      - {type: FOR_CONTACT, direction: out, target_label: Contact, target_key: cdp_id, from_column: cdp_id}
+
+  # Reusable trigger → action rules at tenant scope
+  cdp.procedural_memory:
+    table: procedural_memory
+    mode: node
+    label: ActionRule
+    key: rule_id
+    properties: [rule_id, organization_id, name, priority, active, created_at]
+    relationships:
+      - {type: DEFINES_ACTION_RULE, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  cdp.activation_tasks:
+    table: activation_tasks
+    mode: node
+    label: ActivationTask
+    key: task_id
+    properties: [task_id, organization_id, cdp_id, channel, task_type, status,
+                 created_at, emitted_at]
+    relationships:
+      - {type: HAS_ACTIVATION, direction: in, target_label: Contact, target_key: cdp_id, from_column: cdp_id}
+      - {type: THROUGH, direction: out, target_label: Channel, target_key: name, from_column: channel, create_target: true}
+
+  # ===========================================================================
+  # CDP — anomaly detection & predictive models
+  # ===========================================================================
+
+  cdp.anomaly_rules:
+    mode: node
+    label: AnomalyRule
+    key: rule_id
+    properties: [rule_id, spoke, metric_key, metric_name, condition, threshold,
+                 threshold_unit, window_minutes, severity, enabled, cooldown_minutes,
+                 threshold_mode, trigger_mode, evaluator_key, created_at, updated_at]
+    relationships:
+      - {type: DEFINES_ANOMALY_RULE, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  cdp.anomaly_alerts:
+    mode: node
+    label: AnomalyAlert
+    key: alert_id
+    properties: [alert_id, rule_id, organization_id, spoke, metric_key, severity,
+                 observed_value, threshold, condition, message, email_status,
+                 delivery_status, handoff_status, created_at, acknowledged_at]
+    relationships:
+      - {type: TRIGGERED_BY, direction: out, target_label: AnomalyRule, target_key: rule_id, from_column: rule_id}
+      - {type: CONTAINS, direction: in, target_label: AnomalyCatalog, target_key: organization_id, from_column: organization_id, create_target: true}
+      - {type: HAS_ANOMALY_ALERTS, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  cdp.anomaly_threshold_state:
+    mode: node
+    label: MetricThreshold
+    key: id
+    # ETL: synthesize id = "{organization_id}:{rule_id}"
+    properties: [id, organization_id, rule_id, dynamic_threshold, method,
+                 sample_size, confidence, computed_at]
+    relationships:
+      - {type: HAS_THRESHOLD, direction: in, target_label: AnomalyRule, target_key: rule_id, from_column: rule_id}
+      - {type: FOR_TENANT, direction: out, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  cdp.agentic_model:
+    mode: node
+    label: PredictiveModel
+    key: id
+    # ETL: synthesize id = "{organization_id}:{model_name}"
+    properties: [id, organization_id, products, model_name, job_id, model_id,
+                 status, dirty, dirty_reason, dirty_at, onboarded_at, trained_at,
+                 last_predict_at, last_error, updated_at]
+    relationships:
+      - {type: HAS_PREDICTIVE_MODEL, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+
+# =============================================================================
+# Quick reference — labels (new) and what an agent should use them for
+# =============================================================================
+# SourceSystem        — where data came from (connector / system name)
+# CustomerEvent       — atomic behavior/commerce event on a contact
+# CustomerSession     — aggregated visit/session
+# CustomerTouchpoint  — generic interaction/touch (NOT service Interaction)
+# JourneyState        — current stage for a contact
+# JourneyEvent        — stage transition / journey touchpoint
+# CustomerMetric      — latest rolled-up metrics (ask this first for WH metrics)
+# DailyMetric         — day-level metric history
+# OrgMetric           — organization-level named metric
+# Persona             — reusable contact archetype
+# PersonaEvidence     — evidence used to assign a persona
+# ExperienceMemory    — memorable past experience for a contact
+# KnownFact           — durable fact about a contact
+# ActionRule          — tenant trigger→action rule
+# ActivationTask      — outbound/activation work item for a contact
+# AnomalyRule         — metric anomaly definition
+# AnomalyAlert        — fired anomaly instance
+# MetricThreshold     — dynamic threshold state for a rule
+# PredictiveModel     — org predictive-model lifecycle
+#
+# Relations (new) — intended reading direction for Cypher agents:
+# Contact -[:HAS_EVENTS]-> EventHistory -[:CONTAINS]-> CustomerEvent
+# Contact -[:HAS_SESSIONS]-> SessionHistory -[:CONTAINS]-> CustomerSession
+# Contact -[:HAS_JOURNEY_HISTORY]-> JourneyHistory -[:CONTAINS]-> JourneyEvent
+# Contact -[:HAS_JOURNEY_STATE]-> JourneyState
+# Contact -[:HAS_METRICS]-> CustomerMetric
+# Contact -[:HAS_SCORES]-> CustomerScore                    (already in core)
+# Contact -[:HAS_METRIC_HISTORY]-> MetricHistory -[:CONTAINS]-> DailyMetric
+# Contact -[:HAS_PERSONA]-> Persona
+# Contact -[:HAS_PERSONA_EVIDENCE]-> PersonaEvidence
+# Contact -[:HAS_MEMORY]-> MemoryCollection -[:CONTAINS]-> ExperienceMemory|KnownFact
+# Contact -[:HAS_ACTIVATION]-> ActivationTask
+# Contact -[:LINKED_TO]-> Contact
+# CustomerEvent|CustomerTouchpoint|JourneyEvent -[:THROUGH]-> Channel
+# CustomerEvent -[:FROM_SOURCE]-> SourceSystem
+# Tenant -[:HAS_ORG_METRICS]-> OrgMetricCatalog -[:CONTAINS]-> OrgMetric
+# Tenant -[:DEFINES_PERSONA]-> Persona
+# Tenant -[:DEFINES_ACTION_RULE]-> ActionRule
+# Tenant -[:DEFINES_ANOMALY_RULE]-> AnomalyRule
+# Tenant -[:HAS_ANOMALY_ALERTS]-> AnomalyAlert
+# Tenant -[:HAS_PREDICTIVE_MODEL]-> PredictiveModel
+# AnomalyAlert -[:TRIGGERED_BY]-> AnomalyRule -[:HAS_THRESHOLD]-> MetricThreshold
+# =============================================================================

@@ -1,0 +1,35 @@
+{
+  "name": "worktual-campaign",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=backend & npm run dev --workspace=frontend",
+    "dev:all": "npm run dev:lan",
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "dev:backend": "npm run dev --workspace=backend",
+    "dev:agents": "cd agents && .venv/bin/python3.14 -m app.main",
+    "dev:lan": "bash scripts/dev-lan.sh",
+    "dev:lan:stop": "bash scripts/dev-lan-stop.sh",
+    "check:stack": "bash scripts/check-stack.sh",
+    "check:crm-embed": "bash scripts/check-crm-embed.sh",
+    "sync:crm-jwt": "bash scripts/sync-crm-jwt-to-agents.sh",
+    "check:lan-flow": "bash scripts/check-lan-template-flow.sh",
+    "dev:public-site": "npm run dev:public --workspace=frontend",
+    "dev:webpush": "node demo/webpush-site/https-dev-server.mjs",
+    "dev:webpush:tunnel": "node demo/webpush-site/tunnel.mjs",
+    "dev:webpush:share": "node demo/webpush-site/start-share.mjs",
+    "webpush:trust": "node demo/webpush-site/setup-trusted-certs.mjs",
+    "build": "npm run build --workspace=backend && npm run build --workspace=frontend",
+    "docker:build": "docker compose build",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "db:migrate": "npm run db:migrate --workspace=backend",
+    "db:deploy": "npm run db:deploy --workspace=backend",
+    "db:seed": "npm run db:seed --workspace=backend"
+  }
+}

@@ -1,0 +1,26 @@
+# Ticketing KB — mas-agents-guide.md A4. Same KnowledgeArticle as CC FAQ; owned_by ticketing.
+module: tk_kb
+layer: product
+depends_on: [core, knowledge]
+owned_by_spoke: ticketing
+source:
+  semantic: semantic/dbt/ticketing/default/dbt/models/semantic_layer kb_article
+  agents: DSSA deflection searches published KB before ticket create
+usecase: >
+  Help articles and categories. DSSA uses published articles to deflect intake.
+
+classes:
+  - id: KbCategory
+    definition: Folder for ticketing knowledge articles.
+    properties: [name]
+
+relations:
+  - { from: KnowledgeArticle, type: in_category, to: KbCategory }
+
+actions:
+  - id: action.create_kb_article
+    operates_on: [KnowledgeArticle]
+    requires: [userConfirmed]
+  - id: action.manage_kb_category
+    operates_on: [KbCategory]
+    requires: [userConfirmed]

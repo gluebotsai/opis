@@ -1,0 +1,43 @@
+{
+  "name": "my-accounts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": " ",
+    "dev:vite": "vite --host 0.0.0.0",
+    "dev:mail": "node server/index.js",
+    "dev:worker": "node server/worker.js",
+    "dev:all": "node scripts/dev.mjs",
+    "dev:fix": "pnpm approve-builds --all && pnpm install",
+    "stop:dev": "node scripts/stop-dev.mjs",
+    "migrate": "node -e \"import('./server/db/migrate.js').then(m => m.migrateDatabase())\"",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "commit-trace": "node scripts/update-commit-trace.mjs",
+    "setup:hooks": "node scripts/setup-git-hooks.mjs"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "bcrypt": "5.1.1",
+    "bullmq": "^5.79.3",
+    "cors": "^2.8.5",
+    "date-fns": "^4.1.0",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "imapflow": "^1.0.184",
+    "ioredis": "^5.11.1",
+    "jspdf": "2.5.2",
+    "jspdf-autotable": "3.8.4",
+    "lucide-react": "^0.468.0",
+    "mailparser": "^3.7.2",
+    "multer": "^2.2.0",
+    "nodemailer": "^6.9.16",
+    "pg": "^8.13.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.1.1",
+    "vite": "^6.0.7",
+    "xlsx": "^0.18.5"
+  }
+}

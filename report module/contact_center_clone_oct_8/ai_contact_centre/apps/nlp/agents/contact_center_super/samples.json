@@ -1,0 +1,28 @@
+{
+  "conversations": [
+    {
+      "id": "super-route-contact",
+      "title": "Route a contact update to Agent Assist",
+      "turns": [
+        { "role": "user", "content": "Change Priya Sharma's phone number" },
+        {
+          "role": "assistant",
+          "content": "",
+          "tools": ["route_to_agent"]
+        }
+      ]
+    },
+    {
+      "id": "super-route-analytics",
+      "title": "Route a KPI question to Performance Intelligence",
+      "turns": [
+        { "role": "user", "content": "Why did SLA drop yesterday?" },
+        {
+          "role": "assistant",
+          "content": "",
+          "tools": ["route_to_agent"]
+        }
+      ]
+    }
+  ]
+}

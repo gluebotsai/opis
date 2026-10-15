@@ -1,0 +1,60 @@
+{
+  "turn_id": "a989f974",
+  "timestamp": "2026-10-12T12:57:02.878133+00:00",
+  "question": "How many interactions were transferred between queues?",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1036,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Transferred interactions</strong></p>\n<p>There were <strong>3</strong> transferred conversations all time.</p>\n<p>Would you like to see a list of the conversations that were transferred?</p>",
+  "card": "card: kpi r1",
+  "facts": "result_id: r1\nwindow: all time\nkpi: transferred\ncertified: true\nunit: conversations\ntask_goal: Count the number of conversations that were transferred.\nanswer_type: number\nrow_count: 1\nrow 1: transferred=3",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1036,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "How many interactions were transferred between queues?",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants to know the total number of interactions that were transferred between queues.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Count the number of conversations that were transferred.",
+          "time": "all time",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "transferred",
+        "row_count": 1
+      }
+    ],
+    "facts": "result_id: r1\nwindow: all time\nkpi: transferred\ncertified: true\nunit: conversations\ntask_goal: Count the number of conversations that were transferred.\nanswer_type: number\nrow_count: 1\nrow 1: transferred=3",
+    "grounded": true,
+    "card": "card: kpi r1"
+  },
+  "error": null
+}

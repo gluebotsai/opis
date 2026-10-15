@@ -1,0 +1,27 @@
+
+================================================================================
+Starting web at 2026-08-24 22:21:15
+cwd: /home/vectone/Documents/Live_build_web_tracking/CURSOR_REBUILD_for_live/Live_web_tracking_folder/web
+command: yarn dev
+================================================================================
+
+node:internal/modules/run_main:129
+    triggerUncaughtException(
+    ^
+Error: Required package missing from disk. If you keep your packages inside your repository then restarting the Node process may be enough. Otherwise, try to run an install first.
+
+Missing package: vite@virtual:4489fb4751cc081f4e05a382faceebeaf82cbaa307d5dc055ae10ce99dbd8204c2c7f7a19f29a44879d95fbcee0ffc013747ab0cde8a3e271055246d763375ae#npm:5.4.21
+Expected package location: /home/vectone/Documents/Live_build_web_tracking/CURSOR_REBUILD_for_live/Live_web_tracking_folder/web/.yarn/__virtual__/vite-virtual-cb2e5de471/5/root/.yarn/berry/cache/vite-npm-5.4.21-12a8265f9b-10c0.zip/node_modules/vite/
+
+    at makeError (/home/vectone/Documents/Live_build_web_tracking/CURSOR_REBUILD_for_live/Live_web_tracking_folder/web/.pnp.cjs:10378:34)
+    at resolveUnqualified (/home/vectone/Documents/Live_build_web_tracking/CURSOR_REBUILD_for_live/Live_web_tracking_folder/web/.pnp.cjs:12108:17)
+    at resolveRequest (/home/vectone/Documents/Live_build_web_tracking/CURSOR_REBUILD_for_live/Live_web_tracking_folder/web/.pnp.cjs:12159:14)
+    at Object.resolveRequest (/home/vectone/Documents/Live_build_web_tracking/CURSOR_REBUILD_for_live/Live_web_tracking_folder/web/.pnp.cjs:12215:26)
+    at resolve$1 (file:///home/vectone/Documents/Live_build_web_tracking/CURSOR_REBUILD_for_live/Live_web_tracking_folder/web/.pnp.loader.mjs:2046:21)
+    at nextResolve (node:internal/modules/esm/hooks:866:28)
+    at Hooks.resolve (node:internal/modules/esm/hooks:304:30)
+    at MessagePort.handleMessage (node:internal/modules/esm/worker:196:24)
+    at [nodejs.internal.kHybridDispatch] (node:internal/event_target:820:20)
+    at MessagePort.<anonymous> (node:internal/per_context/messageport:23:28)
+
+Node.js v20.17.0

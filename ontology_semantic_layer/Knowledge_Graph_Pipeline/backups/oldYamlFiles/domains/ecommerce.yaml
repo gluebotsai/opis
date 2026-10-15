@@ -1,0 +1,528 @@
+# =============================================================================
+# domains/ecommerce.yaml   —   v2
+# -----------------------------------------------------------------------------
+#   effective(org) = core.yaml + domains/ecommerce.yaml [+ org<id>.yaml]
+#   selected when accounts.organizations.industry_type resolves to `ecommerce`
+#   variant chosen by accounts.organizations.business_type (b2c | b2b | b2b2c)
+#
+# Reviewed against the seven Worktual BA ontology workbooks (CRM B2C,
+# Campaign B2B/B2C, CCaaS B2B/B2C, Ticketing B2B/B2C). Those workbooks declare
+# a 3-layer architecture — Layer 1 Core -> Layer 2 Industry -> Layer 3 Company —
+# which is exactly this file's position. Layer 2 must extend, never contradict.
+#
+# =============================================================================
+# CONFORMANCE RULE (the whole point of v2)
+# =============================================================================
+# Every line below traces to something core.yaml ALREADY has. Concretely, an
+# entry is legal only if:
+#
+#   R1  the table it extends exists in core.yaml `tables:`
+#   R2  every column named in a `when:` / `from_column:` / `name_from:` appears
+#       in that table's core `properties:` list
+#   R3  custom_fields promotion is only allowed where core sets
+#       `custom_dynamic: true` on that table
+#   R4  it adds labels / names / vocabulary / promoted values — it never
+#       renames, re-keys or removes a core label or edge
+#   R5  anything failing R1-R4 lives in `not_modelled:` and EMITS NOTHING
+#
+# The validator must fail the build on any violation. A domain pack that
+# references a column core does not carry is the exact failure mode we are
+# avoiding: it loads clean, produces nothing, and nobody notices.
+#
+# Column provenance is annotated inline as  [core: <table>.<column>].
+# =============================================================================
+
+industry: ecommerce
+pack_version: "2026.09.01"
+requires_core: ">=2"
+layer: domain
+
+applies_when:
+  accounts.organizations.industry_type:
+    [ecommerce, e-commerce, "e commerce", retail, online retail, d2c, dtc,
+     marketplace, shopping, fashion, apparel, consumer goods, cpg,
+     grocery, electronics retail]
+
+# -----------------------------------------------------------------------------
+# VARIANTS — the BAs model B2B and B2C as separate ontologies per product.
+# business_type is a real core column, so the split is enforceable.
+# [core: accounts.organizations.business_type -> Tenant.business_type]
+# -----------------------------------------------------------------------------
+variant_key: accounts.organizations.business_type
+variants:
+
+  b2c:
+    # Individual shopper transacts directly. Revenue: Order -> (no Deal).
+    anchor_entities: [Contact, Order, Ticket, Conversation, Product]
+    naming_overrides:
+      Contact: {primary: Customer, aliases: [shopper, buyer, consumer, guest]}
+      Company: {primary: Store, aliases: [outlet, location]}     # rarely used
+    de_emphasise: [Deal, Quote, Proposal, SalesOrder, PriceBook, Contract]
+    # de_emphasise = ranked lower in the meta-graph for this variant.
+    # It does NOT disable the mapping — a B2C tenant that starts selling
+    # wholesale must not silently lose its data.
+
+  b2b:
+    # Named account / buying committee. Revenue: Deal -> Quote -> SalesOrder.
+    anchor_entities: [Company, Contact, Deal, SalesOrder, Invoice, Ticket]
+    naming_overrides:
+      Contact: {primary: Buyer,   aliases: [contact, procurement contact, requisitioner]}
+      Company: {primary: Account, aliases: [buying account, distributor, reseller, stockist]}
+      Deal:    {primary: Opportunity, aliases: [rfq, tender, bid]}
+      Quote:   {primary: Quote,   aliases: [quotation, proposal, rfq response]}
+      Contract: {primary: Contract, aliases: [supply agreement, pricing agreement]}
+    de_emphasise: [CommerceOrder, LoyaltyTier]
+
+  b2b2c:
+    # Brand HQ + franchise/stockist selling on to consumers. Both paths live.
+    anchor_entities: [Company, Contact, Order, Deal, Ticket]
+    naming_overrides:
+      Company: {primary: Retail Partner, aliases: [franchise, stockist, brand hq, store group]}
+    de_emphasise: []
+
+
+# =============================================================================
+# 1. NAMING — meta-graph only, zero Cypher impact.
+#    Aligned to the BA glossary so the agent recognises their vocabulary.
+#    `ba_predicates` maps their snake_case verbs onto our edge types, because
+#    every BA Q&A tab writes paths as (Node)-[:places]->(Node).
+# =============================================================================
+naming:
+  Contact:            {primary: Customer,  aliases: [shopper, buyer, consumer, customer]}
+  Lead:               {primary: Lead,      aliases: [subscriber, sign-up, prospect]}
+  Customer:           {primary: Customer,  aliases: [purchaser, buyer]}
+  Visitor:            {primary: Anonymous Visitor, aliases: [visitor, browser, guest]}
+  IdentifiedVisitor:  {primary: Known Visitor, aliases: [identified visitor, logged-in visitor]}
+  ContactPoint:       {aliases: [email address, phone number, identity key]}
+  Product:            {primary: Product,   aliases: [item, sku, article, listing]}
+  Order:              {primary: Order,     aliases: [purchase, transaction, sale]}
+  SalesOrder:         {primary: Sales Order, aliases: [wholesale order, trade order, purchase order]}
+  Company:            {primary: Account,   aliases: [store, brand, retail partner]}
+  CompanySite:        {primary: Store / Location, aliases: [outlet, branch, warehouse]}
+  Contract:           {primary: Subscription, aliases: [plan, membership, supply agreement]}
+  ProductOffer:       {primary: Plan,      aliases: [tier, package, bundle]}
+  Addon:              {primary: Add-on,    aliases: [extra, upgrade]}
+  Invoice:            {primary: Invoice / Receipt, aliases: [bill, receipt]}
+  Ticket:             {primary: Ticket,    aliases: [case, issue, complaint, service request]}
+  Conversation:       {primary: Conversation, aliases: [chat, live chat, contact]}
+  Disposition:        {aliases: [outcome code, wrap-up code]}
+  KnowledgeArticle:   {primary: Knowledge Base, aliases: [help article, faq]}
+  Campaign:           {aliases: [promo, blast, send]}
+  Segment:            {primary: Segment,   aliases: [cdp segment, audience]}
+  CustomerSession:    {primary: Browse Session, aliases: [visit, shopping session]}
+  CustomerEvent:      {primary: Interaction / Event, aliases: [web event, behaviour signal]}
+  JourneyState:       {primary: Journey Stage, aliases: [funnel stage, lifecycle stage]}
+  User:               {primary: User,      aliases: [employee, staff, team member]}
+  Agent:              {primary: Support Agent, aliases: [advisor, cx agent, live agent]}
+  TicketAgent:        {primary: Support Agent, aliases: [helpdesk agent, support rep]}
+  Team:               {primary: Team,      aliases: [pod, squad, department]}
+  Queue:              {primary: Queue,     aliases: [contact queue, chat queue]}
+  TicketQueue:        {primary: Queue,     aliases: [support queue, desk]}
+
+# BA workbooks name people-roles that are Role rows here, not labels.
+# [core: accounts.setup_roles.name + .product_id]
+role_naming:
+  match_on: [Role.name, Role.product_id]
+  aliases:
+    marketing:      [Marketing User, campaign manager, marketer]
+    sales_rep:      [Sales Rep, account executive, key account manager]
+    sales_manager:  [Supervisor, sales lead]
+    admin:          [Admin User, platform administrator]
+    finance:        [Finance User, billing user]
+    viewer:         [Read-only User]
+    resolver:       [Resolver, L2 agent]
+    agent:          [Support Agent, advisor]
+  unmapped_note: >-
+    The BA glossary also names "Merchandiser / Product Manager". No such role
+    value exists in accounts.setup_roles today. Listed here as vocabulary only;
+    nothing is emitted for it.
+
+# BA predicate -> core edge type. Meta-graph aliases so the agent can read
+# their Q&A tabs and still write valid Cypher.
+ba_predicates:
+  places:          PLACED                    # Customer -> Order
+  ordered_by:      PLACED                    # inverse; never emit a second edge
+  contains:        HAS_LINE                  # Order -> OrderLine
+  references:      FOR_PRODUCT               # OrderLine -> Product
+  belongs_to:      IN_CATEGORY               # Product -> Category
+  raised_by:       REPORTED_VIA              # Ticket -> SupportProfile -> Contact
+  assigned_to:     ASSIGNED_TO
+  resolved_by:     RESOLVED_BY
+  handled_by:      HANDLED_BY
+  occurs_via:      THROUGH
+  targeted_by:     TARGETED_IN
+  sent_to:         HAS_DELIVERY
+  belongs_to_segment: BELONGS_TO_SEGMENT
+  governs:         UNDER_SLA_POLICY
+  classifies:      HAS_STATUS
+  identified_as:   IDENTIFIED_AS
+  resolves_to:     LINKED_TO
+  held_by:         FOR_COMPANY               # Contract -> Company
+  generated_from:  FOR_ORDER                 # Invoice -> SalesOrder
+
+
+# =============================================================================
+# 2. EXTRA LABELS — every `when:` column verified present in core properties.
+#    Conditional labels must be REMOVED when the condition stops holding
+#    (same machinery as core sublabels).
+# =============================================================================
+extends:
+
+  # --- catalog: product / subscription / bundle ------------------------------
+  inventory.products:
+    extra_labels:
+      - {label: SellableItem}
+      - {label: SubscriptionProduct, when: {billing_type: [recurring]}}   # [core: billing_type]
+      - {label: OneTimeProduct,      when: {billing_type: [one_time]}}    # [core: billing_type]
+      - {label: StockedProduct,      when: {stock_on_hand: not_null}}     # [core: stock_on_hand]
+      - {label: DigitalProduct,      when: {stock_on_hand: is_null, billing_type: [one_time]}}
+      - {label: ConfigurableProduct, when: {product_type: [customizable]}} # [core: product_type]
+      - {label: ActiveListing,       when: {status: [active]}}            # [core: status]
+    promote_property_to_node:                                             # R2 satisfied
+      category:    {label: Category,    key: slug, name_from: category,    edge: IN_CATEGORY}
+      subcategory: {label: Subcategory, key: slug, name_from: subcategory, edge: IN_SUBCATEGORY}
+      brand:       {label: Brand,       key: slug, name_from: brand,       edge: OF_BRAND}
+    derive_hierarchy:
+      # BA models Catalog Category as hierarchical. Both values come off the
+      # same row, so the parent edge is derivable without a new source.
+      - {from: Subcategory, to: Category, edge: PARENT_CATEGORY}
+
+  crm.product_offers:
+    extra_labels:
+      - {label: Plan}
+      - {label: RecurringPlan, when: {billing_type: [recurring]}}          # [core: billing_type]
+
+  crm.product_addons:
+    extra_labels: [{label: AddOn}]
+
+  # --- commerce orders -------------------------------------------------------
+  cdp.orders:
+    extra_labels:
+      - {label: CommerceOrder}
+      - {label: Purchase}
+      - {label: PaidOrder,      when: {payment_status: [paid, captured, settled]}}      # [core: payment_status]
+      - {label: RefundedOrder,  when: {payment_status: [refunded, partially_refunded]}}
+      - {label: CancelledOrder, when: {status: [cancelled, canceled, void]}}            # [core: status]
+      - {label: FulfilledOrder, when: {fulfillment_status: [fulfilled, delivered, shipped]}}
+      - {label: OpenOrder,      when: {fulfillment_status: [unfulfilled, processing, pending]}}
+    custom_fields:                        # allowed: core sets custom_dynamic: true
+      whitelist: [coupon_code, discount_amount, shipping_method, payment_method,
+                  channel_of_sale, store_id, gift_order, tax_amount]
+      types: {discount_amount: number, tax_amount: number, gift_order: boolean}
+      promote_to_node:
+        coupon_code:     {label: Coupon,         key: code, edge: USED_COUPON}
+        payment_method:  {label: PaymentMethod,  key: name, edge: PAID_WITH}
+        shipping_method: {label: ShippingMethod, key: name, edge: SHIPPED_VIA}
+        channel_of_sale: {label: SalesChannel,   key: name, edge: SOLD_THROUGH}
+      note: >-
+        Tenant-dependent. If a key is absent for a tenant, nothing is emitted
+        and no node is created — promotion is per-row, never a schema promise.
+
+  crm.sales_orders:
+    extra_labels: [{label: Purchase}, {label: WholesaleOrder}]
+
+  crm.contracts:
+    extra_labels:
+      - {label: Subscription}
+      - {label: ActiveSubscription,    when: {status: [active]}}                    # [core: status]
+      - {label: CancelledSubscription, when: {status: [cancelled, canceled, churned]}}
+      - {label: AutoRenewing,          when: {auto_renew: [true]}}                  # [core: auto_renew]
+
+  # --- storefront behaviour (web tracking) -----------------------------------
+  cdp.customer_events:
+    extra_labels:
+      - {label: StorefrontEvent}
+      - {label: CommerceEvent,     when: {event_name: [product_viewed, add_to_cart, remove_from_cart,
+                                                       checkout_started, checkout_completed, purchase,
+                                                       refund_requested, wishlist_added]}}  # [core: event_name]
+      - {label: CartEvent,         when: {event_name: [add_to_cart, remove_from_cart,
+                                                       cart_viewed, checkout_started]}}
+      - {label: ConversionEvent,   when: {event_name: [purchase, checkout_completed,
+                                                       signup_completed, subscription_started]}}
+      - {label: WebTrackingEvent,  when: {channel: [web]}}
+      - {label: PageViewEvent,     when: {event_name: [page_view, pageview]}}
+      - {label: FormEvent,         when: {event_name: [form_submit, form_start, form_view]}}
+      - {label: ClickEvent,        when: {event_name: [click, button_click, link_click]}}
+    conditional_relationships:
+      # reference_id is a generic column in core; its meaning is domain-scoped.
+      # [core: cdp.customer_events.reference_id]  — loader must coerce to string
+      # to match Product.id (text cuid) / Order.order_id.
+      - {type: ABOUT_PRODUCT, direction: out, target_label: Product, target_key: id,
+         from_column: reference_id, coerce_to_string: true,
+         when: {event_name: [product_viewed, add_to_cart, remove_from_cart, wishlist_added]}}
+      - {type: ABOUT_ORDER, direction: out, target_label: Order, target_key: order_id,
+         from_column: reference_id, coerce_to_string: true,
+         when: {event_name: [purchase, checkout_completed, refund_requested]}}
+
+  cdp.customer_sessions:
+    extra_labels:
+      - {label: ShoppingSession}
+      - {label: WebSession,      when: {channel: [web]}}
+      - {label: BouncedSession,  when: {is_bounce: [true]}}          # [core: is_bounce]
+      - {label: CampaignSession, when: {utm_campaign: not_null}}     # [core: utm_campaign]
+
+  campaign.website_contacts:
+    extra_labels:
+      - {label: StorefrontVisitor}
+      - {label: NewsletterSubscriber, when: {subscribed: [true]}}    # [core: subscribed]
+
+  # --- customer profile ------------------------------------------------------
+  cdp.customer_profile:
+    extra_labels: [{label: Shopper}]
+    custom_fields:                        # allowed: core sets custom_dynamic: true
+      whitelist: [loyalty_tier, loyalty_id, loyalty_points, preferred_category,
+                  preferred_store, size_preference, default_shipping_country,
+                  first_order_at]
+      types: {loyalty_points: number}
+      identity: [loyalty_id]                        # -> ContactPoint {key_type:'loyalty_id'}
+      promote_to_node:
+        loyalty_tier: {label: LoyaltyTier, key: name, edge: IN_LOYALTY_TIER}
+      conditional_labels:
+        - {label: LoyaltyMember, when: {loyalty_id: not_null}}
+
+  crm.contact_profiles:
+    extra_labels:
+      - {label: ShopperOverlay}
+      - {label: MarketingSubscriber, when: {marketing_opt_out: [false]}}  # [core: marketing_opt_out]
+
+  # --- service ---------------------------------------------------------------
+  ticketing.tickets:
+    extra_labels:
+      - {label: SupportCase}
+      - {label: OrderIssue,   when: {category: [order_issue, delivery, shipping,
+                                                returns_refunds, refund, wismo]}}   # [core: category]
+      - {label: ProductIssue, when: {category: [product_question, damaged_item,
+                                                faulty_item, sizing]}}
+      - {label: PaymentIssue, when: {category: [payment, billing, chargeback]}}
+
+  ccass.conversations:
+    extra_labels: [{label: ShopperConversation}]
+
+
+# =============================================================================
+# 3. VOCABULARIES — value spaces for free-text core columns. Additive.
+# =============================================================================
+vocabularies:
+  customer_event.event_name:                                   # [core: cdp.customer_events.event_name]
+    canonical: [page_viewed, product_viewed, search_performed, add_to_cart,
+                remove_from_cart, cart_viewed, checkout_started, checkout_completed,
+                purchase, payment_failed, refund_requested, wishlist_added,
+                review_submitted, subscription_started, subscription_cancelled,
+                account_created, newsletter_signup]
+    aliases: {order_placed: purchase, atc: add_to_cart, pdp_view: product_viewed}
+
+  order.status:              {canonical: [pending, confirmed, processing, shipped, delivered, completed, cancelled, returned, refunded]}
+  order.payment_status:      {canonical: [unpaid, authorized, paid, partially_refunded, refunded, failed, chargeback]}
+  order.fulfillment_status:  {canonical: [unfulfilled, processing, partially_fulfilled, shipped, delivered, returned]}
+
+  ticket.category:                                             # [core: ticketing.tickets.category]
+    canonical: [order_issue, delivery, returns_refunds, product_question,
+                payment, account, promotions, technical, other]
+    labels: {order_issue: "Where is my order (WISMO)", returns_refunds: "Returns & refunds"}
+
+  ticket.skill:                                                # [core: ticketing.tickets.skill]
+    canonical: [order_support, returns, payments, product_expert, escalations]
+
+  conversation.intent:                                         # [core: ccass.queue_routing_profiles.supported_intents]
+    canonical: [wismo, return_request, refund_status, size_fit, stock_check,
+                price_match, cancel_order, change_address, promo_code_help,
+                product_recommendation]
+
+  journey_state.journey_name:    {canonical: [purchase_funnel, onboarding, loyalty, winback]}
+  journey_state.current_stage:                                 # [core: cdp.journey_states.current_stage]
+    canonical: [awareness, consideration, cart, checkout, purchased,
+                post_purchase, repeat, at_risk, churned]
+
+  campaign.goal:                                               # [core: campaign.campaigns.goal]
+    canonical: [acquisition, abandoned_cart, browse_abandonment, post_purchase,
+                replenishment, winback, cross_sell, upsell, new_arrivals,
+                clearance, loyalty_reward, review_request]
+
+  contact.lead_source:                                         # [core: crm.contact_profiles.lead_source]
+    canonical: [organic_search, paid_search, paid_social, organic_social, email,
+                affiliate, referral, marketplace, direct, in_store]
+
+  deal.stage:                                                  # b2b variant  [core: crm.deals.stage]
+    labels: {qualification: "RFQ received", propose: "Quote sent", negotiate: "Price negotiation"}
+
+
+# =============================================================================
+# 4. DERIVED LABELS — batch lane only. Inputs are core rollup columns.
+#    Idempotent: recompute from source, never increment.
+# =============================================================================
+derived_labels:
+  lane: batch
+  Contact:
+    source: cdp.gold_customer_metrics                     # [core: CustomerMetric]
+    rules:
+      - {label: FirstTimeBuyer, when: "total_orders == 1"}          # [core: total_orders]
+      - {label: RepeatBuyer,    when: "total_orders >= 2"}
+      - {label: LapsedBuyer,    when: "last_purchase_at < now() - 180d and total_orders >= 1"}
+      - {label: HighValueBuyer, when: "total_spend >= p90(total_spend)"}
+      - {label: AtRiskBuyer,    when: "churn_score >= 0.7"}         # [core: churn_score]
+    exclusive_groups: [[FirstTimeBuyer, RepeatBuyer]]
+
+
+# =============================================================================
+# 5. METRIC EXTENSIONS — synonyms for existing dbt metrics, plus three that
+#    are computable from core-mapped labels only.
+# =============================================================================
+metrics:
+  extend_synonyms:
+    order_gmv:               [gmv, revenue, sales, topline, total sales]
+    average_order_value:     [aov, basket size, average basket, average spend per order]
+    repurchase_rate:         [repeat rate, repeat purchase rate, returning customer rate]
+    customer_lifetime_value: [ltv, clv, lifetime spend]
+    order_volume:            [orders, transactions, checkouts]
+    units_sold:              [units, quantity sold, items sold]
+    product_revenue:         [revenue by product, sku revenue]
+  add:
+    - metric_id: cart_abandonment_rate
+      canonical_name: Cart Abandonment Rate
+      synonyms: [abandoned carts, cart drop-off, checkout abandonment, abandonment rate]
+      description: >-
+        Sessions carrying an add_to_cart event but no purchase event, over
+        sessions carrying an add_to_cart event. Event-derived proxy — there is
+        no Cart entity in the graph (see not_modelled.cart).
+      unit: ratio
+      route: graph
+      computed_from: [CustomerSession, CustomerEvent]
+      direction: lower_is_better
+      caveat: proxy
+    - metric_id: wismo_ticket_share
+      canonical_name: WISMO Ticket Share
+      synonyms: [where is my order tickets, delivery query share]
+      unit: ratio
+      route: graph
+      computed_from: [Ticket]
+      direction: lower_is_better
+    - metric_id: refund_rate
+      canonical_name: Refund Rate
+      synonyms: [refunds, how many orders were refunded]
+      unit: ratio
+      route: graph
+      computed_from: [Order]
+      direction: lower_is_better
+
+
+# =============================================================================
+# 6. ACCESS — new labels classified so RBAC + connectivity invariant stay whole.
+#    Never GRANT on a supertype label; grant the concrete label.
+# =============================================================================
+access:
+  Category:       {domain: common}
+  Subcategory:    {domain: common}
+  Brand:          {domain: common}
+  LoyaltyTier:    {domain: common}
+  Coupon:         {domain: common}
+  PaymentMethod:  {domain: common}
+  ShippingMethod: {domain: common}
+  SalesChannel:   {domain: common}
+  never_grant: [Purchase, SellableItem, SupportCase, Shopper]
+
+
+# =============================================================================
+# 7. NOT MODELLED — emits nothing. Two lists, kept apart on purpose.
+# =============================================================================
+not_modelled:
+
+  # -- 7a. Blocked on a small core change. Cheap to unblock; do not emit until
+  #        the core column is mapped, or the pack silently produces nothing.
+  blocked_on_core:
+    - concept: Consent
+      ba_domain: Security, Consent & Governance
+      blocker: cdp.customer_profile.consent_json is not in core `properties:`
+      note: BA model has Consent gating every campaign send. One-line core fix.
+    - concept: Preference
+      ba_domain: Household & Profile
+      blocker: cdp.customer_profile.preferences_json / traits_json not in core `properties:`
+    - concept: Order line detail (CDP)
+      ba_domain: Cart & Order
+      blocker: >-
+        core maps cdp.order_items as relationship_only without quantity /
+        unit_price, so units_sold, average_selling_price and basket analysis
+        are uncomputable from storefront orders. BA models Order Line as a
+        first-class node referencing SKU.
+
+  # -- 7b. No source anywhere in Postgres. For the product/BA conversation,
+  #        not for this file. Do not synthesise any of these.
+  no_source:
+    - concept: Cart
+      severity: critical
+      ba_note: >-
+        First-class node in every B2C workbook (owned_by Customer, contains SKU,
+        converts_to Order). Cart abandonment is their headline metric. No cart
+        table exists. Only the event-derived proxy above is honest.
+    - concept: Ticket -> Order link
+      severity: critical
+      ba_note: >-
+        Ticketing B2C scope note: "the Order is the second anchor entity, giving
+        every ticket direct commercial context." B2B: "most tickets trace back
+        to an Order, Invoice or Return." ticketing.tickets has no order column.
+        Fix: add order_ref to ticketing.tickets, then move the edge into CORE.
+    - concept: Conversation -> Order link
+      severity: high
+      ba_note: same as above for live chat; ccass.conversations has no order ref.
+    - concept: Fulfilment domain (Shipment, Carrier, Fulfillment, Delivery Event)
+      severity: high
+      ba_note: whole BA domain; we hold only cdp.orders.fulfillment_status as a string.
+    - concept: Payments domain (Payment/Transaction, Refund, Wallet/Store Credit)
+      severity: high
+      ba_note: we hold only cdp.orders.payment_status; PaymentMethod above is a JSON key, not a ledger.
+    - concept: Return / RMA
+      severity: high
+      ba_note: raised_against Order Line, triggers Refund. No table.
+    - concept: Product Variant / SKU
+      severity: medium
+      ba_note: >-
+        BA separates Product (style) from SKU (size/colour). Worktual collapses
+        both into inventory.products (it carries `sku`). Reconcile deliberately —
+        do not fake a variant level.
+    - concept: Inventory at Store
+      severity: medium
+      ba_note: stock_on_hand is a product-level integer; BA models stock per Store.
+    - concept: Wishlist
+      severity: medium
+      ba_note: wishlist_added exists as an event; the list itself has no table.
+    - concept: Loyalty Account / Reward Points / Loyalty Program
+      severity: medium
+      ba_note: only Loyalty Tier is reachable (custom_fields). No ledger.
+    - concept: Review / Feedback
+      severity: medium
+      ba_note: csat_score on tickets is the only adjacent signal.
+    - concept: Household, Address
+      severity: low
+      ba_note: no household grouping; addresses exist only as free text on invoices.
+    - concept: Guest Customer
+      severity: low
+      ba_note: guest checkout is a real B2C concept; no flag distinguishes it.
+
+
+# =============================================================================
+# 8. WHAT THIS PACK ASSUMES
+# =============================================================================
+# CORE PATCHES (all tenants, ship before enabling):
+#   C1  cdp.order_items -> carry quantity + unit_price (see 7a).
+#   C2  supertypes: Purchase (Order, SalesOrder), Case (Ticket, Conversation),
+#       Person/Staff over User+Agent+TicketAgent. Never granted in RBAC.
+#   C3  ccass.conversations: queue_id / assigned_agent_id / assigned_user_id are
+#       used by relationships but absent from `properties:`.
+#   C4  sublabel replacement on update (a PaidOrder that becomes RefundedOrder
+#       must lose the first label). §2 depends on this.
+#
+# ENGINE OPS:
+#   E1  extra_labels with when: (IN / is_null / not_null), removable
+#   E2  promote_property_to_node + derive_hierarchy
+#   E3  custom_fields whitelist / types / identity / promote_to_node / conditional_labels
+#   E4  conditional_relationships with coerce_to_string
+#   E5  naming / role_naming / ba_predicates / vocabularies -> meta-graph only
+#   E6  derived_labels in the batch lane, honouring exclusive_groups
+#   E7  variants: variant_key lookup + naming_overrides + de_emphasise ranking
+#
+# VALIDATOR (fails the build):
+#   V1  R1-R5 conformance, per entry, with the [core: ...] provenance resolved
+#   V2  every label in §2/§6 has exactly one access domain
+#   V3  pairwise connectivity per domain ∪ common after merge
+#   V4  nothing under not_modelled emits an edge, label or node
+#   V5  no rename / re-key / removal of any core construct
+# =============================================================================

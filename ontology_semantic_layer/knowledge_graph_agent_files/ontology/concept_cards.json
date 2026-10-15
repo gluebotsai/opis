@@ -1,0 +1,1388 @@
+[
+  {
+    "id": "concept_monthly_ticket_trends",
+    "type": "business_concept",
+    "name": "Monthly Ticket Volume & Trends",
+    "description": "Monthly aggregated ticket volume across all historical periods. Identifies peak creation months, intake spikes, and seasonality.",
+    "aliases": [
+      "in which month created more tickets",
+      "which month had highest volume",
+      "which month created more tickets",
+      "ticket volume by month",
+      "monthly ticket volume",
+      "highest ticket volume month",
+      "tickets created in august",
+      "tickets in august",
+      "august ticket volume",
+      "tickets by month"
+    ],
+    "cypher_template": "MATCH (t:Ticket) RETURN t.created_at.year AS year, t.created_at.month AS month, count(t) AS volume ORDER BY volume DESC",
+    "diagnostic_template": "MATCH (t:Ticket) WHERE t.created_at.month = 8 AND t.created_at.year = 2026 RETURN t.category AS category, t.priority AS priority, count(t) AS volume ORDER BY volume DESC LIMIT 10",
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Ticket)-[:IN_QUEUE]->(Queue)",
+        "(Ticket)-[:ASSIGNED_TO]->(Agent)"
+      ],
+      "key_properties": {
+        "Ticket": [
+          "created_at",
+          "category",
+          "priority",
+          "status",
+          "channel"
+        ]
+      }
+    }
+  },
+  {
+    "id": "concept_ticket_volume",
+    "type": "business_concept",
+    "name": "Ticket Volume",
+    "description": "Count of tickets created in a period; optionally breakdown by channel, priority, or Queue.",
+    "search_text": "Ticket Volume Count of tickets created in a period; optionally breakdown by channel, priority, or Queue. tickets created case volume intake volume new tickets volume created how many tickets intake new tickets (Ticket)-[:in_queue]->(Queue) (Ticket)-[:REPORTED_VIA]->(SupportProfile)-[:OVERLAY_OF]->(Contact) (Tenant)-[:HAS_TICKET]->(Ticket)",
+    "domain": "ticketing",
+    "aliases": [
+      "tickets created",
+      "case volume",
+      "intake volume",
+      "new tickets",
+      "tickets created in august",
+      "how many tickets created in august",
+      "tickets in august",
+      "august tickets",
+      "in which month created more tickets"
+    ],
+    "disambiguation": "NOT Conversation Volume (CCAAS). Ticketing work items are Ticket nodes.",
+    "base_entities": [
+      "Ticket"
+    ],
+    "business_rules": [
+      "Filter by Ticket.created_at with datetime($period_start) / datetime($period_end)",
+      "Group by Ticket.channel property or (Ticket)-[:in_queue]->(Queue)",
+      "Person path: (Ticket)-[:REPORTED_VIA]->(SupportProfile)-[:OVERLAY_OF]->(Contact)"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Ticket)-[:in_queue]->(Queue)",
+        "(Ticket)-[:REPORTED_VIA]->(SupportProfile)-[:OVERLAY_OF]->(Contact)",
+        "(Tenant)-[:HAS_TICKET]->(Ticket)"
+      ],
+      "key_properties": {
+        "Ticket": [
+          "created_at",
+          "channel",
+          "priority",
+          "category",
+          "organization_id"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (t:Ticket) RETURN t.channel AS channel, count(t) AS volume ORDER BY volume DESC",
+    "diagnostic_template": "MATCH (t:Ticket) WHERE t.organization_id = $organization_id WITH coalesce(t.channel, 'Unknown') AS dimension, sum(CASE WHEN t.created_at >= datetime($period_start) AND t.created_at < datetime($period_end) THEN 1 ELSE 0 END) AS current, sum(CASE WHEN t.created_at >= datetime($compare_start) AND t.created_at < datetime($compare_end) THEN 1 ELSE 0 END) AS previous RETURN dimension, current, previous, current - previous AS delta ORDER BY abs(current - previous) DESC LIMIT 5",
+    "keywords": [
+      "volume",
+      "created",
+      "how many tickets",
+      "intake",
+      "new tickets"
+    ],
+    "examples": [
+      "How many tickets were created this week?",
+      "Ticket volume by channel"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_open_tickets",
+    "type": "business_concept",
+    "name": "Open Tickets",
+    "description": "Tickets whose status is open or active. In the graph, tickets are labeled :Ticket with property t.status.",
+    "search_text": "Open Tickets Tickets whose status is open or active. active tickets unresolved tickets open cases backlog open tickets how many open ticket are present now how many open tickets are there (:Ticket)",
+    "domain": "ticketing",
+    "aliases": [
+      "active tickets",
+      "unresolved tickets",
+      "open cases",
+      "backlog",
+      "open tickets",
+      "open ticket"
+    ],
+    "disambiguation": "NOT Conversation volume (CCAAS). Use Ticket + Ticket.status. DashboardMetrics.open_tickets is a cached snapshot \u2014 prefer live Ticket count for accuracy.",
+    "base_entities": [
+      "Ticket"
+    ],
+    "business_rules": [
+      "Tickets are labeled :Ticket with string property t.status.",
+      "Open tickets count: MATCH (t:Ticket) WHERE toLower(t.status) = 'open' RETURN count(t) AS open_tickets.",
+      "Active backlog: toLower(t.status) IN ['open', 'pending', 'reopened']."
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(:Ticket)"
+      ],
+      "key_properties": {
+        "Ticket": [
+          "status",
+          "priority",
+          "created_at",
+          "due_at",
+          "subject",
+          "queue_name"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (t:Ticket) WHERE toLower(t.status) = 'open' OR 'OpenTicket' IN labels(t) RETURN count(t) AS open_tickets",
+    "diagnostic_template": "MATCH (t:Ticket) WHERE toLower(t.status) = 'open' WITH t.priority AS dimension, count(t) AS count RETURN dimension, count ORDER BY count DESC",
+    "keywords": [
+      "open tickets",
+      "open ticket",
+      "active",
+      "backlog",
+      "unresolved",
+      "how many open",
+      "how many open tickets are there",
+      "how many open ticket are present now"
+    ],
+    "examples": [
+      "How many open tickets do we have?",
+      "how many open ticket are present now?",
+      "how many open tickets are there ?"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_overdue_tickets",
+    "type": "business_concept",
+    "name": "Overdue Tickets",
+    "description": "Non-terminal tickets whose resolution deadline (Ticket.due_at) is before now. due_at is computed from SLA by priority at create/update.",
+    "search_text": "Overdue Tickets Non-terminal tickets whose resolution deadline (Ticket.due_at) is before now. due_at is computed from SLA by priority at create/update. past due tickets SLA overdue missed due date late tickets overdue past due late missed deadline due_at (:Ticket) (Ticket)-[:has_sla]->(SLA) (Tenant)-[:HAS_DASHBOARD_METRICS]->(DashboardMetrics)",
+    "domain": "ticketing",
+    "aliases": [
+      "past due tickets",
+      "SLA overdue",
+      "missed due date",
+      "late tickets"
+    ],
+    "disambiguation": "Different from CCAAS SLAInstance.breached_at. Ticketing overdue uses Ticket.due_at on the Ticket node, optionally linked via GOVERNED_BY to SLA.",
+    "base_entities": [
+      "Ticket",
+      "BreachedCase"
+    ],
+    "business_rules": [
+      "Overdue = due_at < datetime() AND status not terminal",
+      "Join (:Ticket) WHERE is_terminal = false",
+      "Optional: (Ticket)-[:has_sla]->(SLA) for policy hours by priority",
+      "DashboardMetrics.overdue is cached snapshot"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(:Ticket)",
+        "(Ticket)-[:has_sla]->(SLA)",
+        "(Tenant)-[:HAS_DASHBOARD_METRICS]->(DashboardMetrics)"
+      ],
+      "key_properties": {
+        "Ticket": [
+          "due_at",
+          "priority",
+          "status",
+          "organization_id",
+          "created_at"
+        ],
+        "SLA": [
+          "priority",
+          "resolution_hours",
+          "first_response_hours"
+        ],
+        "DashboardMetrics": [
+          "overdue",
+          "captured_at"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (t:Ticket) WHERE toLower(t.status) = 'overdue' OR 'OverdueTicket' IN labels(t) OR (t.due_at IS NOT NULL AND t.due_at < datetime() AND t.status <> 'Resolved') RETURN count(t) AS overdue_tickets",
+    "diagnostic_template": "MATCH (t:Ticket) WHERE toLower(t.status) IN [\"open\", \"pending\", \"reopened\"] AND t.due_at IS NOT NULL AND t.due_at < datetime() AND t.organization_id = $organization_id OPTIONAL MATCH (t)-[:in_queue]->(q:Queue) RETURN coalesce(q.queue_name, 'Unqueued') AS dimension, count(t) AS overdue ORDER BY overdue DESC LIMIT 10",
+    "keywords": [
+      "overdue",
+      "past due",
+      "late",
+      "missed deadline",
+      "due_at"
+    ],
+    "examples": [
+      "How many overdue tickets?",
+      "Which queue has the most overdue tickets?"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_resolved_tickets",
+    "type": "business_concept",
+    "name": "Resolved Tickets",
+    "description": "Tickets that reached a terminal status; prefer Ticket.resolved_at or Ticket.status.is_terminal = true.",
+    "search_text": "Resolved Tickets Tickets that reached a terminal status; prefer Ticket.resolved_at or Ticket.status.is_terminal = true. closed tickets solved tickets resolution volume resolved closed solved resolution count (:Ticket) (Ticket)-[:resolved_by]->(Agent) (Ticket)-[:assigned_to]->(Agent)",
+    "domain": "ticketing",
+    "aliases": [
+      "closed tickets",
+      "solved tickets",
+      "resolution volume"
+    ],
+    "base_entities": [
+      "Ticket",
+      "ResolvedCase"
+    ],
+    "business_rules": [
+      "Resolved when resolved_at IS NOT NULL OR (Ticket)-[:USES_STATUS]->(Ticket.status {is_terminal: true})",
+      "Filter period on resolved_at",
+      "Resolver (L2) via (Ticket)-[:resolved_by]->(Agent); L1 via ASSIGNED_TO"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(:Ticket)",
+        "(Ticket)-[:resolved_by]->(Agent)",
+        "(Ticket)-[:assigned_to]->(Agent)"
+      ],
+      "key_properties": {
+        "Ticket": [
+          "resolved_at",
+          "status",
+          "priority",
+          "organization_id",
+          "csat_score"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (t:Ticket) WHERE toLower(t.status) = 'resolved' OR 'ResolvedCase' IN labels(t) RETURN count(t) AS resolved_tickets",
+    "keywords": [
+      "resolved",
+      "closed",
+      "solved",
+      "resolution count"
+    ],
+    "examples": [
+      "How many tickets resolved this week?",
+      "Resolved tickets by agent"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_reopened_tickets",
+    "type": "business_concept",
+    "name": "Reopened Tickets",
+    "description": "Tickets currently or historically in Reopened status (non-terminal). Indicates resolution quality issues.",
+    "search_text": "Reopened Tickets Tickets currently or historically in Reopened status (non-terminal). Indicates resolution quality issues. reopen rate came back open reopened cases reopened reopen came back (:Ticket) (AuditEvent)-[:ON_TICKET]->(Ticket)",
+    "domain": "ticketing",
+    "aliases": [
+      "reopen rate",
+      "came back open",
+      "reopened cases"
+    ],
+    "base_entities": [
+      "Ticket"
+    ],
+    "business_rules": [
+      "Status key often 'Reopened' with is_terminal = false",
+      "Prefer (:Ticket) WHERE status = 'Reopened'",
+      "Audit trail may show status transitions in AuditEvent.meta"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(:Ticket)",
+        "(AuditEvent)-[:ON_TICKET]->(Ticket)"
+      ],
+      "key_properties": {
+        "Ticket": [
+          "status",
+          "resolved_at",
+          "updated_at",
+          "organization_id"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (t:Ticket) WHERE toLower(t.status) = 'reopened' RETURN count(t) AS reopened_tickets",
+    "keywords": [
+      "reopened",
+      "reopen",
+      "came back"
+    ],
+    "examples": [
+      "How many reopened tickets?",
+      "Reopen rate this month"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_ticket_sla_compliance",
+    "type": "business_concept",
+    "name": "Ticket SLA Compliance",
+    "description": "Proportion of support tickets that met their SLA resolution deadline or first response deadline. Breached tickets are labeled :BreachedCase and resolved tickets are labeled :ResolvedCase, linked via (:Ticket)-[:has_sla]->(:SLA).",
+    "search_text": "Ticket SLA Compliance Share of tickets that met resolution deadline or first response deadline. SLA met rate within SLA SLA adherence on-time resolution SLA compliance within SLA breach on time (:Ticket)-[:has_sla]->(:SLA) (:Ticket:BreachedCase) (:Ticket:ResolvedCase)",
+    "domain": "ticketing",
+    "aliases": [
+      "SLA met rate",
+      "within SLA",
+      "SLA adherence",
+      "on-time resolution",
+      "ticket SLA compliance",
+      "SLA compliance"
+    ],
+    "disambiguation": "CCAAS SLA breach uses SLAInstance.breached_at. Ticketing uses Ticket.due_at / first_response_at vs SLA.",
+    "base_entities": [
+      "Ticket",
+      "SLA",
+      "BreachedCase",
+      "ResolvedCase"
+    ],
+    "business_rules": [
+      "Tickets are labeled :Ticket. Breached tickets also carry the label :BreachedCase; resolved tickets carry :ResolvedCase.",
+      "Relationship to policy: (:Ticket)-[:has_sla]->(:SLA).",
+      "Resolution SLA met: NOT \"BreachedCase\" IN labels(t), or t.resolved_at <= t.due_at.",
+      "Resolution breached: \"BreachedCase\" IN labels(t).",
+      "SLA compliance rate = toFloat(sum(CASE WHEN NOT \"BreachedCase\" IN labels(t) THEN 1 ELSE 0 END)) / count(t)."
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(:Ticket)-[:has_sla]->(:SLA)",
+        "(:Ticket:BreachedCase)",
+        "(:Ticket:ResolvedCase)"
+      ],
+      "key_properties": {
+        "Ticket": [
+          "due_at",
+          "resolved_at",
+          "first_response_at",
+          "created_at",
+          "priority",
+          "status"
+        ],
+        "SLA": [
+          "priority",
+          "resolution_hours",
+          "first_response_hours",
+          "display_name"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (t:Ticket)-[:has_sla]->(s:SLA) RETURN s.priority AS priority, count(t) AS total, sum(CASE WHEN \"BreachedCase\" IN labels(t) THEN 1 ELSE 0 END) AS breached, sum(CASE WHEN NOT \"BreachedCase\" IN labels(t) THEN 1 ELSE 0 END) AS met, toFloat(sum(CASE WHEN NOT \"BreachedCase\" IN labels(t) THEN 1 ELSE 0 END)) / count(t) AS sla_compliance_rate ORDER BY priority",
+    "keywords": [
+      "SLA",
+      "compliance",
+      "within SLA",
+      "breach",
+      "on time",
+      "ticket",
+      "breachedcase"
+    ],
+    "examples": [
+      "What is our ticket SLA compliance?",
+      "How many tickets breached SLA this week?",
+      "why the sla rate is droped?"
+    ],
+    "schema_version": "1",
+    "diagnostic_template": "MATCH (t:Ticket)-[:has_sla]->(s:SLA) WITH s.priority AS priority, count(t) AS total, sum(CASE WHEN \"BreachedCase\" IN labels(t) THEN 1 ELSE 0 END) AS breached, toFloat(sum(CASE WHEN \"BreachedCase\" IN labels(t) THEN 1 ELSE 0 END)) / count(t) AS breach_rate RETURN priority, total, breached, count(t) - breached AS met, breach_rate ORDER BY breach_rate DESC"
+  },
+  {
+    "id": "concept_ticket_sla_rate",
+    "type": "business_concept",
+    "name": "Ticket SLA Rate",
+    "aliases": [
+      "SLA rate",
+      "why the sla rate is droped",
+      "sla drop",
+      "sla breach rate",
+      "Ticket SLA Breach Rate",
+      "Breached tickets",
+      "Ticket SLA",
+      "Support SLA",
+      "Ticket SLA Compliance",
+      "BreachedCase"
+    ],
+    "description": "Proportion of support tickets that breached SLA resolution or response deadlines. Breached tickets carry the label :BreachedCase and are linked to their SLA policy via (:Ticket)-[:has_sla]->(:SLA).",
+    "business_rules": [
+      "Tickets are labeled :Ticket. Breached tickets also carry the label :BreachedCase; resolved tickets carry :ResolvedCase.",
+      "Relationship to policy: (:Ticket)-[:has_sla]->(:SLA) where SLA has priority (urgent, high, medium, low), resolution_hours, and first_response_hours.",
+      "Breached ticket count: count(t:BreachedCase) or sum(CASE WHEN \"BreachedCase\" IN labels(t) THEN 1 ELSE 0 END).",
+      "SLA breach rate = toFloat(breached_tickets) / count(t).",
+      "Breakdown dimensions: s.priority, t.queue_name, t.category, t.channel, t.assignee_name."
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(:Ticket)-[:has_sla]->(:SLA)",
+        "(:Ticket:BreachedCase)",
+        "(:Ticket:ResolvedCase)"
+      ],
+      "key_properties": {
+        "Ticket": [
+          "due_at",
+          "created_at",
+          "first_response_at",
+          "priority",
+          "status",
+          "category",
+          "queue_name",
+          "assignee_name"
+        ],
+        "SLA": [
+          "priority",
+          "resolution_hours",
+          "first_response_hours",
+          "display_name"
+        ]
+      }
+    },
+    "keywords": [
+      "ticket",
+      "sla",
+      "breach",
+      "breached",
+      "overdue",
+      "breachedcase",
+      "has_sla",
+      "resolvedcase",
+      "drop",
+      "dropped",
+      "rate"
+    ],
+    "examples": [
+      "why the sla rate is droped?",
+      "what is the sla breach rate for tickets?",
+      "which priority has the highest sla breach rate?",
+      "how many tickets breached sla?"
+    ],
+    "search_text": "Ticket SLA Rate why the sla rate is droped sla drop SLA rate Ticket SLA Breach Rate Breached tickets Ticket SLA Support SLA Ticket SLA Compliance BreachedCase (:Ticket)-[:has_sla]->(:SLA) (:Ticket:BreachedCase)",
+    "cypher_template": "MATCH (t:Ticket)-[:has_sla]->(s:SLA) RETURN s.priority AS priority, count(t) AS total_tickets, sum(CASE WHEN \"BreachedCase\" IN labels(t) THEN 1 ELSE 0 END) AS breached_tickets, toFloat(sum(CASE WHEN \"BreachedCase\" IN labels(t) THEN 1 ELSE 0 END))/count(t) AS breach_rate ORDER BY breach_rate DESC",
+    "diagnostic_template": "MATCH (t:Ticket)-[:has_sla]->(s:SLA) WHERE (t.created_at >= datetime($period_start) AND t.created_at < datetime($period_end)) OR (t.created_at >= datetime($compare_start) AND t.created_at < datetime($compare_end)) WITH s.priority AS dimension, sum(CASE WHEN t.created_at >= datetime($period_start) AND t.created_at < datetime($period_end) AND \"BreachedCase\" IN labels(t) THEN 1 ELSE 0 END) AS current, sum(CASE WHEN t.created_at >= datetime($compare_start) AND t.created_at < datetime($compare_end) AND \"BreachedCase\" IN labels(t) THEN 1 ELSE 0 END) AS previous, count(CASE WHEN t.created_at >= datetime($period_start) AND t.created_at < datetime($period_end) THEN 1 END) AS current_total, count(CASE WHEN t.created_at >= datetime($compare_start) AND t.created_at < datetime($compare_end) THEN 1 END) AS previous_total RETURN dimension, current, previous, (toFloat(current)/CASE WHEN current_total=0 THEN 1 ELSE current_total END - toFloat(previous)/CASE WHEN previous_total=0 THEN 1 ELSE previous_total END) AS delta ORDER BY delta DESC",
+    "domain": "support",
+    "schema_version": "2"
+  },
+  {
+    "id": "concept_ticket_queue_assignment",
+    "type": "business_concept",
+    "name": "Ticket Queue Assignment & Routing",
+    "description": "How tickets are assigned and routed to support queues based on ticket category, issue type, and domain via (:Ticket)-[:in_queue]->(:Queue).",
+    "search_text": "Ticket Queue Assignment & Routing how the tickets assigned to queue how are tickets routed to queue ticket routing rules queue assignment queue routing logic (:Ticket)-[:in_queue]->(:Queue)",
+    "domain": "ticketing",
+    "aliases": [
+      "ticket routing",
+      "queue assignment",
+      "how tickets are assigned to queue",
+      "how the tickets assigned to queue",
+      "ticket queue routing",
+      "routing rules"
+    ],
+    "base_entities": [
+      "Ticket",
+      "Queue"
+    ],
+    "business_rules": [
+      "Tickets are classified by category and domain, then routed to specialized queues via (:Ticket)-[:in_queue]->(:Queue).",
+      "Each queue has a specific operational scope defined by Queue.description and Queue.queue_name (e.g. Shipping & Delivery Support, Order Management & Fulfillment, Returns & Refunds Support, Payments & Billing Support, Product Support, Customer Account & Access Support, Offers & Loyalty Support).",
+      "Ticket.queue_name denormalises the assigned queue name directly on the Ticket node."
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(:Ticket)-[:in_queue]->(:Queue)"
+      ],
+      "key_properties": {
+        "Ticket": [
+          "category",
+          "subject",
+          "channel",
+          "queue_name",
+          "priority"
+        ],
+        "Queue": [
+          "queue_name",
+          "description",
+          "type",
+          "open_tickets"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (t:Ticket)-[:in_queue]->(q:Queue) RETURN q.queue_name AS queue, q.description AS scope, count(t) AS ticket_count ORDER BY ticket_count DESC",
+    "diagnostic_template": "MATCH (t:Ticket)-[:in_queue]->(q:Queue) RETURN t.category AS category, q.queue_name AS queue, count(t) AS count ORDER BY count DESC LIMIT 10",
+    "keywords": [
+      "how the tickets assigned to queue",
+      "how are tickets assigned to queue",
+      "queue assignment",
+      "routing",
+      "assigned to queue",
+      "routed to queue"
+    ],
+    "examples": [
+      "how are tickets routed to queues?",
+      "what are the rules for queue assignment?"
+    ],
+    "schema_version": "2"
+  },
+  {
+    "id": "concept_ticket_agent",
+    "type": "business_concept",
+    "name": "Ticket Agent",
+    "description": "Agent is the ticketing workforce bridge to Employee (IS_TICKET_AGENT_FOR). Handles tickets via ASSIGNED_TO (L1) and RESOLVED_BY (L2).",
+    "search_text": "Ticket Agent Agent is the ticketing workforce bridge to Employee (IS_TICKET_AGENT_FOR). Handles tickets via ASSIGNED_TO (L1) and RESOLVED_BY (L2). support agent ticketing assignee resolver case agent ticket agent assignee resolver Agent who is assigned (Agent)-[:IS_TICKET_AGENT_FOR]->(Employee) (Ticket)-[:assigned_to]->(Agent) (Ticket)-[:resolved_by]->(Agent) (Queue)-[:HAS_MEMBER]->(Agent) (Tenant)-[:HAS_TICKET_AGENT]->(Agent)",
+    "domain": "ticketing",
+    "aliases": [
+      "support agent ticketing",
+      "assignee",
+      "resolver",
+      "case agent"
+    ],
+    "disambiguation": "NOT CCAAS Agent (IS_AGENT_FOR / HANDLED_BY Conversation). Ticket staff identity name/email/skills live on Employee; Agent holds spoke prefs + setup_user_id.",
+    "base_entities": [
+      "Agent",
+      "Employee",
+      "Ticket",
+      "Queue"
+    ],
+    "business_rules": [
+      "(Agent)-[:IS_TICKET_AGENT_FOR]->(Employee)",
+      "(Ticket)-[:assigned_to]->(Agent) for L1",
+      "(Ticket)-[:resolved_by]->(Agent) for L2",
+      "(Queue)-[:HAS_MEMBER]->(Agent)",
+      "For display name use Employee via IS_TICKET_AGENT_FOR, not a name property on Agent"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Agent)-[:IS_TICKET_AGENT_FOR]->(Employee)",
+        "(Ticket)-[:assigned_to]->(Agent)",
+        "(Ticket)-[:resolved_by]->(Agent)",
+        "(Queue)-[:HAS_MEMBER]->(Agent)",
+        "(Tenant)-[:HAS_TICKET_AGENT]->(Agent)"
+      ],
+      "key_properties": {
+        "Agent": [
+          "id",
+          "setup_user_id",
+          "role",
+          "status",
+          "organization_id"
+        ],
+        "Employee": [
+          "first_name",
+          "last_name",
+          "work_email"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (t:Ticket)-[:assigned_to]->(ta:Agent)-[:IS_TICKET_AGENT_FOR]->(u:Employee) WHERE t.organization_id = $organization_id AND t.created_at >= datetime($period_start) AND t.created_at < datetime($period_end) RETURN u.first_name + ' ' + u.last_name AS agent, count(t) AS assigned_count ORDER BY assigned_count DESC LIMIT 10",
+    "keywords": [
+      "ticket agent",
+      "assignee",
+      "resolver",
+      "Agent",
+      "who is assigned"
+    ],
+    "examples": [
+      "Which agent has the most assigned tickets?",
+      "Show resolver for this ticket"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_high_priority_open_tickets",
+    "type": "business_concept",
+    "name": "High Priority Open Tickets",
+    "description": "Open tickets with priority in urgent/high.",
+    "search_text": "High Priority Open Tickets Open tickets with priority in urgent/high. urgent open tickets critical backlog P1 P2 open urgent high priority critical P1 (:Ticket) (Ticket)-[:has_sla]->(SLA)",
+    "domain": "ticketing",
+    "aliases": [
+      "urgent open tickets",
+      "critical backlog",
+      "P1 P2 open"
+    ],
+    "base_entities": [
+      "Ticket"
+    ],
+    "business_rules": [
+      "is_terminal = false AND toLower(priority) IN ['urgent', 'high']",
+      "Priority keys align with SLA.priority"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(:Ticket)",
+        "(Ticket)-[:has_sla]->(SLA)"
+      ],
+      "key_properties": {
+        "Ticket": [
+          "priority",
+          "status",
+          "due_at",
+          "organization_id"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (t:Ticket) WHERE toLower(t.status) = 'open' AND toLower(t.priority) IN ['urgent', 'high'] RETURN count(t) AS high_priority_open",
+    "keywords": [
+      "urgent",
+      "high priority",
+      "critical",
+      "P1"
+    ],
+    "examples": [
+      "How many urgent open tickets?",
+      "High priority backlog by queue"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_unassigned_tickets",
+    "type": "business_concept",
+    "name": "Unassigned Tickets",
+    "description": "Open tickets with no L1 assignee (no ASSIGNED_TO Agent, or assignee_id null).",
+    "search_text": "Unassigned Tickets Open tickets with no L1 assignee (no ASSIGNED_TO Agent, or assignee_id null). no assignee unclaimed tickets tickets without agent unassigned no assignee unclaimed who owns (Ticket)-[:assigned_to]->(Agent) (:Ticket) (Tenant)-[:HAS_DASHBOARD_METRICS]->(DashboardMetrics)",
+    "domain": "ticketing",
+    "aliases": [
+      "no assignee",
+      "unclaimed tickets",
+      "tickets without agent"
+    ],
+    "disambiguation": "ASSIGNED_TO on Ticket points to Agent (ticketing), NOT CRM ContactProfile ASSIGNED_TO Employee, and NOT CCAAS Conversation HANDLED_BY Agent.",
+    "base_entities": [
+      "Ticket",
+      "Agent"
+    ],
+    "business_rules": [
+      "Unassigned = NOT (Ticket)-[:assigned_to]->(:Agent) OR assignee_id IS NULL",
+      "Usually also require is_terminal = false",
+      "DashboardMetrics.unassigned is snapshot"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Ticket)-[:assigned_to]->(Agent)",
+        "(:Ticket)",
+        "(Tenant)-[:HAS_DASHBOARD_METRICS]->(DashboardMetrics)"
+      ],
+      "key_properties": {
+        "Ticket": [
+          "assignee_id",
+          "assignee_name",
+          "status",
+          "organization_id",
+          "created_at"
+        ],
+        "DashboardMetrics": [
+          "unassigned",
+          "captured_at"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (t:Ticket) WHERE NOT (t)-[:assigned_to]->(:Agent) RETURN count(t) AS unassigned_tickets",
+    "keywords": [
+      "unassigned",
+      "no assignee",
+      "unclaimed",
+      "who owns"
+    ],
+    "examples": [
+      "How many unassigned tickets?",
+      "Unassigned tickets by priority"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_due_today_tickets",
+    "type": "business_concept",
+    "name": "Due Today Tickets",
+    "description": "Open tickets whose due_at falls on the organization's local calendar today (OrgSettings.display_timezone).",
+    "search_text": "Due Today Tickets Open tickets whose due_at falls on the organization's local calendar today (OrgSettings.display_timezone). tickets due today due date today deadline today due today deadline today due_at today (:Ticket) (Tenant)-[:HAS_ORG_SETTINGS]->(OrgSettings) (Tenant)-[:HAS_DASHBOARD_METRICS]->(DashboardMetrics)",
+    "domain": "ticketing",
+    "aliases": [
+      "tickets due today",
+      "due date today",
+      "deadline today"
+    ],
+    "base_entities": [
+      "Ticket"
+    ],
+    "business_rules": [
+      "Use Ticket.due_at date part in org timezone (OrgSettings.display_timezone)",
+      "Require is_terminal = false",
+      "DashboardMetrics.due_today is snapshot"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(:Ticket)",
+        "(Tenant)-[:HAS_ORG_SETTINGS]->(OrgSettings)",
+        "(Tenant)-[:HAS_DASHBOARD_METRICS]->(DashboardMetrics)"
+      ],
+      "key_properties": {
+        "Ticket": [
+          "due_at",
+          "organization_id",
+          "status"
+        ],
+        "OrgSettings": [
+          "display_timezone"
+        ],
+        "DashboardMetrics": [
+          "due_today",
+          "captured_at"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (t:Ticket) WHERE toLower(t.status) = 'open' AND t.due_at IS NOT NULL AND date(t.due_at) = date() RETURN count(t) AS due_today",
+    "keywords": [
+      "due today",
+      "deadline today",
+      "due_at today"
+    ],
+    "examples": [
+      "How many tickets are due today?",
+      "List tickets due today"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_ticket_first_response_time",
+    "type": "business_concept",
+    "name": "Ticket First Response Time",
+    "description": "Time from ticket creation to first staff response (Ticket.first_response_at). SLA target hours come from SLA.first_response_hours by priority.",
+    "search_text": "Ticket First Response Time Time from ticket creation to first staff response (Ticket.first_response_at). SLA target hours come from SLA.first_response_hours by priority. FRT time to first reply first response SLA speed to first answer first response FRT response time reply speed (Ticket)-[:has_sla]->(SLA) (Ticket)-[:assigned_to]->(Agent)",
+    "domain": "ticketing",
+    "aliases": [
+      "FRT",
+      "time to first reply",
+      "first response SLA",
+      "speed to first answer"
+    ],
+    "disambiguation": "CCAAS uses Conversation.first_agent_response_at / SLAInstance. Ticketing uses Ticket.first_response_at and SLA.",
+    "base_entities": [
+      "Ticket",
+      "SLA",
+      "Agent"
+    ],
+    "business_rules": [
+      "FRT seconds = duration.between(created_at, first_response_at).seconds",
+      "Only tickets with first_response_at IS NOT NULL",
+      "Met SLA if first_response_at <= created_at + SLA.first_response_hours (via GOVERNED_BY)",
+      "Average FRT = avg(duration) over period"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Ticket)-[:has_sla]->(SLA)",
+        "(Ticket)-[:assigned_to]->(Agent)"
+      ],
+      "key_properties": {
+        "Ticket": [
+          "created_at",
+          "first_response_at",
+          "priority",
+          "organization_id"
+        ],
+        "SLA": [
+          "priority",
+          "first_response_hours"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (t:Ticket) WHERE t.organization_id = $organization_id AND t.first_response_at IS NOT NULL AND t.first_response_at >= datetime($period_start) AND t.first_response_at < datetime($period_end) RETURN avg(duration.between(t.created_at, t.first_response_at).seconds) AS avg_first_response_seconds",
+    "keywords": [
+      "first response",
+      "FRT",
+      "response time",
+      "reply speed"
+    ],
+    "examples": [
+      "What is average first response time?",
+      "Are we meeting first response SLA?"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_ticket_resolution_time",
+    "type": "business_concept",
+    "name": "Ticket Resolution Time",
+    "description": "Duration from Ticket.created_at to Ticket.resolved_at for resolved tickets.",
+    "search_text": "Ticket Resolution Time Duration from Ticket.created_at to Ticket.resolved_at for resolved tickets. time to resolve average resolution time ART handle time ticket resolution time time to resolve ART how long to close (Ticket)-[:has_sla]->(SLA) (Ticket)-[:resolved_by]->(Agent) (Ticket)-[:assigned_to]->(Agent)",
+    "domain": "ticketing",
+    "aliases": [
+      "time to resolve",
+      "average resolution time",
+      "ART",
+      "handle time ticket"
+    ],
+    "disambiguation": "Not CCAAS Average Handle Time (assigned_at\u2192resolved_at on Conversation). Ticketing ART uses created_at\u2192resolved_at on Ticket.",
+    "base_entities": [
+      "Ticket",
+      "SLA",
+      "Agent"
+    ],
+    "business_rules": [
+      "Only where resolved_at IS NOT NULL",
+      "ART = avg(duration.between(created_at, resolved_at).seconds)",
+      "Compare against SLA.resolution_hours via GOVERNED_BY"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Ticket)-[:has_sla]->(SLA)",
+        "(Ticket)-[:resolved_by]->(Agent)",
+        "(Ticket)-[:assigned_to]->(Agent)"
+      ],
+      "key_properties": {
+        "Ticket": [
+          "created_at",
+          "resolved_at",
+          "priority",
+          "organization_id"
+        ],
+        "SLA": [
+          "resolution_hours",
+          "priority"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (t:Ticket) WHERE t.organization_id = $organization_id AND t.resolved_at IS NOT NULL AND t.resolved_at >= datetime($period_start) AND t.resolved_at < datetime($period_end) RETURN avg(duration.between(t.created_at, t.resolved_at).seconds) AS avg_resolution_seconds",
+    "keywords": [
+      "resolution time",
+      "time to resolve",
+      "ART",
+      "how long to close"
+    ],
+    "examples": [
+      "Average resolution time this month?",
+      "Resolution time by priority"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_ticket_csat",
+    "type": "business_concept",
+    "name": "Ticket CSAT",
+    "description": "Customer satisfaction on tickets: Ticket.csat_score (1\u20135) and csat_rated_at. Supports average, promoter/detractor rates, and response rate among resolved.",
+    "search_text": "Ticket CSAT Customer satisfaction on tickets: Ticket.csat_score (1\u20135) and csat_rated_at. Supports average, promoter/detractor rates, and response rate among resolved. customer satisfaction CSAT score satisfaction rating survey score CSAT satisfaction rating promoter detractor survey (Ticket)-[:REPORTED_VIA]->(SupportProfile)-[:OVERLAY_OF]->(Contact)",
+    "domain": "ticketing",
+    "aliases": [
+      "customer satisfaction",
+      "CSAT score",
+      "satisfaction rating",
+      "survey score"
+    ],
+    "base_entities": [
+      "Ticket",
+      "SupportProfile",
+      "Contact"
+    ],
+    "business_rules": [
+      "Rated tickets: csat_score IS NOT NULL",
+      "average_csat = avg(csat_score) where rated",
+      "Promoter: csat_score >= 4; Detractor: csat_score <= 2; Neutral: = 3",
+      "Response rate = rated among resolved / resolved (resolved_at IS NOT NULL)",
+      "Customer-level CSAT: (Contact)<-[:OVERLAY_OF]-(SupportProfile)<-[:REPORTED_VIA]-(Ticket)",
+      "Do NOT invent a Customer node \u2014 Customer is Contact sublabel when contact_type = customer"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Ticket)-[:REPORTED_VIA]->(SupportProfile)-[:OVERLAY_OF]->(Contact)"
+      ],
+      "key_properties": {
+        "Ticket": [
+          "csat_score",
+          "csat_rated_at",
+          "resolved_at",
+          "organization_id"
+        ],
+        "Contact": [
+          "cdp_id",
+          "contact_type"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (t:Ticket) WHERE t.organization_id = $organization_id AND t.csat_score IS NOT NULL AND t.csat_rated_at >= datetime($period_start) AND t.csat_rated_at < datetime($period_end) RETURN avg(toFloat(t.csat_score)) AS average_csat, count(t) AS rated_count",
+    "diagnostic_template": "MATCH (t:Ticket)-[:REPORTED_VIA]->(sp:SupportProfile)-[:OVERLAY_OF]->(ct:Contact) WHERE t.organization_id = $organization_id AND t.csat_score IS NOT NULL AND t.csat_rated_at >= datetime($period_start) AND t.csat_rated_at < datetime($period_end) RETURN ct.cdp_id AS contact, avg(toFloat(t.csat_score)) AS avg_csat, count(t) AS ratings ORDER BY avg_csat ASC LIMIT 10",
+    "keywords": [
+      "CSAT",
+      "satisfaction",
+      "rating",
+      "promoter",
+      "detractor",
+      "survey"
+    ],
+    "examples": [
+      "What is average CSAT this month?",
+      "CSAT for this customer",
+      "CSAT response rate"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_ticket_escalation",
+    "type": "business_concept",
+    "name": "Ticket Escalation",
+    "description": "Tickets escalated to an L2 resolver. Graph: Ticket has RESOLVED_BY Agent and/or AuditEvent.action = ticket.escalated.",
+    "search_text": "Ticket Escalation Tickets escalated to an L2 resolver. Graph: Ticket has RESOLVED_BY Agent and/or AuditEvent.action = ticket.escalated. escalated tickets L2 handoff sent to resolver escalation volume escalation escalated resolver L2 handoff (Ticket)-[:resolved_by]->(Agent) (Ticket)-[:assigned_to]->(Agent) (AuditEvent)-[:ON_TICKET]->(Ticket) (AuditEvent)-[:ACTED_BY]->(Agent)",
+    "domain": "ticketing",
+    "aliases": [
+      "escalated tickets",
+      "L2 handoff",
+      "sent to resolver",
+      "escalation volume"
+    ],
+    "disambiguation": "Not CCAAS Transfer. Ticketing escalation sets resolver (RESOLVED_BY), distinct from L1 ASSIGNED_TO.",
+    "base_entities": [
+      "Ticket",
+      "Agent",
+      "AuditEvent"
+    ],
+    "business_rules": [
+      "Escalated if (Ticket)-[:resolved_by]->(Agent) OR AuditEvent.action = 'ticket.escalated'",
+      "Path: (AuditEvent)-[:ON_TICKET]->(Ticket), (AuditEvent)-[:ACTED_BY]->(Agent)",
+      "Count distinct tickets in period via AuditEvent.created_at or when resolver_id set"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Ticket)-[:resolved_by]->(Agent)",
+        "(Ticket)-[:assigned_to]->(Agent)",
+        "(AuditEvent)-[:ON_TICKET]->(Ticket)",
+        "(AuditEvent)-[:ACTED_BY]->(Agent)"
+      ],
+      "key_properties": {
+        "Ticket": [
+          "resolver_id",
+          "assignee_id",
+          "priority",
+          "organization_id"
+        ],
+        "AuditEvent": [
+          "action",
+          "created_at",
+          "organization_id"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (ae:AuditEvent)-[:ON_TICKET]->(t:Ticket) WHERE ae.organization_id = $organization_id AND ae.action = 'ticket.escalated' AND ae.created_at >= datetime($period_start) AND ae.created_at < datetime($period_end) RETURN count(DISTINCT t) AS escalation_volume",
+    "keywords": [
+      "escalation",
+      "escalated",
+      "resolver",
+      "L2",
+      "handoff"
+    ],
+    "examples": [
+      "How many escalations this week?",
+      "Which agent escalates the most?"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_ticket_queue_load",
+    "type": "business_concept",
+    "name": "Ticket Queue Load",
+    "description": "Workload on Queue: open ticket count, assigned count, sla_status, and membership via HAS_MEMBER Agent.",
+    "search_text": "Ticket Queue Load Workload on Queue: open ticket count, assigned count, sla_status, and membership via HAS_MEMBER Agent. team backlog queue open tickets queue workload queue SLA status queue team backlog workload queue load (Ticket)-[:in_queue]->(Queue) (Queue)-[:HAS_MEMBER]->(Agent) (Queue)-[:MIRRORED_FROM]->(Team) (Tenant)-[:HAS_TICKET_QUEUE]->(Queue)",
+    "domain": "ticketing",
+    "aliases": [
+      "team backlog",
+      "queue open tickets",
+      "queue workload",
+      "queue SLA status"
+    ],
+    "disambiguation": "Queue is ticketing (not CCAAS Queue). May be MIRRORED_FROM Team.",
+    "base_entities": [
+      "Ticket",
+      "Queue"
+    ],
+    "business_rules": [
+      "Live load: count (Ticket)-[:in_queue]->(Queue) with is_terminal = false",
+      "Cached: Queue.open_tickets, assigned, sla_status",
+      "(Queue)-[:HAS_MEMBER]->(Agent)",
+      "(Queue)-[:MIRRORED_FROM]->(Team) when synced from MyAccount"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Ticket)-[:in_queue]->(Queue)",
+        "(Queue)-[:HAS_MEMBER]->(Agent)",
+        "(Queue)-[:MIRRORED_FROM]->(Team)",
+        "(Tenant)-[:HAS_TICKET_QUEUE]->(Queue)"
+      ],
+      "key_properties": {
+        "Queue": [
+          "queue_name",
+          "open_tickets",
+          "assigned",
+          "sla_status",
+          "organization_id"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (t:Ticket)-[:in_queue]->(q:Queue) WHERE toLower(t.status) = 'open' RETURN q.name AS queue, count(t) AS open_tickets ORDER BY open_tickets DESC",
+    "keywords": [
+      "queue",
+      "team",
+      "backlog",
+      "workload",
+      "queue load"
+    ],
+    "examples": [
+      "Which queue has the highest backlog?",
+      "Queue load and SLA status"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_support_requester",
+    "type": "business_concept",
+    "name": "Support Requester",
+    "description": "Person who reported a ticket. Path: Ticket-[:REPORTED_VIA]->SupportProfile-[:OVERLAY_OF]->Contact. Contact may also have Customer sublabel via contact_type.",
+    "search_text": "Support Requester Person who reported a ticket. Path: Ticket-[:REPORTED_VIA]->SupportProfile-[:OVERLAY_OF]->Contact. Contact may also have Customer sublabel via contact_type. ticket customer requester support contact who filed the ticket requester customer tickets support contact who reported contact tickets (Ticket)-[:REPORTED_VIA]->(SupportProfile) (SupportProfile)-[:OVERLAY_OF]->(Contact) (SupportProfile)-[:OF_ACCOUNT]->(ClientAccount)",
+    "domain": "ticketing",
+    "aliases": [
+      "ticket customer",
+      "requester",
+      "support contact",
+      "who filed the ticket"
+    ],
+    "disambiguation": "Do NOT create or MATCH a separate Customer node from ticketing. Use Contact (and optional :Customer sublabel). SupportProfile is spoke ops overlay (like CRM ContactProfile), keyed by contact_profile.id; person key is Contact.cdp_id.",
+    "base_entities": [
+      "Ticket",
+      "SupportProfile",
+      "Contact",
+      "ClientAccount"
+    ],
+    "business_rules": [
+      "(Ticket)-[:REPORTED_VIA]->(SupportProfile)-[:OVERLAY_OF]->(Contact)",
+      "Optional B2B: (SupportProfile)-[:OF_ACCOUNT]->(ClientAccount)",
+      "Customer KPIs (lifetime tickets, avg CSAT) aggregate Tickets under this path",
+      "SupportProfile.total_tickets is cache only \u2014 prefer count(Ticket) for analytics"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Ticket)-[:REPORTED_VIA]->(SupportProfile)",
+        "(SupportProfile)-[:OVERLAY_OF]->(Contact)",
+        "(SupportProfile)-[:OF_ACCOUNT]->(ClientAccount)"
+      ],
+      "key_properties": {
+        "SupportProfile": [
+          "id",
+          "cdp_id",
+          "status",
+          "total_tickets",
+          "organization_id"
+        ],
+        "Contact": [
+          "cdp_id",
+          "first_name",
+          "last_name",
+          "contact_type"
+        ],
+        "Ticket": [
+          "customer_id",
+          "csat_score",
+          "created_at",
+          "resolved_at"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (t:Ticket)-[:REPORTED_VIA]->(sp:SupportProfile)-[:OVERLAY_OF]->(ct:Contact) WHERE t.organization_id = $organization_id AND ct.cdp_id = $cdp_id RETURN count(t) AS tkt_total_tickets, avg(CASE WHEN t.csat_score IS NOT NULL THEN toFloat(t.csat_score) END) AS tkt_avg_csat_score",
+    "keywords": [
+      "requester",
+      "customer tickets",
+      "support contact",
+      "who reported",
+      "contact tickets"
+    ],
+    "examples": [
+      "How many tickets does this customer have?",
+      "Show tickets for this contact",
+      "Average CSAT for this requester"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_ticket_note_volume",
+    "type": "business_concept",
+    "name": "Ticket Note Volume",
+    "description": "Volume of TicketNote on tickets. visibility distinguishes internal vs customer-visible.",
+    "search_text": "Ticket Note Volume Volume of TicketNote on tickets. visibility distinguishes internal vs customer-visible. replies comments on ticket internal notes customer visible replies notes replies comments internal note (Ticket)<-[:HAS_TICKET_NOTE]-(TicketNote) (TicketNote)-[:AUTHORED_BY]->(Agent)",
+    "domain": "ticketing",
+    "aliases": [
+      "replies",
+      "comments on ticket",
+      "internal notes",
+      "customer visible replies"
+    ],
+    "disambiguation": "TicketNote is not CCAAS WorkNote on Conversation.",
+    "base_entities": [
+      "TicketNote",
+      "Ticket",
+      "Agent"
+    ],
+    "business_rules": [
+      "(Ticket)-[:HAS_TICKET_NOTE]->(TicketNote) or (TicketNote) inbound HAS_TICKET_NOTE from Ticket",
+      "Internal: visibility = 'internal'; customer-visible otherwise",
+      "(TicketNote)-[:AUTHORED_BY]->(Agent)"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Ticket)<-[:HAS_TICKET_NOTE]-(TicketNote)",
+        "(TicketNote)-[:AUTHORED_BY]->(Agent)"
+      ],
+      "key_properties": {
+        "TicketNote": [
+          "visibility",
+          "created_at",
+          "organization_id",
+          "body"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (n:TicketNote) WHERE n.organization_id = $organization_id AND n.created_at >= datetime($period_start) AND n.created_at < datetime($period_end) RETURN n.visibility AS visibility, count(n) AS note_volume",
+    "keywords": [
+      "notes",
+      "replies",
+      "comments",
+      "internal note"
+    ],
+    "examples": [
+      "How many ticket notes this week?",
+      "Internal vs public reply volume"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_outbound_ticket_email",
+    "type": "business_concept",
+    "name": "Outbound Ticket Email",
+    "description": "Emails sent to customers about tickets (OutboundEmail). kinds include ticket_created, ticket_reply, ticket_resolved.",
+    "search_text": "Outbound Ticket Email Emails sent to customers about tickets (OutboundEmail). kinds include ticket_created, ticket_reply, ticket_resolved. customer email sent ticket acknowledgement resolution email reply email email outbound acknowledgement customer mail (OutboundEmail)-[:SENT_FOR]->(Ticket) (InboundEmailRef)-[:THREADS_TO]->(Ticket)",
+    "domain": "ticketing",
+    "aliases": [
+      "customer email sent",
+      "ticket acknowledgement",
+      "resolution email",
+      "reply email"
+    ],
+    "base_entities": [
+      "OutboundEmail",
+      "Ticket",
+      "InboundEmailRef"
+    ],
+    "business_rules": [
+      "(OutboundEmail)-[:SENT_FOR]->(Ticket)",
+      "Inbound threading: (InboundEmailRef)-[:THREADS_TO]->(Ticket)",
+      "Filter OutboundEmail.created_at and status for delivery success"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(OutboundEmail)-[:SENT_FOR]->(Ticket)",
+        "(InboundEmailRef)-[:THREADS_TO]->(Ticket)"
+      ],
+      "key_properties": {
+        "OutboundEmail": [
+          "kind",
+          "status",
+          "to_email",
+          "created_at",
+          "organization_id"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (e:OutboundEmail)-[:SENT_FOR]->(t:Ticket) WHERE e.organization_id = $organization_id AND e.created_at >= datetime($period_start) AND e.created_at < datetime($period_end) RETURN e.kind AS kind, count(e) AS email_volume",
+    "keywords": [
+      "email",
+      "outbound",
+      "acknowledgement",
+      "customer mail"
+    ],
+    "examples": [
+      "How many outbound ticket emails this week?",
+      "Failed outbound emails"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_ticket_dashboard_kpis",
+    "type": "business_concept",
+    "name": "Ticket Dashboard KPIs",
+    "description": "Cached org KPI snapshot on DashboardMetrics: open_tickets, on_hold, overdue, due_today, unassigned. Use for quick home answers; live Ticket queries for authoritative analytics.",
+    "search_text": "Ticket Dashboard KPIs Cached org KPI snapshot on DashboardMetrics: open_tickets, on_hold, overdue, due_today, unassigned. Use for quick home answers; live Ticket queries for authoritative analytics. home metrics dashboard snapshot open overdue due today unassigned dashboard KPI home metrics snapshot (Tenant)-[:HAS_DASHBOARD_METRICS]->(DashboardMetrics)",
+    "domain": "ticketing",
+    "aliases": [
+      "home metrics",
+      "dashboard snapshot",
+      "open overdue due today unassigned"
+    ],
+    "base_entities": [
+      "DashboardMetrics",
+      "Tenant",
+      "Ticket"
+    ],
+    "business_rules": [
+      "(Tenant)-[:HAS_DASHBOARD_METRICS]->(DashboardMetrics)",
+      "One row per organization_id; check captured_at freshness",
+      "If snapshot stale or null, compute from Ticket + Ticket.status instead"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Tenant)-[:HAS_DASHBOARD_METRICS]->(DashboardMetrics)"
+      ],
+      "key_properties": {
+        "DashboardMetrics": [
+          "open_tickets",
+          "on_hold",
+          "overdue",
+          "due_today",
+          "unassigned",
+          "captured_at",
+          "organization_id"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (dm:DashboardMetrics) WHERE dm.organization_id = $organization_id RETURN dm.open_tickets AS open_tickets, dm.overdue AS overdue, dm.due_today AS due_today, dm.unassigned AS unassigned, dm.captured_at AS captured_at",
+    "keywords": [
+      "dashboard",
+      "KPI",
+      "home metrics",
+      "snapshot"
+    ],
+    "examples": [
+      "Show dashboard KPIs",
+      "Open, overdue, and unassigned counts"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_client_account_tickets",
+    "type": "business_concept",
+    "name": "Client Account Tickets",
+    "description": "Tickets filed by contacts under a B2B ClientAccount (ticketing.ticketing_accounts). Not CRM Account and not MyAccount Tenant.",
+    "search_text": "Client Account Tickets Tickets filed by contacts under a B2B ClientAccount (ticketing.ticketing_accounts). Not CRM Account and not MyAccount Tenant. B2B account tickets company support volume account backlog client account B2B account tickets company support (Ticket)-[:REPORTED_VIA]->(SupportProfile)-[:OF_ACCOUNT]->(ClientAccount) (SupportProfile)-[:OVERLAY_OF]->(Contact) (Tenant)-[:HAS_CLIENT_ACCOUNT]->(ClientAccount)",
+    "domain": "ticketing",
+    "aliases": [
+      "B2B account tickets",
+      "company support volume",
+      "account backlog"
+    ],
+    "base_entities": [
+      "ClientAccount",
+      "SupportProfile",
+      "Ticket",
+      "Contact"
+    ],
+    "business_rules": [
+      "(SupportProfile)-[:OF_ACCOUNT]->(ClientAccount)",
+      "(Ticket)-[:REPORTED_VIA]->(SupportProfile)",
+      "Do not confuse ClientAccount with Account (CRM) or Tenant (accounts.organizations)"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Ticket)-[:REPORTED_VIA]->(SupportProfile)-[:OF_ACCOUNT]->(ClientAccount)",
+        "(SupportProfile)-[:OVERLAY_OF]->(Contact)",
+        "(Tenant)-[:HAS_CLIENT_ACCOUNT]->(ClientAccount)"
+      ],
+      "key_properties": {
+        "ClientAccount": [
+          "name",
+          "status",
+          "organization_id"
+        ],
+        "Ticket": [
+          "created_at",
+          "status",
+          "priority",
+          "csat_score"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (t:Ticket)-[:REPORTED_VIA]->(sp:SupportProfile)-[:OF_ACCOUNT]->(ca:ClientAccount) WHERE ca.organization_id = $organization_id AND ca.name = $account_name RETURN count(t) AS ticket_count, avg(CASE WHEN t.csat_score IS NOT NULL THEN toFloat(t.csat_score) END) AS avg_csat",
+    "keywords": [
+      "client account",
+      "B2B",
+      "account tickets",
+      "company support"
+    ],
+    "examples": [
+      "How many tickets for account Acme?",
+      "CSAT by client account"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_automation_rule_ticketing",
+    "type": "business_concept",
+    "name": "Ticket Automation Rule",
+    "description": "Org AutomationRule that runs on ticket.created / ticket.updated to set priority, queue, assignee, or notify.",
+    "search_text": "Ticket Automation Rule Org AutomationRule that runs on ticket.created / ticket.updated to set priority, queue, assignee, or notify. if then ticket rule auto assign rule ticket workflow rule automation rule auto assign workflow (Tenant)-[:HAS_AUTOMATION_RULE]->(AutomationRule) (AutomationRule)-[:CREATED_BY]->(Agent)",
+    "domain": "ticketing",
+    "aliases": [
+      "if then ticket rule",
+      "auto assign rule",
+      "ticket workflow rule"
+    ],
+    "base_entities": [
+      "AutomationRule",
+      "Ticket",
+      "Agent",
+      "Queue"
+    ],
+    "business_rules": [
+      "(Tenant)-[:HAS_AUTOMATION_RULE]->(AutomationRule)",
+      "event in ['ticket.created', 'ticket.updated']",
+      "conditions/actions are dynamic JSON on the node"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Tenant)-[:HAS_AUTOMATION_RULE]->(AutomationRule)",
+        "(AutomationRule)-[:CREATED_BY]->(Agent)"
+      ],
+      "key_properties": {
+        "AutomationRule": [
+          "name",
+          "event",
+          "enabled",
+          "priority",
+          "organization_id"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (r:AutomationRule) WHERE r.organization_id = $organization_id AND r.enabled = true RETURN r.name AS rule, r.event AS event, r.priority AS run_order ORDER BY r.priority",
+    "keywords": [
+      "automation",
+      "rule",
+      "auto assign",
+      "workflow"
+    ],
+    "examples": [
+      "What automation rules are enabled?",
+      "Rules on ticket created"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "rule_global_query_contract",
+    "type": "query_rule",
+    "name": "Global Cypher Query Contract",
+    "aliases": [
+      "query rules",
+      "cypher rules",
+      "graph contract",
+      "how to query"
+    ],
+    "description": "Mandatory rules the Cypher agent must apply to EVERY generated query against the Worktual OKG. Retrieve and prepend this card on every request.",
+    "business_rules": [
+      "CASE SENSITIVITY: Neo4j labels, relationship types and property names are case-sensitive. Labels are PascalCase (Conversation, SalesOrder, ContactProfile). Relationship types are UPPER_SNAKE_CASE (HAS_ROUTING_ATTEMPT, BELONGS_TO_SEGMENT). Properties are lower_snake_case (created_at, churn_score, total_amount). Never title-case a property, never PascalCase a relationship, never UPPER a label.",
+      "NODE KEYS ARE NOT ALWAYS 'id'. Registry: Contact=cdp_id, CustomerScore=cdp_id, ContactPoint=identity_id, Insight=insight_id, Recommendation=recommendation_id, Segment=segment_id, Order=order_id, OrgProfile=organization_id, KnowledgeOrgProfile=organization_id, AssignmentSettings=organization_id, WebchatChannelConfig=channel_config_id, SocialChannelConfig=channel_config_id, Product=id (bigint), PlatformProduct=id (string). Every other label uses id.",
+      "ANCHOR BOTH ENDS WITH LABELS. These relationship types are overloaded and reused across unrelated pairs: CONTAINS, HAS_LINE, FOR_PRODUCT, FOR_CONTACT, FOR_OPPORTUNITY, FOR_ACTIVITY, FOR_ACCOUNT, OWNED_BY, CREATED_BY, ASSIGNED_TO, IN_QUEUE, FROM_QUEUE, HANDLED_BY, OFFERED_AGENT, FOLLOWS_HOURS, USES_TEMPLATE, APPROVED_BY. Never write (a)-[:CONTAINS]->(b) without labels on both a and b.",
+      "TENANT SCOPE IS THE DATABASE. Each tenant has its own Neo4j database. Do NOT add `WHERE n.organization_id = $organization_id` unless the runtime actually binds $organization_id \u2014 an unbound parameter makes Neo4j throw 'Expected parameter(s)' and the agent returns an error instead of an answer.",
+      "DATETIME vs DATE. Most timestamps are ZONED DATETIME (UTC) and must be compared with datetime($period_start). But DATE-typed columns must be compared with date($period_start): Invoice.issue_date, Opportunity.expected_close_date, Contact.acquisition_date, Contact.date_of_birth, Holiday.holiday_date, Quote.valid_until. Mixing date and datetime raises a type error.",
+      "DURATIONS. Use duration.inSeconds(a, b).seconds for elapsed time. duration.between(a, b).seconds returns ONLY the seconds component (excludes days/months) and silently under-reports any span longer than 24 hours.",
+      "ALWAYS BOUND BOTH ENDS OF A PERIOD: `>= datetime($period_start) AND < datetime($period_end)`. A start-only filter makes 'this week' silently mean 'this week and everything after'.",
+      "GUARD DIVISION: CASE WHEN total = 0 THEN 0.0 ELSE toFloat(numerator)/total END. A bare toFloat(x)/0 returns null and the answer reads as 'unknown'.",
+      "EXISTENCE CHECKS: use EXISTS { (c)-[:HAS_TRANSFER]->(:Transfer) } or COUNT {}. Bare pattern expressions outside WHERE are removed in Neo4j 5.",
+      "NEVER INVENT A TENANT FAN-OUT EDGE. The following (Tenant)-[...]->(x) relationships are commented out in core.yaml and DO NOT EXIST in the graph: HAS_CONTACT, HAS_CONTACT_PROFILE, HAS_CONVERSATION, HAS_INTERACTION, HAS_DEAL, HAS_DEAL_ACTIVITY, HAS_COMPANY, HAS_COMPANY_SITE, HAS_QUOTE, HAS_PROPOSAL, HAS_INVOICE, HAS_SALES_ORDER, HAS_CONTRACT, HAS_NOTIFICATION, HAS_MISSED_CONTACT, HAS_SHARED_NOTE, HAS_KNOWLEDGE_DOCUMENT, HAS_QUOTE_TEMPLATE, HAS_PROPOSAL_TEMPLATE, HAS_INVOICE_TEMPLATE. Match the label directly instead: MATCH (d:Opportunity) \u2014 not MATCH (:Tenant)-[:HAS_DEAL]->(d:Opportunity), which returns zero rows.",
+      "(Contact)-[:PARTICIPATED_IN]->(Conversation) DOES NOT EXIST. Conversations, interactions, activities, insights and recommendations hang off a Contact through synthetic collection nodes. See concept_contact_history.",
+      "IF NO CARD MATCHES, SAY SO. Do not improvise labels or relationship types that are absent from these cards."
+    ],
+    "keywords": [
+      "rules",
+      "contract",
+      "case sensitive",
+      "node key",
+      "how to query",
+      "cypher conventions"
+    ],
+    "examples": [],
+    "search_text": "Global Cypher Query Contract Mandatory rules the Cypher agent must apply to EVERY generated query against the Worktual OKG. Retrieve and prepend this card on every request. query rules cypher rules graph contract how to query rules contract case sensitive node key how to query cypher conventions",
+    "domain": "meta",
+    "schema_version": "2"
+  }
+]

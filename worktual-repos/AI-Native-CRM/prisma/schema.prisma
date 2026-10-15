@@ -1,0 +1,2870 @@
+// CRM transactional models live in crm_qa (DATABASE_URL), including inbox
+// activities, Google email/calendar OAuth (user_integration_connections), and
+// contact_profiles (CRM fields for shared account contacts).
+// my_account_qa (ACCOUNT_DATABASE_URL): auth + shared person contacts only
+// (accessed via the pg account pool — not Prisma). CRM must not store
+// product-specific fields on my_account_qa.public.contacts.
+//
+// PARALLEL B2B/B2C WORK: high-touch shared file — both business-type tracks
+// edit this schema. Coordinate before adding/changing models here, log the
+// change in docs/parallel-work-log.md, and validate the merged
+// prisma/migrations/ folder on a throwaway DB before deploying to the shared
+// worktual_bigint DB. See docs/merge-validation-checklist.md.
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "darwin", "debian-openssl-1.1.x", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["crm", "inventory"]
+}
+
+enum LocationType {
+  hq
+  branch
+  @@schema("crm")
+}
+
+/// Brand → franchise / owned store hierarchy within one organization.
+enum CompanyChannelRole {
+  standard
+  franchise
+  owned_store
+  brand_hq
+  @@schema("crm")
+}
+
+/// Field pack mapped from accounts.organizations.industry_type (not a CRM-owned picker).
+enum OrganizationVertical {
+  general
+  ecommerce
+  healthcare
+  finance
+  telecom
+  @@schema("crm")
+}
+
+enum DealStage {
+  qualification
+  discover
+  propose
+  negotiate
+  closed_won
+  closed_lost
+  @@schema("crm")
+}
+
+enum ActivityType {
+  call
+  meeting
+  email
+  sms
+  note
+  task
+  @@schema("crm")
+}
+
+enum TaskStatus {
+  open
+  in_progress
+  completed
+  @@schema("crm")
+}
+
+enum InboxFolder {
+  inbox
+  sent
+  draft
+  trash
+  @@schema("crm")
+}
+
+enum EmailDirection {
+  outbound
+  inbound
+  @@schema("crm")
+}
+
+enum IntegrationProvider {
+  google
+  microsoft
+  zoom
+  yahoo
+  @@schema("crm")
+}
+
+enum ProductStatus {
+  draft
+  active
+  archived
+  @@schema("crm")
+}
+
+enum ProductType {
+  fixed
+  customizable
+  @@schema("crm")
+}
+
+enum ProductBillingType {
+  one_time
+  recurring
+  @@schema("crm")
+}
+
+enum ProductBillingFrequency {
+  monthly
+  quarterly
+  annual
+  @@schema("crm")
+}
+
+enum ProductUnitOfMeasure {
+  per_seat
+  per_agent
+  per_ticket
+  flat
+  @@schema("crm")
+}
+
+enum AddonPricingModel {
+  flat
+  per_unit
+  stepped
+  tiered
+  @@schema("crm")
+}
+
+/// Shared meter vocabulary for offers/addons (usage packs, seats, etc.).
+enum AddonMeterKey {
+  seat
+  minute
+  session
+  email
+  agent
+  flat
+  custom
+  @@schema("crm")
+}
+
+enum QuoteStatus {
+  draft
+  sent
+  accepted
+  rejected
+  void
+  @@schema("crm")
+}
+
+enum ProposalStatus {
+  draft
+  shared
+  accepted
+  declined
+  @@schema("crm")
+}
+
+/// Standard proposal skeletons (tenant-owned). Customer proposals clone + merge these.
+enum ProposalTemplateKind {
+  standard
+  @@schema("crm")
+}
+
+/// Standard quotation document skeletons (tenant-owned). Quotes clone + merge these.
+enum QuoteTemplateKind {
+  standard
+  @@schema("crm")
+}
+
+/// Standard invoice document skeletons (tenant-owned). Invoices clone + merge these.
+enum InvoiceTemplateKind {
+  standard
+  @@schema("crm")
+}
+
+enum OrderStatus {
+  draft
+  confirmed
+  fulfilled
+  cancelled
+  @@schema("crm")
+}
+
+enum InvoiceStatus {
+  draft
+  sent
+  paid
+  void
+  overdue
+  @@schema("crm")
+}
+
+enum InvoiceLineKind {
+  product
+  addon
+  @@schema("crm")
+}
+
+/// Semantic billing purpose (workflow metadata — not proration engine).
+enum InvoiceBillingKind {
+  standard
+  setup
+  subscription_start
+  renewal
+  amendment
+  adjustment
+  credit
+  @@schema("crm")
+}
+
+enum ContractStatus {
+  active
+  expired
+  cancelled
+  @@schema("crm")
+}
+
+enum ContractBillingScheduleStatus {
+  scheduled
+  generated
+  cancelled
+  @@schema("crm")
+}
+
+enum InvoicePaymentMethod {
+  offline
+  manual
+  stripe
+  razorpay
+  @@schema("crm")
+}
+
+enum InvoicePaymentProvider {
+  stripe
+  razorpay
+  @@schema("crm")
+}
+
+enum InvoicePaymentSessionStatus {
+  active
+  expired
+  paid
+  cancelled
+  @@schema("crm")
+}
+
+enum PaymentGatewayProvider {
+  stripe
+  razorpay
+  @@schema("crm")
+}
+
+enum AuditAction {
+  create
+  update
+  delete
+  stage_change
+  assign
+  convert
+  merge
+  quote_sent
+  quote_accepted
+  order_created
+  invoice_created
+  @@schema("crm")
+}
+
+enum LeadEnrichmentStatus {
+  pending
+  running
+  enriched
+  skipped
+  failed
+  @@schema("crm")
+}
+
+enum ProspectPullStatus {
+  pending
+  searching
+  qualifying
+  personnel
+  ready_for_review
+  importing
+  imported
+  failed
+  cancelled
+  @@schema("crm")
+}
+
+enum ResearchProvider {
+  apollo
+  zoominfo
+  lusha
+  builtwith
+  @@schema("crm")
+}
+
+enum ProposalCorpusBatchStatus {
+  uploading
+  processing
+  pending_review
+  failed
+  completed
+  @@schema("crm")
+}
+
+enum ProposalCorpusItemKind {
+  requirement
+  proposal
+  @@schema("crm")
+}
+
+enum ProposalCorpusItemStatus {
+  pending
+  ingested
+  structured
+  failed
+  @@schema("crm")
+}
+
+enum ProposalCorpusJobStatus {
+  pending
+  ingesting
+  structuring
+  pairing
+  synthesizing
+  pending_review
+  failed
+  cancelled
+  @@schema("crm")
+}
+
+enum ProposalPlaybookStatus {
+  draft
+  pending_review
+  approved
+  rejected
+  @@schema("crm")
+}
+
+enum AgentStepStatus {
+  started
+  ok
+  failed
+  skipped
+  @@schema("crm")
+}
+
+enum LeadNurtureStatus {
+  pending
+  analyzing
+  sent
+  waited
+  skipped
+  failed
+  @@schema("crm")
+}
+
+enum LeadScoringStatus {
+  pending
+  scoring
+  scored
+  failed
+  @@schema("crm")
+}
+
+enum LeadLifecycleStatus {
+  pending
+  analyzing
+  applied
+  waited
+  skipped
+  failed
+  @@schema("crm")
+}
+
+enum EmailAutoReplyStatus {
+  pending
+  analyzing
+  replied
+  awaiting_demo
+  escalated
+  skipped
+  failed
+  @@schema("crm")
+}
+
+/// Mailbox provider an email activity was synced from.
+enum MailProvider {
+  google
+  microsoft
+  @@schema("crm")
+}
+
+model Company {
+  id             String   @id @default(cuid())
+  organizationId BigInt   @map("organization_id")
+  name           String
+  domain         String?
+  industry       String?
+  employeeCount  Int?     @map("employee_count")
+  linkedinUrl    String?  @map("linkedin_url")
+  logoUrl        String?  @map("logo_url")
+  ownerUserId    BigInt?  @map("owner_user_id")
+  /// Channel hierarchy under the same tenant (franchise B2B2C).
+  channelRole    CompanyChannelRole @default(standard) @map("channel_role")
+  parentCompanyId String? @map("parent_company_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  /// Expansion & Revenue Matcher overlay (HITL): agent only flags a signal + drafts
+  /// outreach talking points on closed-won deal history; never creates a deal/quote
+  /// or contacts the company itself (human-only send).
+  expansionSignal    String?   @map("expansion_signal") @db.VarChar(16)
+  expansionReason    String?   @map("expansion_reason")
+  expansionDraft     String?   @map("expansion_draft")
+  expansionLastRunAt DateTime? @map("expansion_last_run_at")
+
+  /// Company Collection Risk Agent overlay (HITL): aggregates this company's
+  /// whole invoice payment history into a risk band. Flag only — agent never
+  /// blocks/pauses the account.
+  collectionRiskLevel    String?   @map("collection_risk_level") @db.VarChar(16)
+  collectionRiskReason   String?   @map("collection_risk_reason")
+  collectionRiskLastRunAt DateTime? @map("collection_risk_last_run_at")
+
+  parentCompany   Company?  @relation("CompanyHierarchy", fields: [parentCompanyId], references: [id], onDelete: SetNull)
+  childCompanies  Company[] @relation("CompanyHierarchy")
+  locations       CompanyLocation[]
+  deals           Deal[]
+  orders          SalesOrder[]
+  invoices        Invoice[]
+  contracts       Contract[]
+  contactProfiles ContactProfile[]
+
+  @@index([name])
+  @@index([createdAt])
+  @@index([organizationId])
+  @@index([organizationId, updatedAt])
+  @@index([ownerUserId, updatedAt])
+  @@index([organizationId, channelRole])
+  @@index([parentCompanyId])
+  @@index([organizationId, expansionSignal])
+  @@index([organizationId, collectionRiskLevel])
+  @@schema("crm")
+  @@map("companies")
+}
+
+model CompanyLocation {
+  id             String       @id @default(cuid())
+  organizationId BigInt       @map("organization_id")
+  companyId      String       @map("company_id")
+  name           String
+  type           LocationType @default(branch)
+  address        String?
+  city           String?
+  industry       String?
+  employeeCount  Int?         @map("employee_count")
+  ownerUserId    BigInt?      @map("owner_user_id")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  company         Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  deals           Deal[]
+  contactProfiles ContactProfile[]
+
+  @@index([companyId])
+  @@index([companyId, type])
+  @@index([ownerUserId])
+  @@index([organizationId])
+  @@index([organizationId, companyId])
+  @@schema("crm")
+  @@map("company_locations")
+}
+
+/// CRM-only overlay for a CDP person (`account_contact_id` = `cdp.customer_profile.cdp_id`).
+model ContactProfile {
+  id               String   @id @default(cuid())
+  /// CDP person key (`cdp.customer_profile.cdp_id` text).
+  accountContactId String   @unique @map("account_contact_id")
+  organizationId   BigInt   @map("organization_id")
+  companyId        String?  @map("company_id")
+  locationId       String?  @map("location_id")
+  ownerUserId      BigInt?  @map("owner_user_id")
+  /// User who created the CRM overlay. Distinct from owner (score-gated assignment).
+  createdByUserId  BigInt?  @map("created_by_user_id")
+  /// Assignment Agent ownership (score-gated route)
+  assignmentReason String?  @map("assignment_reason")
+  slaDeadline      DateTime? @map("sla_deadline")
+  assignedAt       DateTime? @map("assigned_at")
+  assignmentEscalated Boolean @default(false) @map("assignment_escalated")
+  /// owner_notified | owner_reminded | manager_notified | admin_notified | acted
+  assignmentFollowupStage String? @map("assignment_followup_stage") @db.VarChar(32)
+  /// lead_status at assignment, so a later status change counts as action
+  assignmentBaselineStatus String? @map("assignment_baseline_status") @db.VarChar(32)
+  /// Nurturing Agent ownership overlay
+  nurtureStatus    String?  @map("nurture_status") @db.VarChar(32)
+  nurtureSequenceStep Int?  @map("nurture_sequence_step")
+  nurtureStartedAt DateTime? @map("nurture_started_at")
+  nurtureLastTouchAt DateTime? @map("nurture_last_touch_at")
+  /// Lifecycle Agent review flag (ambiguous evidence / stall)
+  flaggedForReview Boolean @default(false) @map("flagged_for_review")
+  flagReason       String?  @map("flag_reason") @db.VarChar(500)
+  lifecycleLastAction String? @map("lifecycle_last_action") @db.VarChar(64)
+  lifecycleLastReason String? @map("lifecycle_last_reason")
+  lifecycleLastRunAt DateTime? @map("lifecycle_last_run_at")
+  leadSource       String?  @map("lead_source") @db.VarChar(128)
+  leadStatus       String   @default("new") @map("lead_status") @db.VarChar(32)
+  disqualifyReason String?  @map("disqualify_reason") @db.VarChar(64)
+  bantBudget       Boolean? @map("bant_budget")
+  bantAuthority    Boolean? @map("bant_authority")
+  bantNeed         Boolean? @map("bant_need")
+  bantTimeline     Boolean? @map("bant_timeline")
+  /// Customer's own words when they named a budget, decision, need, or date.
+  bantBudgetDetail    String? @map("bant_budget_detail") @db.VarChar(160)
+  bantAuthorityDetail String? @map("bant_authority_detail") @db.VarChar(160)
+  bantNeedDetail      String? @map("bant_need_detail") @db.VarChar(160)
+  bantTimelineDetail  String? @map("bant_timeline_detail") @db.VarChar(160)
+  convertedDealId  String?  @map("converted_deal_id")
+  tags             String[] @default([])
+  status           String   @default("active") @map("crm_status") @db.VarChar(32)
+  notes            String?
+  /// Compliance & Privacy Control Agent — durable marketing suppression.
+  /// Enforced in lead-nurture-job.ts before any automated send.
+  marketingOptOut   Boolean   @default(false) @map("marketing_opt_out")
+  marketingOptOutAt DateTime? @map("marketing_opt_out_at")
+  /// Vertical pack field values (CRM overlay — never CDP columns).
+  customAttributes Json?    @map("custom_attributes")
+  isPinned         Boolean  @default(false) @map("is_pinned")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  company  Company?         @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  location CompanyLocation? @relation(fields: [locationId], references: [id], onDelete: SetNull)
+
+  @@index([leadStatus])
+  @@index([status])
+  @@index([companyId])
+  @@index([locationId])
+  @@index([ownerUserId, leadStatus])
+  @@index([createdByUserId])
+  @@index([isPinned, updatedAt])
+  @@index([organizationId, updatedAt])
+  @@index([organizationId, flaggedForReview])
+  @@schema("crm")
+  @@map("contact_profiles")
+}
+
+/// Buying role for a person on a company, and optionally on one deal.
+model ContactBuyingRole {
+  id             String   @id @default(cuid())
+  organizationId BigInt   @map("organization_id")
+  contactId      String   @map("contact_id")
+  companyId      String   @map("company_id")
+  dealId         String?  @map("deal_id")
+  role           String   @db.VarChar(40)
+  influence      String?  @db.VarChar(16)
+  attitude       String?  @db.VarChar(16)
+  /// confirmed | suggested | rejected
+  status         String   @default("suggested") @db.VarChar(16)
+  confidence     Float?
+  evidence       String?
+  /// user | ai
+  source         String   @default("user") @db.VarChar(16)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@index([organizationId, companyId])
+  @@index([organizationId, dealId])
+  @@index([contactId])
+  @@schema("crm")
+  @@map("contact_buying_roles")
+}
+
+/// Person-to-person link inside a company. AI rows stay suggested until confirmed.
+model ContactRelationship {
+  id             String   @id @default(cuid())
+  organizationId BigInt   @map("organization_id")
+  companyId      String   @map("company_id")
+  fromContactId  String   @map("from_contact_id")
+  toContactId    String   @map("to_contact_id")
+  /// reports_to | influences | former_colleague | introduced_by
+  kind           String   @db.VarChar(32)
+  strength       String?  @db.VarChar(16)
+  /// confirmed | suggested | rejected
+  status         String   @default("suggested") @db.VarChar(16)
+  evidence       String?
+  source         String   @default("user") @db.VarChar(16)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@index([organizationId, companyId])
+  @@schema("crm")
+  @@map("contact_relationships")
+}
+
+/// Optional CRM pack config. Tenant industry is accounts.organizations.industry_type.
+model OrganizationProfile {
+  organizationId  BigInt                 @id @map("organization_id")
+  vertical        OrganizationVertical   @default(general)
+  verticalConfig  Json                   @default("{}") @map("vertical_config")
+  /// Auto-derived (or admin-entered) email domains treated as "internal" for
+  /// this org — foundation for future Internal Meeting Assist routing.
+  /// Derived from `setup_users.work_email` via `emailDomainType()`, excluding
+  /// free/public providers (gmail, yahoo, outlook, ...).
+  internalDomains          String[]  @default([]) @map("internal_domains")
+  /// derived | manual | needs_manual — see backend/src/service/account/internal-domains.ts
+  internalDomainsMode      String    @default("derived") @map("internal_domains_mode") @db.VarChar(16)
+  /// Specific email addresses always treated as internal regardless of
+  /// domain (alias/personal-email edge case), admin-entered only.
+  internalDomainOverrides  String[]  @default([]) @map("internal_domain_overrides")
+  internalDomainsUpdatedAt DateTime? @map("internal_domains_updated_at")
+  createdAt       DateTime               @default(now()) @map("created_at")
+  updatedAt       DateTime               @updatedAt @map("updated_at")
+
+  @@schema("crm")
+  @@map("organization_profiles")
+}
+
+model Deal {
+  id                String    @id @default(cuid())
+  organizationId    BigInt    @map("organization_id")
+  title             String
+  stage             DealStage @default(qualification)
+  amount            Decimal?  @db.Decimal(12, 2)
+  companyId         String    @map("company_id")
+  locationId        String    @map("location_id")
+  /// Optional CDP person key (`cdp.customer_profile.cdp_id`).
+  contactId         String?   @map("contact_id")
+  contactName       String?   @map("contact_name")
+  contactEmail      String?   @map("contact_email")
+  ownerUserId       BigInt?   @map("owner_user_id")
+  notes             String?
+  lostReason        String?   @map("lost_reason")
+  expectedCloseDate DateTime? @map("expected_close_date")
+  closedAt          DateTime? @map("closed_at")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  /// Pipeline Forecast Auditor overlay — never mutates stage/expectedCloseDate itself.
+  forecastCategory          String?   @map("forecast_category") @db.VarChar(32)
+  forecastConfidencePercent Int?      @map("forecast_confidence_percent")
+  forecastFlagged           Boolean   @default(false) @map("forecast_flagged")
+  forecastReason            String?   @map("forecast_reason")
+  forecastLastRunAt         DateTime? @map("forecast_last_run_at")
+
+  company    Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  location   CompanyLocation @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  activities DealActivity[]
+  proposals  Proposal[]
+  quotes     Quote[]
+  orders     SalesOrder[]
+  invoices   Invoice[]
+
+  @@index([companyId])
+  @@index([locationId])
+  @@index([stage])
+  @@index([stage, updatedAt])
+  @@index([updatedAt])
+  @@index([locationId, updatedAt])
+  @@index([organizationId])
+  @@index([organizationId, stage, updatedAt])
+  @@index([ownerUserId, stage])
+  @@index([companyId, stage])
+  @@index([organizationId, forecastFlagged])
+  @@schema("crm")
+  @@map("deals")
+}
+
+model DealActivity {
+  id              String       @id @default(cuid())
+  organizationId  BigInt       @map("organization_id")
+  dealId          String       @map("deal_id")
+  type            ActivityType
+  subject         String
+  body            String?
+  dueAt           DateTime?    @map("due_at")
+  completedAt     DateTime?    @map("completed_at")
+  createdByUserId BigInt?      @map("created_by_user_id")
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
+
+  deal Deal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+
+  @@index([dealId])
+  @@index([dealId, createdAt])
+  @@index([organizationId])
+  @@index([organizationId, dealId, createdAt])
+  @@schema("crm")
+  @@map("deal_activities")
+}
+
+/// Contact timeline rows. contactId is `cdp.customer_profile.cdp_id` (text).
+model ContactActivity {
+  id              String          @id @default(cuid())
+  organizationId  BigInt          @map("organization_id")
+  contactId       String          @map("contact_id")
+  type            ActivityType
+  folder          InboxFolder     @default(inbox)
+  /// Groups replies into one conversation in the Inbox UI
+  threadId        String?         @map("thread_id")
+  gmailMessageId  String?         @unique @map("gmail_message_id")
+  gmailThreadId   String?         @map("gmail_thread_id")
+  /// Provider-agnostic message id (Gmail id or Graph message id) for dedupe
+  providerMessageId String?       @unique @map("provider_message_id")
+  /// Provider-agnostic conversation id (Gmail threadId or Graph conversationId)
+  providerThreadId  String?       @map("provider_thread_id")
+  mailProvider      MailProvider? @map("mail_provider")
+  /// RFC Message-ID header — required for client-side reply threading
+  rfcMessageId    String?         @map("rfc_message_id")
+  emailDirection  EmailDirection? @map("email_direction")
+  /// Set by the auto-reply agent when a human must answer (sensitive content)
+  needsManualResponse Boolean     @default(false) @map("needs_manual_response")
+  subject         String
+  body            String?
+  dueAt           DateTime?       @map("due_at")
+  /// Task assignee (required for type=task)
+  assigneeUserId  BigInt?         @map("assignee_user_id")
+  /// Task workflow status (null for non-task activities). Overdue is derived.
+  taskStatus      TaskStatus?     @map("task_status")
+  /// Legacy 1-hour reminder flag (mirrored to reminder1hSentAt for back-compat)
+  reminderSentAt  DateTime?       @map("reminder_sent_at")
+  /// Set when the T−24h owner + customer reminder legs completed (or permanently skipped)
+  reminder24hSentAt DateTime?     @map("reminder_24h_sent_at")
+  /// Set when the T−1h owner + customer reminder legs completed (or permanently skipped)
+  reminder1hSentAt  DateTime?     @map("reminder_1h_sent_at")
+  /// Set when admins were escalated that this meeting was not conducted (no transcript)
+  missEscalatedAt DateTime?       @map("miss_escalated_at")
+  /// Set when Minutes of Meeting email was sent after transcript attach
+  momSentAt       DateTime?       @map("mom_sent_at")
+  /// Meeting / call transcript text once a provider (or manual upload) supplies it
+  transcriptText     String?    @map("transcript_text")
+  transcriptSource   String?    @map("transcript_source")
+  transcriptAnalyzedAt DateTime? @map("transcript_analyzed_at")
+  /// Extracted signals: intent, commitments, objections, BANT hints
+  transcriptInsights Json?      @map("transcript_insights")
+  /// Outcome word for this touch, written by the disposition agent. Not a fixed list.
+  disposition     String?         @map("disposition") @db.VarChar(48)
+  /// Hash of the text already judged, so the same transcript or email is not tagged again.
+  dispositionTextHash String?    @map("disposition_text_hash") @db.VarChar(64)
+  completedAt     DateTime?       @map("completed_at")
+  createdByUserId BigInt?         @map("created_by_user_id")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+
+  @@index([contactId])
+  @@index([contactId, createdAt])
+  @@index([folder, createdAt])
+  @@index([threadId, createdAt])
+  @@index([gmailThreadId])
+  @@index([providerThreadId])
+  @@index([type, dueAt, reminderSentAt])
+  @@index([type, dueAt, reminder24hSentAt])
+  @@index([type, dueAt, reminder1hSentAt])
+  @@index([type, dueAt, missEscalatedAt])
+  @@index([type, dueAt, momSentAt])
+  @@index([assigneeUserId, taskStatus, dueAt])
+  @@index([organizationId, contactId, createdAt])
+  @@index([organizationId, folder, createdAt])
+  @@schema("crm")
+  @@map("contact_activities")
+}
+
+/// Per-user OAuth for Email (Gmail send) and Calendar. Lives in crm_qa only.
+model UserIntegrationConnection {
+  id             String              @id @default(cuid())
+  organizationId BigInt              @map("organization_id")
+  userId         BigInt              @map("user_id")
+  provider       IntegrationProvider
+  accountEmail   String?             @map("account_email")
+  accessToken    String              @map("access_token")
+  refreshToken   String?             @map("refresh_token")
+  tokenExpiresAt DateTime?           @map("token_expires_at")
+  scope          String?
+  createdAt      DateTime            @default(now()) @map("created_at")
+  updatedAt      DateTime            @updatedAt @map("updated_at")
+
+  @@unique([userId, provider])
+  @@index([userId])
+  @@index([organizationId])
+  @@index([organizationId, userId])
+  @@schema("crm")
+  @@map("user_integration_connections")
+}
+
+enum SalesSeniorityTier {
+  junior
+  mid
+  senior
+  @@schema("crm")
+}
+
+/// Per-org sales assignment thresholds (deal-size → seniority routing).
+model OrgAssignmentSettings {
+  id                     String   @id @default(cuid())
+  organizationId         BigInt   @unique @map("organization_id")
+  seniorAmountThreshold  Int      @default(50000) @map("senior_amount_threshold")
+  /// ICP knobs for Fit scoring: { targetIndustries, sizeTiers, serviceableGeos }
+  leadIcp                Json?    @map("lead_icp")
+  /// Admin reminder cadence. Null uses product defaults (hot/warm/cold).
+  followupPolicy         Json?    @map("followup_policy")
+  updatedByUserId        BigInt?  @map("updated_by_user_id")
+  createdAt              DateTime @default(now()) @map("created_at")
+  updatedAt              DateTime @updatedAt @map("updated_at")
+
+  @@schema("crm")
+  @@map("org_assignment_settings")
+}
+
+/// Per-org Finance billing policy, bank details, and gateway credentials.
+model OrgFinanceSettings {
+  id                     String   @id @default(cuid())
+  organizationId         BigInt   @unique @map("organization_id")
+  defaultPaymentTerms    String   @default("Net 30") @map("default_payment_terms")
+  zeroAmountAutoPaid     Boolean  @default(true) @map("zero_amount_auto_paid")
+  offlineReferenceMinLen Int      @default(4) @map("offline_reference_min_len")
+  duplicateInvoiceGuard  Boolean  @default(true) @map("duplicate_invoice_guard")
+  onlinePaymentsEnabled  Boolean  @default(true) @map("online_payments_enabled")
+  /// { defaultProvider, rules: [{ currency, offlineOnlyAbove, allowedProviders }] }
+  paymentRoutingRules    Json?    @map("payment_routing_rules")
+  /// { accountName, bankName, accountNumber, ifsc, iban, swift, ... }
+  bankDetails            Json?    @map("bank_details")
+  invoiceNumberPrefix    String?  @map("invoice_number_prefix")
+  invoiceNumberNextSeq   Int      @default(1) @map("invoice_number_next_seq")
+  stripePublishableKey   String?  @map("stripe_publishable_key")
+  stripeSecretKeyEnc     String?  @map("stripe_secret_key_enc")
+  stripeWebhookSecretEnc String?  @map("stripe_webhook_secret_enc")
+  razorpayKeyId          String?  @map("razorpay_key_id")
+  razorpayKeySecretEnc   String?  @map("razorpay_key_secret_enc")
+  razorpayWebhookSecretEnc String? @map("razorpay_webhook_secret_enc")
+  /// Day of month (1–28) used for subscription billing cutoff scheduling.
+  billingCutoffDay       Int      @default(20) @map("billing_cutoff_day")
+  /// Days before contract end to create renewal deal.
+  renewalWindowDays      Int      @default(30) @map("renewal_window_days")
+  autoRenewDefault       Boolean  @default(false) @map("auto_renew_default")
+  renewalQuoteAutoCreate Boolean  @default(true) @map("renewal_quote_auto_create")
+  /// Revenue Gap Forecast Agent — optional admin-set targets. Both optional;
+  /// the agent degrades to an at-risk-only summary when neither is set.
+  revenueTargetMonthly    Decimal? @map("revenue_target_monthly") @db.Decimal(12, 2)
+  revenueTargetQuarterly  Decimal? @map("revenue_target_quarterly") @db.Decimal(12, 2)
+  /// Cached last forecast — { hasTarget, narrative, atRiskInvoiceIds, gapScenario, source }.
+  revenueForecastLastRun   Json?     @map("revenue_forecast_last_run")
+  revenueForecastLastRunAt DateTime? @map("revenue_forecast_last_run_at")
+  updatedByUserId        BigInt?  @map("updated_by_user_id")
+  createdAt              DateTime @default(now()) @map("created_at")
+  updatedAt              DateTime @updatedAt @map("updated_at")
+
+  @@schema("crm")
+  @@map("org_finance_settings")
+}
+
+/// Per-org lead nurture policy (voice bot calls via cc-core).
+model OrgNurtureSettings {
+  id                      String   @id @default(cuid())
+  organizationId          BigInt   @unique @map("organization_id")
+  nurtureCallEnabled      Boolean  @default(false) @map("nurture_call_enabled")
+  nurtureCallDelayMinutes Int      @default(15) @map("nurture_call_delay_minutes")
+  updatedByUserId         BigInt?  @map("updated_by_user_id")
+  createdAt               DateTime @default(now()) @map("created_at")
+  updatedAt               DateTime @updatedAt @map("updated_at")
+
+  @@schema("crm")
+  @@map("org_nurture_settings")
+}
+
+/// Idempotency log for payment gateway webhooks.
+model PaymentGatewayEvent {
+  id              String                 @id @default(cuid())
+  organizationId  BigInt                 @map("organization_id")
+  provider        PaymentGatewayProvider
+  externalEventId String                 @map("external_event_id")
+  invoiceId       String?                @map("invoice_id")
+  payload         Json?
+  processedAt     DateTime               @default(now()) @map("processed_at")
+
+  @@unique([provider, externalEventId])
+  @@index([organizationId, processedAt])
+  @@index([invoiceId])
+  @@schema("crm")
+  @@map("payment_gateway_events")
+}
+
+/// Per-rep CRM overlay for assignment capacity, PTO, tier, and territory.
+model SalesUserAssignmentProfile {
+  id              String              @id @default(cuid())
+  organizationId  BigInt              @map("organization_id")
+  userId          BigInt              @map("user_id")
+  acceptingLeads  Boolean             @default(true) @map("accepting_leads")
+  maxOpenDeals    Int?                @map("max_open_deals")
+  seniorityTier   SalesSeniorityTier? @map("seniority_tier")
+  onPtoUntil      DateTime?           @map("on_pto_until") @db.Date
+  country         String?             @db.VarChar(128)
+  createdAt       DateTime            @default(now()) @map("created_at")
+  updatedAt       DateTime            @updatedAt @map("updated_at")
+
+  @@unique([organizationId, userId])
+  @@index([organizationId])
+  @@index([userId])
+  @@schema("crm")
+  @@map("sales_user_assignment_profiles")
+}
+
+/// Common catalog for B2B, B2C, and B2B2C. Physical table is inventory.products
+/// only — no crm.products view. DML on existing columns; ask inventory owners
+/// before any field change.
+model Product {
+  id             String        @id @default(cuid())
+  organizationId BigInt        @map("organization_id")
+  name           String
+  /// Short line shown on cards
+  tagline        String?
+  description    String?
+  /// Full specifications / details (long text)
+  specifications String?
+  imageUrl       String?       @map("image_url")
+  /// Extra image URLs (JSON string array)
+  galleryUrls    Json?         @map("gallery_urls")
+  /// Product page / PDP / datasheet. Not an image. Null = none.
+  productUrl     String?       @map("product_url")
+  sku            String?
+  /// Retail / commerce merchandising (optional on B2B).
+  brand          String?
+  subcategory    String?
+  /// Warehouse units. Null = not inventory-tracked (services, subscriptions).
+  stockOnHand    Int?          @map("stock_on_hand")
+  price          Decimal?      @db.Decimal(12, 2)
+  /// Discount above this % on any quote line for this product requires Finance approval before send. Null = no cap.
+  maxDiscountPercent Decimal?  @db.Decimal(5, 2) @map("max_discount_percent")
+  currency       String        @default("USD")
+  status         ProductStatus @default(draft)
+  productType    ProductType   @default(fixed) @map("product_type")
+  category       String?
+  /// Comma-separated or freeform tags
+  tags           String?
+  billingType    ProductBillingType      @default(one_time) @map("billing_type")
+  billingFrequency ProductBillingFrequency? @map("billing_frequency")
+  unitOfMeasure  ProductUnitOfMeasure    @default(flat) @map("unit_of_measure")
+  /// Legacy volume tiers on product (prefer Addon / AddonTier for customizable)
+  pricingTiers   Json?         @map("pricing_tiers")
+  /// Non-pricing industry labels/notes (not used for quote math).
+  customAttributes Json?       @map("custom_attributes")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  addons           Addon[]
+  offers           ProductOffer[]
+  priceBookEntries PriceBookEntry[]
+  quoteLines       QuoteLine[]
+  orderLines       OrderLine[]
+  invoiceLines     InvoiceLine[]
+
+  @@index([name])
+  @@index([status])
+  @@index([category])
+  @@index([createdAt])
+  @@index([organizationId])
+  @@index([organizationId, status])
+  @@index([organizationId, sku])
+  @@index([organizationId, productType])
+  @@index([organizationId, brand])
+  @@schema("inventory")
+  @@map("products")
+}
+
+/// Named commercial package under a product (plan, edition, or usage pack).
+model ProductOffer {
+  id               String                    @id @default(cuid())
+  organizationId   BigInt                    @map("organization_id")
+  productId        String                    @map("product_id")
+  name             String
+  code             String?
+  billingType      ProductBillingType?       @map("billing_type")
+  billingFrequency ProductBillingFrequency?  @map("billing_frequency")
+  includedQty      Int?                      @map("included_qty")
+  meterKey         AddonMeterKey?            @map("meter_key")
+  sortOrder        Int                       @default(0) @map("sort_order")
+  status           ProductStatus             @default(active)
+  createdAt        DateTime                  @default(now()) @map("created_at")
+  updatedAt        DateTime                  @updatedAt @map("updated_at")
+
+  product          Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  priceBookEntries PriceBookEntry[]
+
+  @@index([productId])
+  @@index([organizationId])
+  @@index([organizationId, productId])
+  @@schema("crm")
+  @@map("product_offers")
+}
+
+/// Org-level rate card (region / market / currency list).
+model PriceBook {
+  id             String   @id @default(cuid())
+  organizationId BigInt   @map("organization_id")
+  name           String
+  code           String?
+  currency       String   @default("USD")
+  isDefault      Boolean  @default(false) @map("is_default")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  entries PriceBookEntry[]
+
+  @@index([organizationId])
+  @@index([organizationId, isDefault])
+  @@schema("crm")
+  @@map("price_books")
+}
+
+/// List price for a product, offer, or addon within a price book (exactly one target).
+model PriceBookEntry {
+  id               String                   @id @default(cuid())
+  organizationId   BigInt                   @map("organization_id")
+  priceBookId      String                   @map("price_book_id")
+  productId        String?                  @map("product_id")
+  offerId          String?                  @map("offer_id")
+  addonId          String?                  @map("addon_id")
+  amount           Decimal                  @db.Decimal(12, 2)
+  billingFrequency ProductBillingFrequency? @map("billing_frequency")
+  createdAt        DateTime                 @default(now()) @map("created_at")
+  updatedAt        DateTime                 @updatedAt @map("updated_at")
+
+  priceBook PriceBook     @relation(fields: [priceBookId], references: [id], onDelete: Cascade)
+  product   Product?      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  offer     ProductOffer? @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  addon     Addon?        @relation(fields: [addonId], references: [id], onDelete: Cascade)
+
+  @@index([priceBookId])
+  @@index([organizationId])
+  @@index([productId])
+  @@index([offerId])
+  @@index([addonId])
+  @@index([organizationId, priceBookId])
+  @@schema("crm")
+  @@map("price_book_entries")
+}
+
+/// Optional add-on sold with a customizable product (1:N).
+model Addon {
+  id             String            @id @default(cuid())
+  organizationId BigInt            @map("organization_id")
+  productId      String            @map("product_id")
+  name           String
+  unitLabel      String?           @map("unit_label")
+  meterKey       AddonMeterKey?    @map("meter_key")
+  isOverage      Boolean           @default(false) @map("is_overage")
+  pricingModel   AddonPricingModel @map("pricing_model")
+  flatPrice      Decimal?          @map("flat_price") @db.Decimal(12, 2)
+  unitPrice      Decimal?          @map("unit_price") @db.Decimal(12, 4)
+  stepSize       Int?              @map("step_size")
+  stepPrice      Decimal?          @map("step_price") @db.Decimal(12, 2)
+  sortOrder      Int               @default(0) @map("sort_order")
+  createdAt      DateTime          @default(now()) @map("created_at")
+  updatedAt      DateTime          @updatedAt @map("updated_at")
+
+  product          Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  tiers            AddonTier[]
+  invoiceLines     InvoiceLine[]
+  priceBookEntries PriceBookEntry[]
+
+  @@index([productId])
+  @@index([organizationId])
+  @@index([organizationId, productId])
+  @@schema("crm")
+  @@map("product_addons")
+}
+
+/// Quantity bands for tiered addon pricing.
+model AddonTier {
+  id             String   @id @default(cuid())
+  organizationId BigInt   @map("organization_id")
+  addonId        String   @map("addon_id")
+  minQty         Int      @map("min_qty")
+  maxQty         Int?     @map("max_qty")
+  unitPrice      Decimal  @map("unit_price") @db.Decimal(12, 4)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  addon Addon @relation(fields: [addonId], references: [id], onDelete: Cascade)
+
+  @@index([addonId])
+  @@index([organizationId])
+  @@index([organizationId, addonId])
+  @@schema("crm")
+  @@map("product_addon_tiers")
+}
+
+model ProposalTemplate {
+  id             String                @id @default(cuid())
+  organizationId BigInt                @map("organization_id")
+  name           String
+  code           String?
+  kind           ProposalTemplateKind  @default(standard)
+  /// Sections: [{ id, key, title, body, sortOrder }]
+  sections       Json
+  /// HTML brand blueprint: { version, html, css, theme, slots }
+  blueprint      Json?
+  /// Inline assets: [{ id, kind, mime, dataBase64 }]
+  assets         Json?
+  isDefault      Boolean               @default(false) @map("is_default")
+  createdAt      DateTime              @default(now()) @map("created_at")
+  updatedAt      DateTime              @updatedAt @map("updated_at")
+
+  proposals Proposal[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId])
+  @@index([organizationId, isDefault])
+  @@schema("crm")
+  @@map("proposal_templates")
+}
+
+model Proposal {
+  id              String         @id @default(cuid())
+  organizationId  BigInt         @map("organization_id")
+  dealId          String         @map("deal_id")
+  templateId      String?        @map("template_id")
+  number          String
+  title           String
+  summary         String?
+  /// Customer-specific section bodies after merge/edit
+  sections        Json?
+  /// Cloned HTML blueprint from template (layout stays fixed)
+  blueprint       Json?
+  /// Cloned assets from template
+  assets          Json?
+  /// Display name used in the document (company or contact)
+  customerName    String?        @map("customer_name")
+  version         Int            @default(1)
+  status          ProposalStatus @default(draft)
+  attachmentUrl   String?        @map("attachment_url")
+  sharedAt        DateTime?      @map("shared_at")
+  /// Human approval gate — send/share requires both fields non-null
+  approvedByUserId BigInt?       @map("approved_by_user_id")
+  approvedAt      DateTime?      @map("approved_at")
+  approvalStatus  String         @default("drafting") @map("approval_status") @db.VarChar(32)
+  createdByUserId BigInt?        @map("created_by_user_id")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  deal     Deal              @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  template ProposalTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  quotes   Quote[]
+  generationRuns ProposalGenerationRun[]
+
+  @@unique([organizationId, number, version])
+  @@index([organizationId, dealId])
+  @@index([organizationId, status, updatedAt])
+  @@index([dealId])
+  @@index([templateId])
+  @@schema("crm")
+  @@map("proposals")
+}
+
+/// Durable V2 generate job. Additive; unused when PROPOSAL_PIPELINE_V2 is off.
+model ProposalGenerationRun {
+  id                    String    @id @default(cuid())
+  organizationId        BigInt    @map("organization_id")
+  dealId                String    @map("deal_id")
+  replacesProposalId    String?   @map("replaces_proposal_id")
+  baseProposalUpdatedAt DateTime? @map("base_proposal_updated_at")
+  pipelineVersion       Int       @default(2) @map("pipeline_version")
+  proposalId            String?   @unique @map("proposal_id")
+  actorUserId           String?   @map("actor_user_id")
+  status                String    @default("queued") @db.VarChar(32)
+  inputHash             String    @map("input_hash")
+  promptVersion         String    @default("v2") @map("prompt_version")
+  playbookId            String?   @map("playbook_id")
+  contentPlaybookId     String?   @map("content_playbook_id")
+  requirementText       String    @default("") @map("requirement_text")
+  inputJson             Json?     @map("input_json")
+  requirementProfile    Json?     @map("requirement_profile")
+  kbSnapshot            Json?     @map("kb_snapshot")
+  catalogSnapshot       Json?     @map("catalog_snapshot")
+  dealPlan              Json?     @map("deal_plan")
+  outline               Json?
+  pricingSnapshot       Json?     @map("pricing_snapshot")
+  pricingIssues         Json?     @map("pricing_issues")
+  dealBrief             Json?     @map("deal_brief")
+  qaReport              Json?     @map("qa_report")
+  error                 Json?
+  tokensIn              Int       @default(0) @map("tokens_in")
+  tokensOut             Int       @default(0) @map("tokens_out")
+  costEstimate          Decimal?  @map("cost_estimate") @db.Decimal(10, 4)
+  startedAt             DateTime  @default(now()) @map("started_at")
+  finishedAt            DateTime? @map("finished_at")
+  heartbeatAt           DateTime? @map("heartbeat_at")
+  claimedAt             DateTime? @map("claimed_at")
+  nextRetryAt           DateTime? @map("next_retry_at")
+  maxTokens             Int?      @map("max_tokens")
+  expiresAt             DateTime? @map("expires_at")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  proposal Proposal?                 @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+  leaves   ProposalGenerationLeaf[]
+
+  @@index([organizationId, status])
+  @@index([organizationId, inputHash])
+  @@index([dealId, status])
+  @@index([status, heartbeatAt])
+  @@index([status, nextRetryAt])
+  @@schema("crm")
+  @@map("proposal_generation_runs")
+}
+
+model ProposalGenerationLeaf {
+  id          String    @id @default(cuid())
+  runId       String    @map("run_id")
+  leafKey     String    @map("leaf_key")
+  sectionType String    @default("") @map("section_type")
+  title       String    @default("")
+  wave        Int       @default(1)
+  status      String    @default("pending") @db.VarChar(32)
+  attempts    Int       @default(0)
+  errorClass  String?   @map("error_class")
+  nextRetryAt DateTime? @map("next_retry_at")
+  outputJson  Json?     @map("output_json")
+  modelUsed   String?   @map("model_used")
+  latencyMs   Int?      @map("latency_ms")
+  tokensIn    Int?      @map("tokens_in")
+  tokensOut   Int?      @map("tokens_out")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  run ProposalGenerationRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@unique([runId, leafKey])
+  @@index([runId, status])
+  @@index([status, nextRetryAt])
+  @@schema("crm")
+  @@map("proposal_generation_leaves")
+}
+
+model QuoteTemplate {
+  id             String            @id @default(cuid())
+  organizationId BigInt            @map("organization_id")
+  name           String
+  code           String?
+  kind           QuoteTemplateKind @default(standard)
+  /// Document sections: [{ id, key, title, body, sortOrder }]
+  sections       Json
+  /// HTML brand blueprint: { version, html, css, theme, slots }
+  blueprint      Json?
+  /// Inline assets: [{ id, kind, mime, dataBase64 }]
+  assets         Json?
+  isDefault      Boolean           @default(false) @map("is_default")
+  createdAt      DateTime          @default(now()) @map("created_at")
+  updatedAt      DateTime          @updatedAt @map("updated_at")
+
+  quotes Quote[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId])
+  @@index([organizationId, isDefault])
+  @@schema("crm")
+  @@map("quote_templates")
+}
+
+model Quote {
+  id             String      @id @default(cuid())
+  organizationId BigInt      @map("organization_id")
+  dealId         String      @map("deal_id")
+  /// Optional link when a quote was created from a proposal
+  proposalId     String?     @map("proposal_id")
+  /// Renewal quote linked to an existing contract (Phase 3).
+  renewalContractId String?  @map("renewal_contract_id")
+  templateId     String?     @map("template_id")
+  number         String
+  version        Int         @default(1)
+  status         QuoteStatus @default(draft)
+  currency       String      @default("USD")
+  subtotal       Decimal     @default(0) @db.Decimal(12, 2)
+  discountPct    Decimal     @default(0) @map("discount_pct") @db.Decimal(5, 2)
+  total          Decimal     @default(0) @db.Decimal(12, 2)
+  validUntil     DateTime?   @map("valid_until")
+  notes          String?
+  /// Customer-specific document sections after template merge/edit
+  documentSections Json?     @map("document_sections")
+  /// Cloned HTML blueprint from template
+  blueprint      Json?
+  /// Cloned assets from template
+  assets         Json?
+  customerName   String?     @map("customer_name")
+  companyName    String?     @map("company_name")
+  vendorName     String?     @map("vendor_name")
+  sentAt         DateTime?   @map("sent_at")
+  acceptedAt     DateTime?   @map("accepted_at")
+  approvedByUserId BigInt?   @map("approved_by_user_id")
+  approvedAt     DateTime?   @map("approved_at")
+  approvalStatus String      @default("drafting") @map("approval_status") @db.VarChar(32)
+  /// Finance approve/reject note (reject requires a reason).
+  approvalNote   String?     @map("approval_note")
+  createdByUserId BigInt?    @map("created_by_user_id")
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
+
+  deal     Deal           @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  proposal Proposal?      @relation(fields: [proposalId], references: [id], onDelete: SetNull)
+  template QuoteTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  lines    QuoteLine[]
+  orders   SalesOrder[]
+
+  @@unique([organizationId, number, version])
+  @@index([organizationId, dealId])
+  @@index([organizationId, status, createdAt])
+  @@index([dealId])
+  @@index([proposalId])
+  @@index([renewalContractId])
+  @@index([templateId])
+  @@schema("crm")
+  @@map("quotes")
+}
+
+model QuoteLine {
+  id             String   @id @default(cuid())
+  organizationId BigInt   @map("organization_id")
+  quoteId        String   @map("quote_id")
+  productId      String?  @map("product_id")
+  name           String
+  quantity       Decimal  @default(1) @db.Decimal(12, 2)
+  unitPrice      Decimal  @map("unit_price") @db.Decimal(12, 2)
+  amount         Decimal  @db.Decimal(12, 2)
+  sortOrder      Int      @default(0) @map("sort_order")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  quote   Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([quoteId])
+  @@index([organizationId])
+  @@index([organizationId, quoteId])
+  @@schema("crm")
+  @@map("quote_lines")
+}
+
+model SalesOrder {
+  id             String      @id @default(cuid())
+  organizationId BigInt      @map("organization_id")
+  dealId         String?     @map("deal_id")
+  quoteId        String?     @map("quote_id")
+  /// Optional for B2C contact-first commerce orders.
+  companyId      String?     @map("company_id")
+  /// Consumer / contact on the order (B2C / B2B2C). CDP person key.
+  contactId      String?     @map("contact_id")
+  number         String
+  status         OrderStatus @default(confirmed)
+  currency       String      @default("USD")
+  total          Decimal     @default(0) @db.Decimal(12, 2)
+  confirmedAt    DateTime?   @map("confirmed_at")
+  createdByUserId BigInt?    @map("created_by_user_id")
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
+
+  deal     Deal?        @relation(fields: [dealId], references: [id], onDelete: SetNull)
+  quote    Quote?       @relation(fields: [quoteId], references: [id], onDelete: SetNull)
+  company  Company?     @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  lines    OrderLine[]
+  invoices Invoice[]
+  sourceContracts Contract[] @relation("ContractSourceOrder")
+
+  @@unique([organizationId, number])
+  @@index([organizationId, status, createdAt])
+  @@index([companyId])
+  @@index([dealId])
+  @@index([contactId])
+  @@schema("crm")
+  @@map("sales_orders")
+}
+
+model OrderLine {
+  id             String   @id @default(cuid())
+  organizationId BigInt   @map("organization_id")
+  orderId        String   @map("order_id")
+  productId      String?  @map("product_id")
+  name           String
+  quantity       Decimal  @default(1) @db.Decimal(12, 2)
+  unitPrice      Decimal  @map("unit_price") @db.Decimal(12, 2)
+  amount         Decimal  @db.Decimal(12, 2)
+  sortOrder      Int      @default(0) @map("sort_order")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  order   SalesOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product?   @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+  @@index([organizationId])
+  @@index([organizationId, orderId])
+  @@schema("crm")
+  @@map("order_lines")
+}
+
+model InvoiceTemplate {
+  id             String              @id @default(cuid())
+  organizationId BigInt              @map("organization_id")
+  name           String
+  code           String?
+  kind           InvoiceTemplateKind @default(standard)
+  /// Document sections: [{ id, key, title, body, sortOrder }]
+  sections       Json
+  /// HTML brand blueprint: { version, html, css, theme, slots }
+  blueprint      Json?
+  /// Inline assets: [{ id, kind, mime, dataBase64 }]
+  assets         Json?
+  isDefault      Boolean             @default(false) @map("is_default")
+  createdAt      DateTime            @default(now()) @map("created_at")
+  updatedAt      DateTime            @updatedAt @map("updated_at")
+
+  invoices Invoice[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId])
+  @@index([organizationId, isDefault])
+  @@schema("crm")
+  @@map("invoice_templates")
+}
+
+model Invoice {
+  id              String        @id @default(cuid())
+  organizationId  BigInt        @map("organization_id")
+  /// Optional — set when invoice comes from quote accept / commerce order.
+  orderId         String?       @map("order_id")
+  /// Optional — set when Finance creates invoice from a deal.
+  dealId          String?       @map("deal_id")
+  companyId       String?       @map("company_id")
+  templateId      String?       @map("template_id")
+  number          String
+  status          InvoiceStatus @default(draft)
+  currency        String        @default("USD")
+  total           Decimal       @default(0) @db.Decimal(12, 2)
+  discountAmount  Decimal       @default(0) @map("discount_amount") @db.Decimal(12, 2)
+  taxAmount       Decimal       @default(0) @map("tax_amount") @db.Decimal(12, 2)
+  /// Global tax snapshot (IN GST / UK VAT / US sales tax components).
+  taxDetails      Json?         @map("tax_details")
+  issueDate       DateTime?     @map("issue_date")
+  paymentTerms    String?       @map("payment_terms")
+  notes           String?
+  billingAddress  String?       @map("billing_address")
+  leadEmail       String?       @map("lead_email")
+  leadPhone       String?       @map("lead_phone")
+  taxId           String?       @map("tax_id")
+  dueAt           DateTime?     @map("due_at")
+  paidAt          DateTime?     @map("paid_at")
+  /// Customer-specific document sections after template merge/edit
+  sections        Json?
+  /// Cloned HTML blueprint from template
+  blueprint       Json?
+  /// Cloned assets from template
+  assets          Json?
+  approvedByUserId BigInt?      @map("approved_by_user_id")
+  approvedAt      DateTime?     @map("approved_at")
+  approvalStatus  String        @default("drafting") @map("approval_status") @db.VarChar(32)
+  approvalNote    String?       @map("approval_note")
+  billingKind     InvoiceBillingKind @default(standard) @map("billing_kind")
+  submittedForApprovalAt DateTime? @map("submitted_for_approval_at")
+  resubmittedAt   DateTime?     @map("resubmitted_at")
+  paymentMethod   InvoicePaymentMethod? @map("payment_method")
+  paymentReference String?      @map("payment_reference")
+  paymentConfirmedByUserId BigInt? @map("payment_confirmed_by_user_id")
+  paymentConfirmedAt DateTime?  @map("payment_confirmed_at")
+  paymentProvider InvoicePaymentProvider? @map("payment_provider")
+  paymentLinkUrl  String?       @map("payment_link_url")
+  paymentSessionId String?      @map("payment_session_id")
+  paymentSessionExpiresAt DateTime? @map("payment_session_expires_at")
+  paymentSessionStatus InvoicePaymentSessionStatus? @map("payment_session_status")
+  sentAt          DateTime?     @map("sent_at")
+  lastSentAt      DateTime?     @map("last_sent_at")
+  voidedAt        DateTime?     @map("voided_at")
+  voidReason      String?       @map("void_reason")
+  voidedByUserId  BigInt?       @map("voided_by_user_id")
+  createdByUserId BigInt?       @map("created_by_user_id")
+  /// Invoice Escalation Agent — collections-risk overlay. Agent only ever
+  /// writes these four fields (+ notifications); never marks paid/void, never
+  /// changes dueAt/total, never sends escalationDraft itself (human-only send).
+  escalationSeverity  String?   @map("escalation_severity") @db.VarChar(16)
+  escalationReason    String?   @map("escalation_reason")
+  escalationDraft     String?   @map("escalation_draft")
+  escalationLastRunAt DateTime? @map("escalation_last_run_at")
+  /// Invoice Dunning Agent — staged reminder->warning->pause_notice cadence.
+  /// Agent only ever writes these three fields (+ notifications); draft only,
+  /// a human always reviews and sends (same HITL rule as escalation above).
+  dunningStage       String    @default("none") @map("dunning_stage") @db.VarChar(16)
+  dunningStageSentAt DateTime? @map("dunning_stage_sent_at")
+  dunningDraft       String?   @map("dunning_draft")
+  contractId      String?       @map("contract_id")
+  billingScheduleId String?     @map("billing_schedule_id")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  order    SalesOrder?      @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  deal     Deal?            @relation(fields: [dealId], references: [id], onDelete: SetNull)
+  company  Company?         @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  template InvoiceTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  contract Contract?        @relation(fields: [contractId], references: [id], onDelete: SetNull)
+  billingSchedule ContractBillingSchedule? @relation(fields: [billingScheduleId], references: [id], onDelete: SetNull)
+  lines    InvoiceLine[]
+
+  @@unique([organizationId, number])
+  @@index([organizationId, status, createdAt])
+  @@index([companyId])
+  @@index([orderId])
+  @@index([dealId])
+  @@index([contractId])
+  @@index([billingScheduleId])
+  @@index([templateId])
+  @@index([organizationId, escalationSeverity])
+  @@index([organizationId, dunningStage])
+  @@schema("crm")
+  @@map("invoices")
+}
+
+model InvoiceLine {
+  id             String          @id @default(cuid())
+  organizationId BigInt          @map("organization_id")
+  invoiceId      String          @map("invoice_id")
+  kind           InvoiceLineKind @default(product)
+  productId      String?         @map("product_id")
+  addonId        String?         @map("addon_id")
+  name           String
+  description    String?
+  quantity       Decimal         @default(1) @db.Decimal(12, 2)
+  unitPrice      Decimal         @map("unit_price") @db.Decimal(12, 4)
+  taxPercent     Decimal         @default(0) @map("tax_percent") @db.Decimal(5, 2)
+  amount         Decimal         @db.Decimal(12, 2)
+  sortOrder      Int             @default(0) @map("sort_order")
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+
+  invoice Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  addon   Addon?   @relation(fields: [addonId], references: [id], onDelete: SetNull)
+
+  @@index([invoiceId])
+  @@index([productId])
+  @@index([addonId])
+  @@index([organizationId])
+  @@index([organizationId, invoiceId])
+  @@schema("crm")
+  @@map("invoice_lines")
+}
+
+model Contract {
+  id             String    @id @default(cuid())
+  organizationId BigInt    @map("organization_id")
+  companyId      String    @map("company_id")
+  dealId         String?   @map("deal_id")
+  title          String
+  startsAt       DateTime  @map("starts_at")
+  endsAt         DateTime  @map("ends_at")
+  arr            Decimal?  @db.Decimal(12, 2)
+  autoRenew      Boolean   @default(false) @map("auto_renew")
+  status         ContractStatus @default(active)
+  sourceOrderId  String?   @map("source_order_id")
+  billingFrequency ProductBillingFrequency? @map("billing_frequency")
+  cancelledAt    DateTime? @map("cancelled_at")
+  cancelReason   String?   @map("cancel_reason")
+  renewDealId    String?   @map("renew_deal_id")
+  renewalRemindedAt DateTime? @map("renewal_reminded_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  sourceOrder SalesOrder? @relation("ContractSourceOrder", fields: [sourceOrderId], references: [id], onDelete: SetNull)
+  billingSchedules ContractBillingSchedule[]
+  invoices Invoice[]
+
+  @@index([organizationId, endsAt])
+  @@index([organizationId, status, endsAt])
+  @@index([companyId])
+  @@index([renewDealId])
+  @@index([endsAt, renewalRemindedAt])
+  @@schema("crm")
+  @@map("contracts")
+}
+
+model ContractBillingSchedule {
+  id             String                        @id @default(cuid())
+  organizationId BigInt                        @map("organization_id")
+  contractId     String                        @map("contract_id")
+  billingKind    InvoiceBillingKind            @map("billing_kind")
+  scheduledFor   DateTime                      @map("scheduled_for") @db.Date
+  status         ContractBillingScheduleStatus @default(scheduled)
+  invoiceId      String?                       @map("invoice_id")
+  amount         Decimal?                      @db.Decimal(12, 2)
+  currency       String                        @default("USD")
+  idempotencyKey String                        @map("idempotency_key")
+  createdAt      DateTime                      @default(now()) @map("created_at")
+  updatedAt      DateTime                      @updatedAt @map("updated_at")
+
+  contract Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  invoices Invoice[]
+
+  @@unique([organizationId, idempotencyKey])
+  @@index([organizationId, status, scheduledFor])
+  @@index([contractId])
+  @@schema("crm")
+  @@map("contract_billing_schedules")
+}
+
+model AuditLog {
+  id             String      @id @default(cuid())
+  organizationId BigInt      @map("organization_id")
+  actorUserId    BigInt?     @map("actor_user_id")
+  action         AuditAction
+  entityType     String      @map("entity_type")
+  entityId       String      @map("entity_id")
+  meta           Json?
+  createdAt      DateTime    @default(now()) @map("created_at")
+
+  @@index([organizationId, createdAt])
+  @@index([entityType, entityId])
+  @@index([actorUserId, createdAt])
+  @@schema("crm")
+  @@map("audit_logs")
+}
+
+/// Async report rollup snapshot (Phase 3 analytics without live OLTP scans).
+model ReportSnapshot {
+  id             String   @id @default(cuid())
+  organizationId BigInt   @map("organization_id")
+  kind           String
+  payload        Json
+  generatedAt    DateTime @default(now()) @map("generated_at")
+
+  @@index([organizationId, kind, generatedAt])
+  @@schema("crm")
+  @@map("report_snapshots")
+}
+
+/// Cached firmographic enrichments per email/company domain (30-day TTL).
+model DomainEnrichmentCache {
+  id             String   @id @default(cuid())
+  organizationId BigInt   @map("organization_id")
+  domain         String   @db.VarChar(255)
+  payload        Json
+  source         String?
+  expiresAt      DateTime @map("expires_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@unique([organizationId, domain])
+  @@index([expiresAt])
+  @@schema("crm")
+  @@map("domain_enrichment_cache")
+}
+
+/// Enrichment Agent owned snapshot per contact (never overwrites user data silently).
+model LeadEnrichmentSnapshot {
+  id                    String   @id @default(cuid())
+  organizationId        BigInt   @map("organization_id")
+  contactId             String   @map("contact_id")
+  companyName           String?  @map("company_name")
+  companySize           String?  @map("company_size")
+  industry              String?
+  companyDescription    String?  @map("company_description")
+  products              String?
+  revenueBand           String?  @map("revenue_band")
+  seniorityTier         String?  @map("seniority_tier") @db.VarChar(32)
+  geography             String?
+  emailDomainType       String?  @map("email_domain_type") @db.VarChar(16)
+  enrichmentConfidence  Float?   @map("enrichment_confidence")
+  enrichmentSource      String?  @map("enrichment_source")
+  conflictFlags         Json?    @map("conflict_flags")
+  enrichmentTimestamp   DateTime @default(now()) @map("enrichment_timestamp")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  @@unique([organizationId, contactId])
+  @@index([organizationId, updatedAt])
+  @@schema("crm")
+  @@map("lead_enrichment_snapshots")
+}
+
+/// Operational queue for lead firmographic enrichment (not customer data).
+model LeadEnrichmentJob {
+  id             String                @id @default(cuid())
+  organizationId BigInt                @map("organization_id")
+  contactId      String                @map("contact_id")
+  companyId      String?               @map("company_id")
+  status         LeadEnrichmentStatus  @default(pending)
+  attempts       Int                   @default(0)
+  maxAttempts    Int                   @default(5) @map("max_attempts")
+  nextRetryAt    DateTime?             @map("next_retry_at")
+  lastError      String?               @map("last_error")
+  resultSummary  Json?                 @map("result_summary")
+  createdAt      DateTime              @default(now()) @map("created_at")
+  updatedAt      DateTime              @updatedAt @map("updated_at")
+  completedAt    DateTime?             @map("completed_at")
+
+  @@unique([organizationId, contactId])
+  @@index([status, nextRetryAt])
+  @@index([organizationId, status, updatedAt])
+  @@schema("crm")
+  @@map("lead_enrichment_jobs")
+}
+
+/// Curated step-by-step trace for proactive agent runs (one row per graph
+/// node per job). Lead enrichment first; extend `agent` values later.
+/// Never stores raw HTML/prompt dumps — `detail` is small curated facts only.
+model AgentStepEvent {
+  id             String          @id @default(cuid())
+  organizationId BigInt          @map("organization_id")
+  agent          String
+  jobId          String          @map("job_id")
+  contactId      String?         @map("contact_id")
+  step           String
+  label          String
+  status         AgentStepStatus @default(started)
+  detail         Json?
+  errorReason    String?         @map("error_reason")
+  startedAt      DateTime        @default(now()) @map("started_at")
+  endedAt        DateTime?       @map("ended_at")
+
+  @@unique([jobId, step])
+  @@index([contactId, startedAt])
+  @@index([organizationId, agent, startedAt])
+  @@schema("crm")
+  @@map("agent_step_events")
+}
+
+/// Last LLM input fingerprint per (org, agent, entity) — cron sweeps
+/// (pipeline-forecast, collection-risk, revenue-gap, dunning, escalation,
+/// score-decay, etc.) skip the LLM call when the input is unchanged since
+/// the last run. See dao/ai/agent-input-fingerprint.ts.
+model AgentInputFingerprint {
+  id             String    @id @default(cuid())
+  organizationId BigInt    @map("organization_id")
+  agent          String
+  entityType     String    @map("entity_type")
+  entityId       String    @map("entity_id")
+  inputHash      String    @map("input_hash")
+  lastCheckedAt  DateTime  @default(now()) @map("last_checked_at")
+  lastLlmAt      DateTime? @map("last_llm_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@unique([organizationId, agent, entityType, entityId])
+  @@index([organizationId, lastCheckedAt])
+  @@schema("crm")
+  @@map("agent_input_fingerprints")
+}
+
+/// Autonomous per-lead AI narrative summary. Regenerated when the lead's
+/// signature (activities, stage, firmographics) changes. crm_qa only.
+model LeadSummary {
+  id             String   @id @default(cuid())
+  organizationId BigInt   @map("organization_id")
+  contactId      String   @map("contact_id")
+  summary        String
+  headline       String?
+  intent         String?
+  recommendedAction String? @map("recommended_action")
+  flags          Json?
+  signature      String
+  source         String   @default("heuristic")
+  model          String?
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@unique([organizationId, contactId])
+  @@index([organizationId, updatedAt])
+  @@schema("crm")
+  @@map("lead_summaries")
+}
+
+/// Debounced conversation-summary refresh. One row per lead; run_after slides
+/// while emails, calls, meetings, or CCaaS text keep arriving.
+model LeadSummaryRefreshQueue {
+  organizationId BigInt   @map("organization_id")
+  contactId      String   @map("contact_id")
+  runAfter       DateTime @map("run_after")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@id([organizationId, contactId])
+  @@index([runAfter])
+  @@schema("crm")
+  @@map("lead_summary_refresh_queue")
+}
+
+/// In-app notifications for admins (and optionally other roles). crm_qa only.
+/// Recipients are account-DB user UUIDs; no FK to my_account_qa.
+model Notification {
+  id              String    @id @default(cuid())
+  organizationId  BigInt    @map("organization_id")
+  recipientUserId BigInt    @map("recipient_user_id")
+  actorUserId     BigInt?   @map("actor_user_id")
+  kind            String
+  title           String
+  body            String?
+  href            String?
+  entityType      String?   @map("entity_type")
+  entityId        String?   @map("entity_id")
+  contactId       String?   @map("contact_id")
+  metadata        Json?
+  readAt          DateTime? @map("read_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  @@index([recipientUserId, createdAt(sort: Desc)])
+  @@index([recipientUserId, readAt])
+  @@index([organizationId, createdAt(sort: Desc)])
+  @@index([contactId])
+  @@schema("crm")
+  @@map("notifications")
+}
+
+/// Autonomous nurture / re-engage queue. One row per lead; agent decides
+/// nurture_now | wait | skip_not_interested. crm_qa only.
+/// Meeting Analysis Agent — structured evidence for Lifecycle (never raw transcript).
+model MeetingAnalysis {
+  id               String   @id @default(cuid())
+  organizationId   BigInt   @map("organization_id")
+  activityId       String   @unique @map("activity_id")
+  contactId        String?  @map("contact_id")
+  dealId           String?  @map("deal_id")
+  outcome          String?  @db.VarChar(32)
+  bantBudget       Boolean? @map("bant_budget")
+  bantAuthority    Boolean? @map("bant_authority")
+  bantNeed         Boolean? @map("bant_need")
+  bantTimelineText String?  @map("bant_timeline_text") @db.VarChar(256)
+  nextStepAgreed   String?  @map("next_step_agreed")
+  objectionsRaised Json     @default("[]") @map("objections_raised")
+  confidence       Float    @default(0)
+  evidence         Json     @default("[]")
+  analyzedAt       DateTime @default(now()) @map("analyzed_at")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  @@index([contactId, analyzedAt])
+  @@schema("crm")
+  @@map("meeting_analyses")
+}
+
+/// Sales & Pre-sales Coach Agent — private per-interaction coaching feedback.
+/// Never a performance rating; overallImpression is a qualitative band, not a score.
+/// Rep sees the full row privately; managers/admins only ever see aggregate counts
+/// (see getCoachingTrendsForOrg) — never raw coachingNote/highlightedMoment text.
+model CoachingInsight {
+  id                String   @id @default(cuid())
+  organizationId    BigInt   @map("organization_id")
+  activityId        String   @unique @map("activity_id")
+  contactId         String?  @map("contact_id")
+  dealId            String?  @map("deal_id")
+  repUserId         BigInt   @map("rep_user_id")
+  interactionType   String   @map("interaction_type") @db.VarChar(16)
+  overallImpression String   @map("overall_impression") @db.VarChar(16)
+  discoveryQuality  String?  @map("discovery_quality")
+  objectionHandling String?  @map("objection_handling")
+  methodologyNote   String?  @map("methodology_note")
+  talkBalanceNote   String?  @map("talk_balance_note")
+  strengths         Json     @default("[]") @map("strengths")
+  growthAreas       Json     @default("[]") @map("growth_areas")
+  highlightedMoment String?  @map("highlighted_moment")
+  coachingNote      String?  @map("coaching_note")
+  analyzedAt        DateTime @default(now()) @map("analyzed_at")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  @@index([organizationId, repUserId, createdAt(sort: Desc)])
+  @@index([contactId])
+  @@schema("crm")
+  @@map("coaching_insights")
+}
+
+/// Once-per-IST-day spoken dashboard briefing (LLM-ranked existing work).
+model DailyBriefing {
+  id             String    @id @default(cuid())
+  organizationId BigInt    @map("organization_id")
+  userId         BigInt    @map("user_id")
+  briefingDate   DateTime  @map("briefing_date") @db.Date
+  script         String
+  items          Json      @default("[]")
+  playedAt       DateTime? @map("played_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@unique([organizationId, userId, briefingDate])
+  @@index([organizationId, userId])
+  @@schema("crm")
+  @@map("daily_briefings")
+}
+
+/// Compliance & Privacy Control Agent — human-gated data-deletion / data-access
+/// requests. The agent only ever classifies + drafts here; an admin must
+/// explicitly execute (see executePrivacyRequestCommand) before any data is
+/// deleted. Marketing opt-outs never create a row — they apply immediately
+/// to ContactProfile.marketingOptOut instead (see compliance-privacy-assess.ts).
+model PrivacyRequest {
+  id                String    @id @default(cuid())
+  organizationId    BigInt    @map("organization_id")
+  activityId        String    @unique @map("activity_id")
+  contactId         String    @map("contact_id")
+  requestType       String    @map("request_type") @db.VarChar(24)
+  confidence        String    @map("confidence") @db.VarChar(16)
+  status            String    @default("pending_review") @map("status") @db.VarChar(24)
+  reason            String?   @map("reason")
+  draftConfirmation String?   @map("draft_confirmation")
+  reviewedByUserId  BigInt?   @map("reviewed_by_user_id")
+  reviewedAt        DateTime? @map("reviewed_at")
+  executedAt        DateTime? @map("executed_at")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  @@index([organizationId, status, createdAt(sort: Desc)])
+  @@index([contactId])
+  @@schema("crm")
+  @@map("privacy_requests")
+}
+
+model LeadNurtureJob {
+  id             String            @id @default(cuid())
+  organizationId BigInt            @map("organization_id")
+  contactId      String            @map("contact_id")
+  status         LeadNurtureStatus @default(pending)
+  decision       String?
+  nurtureStatus  String?           @map("nurture_status") @db.VarChar(32)
+  currentSequenceStep Int?         @map("current_sequence_step")
+  sequenceStartedAt DateTime?      @map("sequence_started_at")
+  attempts       Int               @default(0)
+  maxAttempts    Int               @default(5) @map("max_attempts")
+  nextRetryAt    DateTime?         @map("next_retry_at")
+  lastError      String?           @map("last_error")
+  resultSummary  Json?             @map("result_summary")
+  lastSentAt     DateTime?         @map("last_sent_at")
+  createdAt      DateTime          @default(now()) @map("created_at")
+  updatedAt      DateTime          @updatedAt @map("updated_at")
+  completedAt    DateTime?         @map("completed_at")
+
+  @@unique([organizationId, contactId])
+  @@index([status, nextRetryAt])
+  @@index([organizationId, status, updatedAt])
+  @@schema("crm")
+  @@map("lead_nurture_jobs")
+}
+
+/// Lead Lifecycle Agent — one row per contact. Owns lead status, lifecycle
+/// stage, and sales pipeline stage progression from CRM signals. crm_qa only.
+model LeadLifecycleJob {
+  id             String              @id @default(cuid())
+  organizationId BigInt              @map("organization_id")
+  contactId      String              @map("contact_id")
+  status         LeadLifecycleStatus @default(pending)
+  /// Which ladder moved: lead_status | lifecycle | pipeline | none
+  ladder         String?
+  fromStage      String?             @map("from_stage")
+  toStage        String?             @map("to_stage")
+  decision       String?
+  reason         String?
+  triggerReason  String?             @map("trigger_reason")
+  dealId         String?             @map("deal_id")
+  attempts       Int                 @default(0)
+  maxAttempts    Int                 @default(5) @map("max_attempts")
+  nextRetryAt    DateTime?           @map("next_retry_at")
+  lastError      String?             @map("last_error")
+  resultSummary  Json?               @map("result_summary")
+  lastAppliedAt  DateTime?           @map("last_applied_at")
+  createdAt      DateTime            @default(now()) @map("created_at")
+  updatedAt      DateTime            @updatedAt @map("updated_at")
+  completedAt    DateTime?           @map("completed_at")
+
+  @@unique([organizationId, contactId])
+  @@index([status, nextRetryAt])
+  @@index([organizationId, status, updatedAt])
+  @@schema("crm")
+  @@map("lead_lifecycle_jobs")
+}
+
+/// Email Auto-reply Agent — one row per inbound email activity. Safe mail gets
+/// an autonomous reply; sensitive mail is escalated to the owner (or admin).
+model EmailAutoReplyJob {
+  id                String               @id @default(cuid())
+  organizationId    BigInt               @map("organization_id")
+  contactId         String               @map("contact_id")
+  /// Inbound ContactActivity that triggered this job
+  inboundActivityId String               @unique @map("inbound_activity_id")
+  /// Mailbox owner whose OAuth connection received the mail
+  mailboxUserId     BigInt?              @map("mailbox_user_id")
+  status            EmailAutoReplyStatus @default(pending)
+  decision          String?
+  /// safe | sensitive | unknown
+  sensitivity       String?
+  category          String?
+  reason            String?
+  /// Outbound ContactActivity created after an auto-reply send
+  replyActivityId   String?              @map("reply_activity_id")
+  escalatedToUserId BigInt?              @map("escalated_to_user_id")
+  attempts          Int                  @default(0)
+  maxAttempts       Int                  @default(3) @map("max_attempts")
+  nextRetryAt       DateTime?            @map("next_retry_at")
+  lastError         String?              @map("last_error")
+  resultSummary     Json?                @map("result_summary")
+  createdAt         DateTime             @default(now()) @map("created_at")
+  updatedAt         DateTime             @updatedAt @map("updated_at")
+  completedAt       DateTime?            @map("completed_at")
+
+  @@index([status, nextRetryAt])
+  @@index([organizationId, status, completedAt])
+  @@schema("crm")
+  @@map("email_auto_reply_jobs")
+}
+
+/// Coworker customer email held until sendAt, then sent as the mailbox user.
+model ScheduledOutboundEmail {
+  id              String    @id @default(cuid())
+  organizationId  BigInt    @map("organization_id")
+  mailboxUserId   BigInt    @map("mailbox_user_id")
+  contactId       String?   @map("contact_id")
+  draftActivityId String?   @map("draft_activity_id")
+  toEmail         String    @map("to_email")
+  subject         String
+  body            String
+  sendAt          DateTime  @map("send_at")
+  /// scheduled | sent | failed | cancelled
+  status          String    @default("scheduled")
+  lastError       String?   @map("last_error")
+  sentAt          DateTime? @map("sent_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@index([status, sendAt])
+  @@index([draftActivityId])
+  @@schema("crm")
+  @@map("scheduled_outbound_emails")
+}
+
+enum GmailPushWatchKind {
+  user
+  crm_bot
+
+  @@schema("crm")
+}
+
+/// Gmail users.watch registration for Pub/Sub push (one row per mailbox email).
+model GmailPushWatch {
+  id             String             @id @default(cuid())
+  organizationId BigInt?            @map("organization_id")
+  userId         BigInt?            @map("user_id")
+  accountEmail   String             @unique @map("account_email")
+  watchKind      GmailPushWatchKind @default(user) @map("watch_kind")
+  historyId      String?            @map("history_id")
+  expiration     DateTime?          @map("expiration")
+  createdAt      DateTime           @default(now()) @map("created_at")
+  updatedAt      DateTime           @updatedAt @map("updated_at")
+
+  @@index([expiration])
+  @@schema("crm")
+  @@map("gmail_push_watches")
+}
+
+/// Google Calendar events.watch channel (HTTPS push, not Gmail Pub/Sub).
+model GoogleCalendarWatch {
+  id             String    @id @default(cuid())
+  organizationId BigInt    @map("organization_id")
+  userId         BigInt    @unique @map("user_id")
+  channelId      String    @unique @map("channel_id")
+  resourceId     String?   @map("resource_id")
+  channelToken   String    @map("channel_token")
+  syncToken      String?   @map("sync_token")
+  expiration     DateTime? @map("expiration")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@index([expiration])
+  @@schema("crm")
+  @@map("google_calendar_watches")
+}
+
+enum CalendarMeetCaptureStatus {
+  pending
+  dispatched
+  cancelled
+  failed
+
+  @@schema("crm")
+}
+
+/// Host-owned Google Meet capture (calendar events scheduled outside CRM).
+model CalendarMeetCapture {
+  id                String                     @id @default(cuid())
+  organizationId    BigInt                     @map("organization_id")
+  userId            BigInt                     @map("user_id")
+  googleEventId     String                     @map("google_event_id")
+  meetUrl           String?                    @map("meet_url")
+  meetCode          String?                    @map("meet_code")
+  summary           String?
+  startAt           DateTime?                  @map("start_at")
+  endAt             DateTime?                  @map("end_at")
+  status            CalendarMeetCaptureStatus  @default(pending)
+  contactId         String?                    @map("contact_id")
+  activityId        String?                    @map("activity_id")
+  meetingServiceId  String?                    @map("meeting_service_id")
+  lastError         String?                    @map("last_error")
+  createdAt         DateTime                   @default(now()) @map("created_at")
+  updatedAt         DateTime                   @updatedAt @map("updated_at")
+
+  @@unique([userId, googleEventId])
+  @@index([organizationId, meetCode])
+  @@index([meetingServiceId])
+  @@schema("crm")
+  @@map("calendar_meet_captures")
+}
+
+/// Lead Scoring Agent — one row per contact. Initial score on create/import;
+/// recalculates when engagement signals change. crm_qa only.
+model LeadScoringJob {
+  id               String             @id @default(cuid())
+  organizationId   BigInt             @map("organization_id")
+  contactId        String             @map("contact_id")
+  status           LeadScoringStatus  @default(pending)
+  score            Int?
+  fitScore         Int?               @map("fit_score")
+  intentScore      Int?               @map("intent_score")
+  grade            String?
+  band             String?
+  rationale        String?
+  factors          Json?
+  nextBestAction   String?            @map("next_best_action")
+  triggerReason    String?            @map("trigger_reason")
+  previousScore    Int?               @map("previous_score")
+  attempts         Int                @default(0)
+  maxAttempts      Int                @default(5) @map("max_attempts")
+  nextRetryAt      DateTime?          @map("next_retry_at")
+  lastError        String?            @map("last_error")
+  resultSummary    Json?              @map("result_summary")
+  createdAt        DateTime           @default(now()) @map("created_at")
+  updatedAt        DateTime           @updatedAt @map("updated_at")
+  completedAt      DateTime?          @map("completed_at")
+
+  @@unique([organizationId, contactId])
+  @@index([status, nextRetryAt])
+  @@index([organizationId, status, updatedAt])
+  @@index([organizationId, grade, score])
+  @@schema("crm")
+  @@map("lead_scoring_jobs")
+}
+
+enum MeetingAssistStatus {
+  active
+  ended
+  failed
+
+  @@schema("crm")
+  @@map("meeting_assist_status")
+}
+
+enum MeetingAssistProvider {
+  google_meet
+  zoom
+  teams
+  other
+
+  @@schema("crm")
+  @@map("meeting_assist_provider")
+}
+
+/// Live / post-meeting assist session — one per meeting ContactActivity.
+/// Transcript chunks are stored separately; on finalize they roll up onto
+/// ContactActivity.transcriptText for lifecycle analysis.
+model MeetingAssistSession {
+  id                String                @id @default(cuid())
+  organizationId    BigInt                @map("organization_id")
+  contactId         String                @map("contact_id")
+  activityId        String                @unique @map("activity_id")
+  provider          MeetingAssistProvider @default(other)
+  externalMeetingId String?               @map("external_meeting_id")
+  joinUrl           String?               @map("join_url")
+  hostUserId        BigInt?               @map("host_user_id")
+  status            MeetingAssistStatus   @default(active)
+  startedAt         DateTime              @default(now()) @map("started_at")
+  endedAt           DateTime?             @map("ended_at")
+  lastAssistAt      DateTime?             @map("last_assist_at")
+  lastSuggestions   Json?                 @map("last_suggestions")
+  meta              Json?
+  createdAt         DateTime              @default(now()) @map("created_at")
+  updatedAt         DateTime              @updatedAt @map("updated_at")
+  chunks            MeetingTranscriptChunk[]
+
+  @@index([organizationId, contactId, status])
+  @@index([organizationId, status, startedAt])
+  @@index([externalMeetingId])
+  @@schema("crm")
+  @@map("meeting_assist_sessions")
+}
+
+model MeetingTranscriptChunk {
+  id             String               @id @default(cuid())
+  organizationId BigInt               @map("organization_id")
+  sessionId      String               @map("session_id")
+  session        MeetingAssistSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  seq            Int
+  speaker        String?
+  speakerEmail   String?              @map("speaker_email")
+  text           String
+  spokenAt       DateTime?            @map("spoken_at")
+  /// live_push | zoom_webhook | teams_graph | google_drive | speech_api | manual
+  source         String               @default("live_push")
+  createdAt      DateTime             @default(now()) @map("created_at")
+
+  @@unique([sessionId, seq])
+  @@index([sessionId, createdAt])
+  @@index([organizationId])
+  @@index([organizationId, sessionId])
+  @@schema("crm")
+  @@map("meeting_transcript_chunks")
+}
+
+enum ProcessConfirmationStatus {
+  pending
+  approved
+  rejected
+  expired
+  @@schema("crm")
+}
+
+/// Owner approval gate for B2B post-meeting process agent (email/proposal/close).
+model ProcessConfirmation {
+  id              String                     @id @default(cuid())
+  organizationId  BigInt                     @map("organization_id")
+  contactId       String                     @map("contact_id")
+  ownerUserId     BigInt                     @map("owner_user_id")
+  activityId      String?                    @map("activity_id")
+  dealId          String?                    @map("deal_id")
+  /// email_proposal | book_meeting | close_won | close_lost | quote_send | quote_accept
+  actionKind      String                     @map("action_kind")
+  title           String
+  summary         String?
+  payload         Json
+  status          ProcessConfirmationStatus  @default(pending)
+  decidedAt       DateTime?                  @map("decided_at")
+  decidedByUserId BigInt?                    @map("decided_by_user_id")
+  resultNote      String?                    @map("result_note")
+  createdAt       DateTime                   @default(now()) @map("created_at")
+  updatedAt       DateTime                   @updatedAt @map("updated_at")
+
+  @@index([ownerUserId, status, createdAt(sort: Desc)])
+  @@index([contactId, status])
+  @@index([organizationId, status, createdAt(sort: Desc)])
+  @@schema("crm")
+  @@map("process_confirmations")
+}
+
+/// Durable coworker / agent memory (structured slots). Not Redis; not CDP.
+/// Hydrated into coworker context alongside client STM.
+model AgentMemory {
+  id             String    @id @default(cuid())
+  organizationId BigInt    @map("organization_id")
+  /// org | user | contact | deal
+  scopeType      String    @map("scope_type") @db.VarChar(16)
+  /// Empty string for org-wide; otherwise user/contact/deal id.
+  scopeId        String    @default("") @map("scope_id") @db.VarChar(64)
+  slotKey        String    @map("slot_key") @db.VarChar(64)
+  slotValue      Json      @map("slot_value")
+  source         String?   @db.VarChar(32)
+  expiresAt      DateTime? @map("expires_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@unique([organizationId, scopeType, scopeId, slotKey])
+  @@index([organizationId, scopeType, scopeId])
+  @@index([organizationId, updatedAt(sort: Desc)])
+  @@schema("crm")
+  @@map("agent_memories")
+}
+
+/// Hub A2A spoke task receipts. Protocol task store for CRM-owned work only.
+model A2aSpokeTask {
+  id             String   @id @default(cuid())
+  organizationId BigInt   @map("organization_id")
+  taskId         String   @unique @map("task_id")
+  contextId      String   @default("") @map("context_id")
+  skillId        String   @default("") @map("skill_id")
+  state          String   @db.VarChar(32)
+  actorId        String   @default("") @map("actor_id") @db.VarChar(160)
+  runId          String   @default("") @map("run_id") @db.VarChar(160)
+  idempotencyKey String   @default("") @map("idempotency_key") @db.VarChar(240)
+  receipt        Json?
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@index([organizationId, createdAt])
+  @@schema("crm")
+  @@map("a2a_spoke_tasks")
+}
+
+/// Hub OAuth clients + live tokens for every A2A spoke. Table lives in
+/// accounts.a2a_spoke_clients (not Prisma-mapped: accounts is not in this
+/// datasource). See prisma/migrations/20260827180000_a2a_spoke_clients/.
+
+enum AppointmentStatus {
+  scheduled
+  canceled
+  completed
+  no_show
+
+  @@schema("crm")
+  @@map("appointment_status")
+}
+
+enum AppointmentSource {
+  crm_ui
+  ccaas_webchat
+  demo_agent
+
+  @@schema("crm")
+  @@map("appointment_source")
+}
+
+/// Booking source of truth — CCaaS and CRM write here; contact_activities mirrors timeline.
+model Appointment {
+  id               String                @id @default(cuid())
+  organizationId   BigInt                @map("organization_id")
+  contactId        String                @map("contact_id")
+  hostUserId       BigInt                @map("host_user_id")
+  activityId       String?               @unique @map("activity_id")
+  source           AppointmentSource
+  status           AppointmentStatus     @default(scheduled)
+  title            String
+  startsAt         DateTime              @map("starts_at")
+  endsAt           DateTime              @map("ends_at")
+  timezone         String                @db.VarChar(64)
+  provider         MeetingAssistProvider @default(google_meet)
+  joinUrl          String?               @map("join_url")
+  calendarEventId  String?               @map("calendar_event_id")
+  guestEmails      Json                  @default("[]") @map("guest_emails")
+  assignmentReason String?               @map("assignment_reason")
+  canceledAt       DateTime?             @map("canceled_at")
+  completedAt      DateTime?             @map("completed_at")
+  createdAt        DateTime              @default(now()) @map("created_at")
+  updatedAt        DateTime              @updatedAt @map("updated_at")
+
+  @@index([organizationId, contactId, status, startsAt])
+  @@index([hostUserId, startsAt])
+  @@schema("crm")
+  @@map("appointments")
+}
+
+/// Tenant integration API keys (admin-created). Secret stored as hash only.
+model ApiKey {
+  id              String    @id @default(cuid())
+  organizationId  BigInt    @map("organization_id")
+  name            String    @db.VarChar(120)
+  /// Public hint, e.g. crm_live_ab12cd34
+  keyPrefix       String    @map("key_prefix") @db.VarChar(32)
+  keyHash         String    @map("key_hash") @db.VarChar(64)
+  /// contacts | companies | deals | activities | appointments | products | quotes | invoices | commerce
+  scopes          String[]
+  createdByUserId BigInt    @map("created_by_user_id")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  revokedAt       DateTime? @map("revoked_at")
+  lastUsedAt      DateTime? @map("last_used_at")
+
+  @@unique([organizationId, keyPrefix])
+  @@index([keyHash])
+  @@index([organizationId, revokedAt])
+  @@schema("crm")
+  @@map("api_keys")
+}
+
+/// Per-org API credentials for prospect research providers (chat lead pull).
+model OrgResearchProviderConfig {
+  id              String           @id @default(cuid())
+  organizationId  BigInt           @map("organization_id")
+  provider        ResearchProvider
+  enabled         Boolean          @default(false)
+  apiKeyEnc       String?          @map("api_key_enc")
+  apiKeyHint      String?          @map("api_key_hint")
+  /// e.g. { competitorStacks: ["salesforce"], ... }
+  settings        Json?
+  updatedByUserId BigInt?          @map("updated_by_user_id")
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+
+  @@unique([organizationId, provider])
+  @@index([organizationId])
+  @@schema("crm")
+  @@map("org_research_provider_configs")
+}
+
+/// Chat-triggered prospect pull job (search → qualify → personnel → HITL import).
+model ProspectPullJob {
+  id                 String             @id @default(cuid())
+  organizationId     BigInt             @map("organization_id")
+  requestedByUserId  BigInt             @map("requested_by_user_id")
+  status             ProspectPullStatus @default(pending)
+  limitN             Int                @default(10) @map("limit_n")
+  sourcesRequested   Json               @default("[]") @map("sources_requested")
+  sourcesUsed        Json?              @map("sources_used")
+  criteria           Json               @default("{}")
+  attempts           Int                @default(0)
+  maxAttempts        Int                @default(3) @map("max_attempts")
+  lastError          String?            @map("last_error")
+  resultSummary      Json?              @map("result_summary")
+  createdAt          DateTime           @default(now()) @map("created_at")
+  updatedAt          DateTime           @updatedAt @map("updated_at")
+  completedAt        DateTime?          @map("completed_at")
+  candidates         ProspectPullCandidate[]
+
+  @@index([organizationId, status, updatedAt])
+  @@index([organizationId, createdAt])
+  @@schema("crm")
+  @@map("prospect_pull_jobs")
+}
+
+model ProspectPullCandidate {
+  id                String   @id @default(cuid())
+  jobId             String   @map("job_id")
+  organizationId    BigInt   @map("organization_id")
+  rank              Int?
+  selected          Boolean  @default(true)
+  firstName         String?  @map("first_name")
+  lastName          String?  @map("last_name")
+  email             String?
+  phone             String?
+  title             String?
+  companyName       String?  @map("company_name")
+  companyDomain     String?  @map("company_domain")
+  linkedinUrl       String?  @map("linkedin_url")
+  industry          String?
+  employeeCount     Int?     @map("employee_count")
+  city              String?
+  country           String?
+  technographics    Json?
+  sourcesFoundIn    Json     @default("[]") @map("sources_found_in")
+  qualifyReasons    Json?    @map("qualify_reasons")
+  qualifyScore      Int?     @map("qualify_score")
+  providerPayload   Json?    @map("provider_payload")
+  importedContactId String?  @map("imported_contact_id")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+  job               ProspectPullJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([jobId, rank])
+  @@index([organizationId, jobId])
+  @@schema("crm")
+  @@map("prospect_pull_candidates")
+}
+
+model ProspectProviderCache {
+  id             String           @id @default(cuid())
+  organizationId BigInt           @map("organization_id")
+  provider       ResearchProvider
+  queryHash      String           @map("query_hash")
+  payload        Json
+  expiresAt      DateTime         @map("expires_at")
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+
+  @@unique([organizationId, provider, queryHash])
+  @@index([expiresAt])
+  @@schema("crm")
+  @@map("prospect_provider_cache")
+}
+
+/// Upload session of historical requirement ↔ proposal PDF pairs for pattern learning.
+model ProposalCorpusBatch {
+  id                String                     @id @default(cuid())
+  organizationId    BigInt                     @map("organization_id")
+  createdByUserId   BigInt                     @map("created_by_user_id")
+  name              String?
+  status            ProposalCorpusBatchStatus  @default(uploading)
+  lastError         String?                    @map("last_error")
+  resultSummary     Json?                      @map("result_summary")
+  createdAt         DateTime                   @default(now()) @map("created_at")
+  updatedAt         DateTime                   @updatedAt @map("updated_at")
+  completedAt       DateTime?                  @map("completed_at")
+
+  items       ProposalCorpusItem[]
+  pairs       ProposalCorpusPair[]
+  jobs        ProposalCorpusJob[]
+  playbooks   ProposalPlaybook[]
+  caseStudies ProposalCorpusCaseStudy[]
+
+  @@index([organizationId, status, updatedAt])
+  @@index([organizationId, createdAt])
+  @@schema("crm")
+  @@map("proposal_corpus_batches")
+}
+
+model ProposalCorpusItem {
+  id             String                    @id @default(cuid())
+  batchId        String                    @map("batch_id")
+  organizationId BigInt                    @map("organization_id")
+  kind           ProposalCorpusItemKind
+  /// User-built pair index (repeatable slots). Both files in a slot share this value.
+  pairSlot       Int                       @default(0) @map("pair_slot")
+  storagePath    String                    @map("storage_path")
+  filename       String
+  mime           String?
+  pageCount      Int?                      @map("page_count")
+  sha256         String?
+  extractJson    Json?                     @map("extract_json")
+  status         ProposalCorpusItemStatus  @default(pending)
+  lastError      String?                   @map("last_error")
+  createdAt      DateTime                  @default(now()) @map("created_at")
+  updatedAt      DateTime                  @updatedAt @map("updated_at")
+
+  batch              ProposalCorpusBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  requirementPairs   ProposalCorpusPair[] @relation("RequirementItem")
+  proposalPairs      ProposalCorpusPair[] @relation("ProposalItem")
+
+  @@index([batchId, kind])
+  @@index([batchId, pairSlot])
+  @@index([organizationId, batchId])
+  @@schema("crm")
+  @@map("proposal_corpus_items")
+}
+
+model ProposalCorpusPair {
+  id                String   @id @default(cuid())
+  batchId           String   @map("batch_id")
+  organizationId    BigInt   @map("organization_id")
+  requirementItemId String   @map("requirement_item_id")
+  proposalItemId    String   @map("proposal_item_id")
+  confidence        Float?
+  gapsJson          Json?    @map("gaps_json")
+  /// user_explicit = repeatable-slot upload; legacy_auto = pre-ship auto-paired rows.
+  pairingSource     String   @default("user_explicit") @map("pairing_source")
+  /// True for the one pair in the batch whose proposal feeds theme/skeleton freeze.
+  isVisualMaster    Boolean  @default(false) @map("is_visual_master")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  batch             ProposalCorpusBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  requirementItem   ProposalCorpusItem  @relation("RequirementItem", fields: [requirementItemId], references: [id], onDelete: Cascade)
+  proposalItem      ProposalCorpusItem  @relation("ProposalItem", fields: [proposalItemId], references: [id], onDelete: Cascade)
+  caseStudies       ProposalCorpusCaseStudy[]
+
+  @@unique([batchId, requirementItemId, proposalItemId])
+  @@index([organizationId, batchId])
+  @@schema("crm")
+  @@map("proposal_corpus_pairs")
+}
+
+/// Per-pair authoring analysis (how this BRD became this proposal).
+model ProposalCorpusCaseStudy {
+  id                 String   @id @default(cuid())
+  organizationId     BigInt   @map("organization_id")
+  batchId            String   @map("batch_id")
+  pairId             String   @map("pair_id")
+  pairingConfidence  Float    @map("pairing_confidence")
+  sectionAnalysis    Json     @map("section_analysis")
+  lengthAnalysis     Json     @map("length_analysis")
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  batch ProposalCorpusBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  pair  ProposalCorpusPair  @relation(fields: [pairId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, createdAt])
+  @@index([batchId])
+  @@unique([pairId])
+  @@schema("crm")
+  @@map("proposal_corpus_case_studies")
+}
+
+/// Org-level writing-style playbook. Append-only versions; never mutate in place.
+model ProposalContentPlaybook {
+  id               String   @id @default(cuid())
+  organizationId   BigInt   @map("organization_id")
+  version          Int
+  sectionSpecsJson Json     @map("section_specs_json")
+  lengthModelJson  Json     @map("length_model_json")
+  exemplarBankJson Json     @map("exemplar_bank_json")
+  caseStudyCount   Int      @map("case_study_count")
+  /// low (<8 case studies) | high (>=8)
+  confidenceLevel  String   @map("confidence_level")
+  varianceLogJson  Json?    @map("variance_log_json")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  playbooks ProposalPlaybook[]
+
+  @@unique([organizationId, version])
+  @@index([organizationId, version])
+  @@schema("crm")
+  @@map("proposal_content_playbooks")
+}
+
+model ProposalCorpusJob {
+  id             String                   @id @default(cuid())
+  batchId        String                   @map("batch_id")
+  organizationId BigInt                   @map("organization_id")
+  status         ProposalCorpusJobStatus  @default(pending)
+  stage          String                   @default("pending")
+  attempts       Int                      @default(0)
+  maxAttempts    Int                      @default(3) @map("max_attempts")
+  lastError      String?                  @map("last_error")
+  resultSummary  Json?                    @map("result_summary")
+  createdAt      DateTime                 @default(now()) @map("created_at")
+  updatedAt      DateTime                 @updatedAt @map("updated_at")
+  completedAt    DateTime?                @map("completed_at")
+
+  batch ProposalCorpusBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, status, updatedAt])
+  @@index([batchId])
+  @@schema("crm")
+  @@map("proposal_corpus_jobs")
+}
+
+/// Approved org writing pattern for proposals (section order, intent, tone, pricing shape).
+model ProposalPlaybook {
+  id                String                 @id @default(cuid())
+  organizationId    BigInt                 @map("organization_id")
+  sourceBatchId     String?                @map("source_batch_id")
+  /// Snapshot of the org content playbook at freeze time. Not a live pointer.
+  contentPlaybookId String?                @map("content_playbook_id")
+  name              String
+  tagsJson          Json?                  @map("tags_json")
+  sectionsJson      Json                   @map("sections_json")
+  /// Exact page-clone visual master from the winning proposal PDF.
+  blueprint         Json?
+  /// Lazy V2 section library. Existing sectionsJson / blueprint are never rewritten.
+  sectionLibraryJson Json?                 @map("section_library_json")
+  /// Page assets for the visual master (pageHtml / rasters).
+  assets            Json?
+  status            ProposalPlaybookStatus @default(draft)
+  approvedAt        DateTime?              @map("approved_at")
+  approvedByUserId  BigInt?                @map("approved_by_user_id")
+  createdAt         DateTime               @default(now()) @map("created_at")
+  updatedAt         DateTime               @updatedAt @map("updated_at")
+
+  sourceBatch      ProposalCorpusBatch?     @relation(fields: [sourceBatchId], references: [id], onDelete: SetNull)
+  contentPlaybook  ProposalContentPlaybook? @relation(fields: [contentPlaybookId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, status, updatedAt])
+  @@index([sourceBatchId])
+  @@index([contentPlaybookId])
+  @@schema("crm")
+  @@map("proposal_playbooks")
+}
+
+/// Semrush MCP project list cached per org (refreshed daily / bootstrap).
+model SeoProject {
+  id                 String   @id @default(cuid())
+  organizationId     BigInt   @map("organization_id")
+  externalProjectId  String   @map("external_project_id")
+  domain             String?
+  market             String?
+  raw                Json?
+  syncedAt           DateTime @default(now()) @map("synced_at")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  @@unique([organizationId, externalProjectId])
+  @@index([organizationId, syncedAt])
+  @@schema("crm")
+  @@map("seo_projects")
+}
+
+/// Per-tool Semrush MCP payload for a project (query path reads this, not live MCP).
+model SeoToolSnapshot {
+  id                 String   @id @default(cuid())
+  organizationId     BigInt   @map("organization_id")
+  externalProjectId  String   @map("external_project_id")
+  toolName           String   @map("tool_name")
+  payload            Json?
+  error              String?
+  fetchedAt          DateTime @default(now()) @map("fetched_at")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  @@unique([organizationId, externalProjectId, toolName])
+  @@index([organizationId, fetchedAt])
+  @@schema("crm")
+  @@map("seo_tool_snapshots")
+}
+
+/// SEO content packages saved from the Marketing → Digital Marketing agent.
+model SeoGeneratedContent {
+  id              String   @id @default(cuid())
+  organizationId  BigInt   @map("organization_id")
+  userId          BigInt?  @map("user_id")
+  projectId       String?  @map("project_id")
+  contentType     String   @map("content_type")
+  title           String
+  slug            String?
+  seoScore        Int?     @map("seo_score")
+  body            Json
+  status          String   @default("draft")
+  campaignId      String?  @map("campaign_id")
+  primaryKeyword  String?  @map("primary_keyword")
+  keywordQueryId  String?  @map("keyword_query_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@index([organizationId, updatedAt])
+  @@index([organizationId, contentType])
+  @@index([organizationId, keywordQueryId])
+  @@schema("crm")
+  @@map("seo_generated_content")
+}
+
+/// One Semrush keyword-research request per org/seed/locale (cached ≤ 31 days).
+model SeoKeywordQuery {
+  id              String    @id @default(cuid())
+  organizationId  BigInt    @map("organization_id")
+  userId          BigInt?   @map("user_id")
+  seed            String
+  location        String    @default("us")
+  language        String    @default("en")
+  filters         Json      @default("{}")
+  cacheKey        String    @map("cache_key")
+  semrushCalledAt DateTime? @map("semrush_called_at")
+  expiresAt       DateTime  @map("expires_at")
+  payload         Json      @default("[]")
+  error           String?
+  budgetSkipped   Boolean   @default(false) @map("budget_skipped")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@unique([organizationId, cacheKey])
+  @@index([organizationId, updatedAt])
+  @@schema("crm")
+  @@map("seo_keyword_queries")
+}
+
+/// User-starred keywords from a cached Semrush query.
+model SeoSavedKeyword {
+  id             String   @id @default(cuid())
+  organizationId BigInt   @map("organization_id")
+  queryId        String   @map("query_id")
+  term           String
+  metrics        Json     @default("{}")
+  contentId      String?  @map("content_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@unique([organizationId, queryId, term])
+  @@index([organizationId, updatedAt])
+  @@schema("crm")
+  @@map("seo_saved_keywords")
+}
+
+/// Platform-native social posts derived from master Digital Marketing content.
+model SeoSocialPost {
+  id                    String    @id @default(cuid())
+  organizationId        BigInt    @map("organization_id")
+  userId                BigInt?   @map("user_id")
+  contentId             String?   @map("content_id")
+  platform              String
+  postType              String    @default("feed") @map("post_type")
+  copy                  Json      @default("{}")
+  status                String    @default("draft")
+  scheduledAt           DateTime? @map("scheduled_at")
+  publishedAt           DateTime? @map("published_at")
+  externalPostId        String?   @map("external_post_id")
+  lastError             String?   @map("last_error")
+  accountsConnectionId  String?   @map("accounts_connection_id")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  @@index([organizationId, updatedAt])
+  @@index([organizationId, contentId])
+  @@schema("crm")
+  @@map("seo_social_posts")
+}
+
+/// One inbound or outbound SIP call. Live writes come later.
+model VoiceConversation {
+  id              String    @id @default(cuid())
+  organizationId  BigInt    @map("organization_id")
+  userId          BigInt    @map("user_id")
+  ext             String    @db.VarChar(32)
+  /// inbound | outbound
+  direction       String    @db.VarChar(16)
+  /// ringing | rejected | missed | connected | ended | failed
+  status          String    @db.VarChar(16)
+  remoteNumber    String    @map("remote_number") @db.VarChar(32)
+  remoteName      String?   @map("remote_name")
+  /// X-Outbound-Number on an outbound call.
+  callerId        String?   @map("caller_id") @db.VarChar(32)
+  /// cdp.customer_profile.cdp_id when the number matches a contact.
+  contactId       String?   @map("contact_id")
+  sipCallId       String    @map("sip_call_id")
+  startedAt       DateTime  @map("started_at")
+  answeredAt      DateTime? @map("answered_at")
+  endedAt         DateTime? @map("ended_at")
+  durationSeconds Int?      @map("duration_seconds")
+  /// hangup | remote_bye | rejected | busy | failed
+  endReason       String?   @map("end_reason") @db.VarChar(32)
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@unique([organizationId, sipCallId])
+  @@index([organizationId, userId, startedAt])
+  @@index([organizationId, contactId, startedAt])
+  @@schema("crm")
+  @@map("voice_conversations")
+}
+
+/// Live phone-call transcript for the signed-in browser SIP call.
+/// Lines arrive from the audio gateway; one call activity is written on hangup.
+model CallTranscriptSession {
+  id               String    @id @default(cuid())
+  organizationId   BigInt    @map("organization_id")
+  userId           BigInt    @map("user_id")
+  ext              String    @db.VarChar(32)
+  contactId        String    @map("contact_id")
+  contactName      String?   @map("contact_name")
+  /// Last 10 digits of the connected party, used to match gateway lines.
+  remoteDigits     String    @map("remote_digits") @db.VarChar(32)
+  /// inbound | outbound
+  direction        String    @db.VarChar(16)
+  gatewaySession   String?   @map("gateway_session_id")
+  /// active | ended
+  status           String    @db.VarChar(16)
+  activityId       String?   @map("activity_id")
+  /// hangup | remote_bye | failed
+  endReason        String?   @map("end_reason") @db.VarChar(32)
+  startedAt        DateTime  @default(now()) @map("started_at")
+  endedAt          DateTime? @map("ended_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  chunks CallTranscriptChunk[]
+
+  @@index([organizationId, status, ext, remoteDigits])
+  @@index([userId, status])
+  @@schema("crm")
+  @@map("call_transcript_sessions")
+}
+
+model CallTranscriptChunk {
+  id           String   @id @default(cuid())
+  sessionId    String   @map("session_id")
+  seq          Int
+  speaker      String?
+  isBot        Boolean  @default(false) @map("is_bot")
+  text         String
+  emotion      String?
+  transcriptTm String?  @map("transcript_tm")
+  raw          Json
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  session CallTranscriptSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, seq])
+  @@index([sessionId, transcriptTm])
+  @@schema("crm")
+  @@map("call_transcript_chunks")
+}
+
+/// cc-core nurture voice session. Transcript lines stay in ccass.*; this row is the join key.
+model NurtureVoiceCall {
+  id             String   @id @default(cuid())
+  organizationId BigInt   @map("organization_id")
+  /// cdp.customer_profile.cdp_id
+  contactId      String   @map("contact_id")
+  activityId     String   @map("activity_id")
+  /// cc-core auto-bot-call session id (ccass.conversations.external_thread_id)
+  sessionId      String   @unique @map("session_id")
+  /// When CRM received the session id from cc-core.
+  triggeredAt    DateTime @map("triggered_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@index([activityId])
+  @@index([organizationId, contactId])
+  @@schema("crm")
+  @@map("nurture_voice_calls")
+}

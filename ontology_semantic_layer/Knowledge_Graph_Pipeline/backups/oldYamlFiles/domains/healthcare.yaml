@@ -1,0 +1,311 @@
+# =============================================================================
+# domains/healthcare.yaml
+#   effective(org) = core.yaml + domains/healthcare.yaml [+ org<id>.yaml]
+#
+# CONFORMANCE (identical across all packs):
+#   R1 table must exist in core `tables:`   R2 every column named in when:/
+#   from_column:/name_from: must be in that table's core `properties:`
+#   R3 custom_fields only where core sets custom_dynamic: true
+#   R4 additive only — never rename, re-key or remove a core construct
+#   R5 anything failing R1-R4 lives in not_modelled: and EMITS NOTHING
+#   R6 access may only TIGHTEN core (add restricted / deny_properties),
+#      never loosen. Enforced by the validator.
+#   Provenance annotated inline as [core: table.column].
+#
+# ONTOLOGIST'S NOTE
+#   Worktual is a customer-engagement platform, not a clinical system. There is
+#   no encounter, diagnosis, medication or claim table anywhere in core. This
+#   pack therefore models the PATIENT-AS-CUSTOMER surface — access, scheduling,
+#   billing, outreach, service — and refuses to synthesise the clinical record.
+#   Everything clinical is listed under not_modelled.no_source, and the
+#   custom_fields blocklist actively prevents clinical data leaking in through
+#   a JSON bag. That refusal is the design, not a shortfall.
+# =============================================================================
+
+industry: healthcare
+pack_version: "2026.09.01"
+requires_core: ">=2"
+layer: domain
+
+applies_when:
+  accounts.organizations.industry_type:
+    [healthcare, health care, hospital, clinic, medical, diagnostics, pathology,
+     pharma, pharmaceutical, dental, telehealth, telemedicine, wellness,
+     home care, hospice, nursing, labs, imaging, ivf, eye care, physiotherapy]
+
+variant_key: accounts.organizations.business_type
+variants:
+  b2c:
+    anchor_entities: [Contact, Appointment, Ticket, Conversation, Invoice, Product]
+    naming_overrides: {Contact: {primary: Patient, aliases: [patient, service user, care recipient]}}
+    de_emphasise: [Deal, Quote, Proposal, SalesOrder]
+  b2b:
+    # device / pharma / lab selling to hospitals & payers; payer-provider contracting
+    anchor_entities: [Company, Contact, Deal, Quote, Contract, Invoice, Ticket]
+    naming_overrides:
+      Company: {primary: Provider Organisation, aliases: [hospital, payer, health system, facility group]}
+      Contact: {primary: Clinical Contact, aliases: [clinician, procurement contact, administrator]}
+      Deal:    {primary: Opportunity, aliases: [tender, empanelment, contract negotiation]}
+    de_emphasise: [LoyaltyTier]
+  b2b2c:
+    # health plan / employer wellness / hospital group with franchise clinics
+    anchor_entities: [Company, Contact, Appointment, Contract, Ticket]
+    naming_overrides:
+      Company: {primary: Sponsor Organisation, aliases: [employer, payer, network partner]}
+    de_emphasise: []
+
+# =============================================================================
+# 1. NAMING — meta-graph only
+# =============================================================================
+naming:
+  Contact:           {primary: Patient,  aliases: [patient, member, service user, care recipient]}
+  Lead:              {primary: Enquiry,  aliases: [enquirer, prospective patient]}
+  Customer:          {primary: Patient,  aliases: [registered patient, active patient]}
+  ContactPoint:      {aliases: [contact detail, patient identifier, mrn]}
+  Company:           {primary: Provider Organisation, aliases: [hospital, payer, insurer, facility group]}
+  CompanySite:       {primary: Facility, aliases: [clinic, centre, branch, site]}
+  Appointment:       {primary: Appointment, aliases: [visit, consultation, booking, slot]}
+  Product:           {primary: Service,  aliases: [treatment, package, procedure, health plan]}
+  ProductOffer:      {primary: Care Package, aliases: [plan, package, membership]}
+  Contract:          {primary: Coverage / Care Plan, aliases: [membership, annual plan, policy]}
+  Invoice:           {primary: Bill,     aliases: [statement, invoice, receipt]}
+  Ticket:            {primary: Patient Request, aliases: [case, query, request, complaint]}
+  Conversation:      {primary: Patient Conversation, aliases: [chat, call, contact]}
+  KnowledgeArticle:  {primary: Patient Information, aliases: [health article, faq, guidance]}
+  Campaign:          {primary: Outreach Programme, aliases: [recall, reminder campaign, health campaign]}
+  Task:              {primary: Care Task, aliases: [follow-up, callback, recall task]}
+  User:              {primary: Staff Member, aliases: [employee, team member]}
+  Agent:             {primary: Patient Services Advisor, aliases: [coordinator, advisor, front desk]}
+  TicketAgent:       {primary: Patient Services Advisor, aliases: [helpdesk agent, coordinator]}
+  Team:              {primary: Department, aliases: [team, unit, service line]}
+  TicketQueue:       {primary: Department Queue, aliases: [queue, desk]}
+  Segment:           {primary: Cohort,  aliases: [patient group, panel, segment]}
+
+role_naming:
+  match_on: [Role.name, Role.product_id]                       # [core: accounts.setup_roles]
+  aliases:
+    admin:         [Practice Administrator]
+    agent:         [Patient Services Advisor, front desk]
+    resolver:      [Senior Coordinator]
+    finance:       [Billing Officer, revenue cycle]
+    marketing:     [Outreach Coordinator]
+    sales_rep:     [Territory Manager]                          # b2b device/pharma
+    viewer:        [Read-only Staff]
+
+# =============================================================================
+# 2. EXTRA LABELS — all conditions verified against core properties
+# =============================================================================
+extends:
+
+  crm.appointments:
+    extra_labels:
+      - {label: PatientAppointment}
+      - {label: CompletedVisit,      when: {status: [completed]}}          # [core: status]
+      - {label: NoShowAppointment,   when: {status: [no_show]}}            # [core: status]
+      - {label: CancelledAppointment,when: {status: [canceled]}}
+      - {label: ScheduledAppointment,when: {status: [scheduled]}}
+      - {label: Teleconsultation,    when: {provider: [google_meet, zoom, teams]}}  # [core: provider]
+    # crm.appointments is the single best-fitting core table for this vertical:
+    # starts_at / ends_at / timezone / status / host_user_id / join_url are all
+    # first-class, and the partial unique index gives one live booking per patient.
+
+  inventory.products:
+    extra_labels:
+      - {label: HealthService}
+      - {label: CarePlanProduct,  when: {billing_type: [recurring]}}       # [core: billing_type]
+      - {label: ProcedureService, when: {billing_type: [one_time]}}
+      - {label: BookableService,  when: {status: [active]}}                # [core: status]
+    promote_property_to_node:
+      category:    {label: ServiceLine,     key: slug, name_from: category,    edge: IN_SERVICE_LINE}
+      subcategory: {label: ServiceCategory, key: slug, name_from: subcategory, edge: IN_SERVICE_CATEGORY}
+    derive_hierarchy:
+      - {from: ServiceCategory, to: ServiceLine, edge: PARENT_SERVICE_LINE}
+
+  crm.contracts:
+    extra_labels:
+      - {label: Coverage}
+      - {label: ActiveCoverage,  when: {status: [active]}}                 # [core: status]
+      - {label: LapsedCoverage,  when: {status: [cancelled, canceled, expired]}}
+      - {label: AutoRenewing,    when: {auto_renew: [true]}}               # [core: auto_renew]
+
+  crm.invoices:
+    extra_labels:
+      - {label: PatientBill}
+      - {label: UnpaidBill,  when: {status: [sent, overdue]}}              # [core: status]
+      - {label: PaidBill,    when: {status: [paid]}}
+
+  ticketing.tickets:
+    extra_labels:
+      - {label: PatientRequest}
+      - {label: AppointmentRequest, when: {category: [appointment, scheduling, rescheduling]}}   # [core: category]
+      - {label: BillingQuery,       when: {category: [billing, insurance, claim_query, payment]}}
+      - {label: RecordsRequest,     when: {category: [records_request, reports, documentation]}}
+      - {label: PrescriptionRequest,when: {category: [prescription_refill, medication_query]}}
+      - {label: ReferralRequest,    when: {category: [referral]}}
+      - {label: Complaint,          when: {category: [complaint, grievance, feedback]}}
+
+  ccass.conversations:
+    extra_labels: [{label: PatientConversation}]
+
+  cdp.customer_profile:
+    extra_labels: [{label: Patient}]
+    custom_fields:                       # allowed: core sets custom_dynamic: true
+      whitelist: [mrn, member_id, payer, plan_id, primary_facility_code,
+                  registration_date, preferred_contact_time, care_coordinator]
+      identity: [mrn, member_id]                   # -> ContactPoint {key_type:'mrn'|'member_id'}
+      promote_to_node:
+        payer:   {label: Payer,        key: name, edge: COVERED_BY}
+        plan_id: {label: CoveragePlan, key: id,   edge: ENROLLED_IN}
+      blocklist:
+        # NEVER promoted, NEVER stored as a property, even if the key exists.
+        # The graph is an engagement graph; clinical data belongs in the EHR.
+        [diagnosis, condition, icd_code, icd10, snomed, medications, medication,
+         prescription, allergy, allergies, lab_result, test_result, pathology,
+         treatment, procedure_code, cpt, disability, pregnancy, mental_health,
+         hiv_status, genetic, immunisation, vitals, bmi, blood_group,
+         substance_use, smoking_status]
+      blocklist_action: drop_silently_and_log
+
+  crm.contact_profiles:
+    extra_labels:
+      - {label: PatientOverlay}
+      - {label: MarketingSuppressed, when: {marketing_opt_out: [true]}}    # [core: marketing_opt_out]
+
+# =============================================================================
+# 3. VOCABULARIES
+# =============================================================================
+vocabularies:
+  ticket.category:                                                # [core: ticketing.tickets.category]
+    canonical: [appointment, scheduling, billing, insurance, records_request,
+                prescription_refill, referral, test_reports, complaint,
+                feedback, technical, general]
+    labels: {records_request: "Medical records request", prescription_refill: "Prescription refill"}
+  ticket.skill:                                                   # [core: ticketing.tickets.skill]
+    canonical: [scheduling, billing, clinical_admin, records, insurance_desk]
+  conversation.intent:                                            # [core: queue_routing_profiles.supported_intents]
+    canonical: [book_appointment, reschedule, cancel_appointment, appointment_status,
+                billing_query, insurance_coverage, report_status, prescription_refill,
+                referral_request, directions_timings, complaint]
+  campaign.goal:                                                  # [core: campaign.campaigns.goal]
+    canonical: [appointment_recall, preventive_screening, vaccination_drive,
+                health_checkup_package, follow_up_reminder, no_show_recovery,
+                plan_renewal, patient_education, feedback_request]
+  journey_state.current_stage:                                    # [core: cdp.journey_states.current_stage]
+    canonical: [enquiry, registered, first_visit, under_care, follow_up,
+                dormant, discharged, reactivated]
+  contact.lead_source:                                            # [core: crm.contact_profiles.lead_source]
+    canonical: [walk_in, referral_doctor, referral_patient, insurance_network,
+                web_search, paid_ads, camp_event, tie_up, call_centre]
+  deal.stage:                                                     # b2b  [core: crm.deals.stage]
+    labels: {qualification: "Empanelment enquiry", propose: "Proposal / tender submitted",
+             negotiate: "Rate negotiation", closed_won: "Empanelled / contracted"}
+
+# =============================================================================
+# 4. DERIVED LABELS — batch lane, recompute-only
+# =============================================================================
+derived_labels:
+  lane: batch
+  Contact:
+    source: cdp.gold_customer_metrics                             # [core: CustomerMetric]
+    rules:
+      - {label: NewPatient,      when: "total_orders == 1"}
+      - {label: ReturningPatient,when: "total_orders >= 2"}
+      - {label: DormantPatient,  when: "last_event_at < now() - 365d"}
+      - {label: AtRiskPatient,   when: "churn_score >= 0.7"}      # attrition, NOT clinical risk
+    exclusive_groups: [[NewPatient, ReturningPatient]]
+    note: >-
+      AtRiskPatient means at risk of leaving the practice. It must never be
+      rendered or described as clinical risk. Meta-graph carries this caveat.
+
+# =============================================================================
+# 5. METRICS — synonyms plus three computable from core-mapped labels only
+# =============================================================================
+metrics:
+  extend_synonyms:
+    order_volume: [visits, appointments booked, consultations]
+    average_order_value: [average bill value, revenue per visit]
+    customer_lifetime_value: [patient lifetime value, lifetime revenue per patient]
+  add:
+    - metric_id: appointment_no_show_rate
+      canonical_name: Appointment No-Show Rate
+      synonyms: [no shows, missed appointments, dna rate, did not attend]
+      unit: ratio
+      route: graph
+      computed_from: [Appointment]
+      direction: lower_is_better
+    - metric_id: records_request_share
+      canonical_name: Records Request Share
+      synonyms: [how many requests are for medical records]
+      unit: ratio
+      route: graph
+      computed_from: [Ticket]
+      direction: neutral
+    - metric_id: recall_campaign_response_rate
+      canonical_name: Recall Response Rate
+      synonyms: [recall response, reminder effectiveness, did patients come back]
+      unit: ratio
+      route: graph
+      computed_from: [CampaignDelivery, Appointment]
+      direction: higher_is_better
+      caveat: proxy
+
+# =============================================================================
+# 6. ACCESS — tighten only (R6). Free text in this vertical may carry PHI.
+# =============================================================================
+access:
+  Payer:        {domain: common}
+  CoveragePlan: {domain: common}
+  ServiceLine:  {domain: common}
+  ServiceCategory: {domain: common}
+  tighten:
+    Ticket:              {sensitivity: restricted, deny_properties: [description, ai_summary]}
+    TicketNote:          {sensitivity: restricted, deny_properties: [body]}
+    ConversationSummary: {sensitivity: restricted, deny_properties: [rolling_summary, extracted_facts]}
+    ContactActivity:     {sensitivity: restricted, deny_properties: [body, transcript_text]}
+    Insight:             {sensitivity: restricted, deny_properties: [summary, explanation]}
+    Recommendation:      {sensitivity: restricted, deny_properties: [recommendation]}
+    ExperienceMemory:    {sensitivity: restricted, deny_properties: [summary]}
+    KnownFact:           {sensitivity: restricted, deny_properties: [fact]}
+  never_grant: [Patient, HealthService, PatientRequest]
+
+compliance:
+  regimes: [HIPAA, GDPR, DPDP, ISO27001]
+  principle: minimum_necessary
+  notes:
+    - Free-text fields are the PHI risk surface, not the schema. Hence §6 tighten.
+    - custom_fields.blocklist is a control, not a suggestion — validator enforces it.
+    - Marketing suppression must respect MarketingSuppressed before any send.
+
+# =============================================================================
+# 7. NOT MODELLED — emits nothing
+# =============================================================================
+not_modelled:
+  blocked_on_core:
+    - {concept: Facility / Location, blocker: "accounts.organization_locations mapping is commented out in core; the Location stub is declared but unused. Healthcare needs a real facility node."}
+    - {concept: Consent, blocker: "cdp.customer_profile.consent_json not in core properties. Consent-to-contact gates every outreach campaign."}
+    - {concept: Preference, blocker: "cdp.customer_profile.preferences_json / traits_json not in core properties."}
+    - {concept: "Ticket -> commercial object", blocker: "ticketing.tickets has no reference to an appointment, bill or coverage. Same universal gap as every other vertical."}
+  no_source:
+    - {concept: Encounter / Visit record, severity: critical, note: "clinical record of what happened; crm.appointments covers only the booking."}
+    - {concept: Practitioner / Provider directory, severity: critical, note: "host_user_id is a platform user, not a credentialed clinician with specialty, registration number and privileges."}
+    - {concept: Diagnosis / Problem list, severity: high, note: "deliberately out of scope — belongs in the EHR."}
+    - {concept: Medication / Prescription, severity: high, note: "out of scope by design."}
+    - {concept: Claim / Prior authorisation, severity: high, note: "payer adjudication has no table."}
+    - {concept: Referral, severity: medium, note: "referral is a ticket category only; no referral record with source, target and outcome."}
+    - {concept: Care team / Care pathway, severity: medium}
+    - {concept: Consent to treat, severity: medium, note: "distinct from marketing consent; no source."}
+    - {concept: Lab order / Result, severity: medium, note: "out of scope by design."}
+    - {concept: Resource / Bed / Slot inventory, severity: medium, note: "business hours and shifts exist; bookable resource capacity does not."}
+
+# =============================================================================
+# 8. ASSUMES — shared with every pack
+#   CORE: C1 cdp.order_items quantity+unit_price · C2 supertypes (Purchase, Case,
+#         Person/Staff) · C3 ccass.conversations missing join columns ·
+#         C4 conditional-label removal on update
+#   ENGINE: E1 extra_labels when/removable · E2 promote_property_to_node +
+#         derive_hierarchy · E3 custom_fields whitelist/identity/promote/blocklist ·
+#         E4 conditional_relationships · E5 naming+vocab -> meta-graph ·
+#         E6 derived_labels batch lane · E7 variants
+#   VALIDATOR: R1-R6 + one access domain per label + pairwise connectivity +
+#         not_modelled emits nothing + blocklist enforcement
+# =============================================================================

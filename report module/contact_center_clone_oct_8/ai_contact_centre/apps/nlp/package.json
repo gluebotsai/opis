@@ -1,0 +1,12 @@
+{
+  "name": "nlp",
+  "private": true,
+  "scripts": {
+    "dev": "UV_CACHE_DIR=.uv-cache DEBUG=true NLP_ALLOW_INSECURE_COPILOT_AUTH=true LOG_DIR=logs API_V1_PUBLIC_BASE=/nlp-api/v1 uv run uvicorn app.main:app --reload --app-dir src --host 0.0.0.0 --port 8000",
+    "start": "UV_CACHE_DIR=.uv-cache LOG_DIR=logs uv run uvicorn app.main:app --app-dir src --host 0.0.0.0 --port 8000",
+    "sync": "UV_CACHE_DIR=.uv-cache uv sync --all-extras",
+    "test": "UV_CACHE_DIR=.uv-cache uv run pytest",
+    "lint": "UV_CACHE_DIR=.uv-cache uv run ruff check .",
+    "format": "UV_CACHE_DIR=.uv-cache uv run ruff format ."
+  }
+}

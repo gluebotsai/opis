@@ -1,0 +1,127 @@
+{
+  "turn_id": "f801bf5d",
+  "timestamp": "2026-10-03T17:47:49.629070+00:00",
+  "question": "Email sending cap health in the last 30 days?",
+  "identity": {
+    "organization_id": 1012,
+    "user_id": 1054,
+    "branch_id": 1004,
+    "role": "admin"
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma",
+    "dsn_set": true
+  },
+  "answer": "I am unable to provide a health assessment for your email sending capacity at this time due to a technical limitation in the data warehouse regarding the requested breakdown.",
+  "facts": "EXECUTION_ERROR\nerror_type: REPLAN\nmessage: That grouping is not available on this warehouse.\ntask_goal: Check email sending caps and health status\nwindow: past 30 days (UTC)",
+  "trace": {
+    "identity": {
+      "organization_id": 1012,
+      "user_id": 1054,
+      "branch_id": 1004,
+      "role": "admin",
+      "scope_label": "All branch campaigns",
+      "timezone": "UTC"
+    },
+    "question": "Email sending cap health in the last 30 days?",
+    "supervisor": {
+      "kind": "route",
+      "target": "domain"
+    },
+    "supervisor_raw": "```json\n{\"kind\": \"route\", \"target\": \"domain\"}\n```",
+    "interpret_raw": "```json\n{\n  \"kind\": \"interpret\",\n  \"need\": \"Determine if email sending volume is within healthy limits or hitting capacity constraints over the last 30 days.\",\n  \"object\": \"channel-config\",\n  \"metric_family\": \"diagnosis\",\n  \"slice\": \"channel\",\n  \"time\": \"last 30 days\",\n  \"scope_words\": \"all branch campaigns\",\n  \"echo\": \"Assess the health of email sending capacity for the branch over the last 30 days.\",\n  \"ask_user\": \"\"\n}\n```",
+    "interpret": {
+      "kind": "interpret",
+      "need": "Determine if email sending volume is within healthy limits or hitting capacity constraints over the last 30 days.",
+      "object": "channel-config",
+      "metric_family": "diagnosis",
+      "slice": "channel",
+      "time": "last 30 days",
+      "scope_words": "all branch campaigns",
+      "echo": "Assess the health of email sending capacity for the branch over the last 30 days.",
+      "ask_user": ""
+    },
+    "retrieved_kpis": [
+      "email_cap_health",
+      "domain_auth",
+      "mailbox_send_ready",
+      "bounce_rate",
+      "delivery_trend",
+      "email_open_rate",
+      "campaigns_ran",
+      "channel_readiness"
+    ],
+    "task_results": [
+      {
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "email_cap_health",
+          "goal": "Check email sending caps and health status",
+          "time": "last 30 days",
+          "scope": "org",
+          "dimensions": [
+            "channel"
+          ],
+          "answer_type": "kpi",
+          "depends_on": []
+        },
+        "status": "error",
+        "error_type": "REPLAN",
+        "error": "That grouping is not available on this warehouse.",
+        "kpi_id": "email_cap_health",
+        "store": "sql",
+        "sql": "SELECT\n    channel AS channel,\n    hourly_cap,\n    daily_cap,\n    warmup_stage,\n    health_status\nFROM campaign.email_sending_caps\nWHERE organization_id = 1012\n\n",
+        "row_count": 0,
+        "time_echo": "past 30 days (UTC)"
+      }
+    ],
+    "plan": {
+      "kind": "plan",
+      "understanding": {
+        "need": "Determine if email sending volume is within healthy limits or hitting capacity constraints over the last 30 days.",
+        "object": "channel-config",
+        "metric_family": "diagnosis",
+        "slice": "channel",
+        "time": "last 30 days",
+        "scope_words": "all branch campaigns",
+        "echo": "Assess the health of email sending capacity for the branch over the last 30 days.",
+        "ask_user": ""
+      },
+      "depth": "quick",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "email_cap_health",
+          "goal": "Check email sending caps and health status",
+          "time": "last 30 days",
+          "scope": "org",
+          "dimensions": [
+            "channel"
+          ],
+          "answer_type": "kpi",
+          "depends_on": []
+        }
+      ]
+    },
+    "plan_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"understanding\": {\n    \"need\": \"Determine if email sending volume is within healthy limits or hitting capacity constraints over the last 30 days.\",\n    \"object\": \"channel-config\",\n    \"metric_family\": \"diagnosis\",\n    \"slice\": \"channel\",\n    \"time\": \"last 30 days\",\n    \"scope_words\": \"all branch campaigns\",\n    \"echo\": \"Assess the health of email sending capacity for the branch over the last 30 days.\",\n    \"ask_user\": \"\"\n  },\n  \"depth\": \"quick\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"email_cap_health\",\n      \"goal\": \"Check email sending caps and health status\",\n      \"time\": \"last 30 days\",\n      \"scope\": \"org\",\n      \"dimensions\": [\n        \"channel\"\n      ],\n      \"answer_type\": \"kpi\",\n      \"depends_on\": []\n    }\n  ]\n}\n```",
+    "facts": "EXECUTION_ERROR\nerror_type: REPLAN\nmessage: That grouping is not available on this warehouse.\ntask_goal: Check email sending caps and health status\nwindow: past 30 days (UTC)",
+    "loop_errors": [
+      {
+        "attempt": 1,
+        "error_type": "REPLAN",
+        "error": "breakdown was requested but the plan omitted dimensions"
+      },
+      {
+        "attempt": 2,
+        "error_type": "REPLAN",
+        "error": "That grouping is not available on this warehouse."
+      }
+    ],
+    "briefing_raw": "I am unable to provide a health assessment for your email sending capacity at this time due to a technical limitation in the data warehouse regarding the requested breakdown.",
+    "grounded": true
+  },
+  "error": null
+}

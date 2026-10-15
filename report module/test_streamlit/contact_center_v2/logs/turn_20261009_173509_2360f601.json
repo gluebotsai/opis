@@ -1,0 +1,62 @@
+{
+  "turn_id": "2360f601",
+  "timestamp": "2026-10-09T12:05:09.011386+00:00",
+  "question": "What percentage of total interactions were abandoned?",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1018,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Abandonment rate by channel</strong></p><p>The abandonment rate for all time is <strong>0%</strong>.</p><ul><li><strong>email</strong>: 0%</li><li><strong>facebook</strong>: 0%</li><li><strong>instagram</strong>: 0%</li><li><strong>webchat</strong>: 0%</li><li><strong>whatsapp</strong>: 0%</li><li><strong>call</strong>: 0%</li></ul><p>Would you like to see the total number of conversations started per channel instead?</p>",
+  "card": "card: bar r1",
+  "facts": "result_id: r1\nwindow: all time\nkpi: abandonment_rate\ncertified: true\nunit: percent\ntask_goal: Calculate the percentage of total interactions that were abandoned, split by channel.\nanswer_type: percentage\nrow_count: 6\nrow 1: channel=email; abandoned_n=0; queued_finished_n=0; rate_pct=None\nrow 2: channel=facebook; abandoned_n=0; queued_finished_n=4; rate_pct=0\nrow 3: channel=instagram; abandoned_n=0; queued_finished_n=2; rate_pct=0\nrow 4: channel=webchat; abandoned_n=0; queued_finished_n=46; rate_pct=0\nrow 5: channel=whatsapp; abandoned_n=0; queued_finished_n=2; rate_pct=0\nrow 6: channel=call; abandoned_n=0; queued_finished_n=0; rate_pct=None",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1018,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "What percentage of total interactions were abandoned?",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants to know the percentage of total interactions that were abandoned, broken down by channel.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Calculate the percentage of total interactions that were abandoned, split by channel.",
+          "time": "all time",
+          "scope": "org",
+          "slice": [
+            "channel"
+          ],
+          "answer_type": "percentage"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "abandonment_rate",
+        "row_count": 6
+      }
+    ],
+    "facts": "result_id: r1\nwindow: all time\nkpi: abandonment_rate\ncertified: true\nunit: percent\ntask_goal: Calculate the percentage of total interactions that were abandoned, split by channel.\nanswer_type: percentage\nrow_count: 6\nrow 1: channel=email; abandoned_n=0; queued_finished_n=0; rate_pct=None\nrow 2: channel=facebook; abandoned_n=0; queued_finished_n=4; rate_pct=0\nrow 3: channel=instagram; abandoned_n=0; queued_finished_n=2; rate_pct=0\nrow 4: channel=webchat; abandoned_n=0; queued_finished_n=46; rate_pct=0\nrow 5: channel=whatsapp; abandoned_n=0; queued_finished_n=2; rate_pct=0\nrow 6: channel=call; abandoned_n=0; queued_finished_n=0; rate_pct=None",
+    "grounded": true,
+    "card": "card: bar r1"
+  },
+  "error": null
+}

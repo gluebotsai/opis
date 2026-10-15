@@ -1,0 +1,62 @@
+{
+  "turn_id": "9b2e1f1f",
+  "timestamp": "2026-10-09T11:38:57.696598+00:00",
+  "question": "what is the average handle conversation per month",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1016,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Average handled conversations per month</strong></p>\n<p>The handled conversations for the available months in the all time window were <strong>356</strong>, <strong>187</strong>, and <strong>65</strong>.</p>\n<p>Would you like to see this broken down by channel?</p>",
+  "card": "card: none",
+  "facts": "result_id: r1\nwindow: all time\ncertified: false\ntask_goal: Calculate the average number of handled conversations per month.\nanswer_type: number\nrow_count: 3\nrow 1: month=2026-10-01 00:00:00+00:00; handled_conversations=356\nrow 2: month=2026-09-01 00:00:00+00:00; handled_conversations=187\nrow 3: month=2026-08-01 00:00:00+00:00; handled_conversations=65",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1016,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "what is the average handle conversation per month",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants to know the average number of handled conversations per month.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Calculate the average number of handled conversations per month.",
+          "time": "all time",
+          "scope": "org",
+          "slice": [
+            "month"
+          ],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": false,
+        "kpi_id": null,
+        "row_count": 3
+      }
+    ],
+    "facts": "result_id: r1\nwindow: all time\ncertified: false\ntask_goal: Calculate the average number of handled conversations per month.\nanswer_type: number\nrow_count: 3\nrow 1: month=2026-10-01 00:00:00+00:00; handled_conversations=356\nrow 2: month=2026-09-01 00:00:00+00:00; handled_conversations=187\nrow 3: month=2026-08-01 00:00:00+00:00; handled_conversations=65",
+    "grounded": true,
+    "card": "card: none"
+  },
+  "error": null
+}

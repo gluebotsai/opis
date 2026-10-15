@@ -1,0 +1,28 @@
+{
+  "conversations": [
+    {
+      "id": "conversation-assist-draft",
+      "title": "Draft a customer reply without sending",
+      "turns": [
+        { "role": "user", "content": "Help me reply that the refund is in progress" },
+        {
+          "role": "assistant",
+          "content": "{\"replyDraft\":\"Thanks for waiting — your refund is in progress and should reflect in 3-5 business days.\",\"privateNotes\":\"Refund already initiated for invoice 4412.\",\"actionProposal\":null,\"revision\":1,\"sourceMessageId\":\"m-100\"}",
+          "tools": ["get_conversation_context"]
+        }
+      ]
+    },
+    {
+      "id": "conversation-assist-knowledge",
+      "title": "Draft from RAG only when the customer asks a policy question",
+      "turns": [
+        { "role": "user", "content": "What is the refund window?" },
+        {
+          "role": "assistant",
+          "content": "{\"replyDraft\":\"Refunds are issued within 3-5 business days after we confirm the return.\",\"privateNotes\":[],\"actionProposal\":null,\"revision\":1,\"sourceMessageId\":\"m-101\"}",
+          "tools": ["suggest_reply", "get_organization_knowledge"]
+        }
+      ]
+    }
+  ]
+}

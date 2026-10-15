@@ -1,0 +1,373 @@
+version: 1
+product: campaign
+metrics:
+  approved_template_count:
+    label: Approved Template Count
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for approved template count.
+    requires_skus:
+    - campaign
+    min_role: agent
+  audience_reached:
+    label: Audience Reached
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for audience reached.
+    requires_skus:
+    - campaign
+    min_role: agent
+  avg_attempt_count:
+    label: Avg Attempt Count
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for avg attempt count.
+    requires_skus:
+    - campaign
+    min_role: agent
+  avg_batch_processing_seconds:
+    label: Avg Batch Processing Seconds
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for avg batch processing seconds.
+    requires_skus:
+    - campaign
+    min_role: agent
+  avg_planned_duration_seconds:
+    label: Avg Planned Duration Seconds
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for avg planned duration seconds.
+    requires_skus:
+    - campaign
+    min_role: agent
+  avg_seconds_open_to_click:
+    label: Avg Seconds Open To Click
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for avg seconds open to click.
+    requires_skus:
+    - campaign
+    min_role: agent
+  avg_seconds_to_open:
+    label: Avg Seconds To Open
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for avg seconds to open.
+    requires_skus:
+    - campaign
+    min_role: agent
+  batch_count:
+    label: Batch Count
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for batch count.
+    requires_skus:
+    - campaign
+    min_role: agent
+  batch_failure_rate:
+    label: Batch Failure Rate
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for batch failure rate.
+    requires_skus:
+    - campaign
+    min_role: agent
+  bounce_share_of_suppressions:
+    label: Bounce Share Of Suppressions
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for bounce share of suppressions.
+    requires_skus:
+    - campaign
+    min_role: agent
+  bounce_suppressed_count:
+    label: Bounce Suppressed Count
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for bounce suppressed count.
+    requires_skus:
+    - campaign
+    min_role: agent
+  campaign_volume:
+    label: Campaign Volume
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for campaign volume.
+    requires_skus:
+    - campaign
+    min_role: agent
+  click_rate:
+    label: Click Rate
+    kind: count
+    scope: org
+    dims:
+    - channel
+    - campaign_name
+    when: Click-through rate for a period.
+    requires_skus:
+    - campaign
+    min_role: agent
+    channel_scoped: true
+  clicked_touch_count:
+    label: Clicked Touch Count
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for clicked touch count.
+    requires_skus:
+    - campaign
+    min_role: agent
+  complaint_share_of_suppressions:
+    label: Complaint Share Of Suppressions
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for complaint share of suppressions.
+    requires_skus:
+    - campaign
+    min_role: agent
+  complaint_suppressed_count:
+    label: Complaint Suppressed Count
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for complaint suppressed count.
+    requires_skus:
+    - campaign
+    min_role: agent
+  delivery_rate:
+    label: Delivery Rate
+    kind: count
+    scope: org
+    dims:
+    - channel
+    - campaign_name
+    when: "Send proxy (sent \xF7 touches) for a period \u2014 no delivered status\
+      \ in source."
+    requires_skus:
+    - campaign
+    min_role: agent
+    channel_scoped: true
+  engaged_contact_count:
+    label: Engaged Contact Count
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for engaged contact count.
+    requires_skus:
+    - campaign
+    min_role: agent
+  failed_batch_count:
+    label: Failed Batch Count
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for failed batch count.
+    requires_skus:
+    - campaign
+    min_role: agent
+  failed_touch_count:
+    label: Failed Touch Count
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for failed touch count.
+    requires_skus:
+    - campaign
+    min_role: agent
+  failure_rate:
+    label: Failure Rate
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for failure rate.
+    requires_skus:
+    - campaign
+    min_role: agent
+  frequency_per_contact:
+    label: Frequency Per Contact
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for frequency per contact.
+    requires_skus:
+    - campaign
+    min_role: agent
+  open_rate:
+    label: Open Rate
+    kind: count
+    scope: org
+    dims:
+    - channel
+    - campaign_name
+    when: Email/message open rate for a period.
+    requires_skus:
+    - campaign
+    min_role: agent
+    channel_scoped: true
+  opened_touch_count:
+    label: Opened Touch Count
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for opened touch count.
+    requires_skus:
+    - campaign
+    min_role: agent
+  rejected_template_count:
+    label: Rejected Template Count
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for rejected template count.
+    requires_skus:
+    - campaign
+    min_role: agent
+  sent_touch_count:
+    label: Sent Touch Count
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for sent touch count.
+    requires_skus:
+    - campaign
+    min_role: agent
+  suppressed_email_count:
+    label: Suppressed Email Count
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for suppressed email count.
+    requires_skus:
+    - campaign
+    min_role: agent
+  suppression_rate:
+    label: Suppression Rate
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for suppression rate.
+    requires_skus:
+    - campaign
+    min_role: agent
+  template_approval_rate:
+    label: Template Approval Rate
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for template approval rate.
+    requires_skus:
+    - campaign
+    min_role: agent
+  template_count:
+    label: Template Count
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for template count.
+    requires_skus:
+    - campaign
+    min_role: agent
+  touch_count:
+    label: Touch Count
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for touch count.
+    requires_skus:
+    - campaign
+    min_role: agent
+  unique_contacts_touched:
+    label: Unique Contacts Touched
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for unique contacts touched.
+    requires_skus:
+    - campaign
+    min_role: agent
+  unsubscribe_rate:
+    label: Unsubscribe Rate
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for unsubscribe rate.
+    requires_skus:
+    - campaign
+    min_role: agent
+  unsubscribed_contact_count:
+    label: Unsubscribed Contact Count
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for unsubscribed contact count.
+    requires_skus:
+    - campaign
+    min_role: agent
+  variant_click_rate:
+    label: Variant Click Rate
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for variant click rate.
+    requires_skus:
+    - campaign
+    min_role: agent
+  variant_clicked_touch_count:
+    label: Variant Clicked Touch Count
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for variant clicked touch count.
+    requires_skus:
+    - campaign
+    min_role: agent
+  variant_open_rate:
+    label: Variant Open Rate
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for variant open rate.
+    requires_skus:
+    - campaign
+    min_role: agent
+  variant_opened_touch_count:
+    label: Variant Opened Touch Count
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for variant opened touch count.
+    requires_skus:
+    - campaign
+    min_role: agent
+  variant_sent_touch_count:
+    label: Variant Sent Touch Count
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for variant sent touch count.
+    requires_skus:
+    - campaign
+    min_role: agent
+  variant_touch_count:
+    label: Variant Touch Count
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for variant touch count.
+    requires_skus:
+    - campaign
+    min_role: agent

@@ -1,0 +1,192 @@
+/**
+ * Partner dashboard — overview chrome (KPIs + recent referrals panel).
+ * Reuses admin-users primitives; canvas #F4F4F6 · surfaces #FFFFFF · border #C9C9CF.
+ */
+
+.app-shell--partner .app-content:has(.partner-dashboard-page) {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.app-shell--partner .app-content:has(.partner-dashboard-page) > .customer-portal-context {
+  flex: 0 0 auto;
+  margin-bottom: 16px;
+}
+
+.admin-users-page.partner-dashboard-page {
+  --au-canvas: #f4f4f6;
+  background: #f4f4f6;
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+}
+
+.partner-dashboard-page__header {
+  align-items: flex-start;
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.partner-dashboard-page__header .page-header__copy,
+.partner-dashboard-page__header .admin-users-page__subtitle {
+  max-width: 640px;
+}
+
+.partner-dashboard-page .admin-users-kpi-grid.partner-dashboard-kpi {
+  flex: 0 0 auto;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  height: max-content;
+  max-width: 640px;
+}
+
+.partner-dashboard-page .admin-users-kpi-card__icon.partner-dashboard-kpi__icon--active {
+  background: color-mix(in srgb, #098f6a 12%, #ffffff);
+  color: #098f6a;
+}
+
+.partner-dashboard-page .admin-users-kpi-card__icon.partner-dashboard-kpi__icon--awaiting {
+  background: color-mix(in srgb, #e0b73a 14%, #ffffff);
+  color: #e0b73a;
+}
+
+.partner-dashboard-panel {
+  min-height: 0;
+}
+
+/* Recent referrals — data columns only; do not use admin sticky 56px Actions column */
+.partner-dashboard-page .partner-dashboard-panel .admin-users-panel__section-header,
+.partner-dashboard-page .partner-dashboard-panel .admin-users-panel__table-wrap {
+  padding-inline: 20px;
+}
+
+.partner-dashboard-page .admin-users-table.partner-dashboard-table th:last-child,
+.partner-dashboard-page .admin-users-table.partner-dashboard-table td:last-child {
+  box-shadow: none;
+  max-width: none;
+  min-width: 7rem;
+  overflow: hidden;
+  position: static;
+  right: auto;
+  text-overflow: ellipsis;
+  width: 14%;
+  z-index: auto;
+}
+
+.partner-dashboard-view-all {
+  min-height: 40px;
+}
+
+.partner-dashboard-view-all:disabled,
+.partner-dashboard-view-all[aria-disabled="true"] {
+  background: var(--bg-disabled, #f1f3f5);
+  border-color: var(--border-default, #d2d3d4);
+  color: var(--text-disabled, #8b8d92);
+  cursor: not-allowed;
+  opacity: 1;
+  pointer-events: none;
+}
+
+.partner-dashboard-table__company {
+  color: #0b0b10;
+  display: block;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.partner-dashboard-page .partner-dashboard-table th:nth-child(1),
+.partner-dashboard-page .partner-dashboard-table td:nth-child(1) {
+  width: 22%;
+}
+
+.partner-dashboard-page .partner-dashboard-table th:nth-child(2),
+.partner-dashboard-page .partner-dashboard-table td:nth-child(2) {
+  width: 16%;
+}
+
+.partner-dashboard-page .partner-dashboard-table th:nth-child(3),
+.partner-dashboard-page .partner-dashboard-table td:nth-child(3) {
+  width: 14%;
+}
+
+.partner-dashboard-page .partner-dashboard-table th:nth-child(4),
+.partner-dashboard-page .partner-dashboard-table td:nth-child(4) {
+  width: 18%;
+}
+
+.partner-dashboard-page .partner-dashboard-table th:nth-child(5),
+.partner-dashboard-page .partner-dashboard-table td:nth-child(5) {
+  width: 16%;
+}
+
+.partner-dashboard-page .partner-dashboard-table th:nth-child(6),
+.partner-dashboard-page .partner-dashboard-table td:nth-child(6) {
+  width: 14%;
+}
+
+.partner-dashboard-empty-state {
+  align-content: center;
+  align-items: center;
+  display: grid;
+  flex: 1 1 auto;
+  gap: 12px;
+  grid-auto-rows: max-content;
+  justify-items: center;
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.partner-dashboard-empty-state h3 {
+  color: #0b0b10;
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.partner-dashboard-empty-state p {
+  color: #5e5e69;
+  font-size: 14px;
+  margin: 0;
+  max-width: 360px;
+}
+
+.partner-dashboard-empty-state svg {
+  color: #5e5e69;
+}
+
+@media (max-width: 900px) {
+  .partner-dashboard-page .admin-users-kpi-grid.partner-dashboard-kpi {
+    grid-template-columns: 1fr;
+    max-width: none;
+  }
+}
+
+@media (max-height: 720px) {
+  .partner-dashboard-empty-state {
+    padding: 32px 16px;
+  }
+
+  .partner-dashboard-page__header .admin-users-page__subtitle {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+}
+
+@media (max-width: 1280px), (max-height: 720px) {
+  .partner-dashboard-page .partner-dashboard-table th:nth-child(4),
+  .partner-dashboard-page .partner-dashboard-table td:nth-child(4),
+  .partner-dashboard-page .partner-dashboard-table th:nth-child(6),
+  .partner-dashboard-page .partner-dashboard-table td:nth-child(6) {
+    display: none;
+  }
+}

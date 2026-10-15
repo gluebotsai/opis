@@ -1,0 +1,89 @@
+# Module: interaction
+module: interaction
+layer: domain
+depends_on: [core]
+usecase: >
+  Conversation / call / chat as a first-class Interaction. Inbox, support bot,
+  closure, channel adaptation, Hub spoke-query.
+
+classes:
+  - id: Conversation
+    extends: Event
+    definition: One customer touch on a channel (voice, web, email, social).
+    properties: [interactionId, direction]
+    classified_by: [channel, intent, conversation.direction]
+    relations:
+      with: Contact
+      handledBy: Agent
+      inQueue: Queue
+      mayCreate: Ticket
+      hasIntent: Intent
+      hasSentiment: Sentiment
+
+  - id: Conversation
+    extends: Conversation
+    definition: Threaded messaging or voice session in inbox / bot.
+    properties: [conversationId]
+    relations:
+      currentContact: Contact
+
+  - id: Intent
+    definition: Classified reason for the turn or session.
+    classified_by: [intent]
+    properties: [code, confidence]
+
+  - id: Disposition
+    definition: Outcome code at closure.
+    classified_by: [disposition]
+    relations:
+      of: Conversation
+
+  - id: WrapUp
+    definition: Agent wrap-up notes and suggested disposition.
+    relations:
+      of: Conversation
+      uses: Disposition
+
+relations:
+  - { from: Conversation, type: WITH, to: Contact }
+  - { from: Conversation, type: WITH, to: Contact }
+  - { from: Conversation, type: handled_by, to: Agent }
+  - { from: Conversation, type: IN_QUEUE, to: Queue }
+  - { from: Conversation, type: MAY_CREATE, to: Ticket }
+  - { from: Conversation, type: about, to: WorkItem }
+  - { from: Conversation, type: has_INTENT, to: Intent }
+
+actions:
+  - id: action.get_conversation_context
+    operates_on: [Conversation]
+    mutates: false
+    maps_to_tools: [get_conversation_context]
+
+  - id: action.suggest_reply
+    operates_on: [Conversation]
+    mutates: false
+    definition: Draft text for the human agent; does not send.
+    maps_to_tools: [suggest_reply]
+
+  - id: action.summarize_conversation
+    operates_on: [Conversation]
+    mutates: false
+    maps_to_tools: [summarize_conversation]
+
+  - id: action.handoff
+    operates_on: [Conversation]
+    requires: [customerRequestedOrPolicy]
+    definition: Transfer to a live workforce agent (not Hub, not route_to_agent).
+    maps_to_tools: [recommend_live_agent_handoff, LIVE_AGENT]
+
+  - id: action.route_to_specialist
+    operates_on: [Conversation]
+    definition: LLM-to-LLM specialist switch (coworker / Lola). Not a customer handoff.
+    maps_to_tools: [route_to_agent]
+
+  - id: action.adapt_channel
+    operates_on: [Conversation]
+    mutates: false
+    definition: Adjust style/latency for the active channel term.
+
+metric_ids: []

@@ -1,0 +1,80 @@
+# Module: hub
+module: hub
+layer: product
+depends_on: [core]
+usecase: >
+  Cross-spoke orchestration. Super Agent and anomaly/monitoring when local skills
+  are not enough. Hub does not talk to end customers; it returns suggestedAgentReply.
+
+classes:
+  - id: Spoke
+    definition: Product capability plane. Values include contact_centre, ticketing, crm, campaign, hub.
+    properties: [id]
+
+  - id: Skill
+    definition: Executable A2A / MCP capability on a spoke.
+    properties: [skillId]
+    relations:
+      onSpoke: Spoke
+
+  - id: HubRequest
+    definition: spoke-query, run-pipeline, or leftover-work inbound to Hub.
+    properties: [requestId, query]
+    classified_by: [hub.scenario]
+    relations:
+      aboutCustomer: Contact
+      aboutInteraction: Conversation
+      fromSpoke: Spoke
+
+  - id: Strategy
+    definition: Validated Hub plan with audit ids.
+    properties: [strategyId, primaryObjective]
+    relations:
+      produces: DispatchAction
+      forRequest: HubRequest
+
+  - id: DispatchAction
+    definition: Allowlisted work item Hub sends back to a spoke.
+    properties: [actionType, priority, timing]
+    classified_by: [action.family, channel]
+    relations:
+      targetsSpoke: Spoke
+      usesSkill: Skill
+      forCustomer: Contact
+
+relations:
+  - { from: HubRequest, type: about, to: Contact }
+  - { from: HubRequest, type: about, to: Conversation }
+  - { from: Anomaly, type: triggers, to: HubRequest }
+  - { from: Strategy, type: PRODUCES, to: DispatchAction }
+  - { from: DispatchAction, type: targets, to: Spoke }
+  - { from: DispatchAction, type: USES, to: Skill }
+
+actions:
+  - id: action.spoke_query
+    operates_on: [HubRequest]
+    requires: [organizationId]
+    maps_to_tools: [spoke-query]
+    definition: Interactive escalation with customer + question.
+
+  - id: action.run_pipeline
+    operates_on: [Anomaly, HubRequest]
+    maps_to_tools: [run-pipeline]
+    definition: Ops anomaly / Kafka alert path.
+
+  - id: action.dispatch
+    operates_on: [DispatchAction]
+    definition: Hub → spoke execution. CC maps actionType to cc.* skills.
+
+# Hub actionType allowlist relevant to CC (full catalog is Hub-owned)
+dispatch_action_types:
+  service: [escalate, assign, notify, open_task, create_ticket, service_recovery, service_intervention]
+  engagement: [callback, bot_popup, send_email, call, schedule_call]
+  cc_skill_map:
+    escalate: [cc.escalation.acknowledge, cc.monitoring.escalation.read]
+    notify: [cc.monitoring.snapshot.read]
+    open_task: [cc.anomaly.investigate, cc.analytics.root-cause.analyze]
+    assign: [cc.task.accept, cc.task.list]
+    callback: [cc.callback.create]
+    service_recovery: [cc.conversation.context.read, cc.conversation.summarize]
+    bot_popup: [cc.webchat.proactive-engagement.trigger]

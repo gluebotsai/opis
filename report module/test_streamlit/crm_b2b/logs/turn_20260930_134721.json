@@ -1,0 +1,82 @@
+{
+  "question": "how many agents are there",
+  "answer": "There are 0 agents.",
+  "trace": {
+    "question": "how many agents are there",
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1015,
+      "role": "admin"
+    },
+    "model": "worktual-gemma",
+    "tasks": [
+      {
+        "status": "ok",
+        "store": "sql",
+        "sql": "WITH rpt_users AS (\nSELECT src.id, src.organization_id, src.name, src.first_name, src.last_name, src.work_email, src.role_name, src.is_active FROM (\nSELECT \n  u.id,\n  u.organization_id,\n  u.first_name || ' ' || COALESCE(u.last_name, '') AS name,\n  u.first_name,\n  u.last_name,\n  u.work_email,\n  r.name AS role_name,\n  (u.status = 'active') AS is_active\nFROM accounts.setup_users u\nJOIN accounts.setup_user_product_access upa ON upa.user_id = u.id AND upa.product_id = 'crm'\nJOIN accounts.setup_roles r ON r.id = upa.role_id\nWHERE u.organization_id = %(_org_id)s\n) src WHERE TRUE\n)\nSELECT COUNT(*) FROM rpt_users AS users WHERE role_name ILIKE '%%agent%%' LIMIT 500",
+        "views": [
+          "users"
+        ],
+        "guard_notes": [
+          "row cap 500 applied"
+        ],
+        "bound_params": {
+          "_org_id": 1003,
+          "_user_id": 1015,
+          "user_id": 1015,
+          "organization_id": 1003,
+          "org_id": 1003,
+          "tenant_id": 1003,
+          "current_user_id": 1015
+        },
+        "rows": [
+          {
+            "count": 0
+          }
+        ],
+        "attempts": [
+          {
+            "raw": "SELECT COUNT(*) FROM rpt.users WHERE role_name ILIKE '%agent%'",
+            "call": {
+              "kind": "run_sql",
+              "sql": "SELECT COUNT(*) FROM rpt.users WHERE role_name ILIKE '%agent%'"
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "time_status": "all_time",
+        "tool": "run_sql",
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": null,
+          "goal": "Count the number of agents",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "kpi",
+          "depends_on": []
+        }
+      }
+    ],
+    "domain_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"quick\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": null,\n      \"goal\": \"Count the number of agents\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"answer_type\": \"kpi\",\n      \"depends_on\": []\n    }\n  ]\n}\n```",
+    "plan": {
+      "kind": "plan",
+      "depth": "quick",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": null,
+          "goal": "Count the number of agents",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "kpi",
+          "depends_on": []
+        }
+      ]
+    },
+    "facts": "time_requested: all time\nperiod_applied: overall (no date filter, UTC)\ntime_status: all_time\nRESULT: count = 0",
+    "grounded": true,
+    "briefing_raw": "There are 0 agents."
+  }
+}

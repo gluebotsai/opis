@@ -1,0 +1,46 @@
+module: metrics_campaign
+layer: domain
+depends_on:
+- core
+usecase: Certified MetricFlow ids for campaign. Select for reporting agents only.
+metric_ids:
+- campaign_volume
+- audience_reached
+- touch_count
+- sent_touch_count
+- opened_touch_count
+- clicked_touch_count
+- failed_touch_count
+- unique_contacts_touched
+- template_count
+- approved_template_count
+- engaged_contact_count
+- unsubscribed_contact_count
+- suppressed_email_count
+- bounce_suppressed_count
+- complaint_suppressed_count
+- avg_planned_duration_seconds
+- avg_attempt_count
+- avg_seconds_to_open
+- avg_seconds_open_to_click
+- variant_touch_count
+- variant_sent_touch_count
+- variant_opened_touch_count
+- variant_clicked_touch_count
+- batch_count
+- failed_batch_count
+- avg_batch_processing_seconds
+- rejected_template_count
+- delivery_rate
+- open_rate
+- click_rate
+- failure_rate
+- template_approval_rate
+- unsubscribe_rate
+- suppression_rate
+- bounce_share_of_suppressions
+- complaint_share_of_suppressions
+- batch_failure_rate
+- variant_open_rate
+- variant_click_rate
+- frequency_per_contact

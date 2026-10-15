@@ -1,0 +1,64 @@
+{
+  "question": "list my deals",
+  "answer": "\n\nNo owned deal list was returned for overall (no date filter, UTC). The SQL executor failed before producing rows, so no deal names or counts are available.",
+  "trace": {
+    "question": "list my deals",
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1017,
+      "role": "sales_rep"
+    },
+    "model": "worktual-qwen-27B",
+    "tasks": [
+      {
+        "status": "error",
+        "error_type": "NO_TOOL",
+        "error": "SQL executor did not return run_kpi JSON or a SELECT/WITH statement.",
+        "raw": null,
+        "attempts": [
+          {
+            "raw": null,
+            "call": {
+              "kind": "none"
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "rows": [],
+        "sql": "",
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": null,
+          "goal": "List deals owned by the rep",
+          "time": "all time",
+          "scope": "own",
+          "dimension": null,
+          "answer_type": "list",
+          "depends_on": []
+        }
+      }
+    ],
+    "domain_raw": "\n\n{\n  \"kind\": \"plan\",\n  \"depth\": \"quick\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": null,\n      \"goal\": \"List deals owned by the rep\",\n      \"time\": \"all time\",\n      \"scope\": \"own\",\n      \"dimension\": null,\n      \"answer_type\": \"list\",\n      \"depends_on\": []\n    }\n  ]\n}",
+    "plan": {
+      "kind": "plan",
+      "depth": "quick",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": null,
+          "goal": "List deals owned by the rep",
+          "time": "all time",
+          "scope": "own",
+          "dimension": null,
+          "answer_type": "list",
+          "depends_on": []
+        }
+      ]
+    },
+    "facts": "EXECUTION_ERROR\ntime_requested: all time\nperiod_applied: overall (no date filter, UTC)\nerror_type: NO_TOOL\nmessage: SQL executor did not return run_kpi JSON or a SELECT/WITH statement.\ntask_goal: List deals owned by the rep",
+    "grounded": true,
+    "briefing_raw": "\n\nNo owned deal list was returned for overall (no date filter, UTC). The SQL executor failed before producing rows, so no deal names or counts are available."
+  }
+}

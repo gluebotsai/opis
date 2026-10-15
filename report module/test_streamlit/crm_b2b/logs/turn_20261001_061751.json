@@ -1,0 +1,21 @@
+{
+  "question": "hi",
+  "answer": "Domain did not return a plan. The raw reply is in the trace.",
+  "trace": {
+    "question": "hi",
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1017,
+      "role": "sales_manager"
+    },
+    "model": "worktual-gemma",
+    "tasks": [],
+    "domain_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"quick\",\n  \"tasks\": []\n}\n```",
+    "plan": {
+      "kind": "plan",
+      "depth": "quick",
+      "tasks": []
+    },
+    "domain_error": "Domain reply had no tasks array."
+  }
+}

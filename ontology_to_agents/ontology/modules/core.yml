@@ -1,0 +1,90 @@
+# Module: core (foundation) — always included
+module: core
+layer: foundation
+usecase: >
+  Industry-neutral spine. Every agent slice starts here. Tenants only change
+  labels (Patient / Client / Buyer), not these ids.
+
+classes:
+  - id: Party
+    definition: Any identifiable actor — a person or an organization.
+    properties: [id, displayName, identifiers]
+    prompt: false
+
+  - id: Person
+    extends: Party
+    definition: Individual human (customer contact or employee).
+    properties: [givenName, familyName, email, phone]
+
+  - id: Organization
+    extends: Party
+    definition: Company or tenant org. Worktual customer-business, not a spoke.
+    properties: [legalName, industry, businessType, hours, address]
+    classified_by: [industry, businessType]
+
+  - id: Contact
+    extends: Party
+    definition: Party the tenant does business with. Canonical type for Patient/Client/Buyer.
+    properties: [cdpId, lifecycleStage]
+    classified_by: [lifecycle]
+    relations:
+      hasConsent: Consent
+      hasPreference: Preference
+      identifiedBy: Identity
+      belongsToOrg: Organization
+
+  - id: Agent
+    extends: Person
+    definition: Staff user in the tenant (admin, supervisor, live agent).
+    classified_by: [staff.role]
+    relations:
+      worksFor: Organization
+
+  - id: Consent
+    definition: Permission to process, record, or contact on a scope.
+    properties: [scope, granted, capturedAt]
+    # scopes: support | marketing | recording
+
+  - id: Preference
+    definition: Customer or org preference (language, channel, hours).
+    properties: [key, value]
+    prompt: false
+
+  - id: Channel
+    definition: Communication medium. Values come from taxonomy.channel.
+    classified_by: [channel]
+
+  - id: Event
+    definition: Something that happened at a time.
+    properties: [occurredAt, source]
+    prompt: false
+
+  - id: WorkItem
+    definition: Trackable unit of work (ticket, task, deal).
+    properties: [status, priority, dueAt]
+    prompt: false
+
+  - id: Location
+    properties: [timezone, country, region]
+    prompt: false
+
+relations:
+  - { from: Person, type: works_for, to: Organization }
+  - { from: Contact, type: has_consent, to: Consent }
+  - { from: Contact, type: has_preference, to: Preference }
+  - { from: Contact, type: belongs_to, to: Organization }
+  - { from: Agent, type: works_for, to: Organization }
+
+actions:
+  - id: action.identify
+    operates_on: [Contact, Person]
+    requires: []
+    definition: Resolve a party from channel identity or stated fields.
+
+  - id: action.route_to_specialist
+    operates_on: []
+    definition: Super/domain router — LLM-to-LLM specialist handoff. Not live-agent transfer.
+
+labels:
+  # Industry overlays change these in tenant semantic — defaults:
+  Contact: Customer

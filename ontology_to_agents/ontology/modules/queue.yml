@@ -1,0 +1,74 @@
+# Module: queue
+module: queue
+layer: product
+depends_on: [core, workforce]
+usecase: >
+  Queue Management Agent create/update/delete with draft+confirm.
+  Others may read Queue as routing context (do not select this module just to name a queue).
+
+classes:
+  - id: Queue
+    definition: Routing destination with staffing, hours, and skills.
+    properties: [name, description]
+    classified_by: [queue.status]
+    relations:
+      team: Team
+      hours: BusinessHours
+      hasShift: Shift
+      staffedBy: Agent
+
+  - id: Team
+    definition: Staff grouping — CC queue staffing and Ticketing ticket ownership share this type.
+    properties: [name, description]
+
+  - id: BusinessHours
+    definition: Named hours calendar for a queue.
+    properties: [name, timezone]
+
+  - id: Shift
+    definition: Staffing window on a queue. At least one required to publish.
+    properties: [name]
+    classified_by: [staffingMode]
+    relations:
+      agents: Agent
+      agentChannels: Channel
+
+  - id: QueueDraft
+    definition: Staged queue create before confirmation.
+    properties: [mode, nextField]
+
+  - id: RoutingSkill
+    definition: Queue or agent skill used for eligibility (list_eligible_agents).
+    properties: [name]
+
+relations:
+  - { from: Queue, type: owned_by_team, to: Team }
+  - { from: Queue, type: has_HOURS, to: BusinessHours }
+  - { from: Queue, type: has_SHIFT, to: Shift }
+  - { from: Shift, type: staffed_by, to: Agent }
+  - { from: Queue, type: REQUIRES_SKILL, to: RoutingSkill }
+
+actions:
+  - id: action.list_queues
+    operates_on: [Queue]
+    mutates: false
+    maps_to_tools: [list_queues, list_teams, list_business_hours]
+
+  - id: action.stage_queue_draft
+    operates_on: [QueueDraft]
+    maps_to_tools: [stage_queue_draft]
+
+  - id: action.create_queue
+    operates_on: [Queue]
+    requires: [draftComplete, userConfirmed]
+    maps_to_tools: [create_queue]
+
+  - id: action.update_queue_status
+    operates_on: [Queue]
+    requires: [userConfirmed]
+    maps_to_tools: [update_queue_status]
+
+  - id: action.delete_queue
+    operates_on: [Queue]
+    requires: [userConfirmed]
+    maps_to_tools: [delete_queue]

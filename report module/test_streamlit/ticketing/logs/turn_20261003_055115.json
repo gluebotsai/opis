@@ -1,0 +1,103 @@
+{
+  "question": "which channel we can get more  tickets?",
+  "answer": "The total ticket count across all channels is **20,050**. Email is the most frequent channel with **7,322** tickets, followed by Chat with **5,379**, Web with **4,177**, Phone with **3,171**, and Webchat with **1**.",
+  "trace": {
+    "question": "which channel we can get more  tickets?",
+    "identity": {
+      "organization_id": 1012,
+      "user_id": 1038,
+      "role": "admin",
+      "queue_ids": [
+        1060,
+        1061,
+        1062,
+        1063,
+        1064,
+        1065,
+        1066,
+        1071,
+        1072,
+        1073,
+        1074,
+        1075,
+        1076
+      ]
+    },
+    "model": "worktual-gemma",
+    "tasks": [
+      {
+        "status": "ok",
+        "store": "sql",
+        "kpi_id": "ticket_count",
+        "sql": "WITH base_ticket AS (\n-- Shared ticket grain. Python inlines this as the base_ticket CTE body.\n-- No aggregations. Status rules use tickets.status only. Never is_terminal.\nSELECT\n    t.id AS ticket_id,\n    t.organization_id,\n    t.ticket_number,\n    t.status,\n    t.priority,\n    t.channel,\n    t.category,\n    t.customer_id,\n    t.customer_name,\n    t.assignee_id,\n    t.assignee_name,\n    t.resolver_id,\n    t.resolver_name,\n    t.queue_id,\n    t.queue_name,\n    t.created_by_id,\n    t.created_by_name,\n    t.due_at,\n    t.first_response_at,\n    t.resolved_at,\n    t.csat_score,\n    t.csat_rated_at,\n    t.created_at,\n    t.updated_at,\n    sp.resolution_hours AS sla_resolution_hours,\n    sp.first_response_hours AS sla_first_response_hours,\n    EXTRACT(EPOCH FROM (t.resolved_at - t.created_at)) / 3600.0 AS resolution_hours,\n    EXTRACT(EPOCH FROM (t.first_response_at - t.created_at)) / 3600.0 AS first_response_hours,\n    EXTRACT(EPOCH FROM (t.resolved_at - t.due_at)) / 3600.0 AS resolution_variance_hours,\n    EXTRACT(EPOCH FROM (COALESCE(t.resolved_at, NOW()) - t.due_at)) / 3600.0 AS overdue_hours_so_far,\n    (t.status = 'Open') AS is_status_open,\n    (t.status = 'Pending') AS is_status_pending_literal,\n    (t.status = 'Reopened') AS is_status_reopened,\n    (t.status = 'Overdue') AS is_status_overdue,\n    (t.status = 'Resolved') AS is_status_resolved,\n    (t.status = 'Closed') AS is_status_closed,\n    (t.status NOT IN ('Closed', 'Resolved')) AS is_pending_generic,\n    (t.assignee_id IS NULL) AS is_unassigned,\n    (t.priority = 'high') AS is_high_priority,\n    (t.due_at IS NOT NULL) AS has_resolution_due,\n    (sp.first_response_hours IS NOT NULL) AS has_first_response_policy,\n    (\n        t.resolved_at IS NOT NULL\n        AND t.due_at IS NOT NULL\n        AND t.resolved_at <= t.due_at\n    ) AS resolution_sla_met,\n    (\n        t.due_at IS NOT NULL\n        AND (\n            (t.resolved_at IS NOT NULL AND t.resolved_at > t.due_at)\n            OR (\n                t.status NOT IN ('Closed', 'Resolved')\n                AND NOW() > t.due_at\n            )\n            OR (\n                t.status IN ('Closed', 'Resolved')\n                AND t.resolved_at IS NULL\n                AND NOW() > t.due_at\n            )\n        )\n    ) AS resolution_sla_missed,\n    (\n        t.due_at IS NOT NULL\n        AND t.status NOT IN ('Closed', 'Resolved')\n        AND NOW() <= t.due_at\n        AND EXTRACT(EPOCH FROM (t.due_at - NOW()))\n            <= 0.20 * EXTRACT(EPOCH FROM (t.due_at - t.created_at))\n        AND EXTRACT(EPOCH FROM (t.due_at - t.created_at)) > 0\n    ) AS resolution_at_risk,\n    (t.due_at IS NULL) AS resolution_no_sla,\n    (\n        t.first_response_at IS NOT NULL\n        AND sp.first_response_hours IS NOT NULL\n        AND t.first_response_at <= t.created_at + (sp.first_response_hours * INTERVAL '1 hour')\n    ) AS first_response_sla_met,\n    (\n        sp.first_response_hours IS NOT NULL\n        AND (\n            (\n                t.first_response_at IS NOT NULL\n                AND t.first_response_at > t.created_at + (sp.first_response_hours * INTERVAL '1 hour')\n            )\n            OR (\n                t.first_response_at IS NULL\n                AND NOW() > t.created_at + (sp.first_response_hours * INTERVAL '1 hour')\n            )\n        )\n    ) AS first_response_sla_missed,\n    (\n        t.first_response_at IS NULL\n        AND sp.first_response_hours IS NOT NULL\n        AND t.status NOT IN ('Closed', 'Resolved')\n        AND NOW() <= t.created_at + (sp.first_response_hours * INTERVAL '1 hour')\n        AND EXTRACT(EPOCH FROM (\n            (t.created_at + (sp.first_response_hours * INTERVAL '1 hour'))\n            - NOW()\n        )) <= 0.20 * (sp.first_response_hours * 3600.0)\n    ) AS first_response_at_risk,\n    (sp.first_response_hours IS NULL) AS first_response_no_sla\nFROM ticketing.tickets t\nLEFT JOIN LATERAL (\n    SELECT sp.resolution_hours, sp.first_response_hours\n    FROM ticketing.sla_policies sp\n    WHERE sp.organization_id = t.organization_id\n      AND sp.priority = t.priority\n      AND sp.active = true\n    ORDER BY sp.id DESC\n    LIMIT 1\n) sp ON true\nWHERE t.organization_id = 1012\n\n)\nSELECT\n    channel AS channel,\n    COUNT(*)::bigint AS ticket_count\nFROM base_ticket\nWHERE TRUE\n  AND TRUE\n  AND TRUE\n  AND TRUE\nGROUP BY channel ORDER BY 2 DESC NULLS LAST\n\n",
+        "rows": [
+          {
+            "channel": "Email",
+            "ticket_count": 7322
+          },
+          {
+            "channel": "Chat",
+            "ticket_count": 5379
+          },
+          {
+            "channel": "Web",
+            "ticket_count": 4177
+          },
+          {
+            "channel": "Phone",
+            "ticket_count": 3171
+          },
+          {
+            "channel": "Webchat",
+            "ticket_count": 1
+          }
+        ],
+        "attempts": [
+          {
+            "raw": "```json\n{\"tool\": \"run_kpi\", \"kpi_id\": \"ticket_count\", \"dimension\": \"channel\"}\n```",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "ticket_count",
+              "dimension": "channel"
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "time_status": "all_time",
+        "tool": "run_kpi",
+        "requested_kpi": "ticket_count",
+        "requested_dimension": "channel",
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "ticket_count",
+          "dimension": "channel",
+          "goal": "Ticket count by channel to identify highest volume",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "breakdown"
+        }
+      }
+    ],
+    "domain_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"quick\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"ticket_count\",\n      \"dimension\": \"channel\",\n      \"goal\": \"Ticket count by channel to identify highest volume\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"answer_type\": \"breakdown\"\n    }\n  ]\n}\n```",
+    "plan": {
+      "kind": "plan",
+      "depth": "quick",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "ticket_count",
+          "dimension": "channel",
+          "goal": "Ticket count by channel to identify highest volume",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "breakdown"
+        }
+      ]
+    },
+    "facts": "window: overall (no date filter, UTC)\nRESULT: 5 group(s)\ngroup_by: channel\ntotal_ticket_count: 20050\n  Email: 7322\n  Chat: 5379\n  Web: 4177\n  Phone: 3171\n  Webchat: 1",
+    "grounded": true,
+    "briefing_raw": "The total ticket count across all channels is **20,050**. Email is the most frequent channel with **7,322** tickets, followed by Chat with **5,379**, Web with **4,177**, Phone with **3,171**, and Webchat with **1**."
+  }
+}

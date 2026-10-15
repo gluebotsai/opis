@@ -1,0 +1,60 @@
+{
+  "turn_id": "2e9874f9",
+  "timestamp": "2026-10-09T06:29:15.362058+00:00",
+  "question": "what is the avergae handle time for all the agents",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1016,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Average handle time for all agents</strong></p>\n<p>The average handle time for all time is <strong>62.40 minutes</strong>.</p>\n<p>Would you like to see this broken down by channel?</p>",
+  "card": "card: kpi r1",
+  "facts": "result_id: r1\nwindow: all time\nkpi: avg_handle_time\ncertified: true\nunit: minutes\ntask_goal: Calculate the average handle time for all handled conversations across all agents.\nanswer_type: number\nrow_count: 1\nrow 1: avg_handle_time=62.40",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1016,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "what is the avergae handle time for all the agents",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants to know the average handle time for all agents across all time.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Calculate the average handle time for all handled conversations across all agents.",
+          "time": "all time",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "avg_handle_time",
+        "row_count": 1
+      }
+    ],
+    "facts": "result_id: r1\nwindow: all time\nkpi: avg_handle_time\ncertified: true\nunit: minutes\ntask_goal: Calculate the average handle time for all handled conversations across all agents.\nanswer_type: number\nrow_count: 1\nrow 1: avg_handle_time=62.40",
+    "grounded": true,
+    "card": "card: kpi r1"
+  },
+  "error": null
+}

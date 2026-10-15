@@ -1,0 +1,260 @@
+# QA / local full stack — backends + web frontend.
+# Usage (from repo root):
+#   docker compose -f docker/docker-compose.qa.yml --env-file .env up -d --build
+#
+# Set VITE_* and CORS_ORIGINS in .env for your public URL (see docs/deploy/build.md).
+# Ports 3000–3002, 5173, 8000 are exposed on all interfaces for IP-based QA access.
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: worktual-redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  kafka:
+    image: apache/kafka:3.8.0
+    container_name: worktual-kafka
+    restart: unless-stopped
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_NUM_PARTITIONS: 3
+      KAFKA_LOG_RETENTION_HOURS: 168
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 || exit 1",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  cc-core:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.node
+      args:
+        SERVICE_PATH: apps/cc-core
+    container_name: worktual-cc-core
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    environment:
+      PORT: 3000
+      REDIS_URL: ${REDIS_URL}
+      CAMPAIGN_ACD_CHANNEL: ${CAMPAIGN_ACD_CHANNEL:-CAMPAIGN_ACD_QA_70}
+      CAMPAIGN_ACD_REDIS_URL: ${CAMPAIGN_ACD_REDIS_URL:-}
+      TRANSCRIPT_REDIS_URL: ${TRANSCRIPT_REDIS_URL}
+      CCAAS_AUDIO_CC_CALL_STREAM: ${CCAAS_AUDIO_CC_CALL_STREAM:-CCAAS_AUDIO_CC_CALL_STREAM_QA}
+      NLP_CALL_SUB: ${NLP_CALL_SUB:-NLP_CALL_SUB}
+      NLP_CALL_PUB: ${NLP_CALL_PUB:-NLP_CALL_PUB}
+      KAFKA_BROKERS: kafka:9092
+      CHAT_SERVICE_URL: http://chat-service:3002
+      SOCIAL_SERVICE_URL: http://social-service:3004
+      NLP_SERVICE_URL: http://nlp:8000
+      CORS_ORIGINS: ${CORS_ORIGINS:-https://rebuild-ccaas.worktual.com}
+      API_V1_PUBLIC_BASE: ${CC_CORE_API_V1_PUBLIC_BASE:-}
+      PUBLIC_APP_URL: ${PUBLIC_APP_URL:-https://rebuild-ccaas.worktual.com}
+      CC_CORE_PUBLIC_URL: ${CC_CORE_PUBLIC_URL:-https://rebuild-ccaas-api.worktual.com/cc-core-api}
+      SOCKET_IO_PATH: ${SOCKET_IO_PATH:-/socket.io}
+    ports:
+      - "3000:3000"
+    depends_on:
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  platform-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.node
+      args:
+        SERVICE_PATH: apps/platform-service
+    container_name: worktual-platform-service
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    environment:
+      PORT: 3001
+      DATABASE_URL: ${PLATFORM_DATABASE_URL}
+      REDIS_URL: redis://redis:6379
+      API_V1_PUBLIC_BASE: ${PLATFORM_API_V1_PUBLIC_BASE:-}
+    ports:
+      - "3001:3001"
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  chat-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.node
+      args:
+        SERVICE_PATH: apps/chat-service
+    container_name: worktual-chat-service
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    environment:
+      PORT: 3002
+      KAFKA_BROKERS: kafka:9092
+      CC_CORE_URL: http://cc-core:3000
+      WEBCHAT_WS_PATHS: ${WEBCHAT_WS_PATHS:-/ws/webchat,/ccaas/chat,/chat-api/ws/webchat}
+    ports:
+      - "3002:3002"
+    volumes:
+      - ../apps/chat-service/secrets/gmail-pubsub-sa.json:/app/secrets/gmail-pubsub-sa.json:ro
+    depends_on:
+      kafka:
+        condition: service_healthy
+      cc-core:
+        condition: service_started
+
+  call-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.node
+      args:
+        SERVICE_PATH: apps/call-service
+    container_name: worktual-call-service
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    environment:
+      PORT: 3003
+      KAFKA_BROKERS: kafka:9092
+      CC_CORE_URL: http://cc-core:3000
+      CALL_SERVICE_API_V1_PUBLIC_BASE: ${CALL_SERVICE_API_V1_PUBLIC_BASE:-}
+    ports:
+      - "3003:3003"
+    depends_on:
+      kafka:
+        condition: service_healthy
+      cc-core:
+        condition: service_started
+
+  social-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.node
+      args:
+        SERVICE_PATH: apps/social-service
+    container_name: worktual-social-service
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    environment:
+      PORT: 3004
+      KAFKA_BROKERS: kafka:9092
+      CC_CORE_URL: http://cc-core:3000
+      ACCOUNTS_INTERNAL_API_URL: http://platform-service:3001
+      WEBHOOK_PUBLIC_PREFIX: ${WEBHOOK_PUBLIC_PREFIX:-}
+    ports:
+      - "3004:3004"
+    depends_on:
+      kafka:
+        condition: service_healthy
+      cc-core:
+        condition: service_started
+      platform-service:
+        condition: service_started
+
+  nlp:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.nlp
+    container_name: worktual-nlp
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    environment:
+      PORT: 8000
+      HOST: 0.0.0.0
+      CC_CORE_URL: http://cc-core:3000
+      CORS_ORIGINS: ${CORS_ORIGINS:-https://rebuild-ccaas.worktual.com}
+      API_V1_PUBLIC_BASE: ${NLP_API_V1_PUBLIC_BASE:-}
+      COWORKER_MAS_MODE: ${COWORKER_MAS_MODE:-three_layer}
+      COWORKER_MAS_ORG_IDS: ${COWORKER_MAS_ORG_IDS:-*}
+    ports:
+      - "8000:8000"
+    depends_on:
+      cc-core:
+        condition: service_started
+
+  a2a-server:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.a2a-server
+    container_name: worktual-a2a
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    environment:
+      PORT: 8020
+      HOST: 0.0.0.0
+      A2A_ENABLED: ${A2A_ENABLED:-false}
+      A2A_PUBLIC_URL: ${A2A_PUBLIC_URL:-http://localhost:8020}
+      A2A_ALLOW_DEV_AUTH: ${A2A_ALLOW_DEV_AUTH:-false}
+      A2A_OAUTH_ISSUER: ${A2A_OAUTH_ISSUER:-}
+      A2A_OAUTH_AUDIENCE: ${A2A_OAUTH_AUDIENCE:-worktual-contact-centre-a2a}
+      A2A_OAUTH_JWKS_URL: ${A2A_OAUTH_JWKS_URL:-}
+      A2A_OAUTH_TOKEN_URL: ${A2A_OAUTH_TOKEN_URL:-}
+      A2A_ENABLED_TENANTS: ${A2A_ENABLED_TENANTS:-}
+      A2A_ENABLED_SKILLS: ${A2A_ENABLED_SKILLS:-}
+      CC_CORE_URL: http://cc-core:3000
+      INTERNAL_SERVICE_KEY: ${INTERNAL_SERVICE_KEY:-}
+      WEBCHAT_TRIGGER_API_KEY: ${WEBCHAT_TRIGGER_API_KEY:-}
+      HUB_A2A_URL: ${HUB_A2A_URL:-}
+      HUB_A2A_TOKEN_URL: ${HUB_A2A_TOKEN_URL:-}
+      HUB_A2A_CLIENT_ID: ${HUB_A2A_CLIENT_ID:-worktual-ccaas-hub}
+      HUB_A2A_CLIENT_SECRET: ${HUB_A2A_CLIENT_SECRET:-}
+      HUB_A2A_SPOKE_LABEL: ${HUB_A2A_SPOKE_LABEL:-CCaaS}
+      HUB_A2A_SERVER_NAME: ${HUB_A2A_SERVER_NAME:-worktual-hub}
+      HUB_A2A_TIMEOUT_SECONDS: ${HUB_A2A_TIMEOUT_SECONDS:-120}
+    ports:
+      - "8020:8020"
+    depends_on:
+      cc-core:
+        condition: service_started
+      nlp:
+        condition: service_started
+
+  web:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.web
+      args:
+        VITE_CC_CORE_URL: ${VITE_CC_CORE_URL:-http://localhost:3000}
+        VITE_PLATFORM_SERVICE_URL: ${VITE_PLATFORM_SERVICE_URL:-http://localhost:3001}
+        VITE_NLP_SERVICE_URL: ${VITE_NLP_SERVICE_URL:-http://localhost:8000}
+        VITE_SOCKET_URL: ${VITE_SOCKET_URL:-http://localhost:3000}
+        VITE_CALL_SERVICE_URL: ${VITE_CALL_SERVICE_URL:-http://localhost:3003}
+        VITE_API_V1_PREFIX: ${VITE_API_V1_PREFIX:-/api/v1}
+        VITE_SOCKET_PATH: ${VITE_SOCKET_PATH:-/socket.io}
+    container_name: worktual-web
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      cc-core:
+        condition: service_started
+      platform-service:
+        condition: service_started
+      nlp:
+        condition: service_started

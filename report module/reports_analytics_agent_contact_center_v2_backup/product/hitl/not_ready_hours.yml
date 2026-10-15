@@ -1,0 +1,117 @@
+kpi_id: not_ready_hours
+object: presence_interval
+grain_table: ccass.agent_presence_history
+joined_tables:
+- ccass.agents
+- accounts.setup_users
+- ccass.queue_members
+hitl:
+  reviewed_by: Uday
+  reviewed_at: 2026-10-08
+columns:
+- column: accounts.setup_users.business_hours_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: accounts.setup_users.city
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_users.country
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_users.created_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_users.employee_id
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_users.ext
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_users.first_name
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_users.id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: accounts.setup_users.invite_status
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_users.invited_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_users.last_name
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_users.location_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: accounts.setup_users.organization_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: accounts.setup_users.primary_language
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_users.secondary_language
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_users.sip_domain_name
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_users.state
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_users.status
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_users.team_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.agents.created_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.agents.display_name
+  use: both
+  reason: Filter and GROUP BY on this presence_interval metric.
+- column: ccass.agents.id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.agents.organization_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.agents.setup_user_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.agents.status
+  use: not_this_metric
+  reason: Roster status is not ready and not a volume split. Ready is presence_state. Agent split is display_name.
+- column: ccass.agent_presence_history.agent_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.agent_presence_history.ended_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.agent_presence_history.id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.agent_presence_history.new_state
+  use: both
+  reason: Filter and GROUP BY on this presence_interval metric.
+- column: ccass.agent_presence_history.organization_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.agent_presence_history.previous_state
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.agent_presence_history.reason_code
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.agent_presence_history.source
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.agent_presence_history.started_at
+  use: not_this_metric
+  reason: Time window. Python time.py binds :start/:end. Not a filter slot.
+- column: ccass.queue_members.shift_type
+  use: filter
+  reason: 'EXISTS filter on workforce KPIs. Not GROUP BY: queue_members is many-to-many and would multiply
+    presence seconds.'

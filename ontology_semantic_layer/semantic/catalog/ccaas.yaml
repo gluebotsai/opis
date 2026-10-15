@@ -1,0 +1,806 @@
+product: ccaas
+engine: postgres
+default_schema: ccass_marts_aiccaas
+tenant_column: organization_id
+tables:
+- name: mart_agent_capacity
+  schema: ccass_marts_aiccaas
+  engine: postgres
+  grain: agent_channel_capacity
+  tenant_column: organization_id
+  sql_agent_only: false
+  columns:
+  - name: capacity_id
+  - name: organization_id
+  semantic_model: agent_capacity
+  semantic_dimensions:
+  - organization_id
+  - updated_at
+  - channel
+  semantic_measures:
+  - total_active_count
+  - total_max_concurrency
+- name: mart_agent_presence_history
+  schema: ccass_marts_aiccaas
+  engine: postgres
+  grain: presence_interval
+  tenant_column: organization_id
+  row_scope_column: agent_id
+  sql_agent_only: false
+  columns:
+  - name: presence_event_id
+  - name: organization_id
+  semantic_model: agent_presence_history
+  semantic_dimensions:
+  - organization_id
+  - started_at
+  - new_state
+  - is_handling_or_wrap
+  - is_logged_in_eligible
+  semantic_measures:
+  - presence_interval_seconds_sum
+- name: mart_agent_tasks
+  schema: ccass_marts_aiccaas
+  engine: postgres
+  grain: agent_task
+  tenant_column: organization_id
+  row_scope_column: assigned_user_id
+  sql_agent_only: false
+  columns:
+  - name: task_id
+  - name: organization_id
+  semantic_model: agent_tasks
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - task_type
+  - status
+  - priority
+  - channel
+  semantic_measures:
+  - task_count
+  - distinct_agents_with_tasks
+- name: mart_agents
+  schema: ccass_marts_aiccaas
+  engine: postgres
+  grain: agent
+  tenant_column: organization_id
+  sql_agent_only: false
+  columns:
+  - name: agent_id
+  - name: organization_id
+  semantic_model: agents
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - status
+  - agent_name
+  semantic_measures:
+  - agent_count
+- name: mart_conversation_assignments
+  schema: ccass_marts_aiccaas
+  engine: postgres
+  description: Assignment offer/accept events; canonical AHT source.
+  grain: assignment
+  purpose: Handle time, missed contacts, occupancy numerators.
+  tenant_column: organization_id
+  row_scope_column: agent_id
+  sql_agent_only: false
+  columns:
+  - name: assignment_id
+  - name: organization_id
+  - name: channel
+    description: Denormalized from conversation for group_by without join ambiguity.
+  - name: direction
+    description: Denormalized from conversation (inbound/outbound).
+  - name: queue_name
+  - name: agent_name
+  semantic_model: conversation_assignments
+  semantic_dimensions:
+  - organization_id
+  - offered_at
+  - channel
+  - direction
+  - queue_name
+  - agent_name
+  - state
+  - reason
+  - is_completed_leg
+  semantic_measures:
+  - assignment_count
+  - human_handle_seconds_sum
+  - completed_leg_count
+- name: mart_conversation_dispositions
+  schema: ccass_marts_aiccaas
+  engine: postgres
+  grain: disposition_event
+  tenant_column: organization_id
+  sql_agent_only: false
+  columns:
+  - name: disposition_entry_id
+  - name: organization_id
+  semantic_model: conversation_dispositions
+  semantic_dimensions:
+  - organization_id
+  - applied_at
+  - resolution_code
+  - is_final
+  semantic_measures:
+  - disposition_entry_count
+- name: mart_conversation_sla_state
+  schema: ccass_marts_aiccaas
+  engine: postgres
+  description: Per-conversation SLA breach state.
+  grain: conversation_sla
+  purpose: SLA breach rate numerator/denominator.
+  tenant_column: organization_id
+  sql_agent_only: false
+  columns:
+  - name: sla_state_id
+  - name: organization_id
+  - name: channel
+  - name: direction
+  - name: queue_name
+  - name: priority
+  semantic_model: conversation_sla_state
+  semantic_dimensions:
+  - organization_id
+  - updated_at
+  - channel
+  - direction
+  - queue_name
+  - priority
+  semantic_measures:
+  - sla_state_count
+  - breached_count
+- name: mart_conversation_transfers
+  schema: ccass_marts_aiccaas
+  engine: postgres
+  grain: transfer
+  tenant_column: organization_id
+  sql_agent_only: false
+  columns:
+  - name: transfer_id
+  - name: organization_id
+  semantic_model: conversation_transfers
+  semantic_dimensions:
+  - organization_id
+  - requested_at
+  - state
+  - resolution_code
+  semantic_measures:
+  - transfer_count
+- name: mart_conversations
+  schema: ccass_marts_aiccaas
+  engine: postgres
+  description: One row per CCaaS conversation with queue/agent names denormalized.
+  grain: conversation
+  purpose: Primary CCaaS fact for volume, SLA, channel, and resolution metrics.
+  tenant_column: organization_id
+  row_scope_column: assigned_agent_id
+  sql_agent_only: false
+  columns:
+  - name: conversation_id
+  - name: organization_id
+    description: Multi-tenant isolation key — required on every query.
+  - name: status
+    description: Conversation lifecycle status from source.
+  - name: channel
+    description: Interaction channel (voice, chat, email, etc.).
+  - name: direction
+    description: Customer-initiated (inbound) vs agent callback/proactive (outbound).
+  - name: queue_name
+    description: Denormalized queue display name for reporting group_by.
+  - name: assigned_agent_name
+    description: Denormalized agent display name on the conversation.
+  - name: created_at
+    description: Conversation creation timestamp (time filter / ordering).
+  - name: is_open
+    description: True when conversation is still open (status not terminal).
+  semantic_model: conversations
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - channel
+  - direction
+  - queue_name
+  - assigned_agent_name
+  - status
+  - lifecycle_state
+  - sla_status
+  - disposition_code
+  - resolution_code
+  - priority
+  - had_handoff
+  - is_ai_only_completed
+  - is_handled
+  - is_resolved
+  - resolved_at
+  - closed_at
+  semantic_measures:
+  - conversation_count
+  - unique_contact_count
+  - handoff_conversation_count
+  - handled_conversation_count
+  - resolved_conversation_count
+  - resolved_conversation_count_by_resolved_at
+  - avg_speed_of_answer_seconds
+  - avg_first_response_seconds
+- name: mart_copilot_skill_executions
+  schema: ccass_marts_aiccaas
+  engine: postgres
+  grain: skill_execution
+  tenant_column: organization_id
+  sql_agent_only: false
+  columns:
+  - name: execution_id
+  - name: organization_id
+  semantic_model: copilot_skill_executions
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - execution_status
+  - tool_key
+  semantic_measures:
+  - execution_count
+- name: mart_copilot_turns
+  schema: ccass_marts_aiccaas
+  engine: postgres
+  grain: copilot_turn
+  tenant_column: organization_id
+  sql_agent_only: false
+  columns:
+  - name: suggestion_id
+  - name: organization_id
+  semantic_model: copilot_turns
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - suggestion_disposition
+  - skill_key
+  semantic_measures:
+  - suggestion_count
+- name: mart_dispositions
+  schema: ccass_marts_aiccaas
+  engine: postgres
+  grain: disposition_catalog
+  tenant_column: organization_id
+  sql_agent_only: false
+  columns:
+  - name: disposition_id
+  - name: organization_id
+  semantic_model: dispositions
+  semantic_dimensions:
+  - organization_id
+  - label
+  - category
+  - outcome
+  - is_active
+  semantic_measures: []
+- name: mart_setup_ccaas_queue_agents
+  schema: ccass_marts_aiccaas
+  engine: postgres
+  grain: queue_membership
+  tenant_column: organization_id
+  sql_agent_only: false
+  columns:
+  - name: queue_agent_id
+  - name: organization_id
+  semantic_model: setup_ccaas_queue_agents
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - shift_type
+  - call_type
+  - handles_calls
+  - handles_email
+  - handles_chat
+  - handles_whatsapp
+  semantic_measures:
+  - queue_agent_count
+- name: mart_setup_ccaas_queues
+  schema: ccass_marts_aiccaas
+  engine: postgres
+  grain: queue
+  tenant_column: organization_id
+  sql_agent_only: false
+  columns:
+  - name: queue_id
+  - name: organization_id
+  semantic_model: setup_ccaas_queues
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - status
+  - queue_name
+  semantic_measures:
+  - queue_count
+- name: mart_setup_teams
+  schema: ccass_marts_aiccaas
+  engine: postgres
+  grain: team
+  tenant_column: organization_id
+  sql_agent_only: false
+  columns:
+  - name: team_id
+  - name: organization_id
+  semantic_model: setup_teams
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - status
+  - team_name
+  semantic_measures:
+  - team_count
+- name: mart_setup_users
+  schema: ccass_marts_aiccaas
+  engine: postgres
+  grain: user
+  tenant_column: organization_id
+  sql_agent_only: false
+  columns:
+  - name: user_id
+  - name: organization_id
+  semantic_model: setup_users
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - status
+  - primary_language
+  - user_name
+  semantic_measures:
+  - user_count
+certified_metrics:
+- id: active_agents
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: active_agents_setup
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: agent_assist_accepted_or_modified
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: agent_assist_adoption_rate
+  label: null
+  'on': null
+  dims: null
+  kind: rate
+  direction: higher_is_better
+  via: ask_semantic
+- id: agent_assist_modification_rate
+  label: null
+  'on': null
+  dims: null
+  kind: rate
+  direction: higher_is_worse
+  via: ask_semantic
+- id: agent_assist_modified
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: agent_assist_suggestions_total
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: agents_assigned_callback
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: ai_containment_rate
+  label: AI Containment Rate
+  'on': Conversation
+  dims:
+  - channel
+  - direction
+  - queue_name
+  - status
+  kind: rate
+  direction: higher_is_better
+  via: ask_semantic
+- id: ai_handover_rate
+  label: null
+  'on': null
+  dims: null
+  kind: rate
+  direction: higher_is_worse
+  via: ask_semantic
+- id: ai_only_completed_conversations
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: average_first_response_time
+  label: Average First Response Time
+  'on': Conversation
+  dims:
+  - channel
+  - direction
+  - queue_name
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: average_handle_time
+  label: Average Handle Time
+  'on': Conversation
+  dims:
+  - channel
+  - direction
+  - agent_name
+  - queue_name
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: average_speed_of_answer
+  label: Average Speed of Answer
+  'on': Conversation
+  dims:
+  - channel
+  - direction
+  - queue_name
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: breached_sla_count
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: call_volume
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: callback_tasks
+  label: Callback Tasks
+  'on': Conversation
+  dims:
+  - channel
+  - status
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: chat_volume
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: completed_leg_count
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: email_volume
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: facebook_volume
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: follow_up_tasks
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: handled_volume
+  label: Handled Conversations
+  'on': Conversation
+  dims:
+  - channel
+  - direction
+  - queue_name
+  - status
+  - assigned_agent_name
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: handling_or_wrap_seconds
+  label: null
+  'on': null
+  dims: null
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: handoff_conversations
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: handover_rate
+  label: null
+  'on': null
+  dims: null
+  kind: rate
+  direction: higher_is_worse
+  via: ask_semantic
+- id: human_agent_occupancy_rate_capacity
+  label: null
+  'on': null
+  dims: null
+  kind: rate
+  direction: higher_is_worse
+  via: ask_semantic
+- id: human_agent_occupancy_rate_presence
+  label: Human Agent Occupancy Rate (presence)
+  'on': Agent
+  dims: null
+  kind: rate
+  direction: higher_is_worse
+  via: ask_semantic
+- id: human_handle_seconds_sum
+  label: null
+  'on': null
+  dims: null
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: instagram_volume
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: logged_in_eligible_seconds
+  label: null
+  'on': null
+  dims: null
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: missed_assignments
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: missed_contact_rate
+  label: Missed Contact Rate
+  'on': Conversation
+  dims:
+  - channel
+  - direction
+  - queue_name
+  - agent_name
+  kind: rate
+  direction: higher_is_worse
+  via: ask_semantic
+- id: open_agent_tasks
+  label: Open Agent Tasks
+  'on': Conversation
+  dims:
+  - channel
+  - status
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: open_conversations
+  label: Open Conversations
+  'on': Conversation
+  dims:
+  - channel
+  - direction
+  - queue_name
+  - status
+  - assigned_agent_name
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: sla_breach_rate
+  label: SLA Breach Rate
+  'on': Conversation
+  dims:
+  - channel
+  - direction
+  - queue_name
+  - priority
+  kind: rate
+  direction: higher_is_worse
+  via: ask_semantic
+- id: resolution_rate
+  label: Resolution Rate
+  'on': Conversation
+  dims:
+  - channel
+  - direction
+  - queue_name
+  - status
+  kind: rate
+  direction: higher_is_better
+  via: ask_semantic
+- id: resolved_conversations_count
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: resolved_dispositions
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: social_media_volume
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: suggestion_tasks
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: tool_executions_succeeded
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: tool_executions_total
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: tool_success_rate
+  label: null
+  'on': null
+  dims: null
+  kind: rate
+  direction: higher_is_better
+  via: ask_semantic
+- id: total_active_agent_count
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: total_agent_capacity
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: total_agents
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: total_agents_setup
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: total_assignments
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: total_conversations
+  label: Total Conversations
+  'on': Conversation
+  dims:
+  - channel
+  - direction
+  - queue_name
+  - status
+  - assigned_agent_name
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: total_queue_agent_assignments
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: total_queues_configured
+  label: Total Configured Queues
+  'on': Queue
+  dims:
+  - queue_name
+  - status
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: total_sla_states
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: total_teams
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: total_transfers
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: unique_contacts_handled
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: webchat_volume
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: whatsapp_volume
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic

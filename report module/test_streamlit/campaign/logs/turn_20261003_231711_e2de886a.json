@@ -1,0 +1,102 @@
+{
+  "turn_id": "e2de886a",
+  "timestamp": "2026-10-03T17:47:11.763311+00:00",
+  "question": "How many unread notifications in the last 7 days?",
+  "identity": {
+    "organization_id": 1012,
+    "user_id": 1054,
+    "branch_id": 1004,
+    "role": "admin"
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma",
+    "dsn_set": true
+  },
+  "answer": "I cannot answer that question because the requested information is not available in the current reporting data.",
+  "facts": "EXECUTION_ERROR\nerror_type: REPLAN\nmessage: kpi 'notifications_unread' grain 'one unread app_notifications row' does not match object 'event'\ntask_goal: kpi 'notifications_unread' grain 'one unread app_notifications row' does not match object 'event'",
+  "trace": {
+    "identity": {
+      "organization_id": 1012,
+      "user_id": 1054,
+      "branch_id": 1004,
+      "role": "admin",
+      "scope_label": "All branch campaigns",
+      "timezone": "UTC"
+    },
+    "question": "How many unread notifications in the last 7 days?",
+    "supervisor": {
+      "kind": "route",
+      "target": "domain"
+    },
+    "supervisor_raw": "```json\n{\"kind\": \"route\", \"target\": \"domain\"}\n```",
+    "interpret_raw": "```json\n{\n  \"kind\": \"interpret\",\n  \"need\": \"Determine the total count of unread notifications received within the last 7 days.\",\n  \"object\": \"event\",\n  \"metric_family\": \"count\",\n  \"slice\": \"\",\n  \"time\": \"last 7 days\",\n  \"scope_words\": \"unspecified\",\n  \"echo\": \"How many unread notifications have there been in the last 7 days?\",\n  \"ask_user\": \"\"\n}\n```",
+    "interpret": {
+      "kind": "interpret",
+      "need": "Determine the total count of unread notifications received within the last 7 days.",
+      "object": "event",
+      "metric_family": "count",
+      "slice": "",
+      "time": "last 7 days",
+      "scope_words": "unspecified",
+      "echo": "How many unread notifications have there been in the last 7 days?",
+      "ask_user": ""
+    },
+    "retrieved_kpis": [
+      "notifications_unread",
+      "event_submissions",
+      "event_opens",
+      "event_conversion",
+      "contact_campaigns_received",
+      "delivery_trend",
+      "entitlement_health",
+      "unique_clicks"
+    ],
+    "task_results": [],
+    "plan": {
+      "kind": "plan",
+      "understanding": {
+        "kind": "interpret",
+        "need": "Determine the total count of unread notifications received within the last 7 days.",
+        "object": "event",
+        "metric_family": "count",
+        "slice": "",
+        "time": "last 7 days",
+        "scope_words": "unspecified",
+        "echo": "How many unread notifications have there been in the last 7 days?",
+        "ask_user": ""
+      },
+      "depth": "quick",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "notifications_unread",
+          "goal": "Count unread app notifications from the last 7 days",
+          "time": "last 7 days",
+          "scope": "org",
+          "dimensions": [],
+          "answer_type": "kpi",
+          "depends_on": []
+        }
+      ]
+    },
+    "plan_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"understanding\": {\n    \"kind\": \"interpret\",\n    \"need\": \"Determine the total count of unread notifications received within the last 7 days.\",\n    \"object\": \"event\",\n    \"metric_family\": \"count\",\n    \"slice\": \"\",\n    \"time\": \"last 7 days\",\n    \"scope_words\": \"unspecified\",\n    \"echo\": \"How many unread notifications have there been in the last 7 days?\",\n    \"ask_user\": \"\"\n  },\n  \"depth\": \"quick\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"notifications_unread\",\n      \"goal\": \"Count unread app notifications from the last 7 days\",\n      \"time\": \"last 7 days\",\n      \"scope\": \"org\",\n      \"dimensions\": [],\n      \"answer_type\": \"kpi\",\n      \"depends_on\": []\n    }\n  ]\n}\n```",
+    "facts": "EXECUTION_ERROR\nerror_type: REPLAN\nmessage: kpi 'notifications_unread' grain 'one unread app_notifications row' does not match object 'event'\ntask_goal: kpi 'notifications_unread' grain 'one unread app_notifications row' does not match object 'event'",
+    "loop_errors": [
+      {
+        "attempt": 1,
+        "error_type": "REPLAN",
+        "error": "kpi 'notifications_unread' grain 'one unread app_notifications row' does not match object 'event'"
+      },
+      {
+        "attempt": 2,
+        "error_type": "REPLAN",
+        "error": "kpi 'notifications_unread' grain 'one unread app_notifications row' does not match object 'event'"
+      }
+    ],
+    "briefing_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"understanding\": {\n    \"kind\": \"interpret\",\n    \"need\": \"Determine the total count of unread notifications received within the last 7 days.\",\n    \"object\": \"event\",\n    \"metric_family\": \"count\",\n    \"slice\": \"\",\n    \"time\": \"last 7 days\",\n    \"scope_words\": \"unspecified\",\n    \"echo\": \"How many unread notifications have there been in the last 7 days?\",\n    \"ask_user\": \"\"\n  },\n  \"depth\": \"quick\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": null,\n      \"goal\": \"Count unread notification events in the last 7 days\",\n      \"time\": \"last 7 days\",\n      \"scope\": \"org\",\n      \"dimensions\": [],\n      \"answer_type\": \"kpi\",\n      \"depends_on\": []\n    }\n  ]\n}\n```",
+    "grounded": true
+  },
+  "error": null
+}

@@ -1,0 +1,62 @@
+{
+  "turn_id": "34883cce",
+  "timestamp": "2026-10-12T11:55:47.297239+00:00",
+  "question": "in which month having more conversations?",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1054,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Monthly conversation volume</strong></p>\n<p>For all time, the month with the most conversations was <strong>October 2026</strong> with <strong>404</strong> conversations.</p>\n<ul>\n<li>September 2026: 187 conversations</li>\n<li>August 2026: 65 conversations</li>\n<li>October 2026: 404 conversations</li>\n</ul>\n<p>Would you like to see the breakdown of these conversations by channel?</p>",
+  "card": "card: table r1",
+  "facts": "result_id: r1\nwindow: all time\nkpi: total\ncertified: true\nunit: conversations\ntask_goal: Count conversations broken down by month.\nanswer_type: number\nrow_count: 3\nrow 1: month=2026-09-01 00:00:00; total=187\nrow 2: month=2026-08-01 00:00:00; total=65\nrow 3: month=2026-10-01 00:00:00; total=404",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1054,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "in which month having more conversations?",
+    "plan": {
+      "kind": "plan",
+      "understanding": "Identify the month with the highest number of started conversations.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Count conversations broken down by month.",
+          "time": "all time",
+          "scope": "org",
+          "slice": [
+            "month"
+          ],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "total",
+        "row_count": 3
+      }
+    ],
+    "facts": "result_id: r1\nwindow: all time\nkpi: total\ncertified: true\nunit: conversations\ntask_goal: Count conversations broken down by month.\nanswer_type: number\nrow_count: 3\nrow 1: month=2026-09-01 00:00:00; total=187\nrow 2: month=2026-08-01 00:00:00; total=65\nrow 3: month=2026-10-01 00:00:00; total=404",
+    "grounded": true,
+    "card": "card: table r1"
+  },
+  "error": null
+}

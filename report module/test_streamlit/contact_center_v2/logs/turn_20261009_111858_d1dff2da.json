@@ -1,0 +1,62 @@
+{
+  "turn_id": "d1dff2da",
+  "timestamp": "2026-10-09T05:48:58.430493+00:00",
+  "question": "i need total conversation count breakdown by the channel... ",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1016,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Total conversation count by channel</strong></p>\n<p>For all time, the conversation counts per channel are:</p>\n<ul>\n<li><strong>webchat</strong>: <strong>360</strong></li>\n<li><strong>call</strong>: <strong>211</strong></li>\n<li><strong>facebook</strong>: <strong>10</strong></li>\n<li><strong>instagram</strong>: <strong>10</strong></li>\n<li><strong>whatsapp</strong>: <strong>28</strong></li>\n<li><strong>email</strong>: <strong>6</strong></li>\n</ul>\n<p>Would you like to see these counts broken down by queue instead?</p>",
+  "card": "card: table r1",
+  "facts": "result_id: r1\nwindow: all time\ncertified: false\ntask_goal: List the total count of conversations for each channel.\nanswer_type: list\nrow_count: 6\nrow 1: channel=email; count=6\nrow 2: channel=facebook; count=10\nrow 3: channel=instagram; count=10\nrow 4: channel=webchat; count=360\nrow 5: channel=whatsapp; count=28\nrow 6: channel=call; count=211",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1016,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "i need total conversation count breakdown by the channel... ",
+    "plan": {
+      "kind": "plan",
+      "understanding": "A breakdown of the total conversation count by channel.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "free_sql",
+          "goal": "List the total count of conversations for each channel.",
+          "time": "all time",
+          "scope": "org",
+          "slice": [
+            "channel"
+          ],
+          "answer_type": "list"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": false,
+        "kpi_id": null,
+        "row_count": 6
+      }
+    ],
+    "facts": "result_id: r1\nwindow: all time\ncertified: false\ntask_goal: List the total count of conversations for each channel.\nanswer_type: list\nrow_count: 6\nrow 1: channel=email; count=6\nrow 2: channel=facebook; count=10\nrow 3: channel=instagram; count=10\nrow 4: channel=webchat; count=360\nrow 5: channel=whatsapp; count=28\nrow 6: channel=call; count=211",
+    "grounded": true,
+    "card": "card: table r1"
+  },
+  "error": null
+}

@@ -1,0 +1,342 @@
+Ontology (this agent — use only these types and actions)
+version: 2026.09.3  modules: core, identity, knowledge, ticket, tk_team, tk_kb, tk_macro, tk_admin, tk_proactive, metrics_ticketing, performance, hub
+agent: Ticketing System (full legal slice)
+labels: wt:Customer shown as Prospect, wt:Contact shown as Contact, wt:Ticket shown as Case, wt:Organization shown as Workspace
+industry_pack: saas_b2b
+
+Aliases (spoken words map to type ids)
+- Demo, Meeting -> wt:Appointment
+- Account, Client, Logo, Prospect -> wt:Customer
+- Deal, Opportunity -> wt:Deal
+- Help doc, KB -> wt:KnowledgeArticle
+- Canned reply -> wt:Macro
+- Tenant, Workspace -> wt:Organization
+- Case, Issue, Ticket -> wt:Ticket
+
+Types
+- wt:Person: Individual human (customer contact or employee).
+- wt:Organization: Company or tenant org. Worktual customer-business, not a spoke.
+- wt:Customer: Party the tenant does business with. Canonical type for Patient/Client/Buyer.
+- wt:Employee: Staff user in the tenant (admin, supervisor, live agent).
+- wt:Consent: Permission to process, record, or contact on a scope.
+- wt:Channel: Communication medium. Values come from taxonomy.channel.
+- wt:Identity: One identifier for a party (cdpId, email, phone, crmId, social).
+- wt:CustomerProfile: Unified view assembled from identities and enrich.
+- wt:Contact: Named person record in CC contact book (may resolve to Customer).
+- wt:ContactDraft: Staged create/update before confirmation. Not an instance of Contact yet.
+- wt:ContactSkill: Skill tag on a contact (routing / eligibility).
+- wt:KnowledgeArticle: Retrievable org/product/support content. Agents must not invent beyond this.
+- wt:OrganizationDirectory: Address, hours, phone, website from get_organization_details.
+- wt:Ticket: Support case — customer issue with priority, team, L1 agent and L2…
+- wt:SLA: Time commitment (first response or resolution hours by priority).
+- wt:TicketNote: Internal or customer-visible note on a ticket.
+- wt:TicketDraft: Staged create before confirm. User supplies customer + issue only.
+- wt:Team: Staff group that owns a class of tickets; description used by triage…
+- wt:KbCategory: Folder for ticketing knowledge articles.
+- wt:Macro: Named canned reply for ticket handling.
+- wt:TicketPriorityDef: Tenant display name + resolution SLA hours. Instances classify wt:Ticket.
+- wt:TicketStatusDef: Tenant display name for lifecycle (Open, Pending, …).
+- wt:ProactiveRecommendation: Suggested ticket action awaiting ASGA or human approval.
+- wt:AsgaDecision: Safety gate — run now, confirm, recommend only, or reject.
+- wt:Anomaly: Metric breach or unusual ops pattern (abandonment, queue depth, SLA).
+- wt:PerformanceReport: Generated agent/queue report or chart. Prefer agent names, never raw UUIDs.
+- wt:Spoke: Product capability plane. Values include contact_centre, ticketing, crm, campaign, hub.
+- wt:Skill: Executable A2A / MCP capability on a spoke.
+- wt:HubRequest: spoke-query, run-pipeline, or leftover-work inbound to Hub.
+- wt:Strategy: Validated Hub plan with audit ids.
+- wt:DispatchAction: Allowlisted work item Hub sends back to a spoke.
+
+Relations
+- wt:Person --WORKS_FOR--> wt:Organization
+- wt:Customer --HAS_CONSENT--> wt:Consent
+- wt:Customer --BELONGS_TO--> wt:Organization
+- wt:Employee --WORKS_FOR--> wt:Organization
+- wt:Contact --RESOLVES_TO--> wt:Customer
+- wt:Contact --HAS_SKILL--> wt:ContactSkill
+- wt:KnowledgeArticle --OWNED_BY--> wt:Organization
+- wt:OrganizationDirectory --OF--> wt:Organization
+- wt:Ticket --FOR_CUSTOMER--> wt:Customer
+- wt:Ticket --FOR_ACCOUNT--> wt:Organization
+- wt:Ticket --HAS_SLA--> wt:SLA
+- wt:Ticket --ASSIGNED_L1--> wt:Employee
+- wt:Ticket --RESOLVER_L2--> wt:Employee
+- wt:Ticket --OWNED_BY_TEAM--> wt:Team
+- wt:Customer --HAS--> wt:Ticket
+- wt:TicketNote --OF--> wt:Ticket
+- wt:Team --HAS_MEMBER--> wt:Employee
+- wt:KnowledgeArticle --IN_CATEGORY--> wt:KbCategory
+- wt:Macro --OWNED_BY--> wt:Organization
+- wt:Ticket --CLASSIFIED_BY--> wt:TicketPriorityDef
+- wt:Ticket --CLASSIFIED_BY--> wt:TicketStatusDef
+- wt:ProactiveRecommendation --ABOUT--> wt:Ticket
+- wt:AsgaDecision --OF--> wt:ProactiveRecommendation
+- wt:Anomaly --TRIGGERS--> wt:HubRequest
+- wt:HubRequest --ABOUT--> wt:Customer
+- wt:Strategy --PRODUCES--> wt:DispatchAction
+- wt:DispatchAction --TARGETS--> wt:Spoke
+- wt:DispatchAction --USES--> wt:Skill
+
+Actions (only these; honor requires)
+- wt:action.identify
+- wt:action.route_to_specialist
+- wt:action.list_contacts
+- wt:action.get_contact
+- wt:action.stage_contact_draft
+- wt:action.create_contact requires: draftComplete, userConfirmed
+- wt:action.update_contact requires: identityResolved, userConfirmed
+- wt:action.contact_enrich
+- wt:action.merge_contacts requires: approvalGranted
+- wt:action.get_organization_details
+- wt:action.get_organization_knowledge
+- wt:action.navigate
+- wt:action.create_ticket requires: identityResolved
+- wt:action.get_ticket_status requires: identityResolved
+- wt:action.verify_contact_for_ticket
+- wt:action.reassign_ticket requires: userConfirmed
+- wt:action.escalate_ticket requires: identityResolved
+- wt:action.enrich_ticket
+- wt:action.create_team requires: userConfirmed
+- wt:action.add_team_members requires: userConfirmed
+- wt:action.create_kb_article requires: userConfirmed
+- wt:action.manage_kb_category requires: userConfirmed
+- wt:action.create_macro requires: userConfirmed
+- wt:action.update_macro requires: userConfirmed
+- wt:action.delete_macro requires: userConfirmed
+- wt:action.create_priority requires: userConfirmed
+- wt:action.create_status requires: userConfirmed
+- wt:action.deflect_intake
+- wt:action.capture_ticket
+- wt:action.asga_gate
+- wt:action.ask_semantic
+- wt:action.ask_ontology
+- wt:action.generate_report
+- wt:action.investigate_anomaly
+- wt:action.spoke_query requires: organizationId
+- wt:action.run_pipeline
+- wt:action.dispatch
+
+Metrics (ask_semantic; ids only; do not invent SQL)
+- open_tickets_metric (Open Tickets) on wt:Ticket  group_by/filter: priority, queue_name, status
+  when: Count open tickets (status=open only) at a point in time or period end.  |  not: Ticket list — use spoke_query.
+- high_priority_open_tickets_metric (High-Priority Open Tickets) on wt:Ticket  group_by/filter: priority, queue_name
+  when: Count urgent/P1 open tickets for dispatch or escalation.  |  not: One ticket priority — use ticket record.
+- sla_breach_rate (SLA Breach Rate) on wt:Ticket  group_by/filter: priority, queue_name, channel
+  when: TK: breached ÷ SLA-eligible tickets. CC: conversation SLA breach ÷ tracked conversations.  |  not: One ticket SLA timer — use ticket record.
+- average_resolution_time_hours (Average Resolution Time) on wt:Ticket  group_by/filter: priority, queue_name
+  when: Mean hours to resolve over a period.  |  not: One ticket resolution timestamp — use ticket record.
+- average_first_response_hours (Average First Response Hours) on wt:PerformanceReport
+  when: Period aggregate for average first response hours.  |  not: Row-level lookup — use spoke_query.
+- average_csat_score (Average CSAT) on wt:Ticket  group_by/filter: queue_name, agent_name
+  when: Mean satisfaction score over a period.  |  not: One survey response — use ticket record.
+- reopen_rate (Reopen Rate) on wt:Ticket  group_by/filter: queue_name, priority
+  when: Share of tickets reopened in a period.  |  not: One ticket reopen flag — use ticket record.
+- sla_at_risk_tickets_metric (SLA At-Risk Tickets) on wt:Ticket  group_by/filter: priority, queue_name
+  when: Tickets due soon / at SLA risk snapshot.  |  not: One ticket SLA timer — use ticket record.
+- unanswered_tickets_metric (Unanswered Tickets) on wt:Ticket  group_by/filter: priority, queue_name, channel
+  when: Tickets with no first response yet.  |  not: One ticket thread — use spoke_query.
+- ticket_volume (Ticket Volume) on wt:Ticket  group_by/filter: priority, queue_name, channel, status
+  when: Ticket count created in a period.  |  not: Ticket list — use spoke_query.
+- resolved_tickets_metric (Resolved Tickets Metric) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for resolved tickets metric.  |  not: Row-level lookup — use spoke_query.
+- active_tickets_metric (Active Tickets Metric) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for active tickets metric.  |  not: Row-level lookup — use spoke_query.
+- resolution_rate (Resolution Rate) on wt:Ticket  group_by/filter: queue_name, priority
+  when: Resolved share over tickets in a period.  |  not: One ticket status — use ticket record.
+- unassigned_tickets_metric (Unassigned Tickets Metric) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for unassigned tickets metric.  |  not: Row-level lookup — use spoke_query.
+- unassignment_rate (Unassignment Rate) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for unassignment rate.  |  not: Row-level lookup — use spoke_query.
+- customers_served (Customers Served) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for customers served.  |  not: Row-level lookup — use spoke_query.
+- accounts_served (Accounts Served) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for accounts served.  |  not: Row-level lookup — use spoke_query.
+- open_ticket_age_days_total (Open Ticket Age Days Total) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for open ticket age days total.  |  not: Row-level lookup — use spoke_query.
+- average_open_ticket_age_days (Average Open Ticket Age Days) on wt:PerformanceReport
+  when: Period aggregate for average open ticket age days.  |  not: Row-level lookup — use spoke_query.
+- tickets_created_today_metric (Tickets Created Today Metric) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for tickets created today metric.  |  not: Row-level lookup — use spoke_query.
+- tickets_last_30_days (Tickets Last 30 Days) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for tickets last 30 days.  |  not: Row-level lookup — use spoke_query.
+- days_since_last_ticket (Days Since Last Ticket) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for days since last ticket.  |  not: Row-level lookup — use spoke_query.
+- reopened_tickets_metric (Reopened Tickets Metric) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for reopened tickets metric.  |  not: Row-level lookup — use spoke_query.
+- closed_tickets_metric (Closed Tickets Metric) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for closed tickets metric.  |  not: Row-level lookup — use spoke_query.
+- pending_tickets_metric (Pending Tickets Metric) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for pending tickets metric.  |  not: Row-level lookup — use spoke_query.
+- assigned_tickets_metric (Assigned Tickets Metric) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for assigned tickets metric.  |  not: Row-level lookup — use spoke_query.
+- assignment_rate (Assignment Rate) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for assignment rate.  |  not: Row-level lookup — use spoke_query.
+- tickets_last_7_days (Tickets Last 7 Days) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for tickets last 7 days.  |  not: Row-level lookup — use spoke_query.
+- average_tickets_per_day (Average Tickets Per Day) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for average tickets per day.  |  not: Row-level lookup — use spoke_query.
+- active_customers_metric (Active Customers Metric) on wt:PerformanceReport  group_by/filter: status
+  when: Period aggregate for active customers metric.  |  not: Row-level lookup — use spoke_query.
+- breached_tickets_metric (Breached Tickets Metric) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for breached tickets metric.  |  not: Row-level lookup — use spoke_query.
+- resolution_hours_total (Resolution Hours Total) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for resolution hours total.  |  not: Row-level lookup — use spoke_query.
+- resolved_for_avg (Resolved For Avg) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for resolved for avg.  |  not: Row-level lookup — use spoke_query.
+- first_response_hours_total (First Response Hours Total) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for first response hours total.  |  not: Row-level lookup — use spoke_query.
+- tickets_with_first_response_metric (Tickets With First Response Metric) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for tickets with first response metric.  |  not: Row-level lookup — use spoke_query.
+- average_first_response_minutes (Average First Response Minutes) on wt:PerformanceReport
+  when: Period aggregate for average first response minutes.  |  not: Row-level lookup — use spoke_query.
+- first_response_sla_met_metric (First Response Sla Met Metric) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for first response sla met metric.  |  not: Row-level lookup — use spoke_query.
+- tickets_with_first_response_sla_target_metric (Tickets With First Response Sla Target Metric) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for tickets with first response sla target metric.  |  not: Row-level lookup — use spoke_query.
+- first_response_sla_compliance_rate (First Response Sla Compliance Rate) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for first response sla compliance rate.  |  not: Row-level lookup — use spoke_query.
+- first_response_coverage_rate (First Response Coverage Rate) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for first response coverage rate.  |  not: Row-level lookup — use spoke_query.
+- resolution_hours_variance_total (Resolution Hours Variance Total) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for resolution hours variance total.  |  not: Row-level lookup — use spoke_query.
+- tickets_with_sla_target_metric (Tickets With Sla Target Metric) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for tickets with sla target metric.  |  not: Row-level lookup — use spoke_query.
+- average_resolution_hours_variance (Average Resolution Hours Variance) on wt:PerformanceReport
+  when: Period aggregate for average resolution hours variance.  |  not: Row-level lookup — use spoke_query.
+- tickets_with_resolution_sla_target_metric (Tickets With Resolution Sla Target Metric) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for tickets with resolution sla target metric.  |  not: Row-level lookup — use spoke_query.
+- resolution_sla_met_metric (Resolution Sla Met Metric) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for resolution sla met metric.  |  not: Row-level lookup — use spoke_query.
+- resolution_sla_compliance_rate (Resolution Sla Compliance Rate) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for resolution sla compliance rate.  |  not: Row-level lookup — use spoke_query.
+- due_today_tickets_metric (Due Today Tickets Metric) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for due today tickets metric.  |  not: Row-level lookup — use spoke_query.
+- current_overdue_tickets_metric (Current Overdue Tickets Metric) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for current overdue tickets metric.  |  not: Row-level lookup — use spoke_query.
+- average_overdue_hours (Average Overdue Hours) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for average overdue hours.  |  not: Row-level lookup — use spoke_query.
+- queues_at_risk_metric (Queues At Risk Metric) on wt:PerformanceReport  group_by/filter: queue_name, queue_type, sla_status
+  when: Period aggregate for queues at risk metric.  |  not: Row-level lookup — use spoke_query.
+- csat_score_total (Csat Score Total) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for csat score total.  |  not: Row-level lookup — use spoke_query.
+- csat_rated_metric (Csat Rated Metric) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for csat rated metric.  |  not: Row-level lookup — use spoke_query.
+- csat_response_rate (Csat Response Rate) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for csat response rate.  |  not: Row-level lookup — use spoke_query.
+- csat_promoter_metric (Csat Promoter Metric) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for csat promoter metric.  |  not: Row-level lookup — use spoke_query.
+- csat_neutral_metric (Csat Neutral Metric) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for csat neutral metric.  |  not: Row-level lookup — use spoke_query.
+- csat_detractor_metric (Csat Detractor Metric) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for csat detractor metric.  |  not: Row-level lookup — use spoke_query.
+- csat_promoter_rate (Csat Promoter Rate) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for csat promoter rate.  |  not: Row-level lookup — use spoke_query.
+- csat_detractor_rate (Csat Detractor Rate) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for csat detractor rate.  |  not: Row-level lookup — use spoke_query.
+- queue_coverage_count (Queue Coverage Count) on wt:PerformanceReport  group_by/filter: queue_name, queue_type, sla_status, user_name, user_role, myaccount_team_name, team_supports_ticketing
+  when: Period aggregate for queue coverage count.  |  not: Row-level lookup — use spoke_query.
+- distinct_agents_in_queues (Distinct Agents In Queues) on wt:PerformanceReport  group_by/filter: queue_name, queue_type, sla_status, user_name, user_role, myaccount_team_name, team_supports_ticketing
+  when: Period aggregate for distinct agents in queues.  |  not: Row-level lookup — use spoke_query.
+- distinct_queues_covered (Distinct Queues Covered) on wt:PerformanceReport  group_by/filter: queue_name, queue_type, sla_status, user_name, user_role, myaccount_team_name, team_supports_ticketing
+  when: Period aggregate for distinct queues covered.  |  not: Row-level lookup — use spoke_query.
+- tickets_with_resolver_metric (Tickets With Resolver Metric) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for tickets with resolver metric.  |  not: Row-level lookup — use spoke_query.
+- tickets_without_resolver_metric (Tickets Without Resolver Metric) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for tickets without resolver metric.  |  not: Row-level lookup — use spoke_query.
+- active_agents_metric (Active Agents Metric) on wt:PerformanceReport  group_by/filter: role, status
+  when: Period aggregate for active agents metric.  |  not: Row-level lookup — use spoke_query.
+- queue_count (Queue Count) on wt:PerformanceReport  group_by/filter: queue_name, queue_type, sla_status
+  when: Period aggregate for queue count.  |  not: Row-level lookup — use spoke_query.
+- note_volume (Note Volume) on wt:PerformanceReport  group_by/filter: visibility, is_internal_note, ticket_priority, ticket_status, queue_name, assignee_name, author_name
+  when: Period aggregate for note volume.  |  not: Row-level lookup — use spoke_query.
+- internal_note_volume (Internal Note Volume) on wt:PerformanceReport  group_by/filter: visibility, is_internal_note, ticket_priority, ticket_status, queue_name, assignee_name, author_name
+  when: Period aggregate for internal note volume.  |  not: Row-level lookup — use spoke_query.
+- customer_reply_volume (Customer Reply Volume) on wt:PerformanceReport  group_by/filter: visibility, is_internal_note, ticket_priority, ticket_status, queue_name, assignee_name, author_name
+  when: Period aggregate for customer reply volume.  |  not: Row-level lookup — use spoke_query.
+- internal_note_ratio (Internal Note Ratio) on wt:PerformanceReport  group_by/filter: visibility, is_internal_note, ticket_priority, ticket_status, queue_name, assignee_name, author_name
+  when: Period aggregate for internal note ratio.  |  not: Row-level lookup — use spoke_query.
+- average_notes_per_ticket (Average Notes Per Ticket) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for average notes per ticket.  |  not: Row-level lookup — use spoke_query.
+- notification_volume (Notification Volume) on wt:PerformanceReport  group_by/filter: kind, is_read
+  when: Period aggregate for notification volume.  |  not: Row-level lookup — use spoke_query.
+- unread_notifications_metric (Unread Notifications Metric) on wt:PerformanceReport  group_by/filter: kind, is_read
+  when: Period aggregate for unread notifications metric.  |  not: Row-level lookup — use spoke_query.
+- outbound_email_volume (Outbound Email Volume) on wt:PerformanceReport  group_by/filter: kind, status
+  when: Period aggregate for outbound email volume.  |  not: Row-level lookup — use spoke_query.
+- audit_event_volume (Audit Event Volume) on wt:PerformanceReport  group_by/filter: action, ticket_priority, ticket_status, queue_name, assignee_name, actor_name
+  when: Period aggregate for audit event volume.  |  not: Row-level lookup — use spoke_query.
+- escalation_volume (Escalation Volume) on wt:PerformanceReport  group_by/filter: action, ticket_priority, ticket_status, queue_name, assignee_name, actor_name
+  when: Period aggregate for escalation volume.  |  not: Row-level lookup — use spoke_query.
+- reassignment_volume (Reassignment Volume) on wt:PerformanceReport  group_by/filter: action, ticket_priority, ticket_status, queue_name, assignee_name, actor_name
+  when: Period aggregate for reassignment volume.  |  not: Row-level lookup — use spoke_query.
+- escalation_rate (Escalation Rate) on wt:PerformanceReport  group_by/filter: status, status_display_name, is_closed_by_status, priority, channel, category, skill, assignee_name, assignee_role, resolver_name, queue_name, queue_type, account_name, organization_name, organization_business_type, team_supports_ticketing, created_by_name, customer_name, has_assignee, has_resolver, has_first_response, has_csat_rating, is_overdue
+  when: Period aggregate for escalation rate.  |  not: Row-level lookup — use spoke_query.
+- kb_article_volume (Kb Article Volume) on wt:PerformanceReport  group_by/filter: category, status, author_name
+  when: Period aggregate for kb article volume.  |  not: Row-level lookup — use spoke_query.
+- kb_published_article_metric (Kb Published Article Metric) on wt:PerformanceReport  group_by/filter: category, status, author_name
+  when: Period aggregate for kb published article metric.  |  not: Row-level lookup — use spoke_query.
+- kb_views_total (Kb Views Total) on wt:PerformanceReport  group_by/filter: category, status, author_name
+  when: Period aggregate for kb views total.  |  not: Row-level lookup — use spoke_query.
+- macro_volume (Macro Volume) on wt:PerformanceReport
+  when: Period aggregate for macro volume.  |  not: Row-level lookup — use spoke_query.
+- recommendation_volume (Recommendation Volume) on wt:PerformanceReport  group_by/filter: agent_id, status, ticket_priority, ticket_status, queue_name
+  when: Period aggregate for recommendation volume.  |  not: Row-level lookup — use spoke_query.
+- accepted_recommendations_metric (Accepted Recommendations Metric) on wt:PerformanceReport  group_by/filter: agent_id, status, ticket_priority, ticket_status, queue_name
+  when: Period aggregate for accepted recommendations metric.  |  not: Row-level lookup — use spoke_query.
+- dismissed_recommendations_metric (Dismissed Recommendations Metric) on wt:PerformanceReport  group_by/filter: agent_id, status, ticket_priority, ticket_status, queue_name
+  when: Period aggregate for dismissed recommendations metric.  |  not: Row-level lookup — use spoke_query.
+- open_recommendations_metric (Open Recommendations Metric) on wt:PerformanceReport  group_by/filter: agent_id, status, ticket_priority, ticket_status, queue_name
+  when: Period aggregate for open recommendations metric.  |  not: Row-level lookup — use spoke_query.
+- recommendation_acceptance_rate (Recommendation Acceptance Rate) on wt:PerformanceReport  group_by/filter: agent_id, status, ticket_priority, ticket_status, queue_name
+  when: Period aggregate for recommendation acceptance rate.  |  not: Row-level lookup — use spoke_query.
+- approval_volume (Approval Volume) on wt:PerformanceReport  group_by/filter: agent_id, status, tool_name, ticket_priority, ticket_status, queue_name
+  when: Period aggregate for approval volume.  |  not: Row-level lookup — use spoke_query.
+- approved_metric (Approved Metric) on wt:PerformanceReport  group_by/filter: agent_id, status, tool_name, ticket_priority, ticket_status, queue_name
+  when: Period aggregate for approved metric.  |  not: Row-level lookup — use spoke_query.
+- rejected_metric (Rejected Metric) on wt:PerformanceReport  group_by/filter: agent_id, status, tool_name, ticket_priority, ticket_status, queue_name
+  when: Period aggregate for rejected metric.  |  not: Row-level lookup — use spoke_query.
+- pending_approvals_metric (Pending Approvals Metric) on wt:PerformanceReport  group_by/filter: agent_id, status, tool_name, ticket_priority, ticket_status, queue_name
+  when: Period aggregate for pending approvals metric.  |  not: Row-level lookup — use spoke_query.
+- approval_rate (Approval Rate) on wt:PerformanceReport  group_by/filter: agent_id, status, tool_name, ticket_priority, ticket_status, queue_name
+  when: Period aggregate for approval rate.  |  not: Row-level lookup — use spoke_query.
+- decision_hours_total (Decision Hours Total) on wt:PerformanceReport  group_by/filter: agent_id, status, tool_name, ticket_priority, ticket_status, queue_name
+  when: Period aggregate for decision hours total.  |  not: Row-level lookup — use spoke_query.
+- decided_approvals_metric (Decided Approvals Metric) on wt:PerformanceReport  group_by/filter: agent_id, status, tool_name, ticket_priority, ticket_status, queue_name
+  when: Period aggregate for decided approvals metric.  |  not: Row-level lookup — use spoke_query.
+- average_decision_hours (Average Decision Hours) on wt:PerformanceReport
+  when: Period aggregate for average decision hours.  |  not: Row-level lookup — use spoke_query.
+- proactive_audit_volume (Proactive Audit Volume) on wt:PerformanceReport  group_by/filter: agent_id, decision
+  when: Period aggregate for proactive audit volume.  |  not: Row-level lookup — use spoke_query.
+- missed_contact_rate (Missed Contact Rate) on wt:Interaction  group_by/filter: channel, direction, queue_name, agent_name
+  when: Missed-contact rate for assigned legs in a period (CCaaS assignment grain).  |  not: One interaction outcome — use interaction record.
+- open_conversations (Open Conversations) on wt:Interaction  group_by/filter: channel, direction, queue_name, status, assigned_agent_name
+  when: Queue depth / open conversation snapshot (includes unassigned queued work).  |  not: One conversation transcript — use spoke_query.
+- ai_containment_rate (AI Containment Rate) on wt:Interaction  group_by/filter: channel, direction, queue_name, status
+  when: AI-only completion share over all conversations in a period.  |  not: One conversation containment — use interaction record.
+- average_handle_time (Average Handle Time) on wt:Interaction  group_by/filter: channel, direction, agent_name, queue_name
+  when: Period AHT on completed assignment legs — not one call duration field.  |  not: Single interaction duration — use interaction record.
+- human_agent_occupancy_rate_presence (Human Agent Occupancy Rate (presence)) on wt:WorkforceAgent
+  when: Time-based occupancy from presence history in a period.  |  not: Real-time agent state — use presence tools.
+- callback_tasks (Callback Tasks) on wt:Task  group_by/filter: channel, status
+  when: Open callback task count or backlog for a period.  |  not: One task record — use spoke_query.
+
+Taxonomy (use these term ids)
+- action.family: service, engagement, growth
+- anomaly.severity: low, medium, high, critical
+- asga.outcome: run_now, confirm, recommend, reject
+- businessType: b2b, b2c, b2b2c
+- channel: voice, web, email, whatsapp, instagram, facebook, social, push
+- hub.scenario: spoke_query, ops_anomaly, engagement_anomaly, customer_event
+- industry: saas, healthcare, bfsi, ecommerce, telecom
+- knowledge.module: business, product, support, sales, service
+- lifecycle: lead, mql, trial, customer, expansion, churn_risk, churned
+- ticket.assignee_role: agent, resolver
+- ticket.category: billing, onboarding, integration, bug, feature_request, service, hub_a2a, crm_mcp, cc_routing, campaign_whatsapp
+- ticket.priority: P1, P2, P3
+- ticket.status: open, pending, escalated, resolved, closed, reopened
+
+Rules
+- Counts and rates → ask_semantic with product: ticketing. Ticket lists/rows → SQL tools, not semantic.
+- L1 assignee (agent) and L2 resolver are never swapped on reassign_ticket.
+- Do not invent customer or ticket facts; CDP + payload + tool results only.
+- Writes (create_ticket, macros, KB, teams) require userConfirmed where listed.
+- Cross-spoke escalation → spoke_query to hub.orchestrator.

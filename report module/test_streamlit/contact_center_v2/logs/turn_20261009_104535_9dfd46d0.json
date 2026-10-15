@@ -1,0 +1,60 @@
+{
+  "turn_id": "9dfd46d0",
+  "timestamp": "2026-10-09T05:15:35.450156+00:00",
+  "question": "how many conversations are there totally?",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1016,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Total conversations</strong></p><p>There are <strong>621</strong> conversations in total for all time.</p><p>Would you like to see these conversations broken down by channel?</p>",
+  "card": "card: table r1",
+  "facts": "result_id: r1\nwindow: all time\ncertified: false\ntask_goal: Count the total number of conversations.\nanswer_type: number\nrow_count: 1\nrow 1: count=621",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1016,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "how many conversations are there totally?",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The total count of all conversations for the organization.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "free_sql",
+          "goal": "Count the total number of conversations.",
+          "time": "all time",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": false,
+        "kpi_id": null,
+        "row_count": 1
+      }
+    ],
+    "facts": "result_id: r1\nwindow: all time\ncertified: false\ntask_goal: Count the total number of conversations.\nanswer_type: number\nrow_count: 1\nrow 1: count=621",
+    "grounded": true,
+    "card": "card: table r1"
+  },
+  "error": null
+}

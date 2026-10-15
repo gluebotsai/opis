@@ -1,0 +1,54 @@
+slice_id: cc.closure
+agent: Interaction Closure Agent
+modules:
+- core
+- interaction
+- quality
+classes:
+- Party
+- Person
+- Organization
+- Contact
+- Agent
+- Consent
+- Preference
+- Channel
+- Event
+- WorkItem
+- Location
+- Conversation
+- Conversation
+- Intent
+- Disposition
+- WrapUp
+- Sentiment
+- QualityScore
+relations:
+- Person works_for Organization
+- Contact has_consent Consent
+- Contact has_preference Preference
+- Contact belongs_to Organization
+- Agent works_for Organization
+- Conversation WITH Contact
+- Conversation WITH Contact
+- Conversation handled_by Agent
+- Conversation IN_QUEUE Queue
+- Conversation MAY_CREATE Ticket
+- Conversation about WorkItem
+- Conversation HAS_INTENT Intent
+- Sentiment of Conversation
+- QualityScore of Conversation
+actions:
+- action.identify
+- action.route_to_specialist
+- action.get_conversation_context
+- action.suggest_reply
+- action.summarize_conversation
+- action.handoff
+- action.adapt_channel
+- action.score_sentiment
+metric_ids:
+- resolution_rate
+- resolved_conversations_count
+- resolved_dispositions
+note: Legal slice (tools/policy). Inject pack.as_prompt() compact, not this file.

@@ -1,0 +1,435 @@
+version: 1
+layer: core
+
+stub_labels:
+  Product: {key: id}
+
+tables:
+
+  # ---------- accounts: organisation & workforce ----------
+  accounts.organizations:
+    mode: node
+    label: Tenant
+    key: id
+    properties: [id, tenant_id, company_name, industry_type, business_type,
+                 contact_name, designation, work_email, admin_email, tax_number,
+                 billing_address, website_url, country, company_size,
+                 mobile_country_code, mobile_number, lifecycle_status,
+                 converted_at, reseller_id, source_lead_id, created_at, updated_at]
+
+  accounts.setup_roles:
+    mode: node
+    label: Role
+    key: id
+    properties: [id, organization_id, name, description, product_id,
+                 can_view, can_create, can_edit, can_delete, can_export,
+                 can_approve, created_at, updated_at]
+    relationships:
+      - {type: DEFINES_ROLE, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  accounts.setup_teams:
+    mode: node
+    label: Team
+    key: id
+    properties: [id, organization_id, name, description, business_hours_id,
+                 status, created_at, updated_at]
+    relationships:
+      - {type: HAS_TEAM, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: FOLLOWS_HOURS, direction: out, target_label: BusinessHours, target_key: id, from_column: business_hours_id}
+
+  accounts.setup_users:
+    mode: node
+    label: User
+    key: id
+    properties: [id, organization_id, employee_id, first_name, last_name,
+                 work_email, mobile_number, primary_language, secondary_language,
+                 city, state, country, location_id, status, team_id,
+                 business_hours_id, invite_status, password_set_at, invited_at,
+                 created_at, updated_at]
+    relationships:
+      - {type: EMPLOYS, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: MEMBER_OF, direction: out, target_label: Team, target_key: id, from_column: team_id}
+      - {type: FOLLOWS_HOURS, direction: out, target_label: BusinessHours, target_key: id, from_column: business_hours_id}
+
+  accounts.setup_holiday_calendars:
+    mode: node
+    label: HolidayCalendar
+    key: id
+    properties: [id, organization_id, name, country, created_at, updated_at]
+    relationships:
+      - {type: HAS_HOLIDAY_CALENDAR, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  accounts.setup_business_hours:
+    mode: node
+    label: BusinessHours
+    key: id
+    properties: [id, organization_id, name, description, timezone, status,
+                 open_time, close_time, timing_mode, holiday_calendar_id,
+                 created_at, updated_at]
+    relationships:
+      - {type: HAS_BUSINESS_HOURS, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: USES_HOLIDAY_CALENDAR, direction: out, target_label: HolidayCalendar, target_key: id, from_column: holiday_calendar_id}
+
+  accounts.setup_channel_configs:
+    mode: node
+    label: Channel
+    key: id
+    properties: [id, organization_id, channel_type, name, status, created_at, updated_at]
+    relationships:
+      - {type: SUPPORTS_CHANNEL, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  # ---------- ccass: workforce ----------
+  ccass.agents:
+    mode: node
+    label: Agent
+    key: id
+    properties: [id, organization_id, display_name, email, status,
+                 setup_user_id, created_at, updated_at]
+    relationships:
+      - {type: HAS_AGENT, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: IS_AGENT_FOR, direction: out, target_label: User, target_key: id, from_column: setup_user_id}
+
+  ccass.skills:
+    mode: node
+    label: Skill
+    key: id
+    properties: [id, organization_id, key, name, description, is_active, created_at, updated_at]
+    relationships:
+      - {type: DEFINES_SKILL, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  ccass.agent_skills:
+    mode: relationship_only
+    from_label: Agent
+    from_key: id
+    from_column: agent_id
+    to_label: Skill
+    to_key: id
+    to_column: skill_id
+    type: HAS_SKILL
+
+  # ---------- ccass: routing ----------
+  ccass.queues:
+    mode: node
+    label: Queue
+    key: id
+    properties: [id, organization_id, setup_queue_id, name, team_id,
+                 business_hours_id, status, published_at, updated_at]
+    relationships:
+      - {type: HAS_QUEUE_OWNER, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: OWNED_BY_TEAM, direction: out, target_label: Team, target_key: id, from_column: team_id}
+      - {type: FOLLOWS_HOURS, direction: out, target_label: BusinessHours, target_key: id, from_column: business_hours_id}
+
+  ccass.queue_skills:
+    mode: relationship_only
+    from_label: Queue
+    from_key: id
+    from_column: queue_id
+    to_label: Skill
+    to_key: id
+    to_column: skill_id
+    type: REQUIRES_SKILL
+
+  ccass.routing_policies:
+    mode: node
+    label: RoutingPolicy
+    key: id
+    properties: [id, organization_id, queue_id, strategy, priority,
+                 offer_timeout_seconds, max_attempts, after_contact_work_seconds,
+                 email_offer_timeout_seconds, email_first_response_sla_seconds,
+                 email_resolution_sla_seconds, email_after_contact_work_seconds,
+                 created_at, updated_at]
+    relationships:
+      - {type: HAS_ROUTING_POLICY, direction: in, target_label: Queue, target_key: id, from_column: queue_id}
+      - {type: OVERFLOWS_TO, direction: out, target_label: Queue, target_key: id, from_column: overflow_queue_id}
+
+  ccass.dispositions:
+    mode: node
+    label: Disposition
+    key: id
+    properties: [id, organization_id, code, label, description, category,
+                 outcome, requires_note, requires_resolution, is_active,
+                 sort_order, created_at, updated_at]
+    relationships:
+      - {type: DEFINES_DISPOSITION, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  ccass.sla_policies:
+    mode: node
+    label: SLA
+    key: id
+    properties: [id, organization_id, name, first_response_seconds,
+                 resolution_seconds, warning_threshold_pct, business_hours_mode,
+                 is_active, created_at, updated_at]
+    relationships:
+      - {type: DEFINES_SLA, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  ccass.channel_automation_policies:
+    mode: node
+    label: ChannelAutomationPolicy
+    key: id
+    properties: [id, organization_id, channel_config_id, channel, bot_enabled,
+                 live_agent_enabled, automation_mode, confidence_threshold,
+                 default_queue_id, handoff_message, no_agent_behavior,
+                 inactivity_close_seconds, shadow_mode, policy_version, status,
+                 created_at, updated_at]
+    relationships:
+      - {type: HAS_AUTOMATION_POLICY, direction: in, target_label: Channel, target_key: id, from_column: channel_config_id}
+      - {type: DEFAULT_QUEUE, direction: out, target_label: Queue, target_key: id, from_column: default_queue_id}
+
+  # ---------- ccass: conversations ----------
+  ccass.conversations:
+    mode: node
+    label: Conversation
+    key: id
+    properties: [id, organization_id, channel, external_thread_id,
+                 provider_thread_id, webchat_id, visitor_id, status,
+                 lifecycle_state, lifecycle_version, priority, subject,
+                 handoff_reason, bot_active, nlp_enabled, live_agent_enabled,
+                 automation_policy_version, disposition_code, disposition_note,
+                 resolution_code, resolution_summary, sla_status, version,
+                 queued_at, assigned_at, first_response_at, transferred_at,
+                 resolved_at, closed_at, ended_at, end_reason, end_actor,
+                 first_response_due_at, resolution_due_at,
+                 first_agent_response_at, created_at, updated_at]
+    relationships:
+      - {type: HAS_CONVERSATION, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: PARTICIPATED_IN, direction: in, target_label: Contact, target_key: cdp_id, from_column: contact_id}
+      - {type: IN_QUEUE, direction: out, target_label: Queue, target_key: id, from_column: queue_id}
+      - {type: THROUGH, direction: out, target_label: Channel, target_key: id, from_column: channel_config_id}
+      - {type: HANDLED_BY, direction: out, target_label: Agent, target_key: id, from_column: assigned_agent_id}
+      - {type: ASSIGNED_USER, direction: out, target_label: User, target_key: id, from_column: assigned_user_id}
+      - {type: CONTINUES_FROM, direction: out, target_label: Conversation, target_key: id, from_column: previous_conversation_id}
+
+  ccass.conversation_dispositions:
+    mode: relationship_only
+    from_label: Conversation
+    from_key: id
+    from_column: conversation_id
+    to_label: Disposition
+    to_key: id
+    to_column: disposition_id
+    type: RESULTED_IN
+
+  ccass.conversation_memory:
+    mode: node
+    label: ConversationSummary
+    key: id
+    properties: [id, organization_id, conversation_id, rolling_summary,
+                 latest_summarized_message_id, model_name, token_estimate,
+                 version, updated_at]
+    relationships:
+      - {type: HAS_SUMMARY, direction: in, target_label: Conversation, target_key: id, from_column: conversation_id}
+
+  ccass.conversation_sla_state:
+    mode: node
+    label: SLAInstance
+    key: id
+    properties: [id, organization_id, conversation_id, sla_policy_id,
+                 first_response_due_at, resolution_due_at,
+                 first_response_warning_at, resolution_warning_at,
+                 breached_at, updated_at]
+    relationships:
+      - {type: HAS_SLA, direction: in, target_label: Conversation, target_key: id, from_column: conversation_id}
+      - {type: BASED_ON, direction: out, target_label: SLA, target_key: id, from_column: sla_policy_id}
+
+  ccass.conversation_message_attachments:
+    mode: node
+    label: Attachment
+    key: id
+    properties: [id, organization_id, conversation_id, message_id, external_id,
+                 storage_key, file_name, content_type, byte_size,
+                 checksum_sha256, download_url, status, created_at]
+    relationships:
+      - {type: HAS_ATTACHMENT, direction: in, target_label: Conversation, target_key: id, from_column: conversation_id}
+
+  ccass.conversation_notes:
+    mode: node
+    label: WorkNote
+    key: id
+    properties: [id, organization_id, conversation_id, author_user_id, body,
+                 created_at, updated_at]
+    relationships:
+      - {type: HAS_WORK_NOTE, direction: in, target_label: Conversation, target_key: id, from_column: conversation_id}
+      - {type: AUTHORED, direction: in, target_label: User, target_key: id, from_column: author_user_id}
+
+  ccass.conversation_participants:
+    mode: node
+    label: ConversationParticipant
+    key: id
+    properties: [id, organization_id, conversation_id, participant_type,
+                 identity_ref, joined_at, left_at]
+    relationships:
+      - {type: HAS_PARTICIPANT, direction: in, target_label: Conversation, target_key: id, from_column: conversation_id}
+
+  ccass.conversation_assignments:
+    mode: node
+    label: Assignment
+    key: id
+    properties: [id, organization_id, conversation_id, queue_id, agent_id,
+                 routing_attempt_id, state, reason, offered_at, accepted_at,
+                 rejected_at, expired_at, ended_at, expires_at]
+    relationships:
+      - {type: HAS_ASSIGNMENT, direction: in, target_label: Conversation, target_key: id, from_column: conversation_id}
+      - {type: OFFERED_TO, direction: out, target_label: Agent, target_key: id, from_column: agent_id}
+      - {type: FROM_QUEUE, direction: out, target_label: Queue, target_key: id, from_column: queue_id}
+
+  ccass.conversation_transfers:
+    mode: node
+    label: Transfer
+    key: id
+    properties: [id, organization_id, conversation_id, from_queue_id,
+                 from_agent_id, to_queue_id, requested_agent_id,
+                 offered_agent_id, state, notes, disposition_code,
+                 resolution_code, requested_at, offered_at, accepted_at,
+                 completed_at, cancelled_at, updated_at]
+    relationships:
+      - {type: HAS_TRANSFER, direction: in, target_label: Conversation, target_key: id, from_column: conversation_id}
+      - {type: TRANSFERRED_TO, direction: out, target_label: Queue, target_key: id, from_column: to_queue_id}
+
+  ccass.routing_attempts:
+    mode: node
+    label: RoutingAttempt
+    key: id
+    properties: [id, organization_id, conversation_id, queue_id, agent_id,
+                 attempt_number, outcome, created_at, completed_at]
+    relationships:
+      - {type: HAS_ROUTING_ATTEMPT, direction: in, target_label: Conversation, target_key: id, from_column: conversation_id}
+      - {type: TARGETED_QUEUE, direction: out, target_label: Queue, target_key: id, from_column: queue_id}
+      - {type: OFFERED_AGENT, direction: out, target_label: Agent, target_key: id, from_column: agent_id}
+
+  ccass.webchat_sessions:
+    mode: node
+    label: WebchatSession
+    key: id
+    properties: [id, organization_id, conversation_id, webchat_id, visitor_id,
+                 page_origin, page_url, created_at, updated_at, ended_at,
+                 end_reason, ended_by]
+    relationships:
+      - {type: HAS_WEBCHAT_SESSION, direction: in, target_label: Conversation, target_key: id, from_column: conversation_id}
+
+  ccass.agent_tasks:
+    mode: node
+    label: Task
+    key: id
+    properties: [id, organization_id, assigned_user_id, created_by_user_id,
+                 assigned_by_user_id, assigned_by_label, contact_id,
+                 conversation_id, task_type, status, priority, source, title,
+                 summary, notes, channel, due_at, completed_at, dismissed_at,
+                 created_at, updated_at]
+    relationships:
+      - {type: HAS_TASK, direction: in, target_label: User, target_key: id, from_column: assigned_user_id}
+      - {type: FROM_CONVERSATION, direction: out, target_label: Conversation, target_key: id, from_column: conversation_id}
+      - {type: FOR_CONTACT, direction: out, target_label: Contact, target_key: cdp_id, from_column: contact_id}
+      - {type: CREATED_BY, direction: out, target_label: User, target_key: id, from_column: created_by_user_id}
+
+  ccass.workspace_common_notes:
+    mode: node
+    label: SharedNote
+    key: id
+    properties: [id, organization_id, author_user_id, body, created_at, updated_at]
+    relationships:
+      - {type: HAS_SHARED_NOTE, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: WROTE_SHARED_NOTE, direction: in, target_label: User, target_key: id, from_column: author_user_id}
+
+  # ---------- cdp: customer 360 ----------
+  cdp.customer_profile:
+    mode: node
+    label: Contact
+    key: cdp_id
+    properties: [cdp_id, organization_id, first_name, last_name, gender,
+                 date_of_birth, company, city, region, country, language,
+                 timezone, acquisition_channel, acquisition_date, first_referrer,
+                 first_seen_at, last_seen_at, created_at, updated_at]
+    relationships:
+      - {type: HAS_CONTACT, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  cdp.identity_keys:
+    mode: node
+    label: ContactPoint
+    key: identity_id
+    properties: [identity_id, cdp_id, organization_id, key_type, key_value,
+                 source_system, confidence_score, verified, created_at]
+    relationships:
+      - {type: HAS_CONTACT_POINT, direction: in, target_label: Contact, target_key: cdp_id, from_column: cdp_id}
+
+  cdp.customer_scores:
+    mode: node
+    label: CustomerScore
+    key: cdp_id
+    properties: [cdp_id, organization_id, engagement_score, value_score,
+                 loyalty_score, churn_score, purchase_probability,
+                 retention_score, advocacy_score, web_engagement_score,
+                 intent_score, digital_activity_score, updated_at]
+    relationships:
+      - {type: HAS_SCORES, direction: in, target_label: Contact, target_key: cdp_id, from_column: cdp_id}
+
+  cdp.ai_insights:
+    mode: node
+    label: Insight
+    key: insight_id
+    properties: [insight_id, cdp_id, organization_id, insight_type, score,
+                 summary, explanation, generated_at]
+    relationships:
+      - {type: HAS_INSIGHT, direction: in, target_label: Contact, target_key: cdp_id, from_column: cdp_id}
+
+  cdp.customer_recommendations:
+    mode: node
+    label: Recommendation
+    key: recommendation_id
+    properties: [recommendation_id, cdp_id, organization_id,
+                 recommendation_type, recommendation, confidence, generated_at]
+    relationships:
+      - {type: HAS_RECOMMENDATION, direction: in, target_label: Contact, target_key: cdp_id, from_column: cdp_id}
+
+  cdp.segments:
+    mode: node
+    label: Segment
+    key: segment_id
+    properties: [segment_id, organization_id, segment_name, description, created_at]
+    relationships:
+      - {type: DEFINES_SEGMENT, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  cdp.customer_segments:
+    mode: relationship_only
+    from_label: Contact
+    from_key: cdp_id
+    from_column: cdp_id
+    to_label: Segment
+    to_key: segment_id
+    to_column: segment_id
+    type: BELONGS_TO_SEGMENT
+
+  cdp.orders:
+    mode: node
+    label: Order
+    key: order_id
+    properties: [order_id, cdp_id, organization_id, order_number, status,
+                 {name: total_amount, type: decimal, scale: 2, currency_column: currency},
+                 currency, payment_status, fulfillment_status, shipping_country,
+                 created_at, updated_at]
+    relationships:
+      - {type: PLACED, direction: in, target_label: Contact, target_key: cdp_id, from_column: cdp_id}
+
+  cdp.order_items:
+    mode: relationship_only
+    from_label: Order
+    from_key: order_id
+    from_column: order_id
+    to_label: Product
+    to_key: id
+    to_column: product_id
+    type: CONTAINS
+
+  # ---------- inventory ----------
+  inventory.products:
+    mode: node
+    label: Offering
+    key: id
+    properties: [id, organization_id, name, tagline, description,
+                 specifications, image_url, product_url, sku, brand, category,
+                 subcategory, tags, stock_on_hand,
+                 {name: price, type: decimal, scale: 2, currency_column: currency},
+                 currency, max_discount_percent, status, product_type,
+                 billing_type, billing_frequency, unit_of_measure,
+                 created_at, updated_at]
+    relationships:
+      - {type: OFFERS, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}

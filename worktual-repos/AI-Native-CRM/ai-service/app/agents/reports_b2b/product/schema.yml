@@ -1,0 +1,1027 @@
+version: 1
+
+views:
+  deals:
+    description: "Core sales opportunities with dynamic quote currency resolution, stage weights, and aging days."
+    source: |
+      SELECT 
+        d.id,
+        d.organization_id,
+        d.title,
+        d.stage,
+        COALESCE(d.amount, 0) AS amount,
+        CASE
+          WHEN pq.currency IS NOT NULL AND pq.currency <> 'USD' THEN pq.currency
+          WHEN o.country IS NOT NULL AND o.country <> 'US' AND cc.curr IS NOT NULL THEN cc.curr
+          WHEN pq.currency = 'USD' THEN 'USD'
+          WHEN o.country = 'US' THEN 'USD'
+          ELSE 'USD'
+        END AS currency_code,
+        CASE d.stage
+          WHEN 'qualification' THEN 0.10
+          WHEN 'discover' THEN 0.25
+          WHEN 'propose' THEN 0.50
+          WHEN 'negotiate' THEN 0.75
+          WHEN 'closed_won' THEN 1.00
+          WHEN 'closed_lost' THEN 0.00
+          ELSE 0.00
+        END AS stage_weight,
+        ROUND(COALESCE(d.amount, 0) * (
+          CASE d.stage
+            WHEN 'qualification' THEN 0.10
+            WHEN 'discover' THEN 0.25
+            WHEN 'propose' THEN 0.50
+            WHEN 'negotiate' THEN 0.75
+            WHEN 'closed_won' THEN 1.00
+            WHEN 'closed_lost' THEN 0.00
+            ELSE 0.00
+          END
+        ), 2) AS weighted_amount,
+        d.company_id,
+        c.name AS company_name,
+        c.industry AS company_industry,
+        d.location_id,
+        d.contact_id,
+        COALESCE(d.contact_name, cdp.first_name || ' ' || COALESCE(cdp.last_name, '')) AS contact_name,
+        COALESCE(d.contact_email, id_k.key_value) AS contact_email,
+        d.owner_user_id,
+        su.first_name || ' ' || COALESCE(su.last_name, '') AS owner_name,
+        d.created_at,
+        d.closed_at,
+        COALESCE(d.closed_at, d.created_at) AS close_ts,
+        d.updated_at,
+        d.expected_close_date,
+        d.lost_reason,
+        (d.stage IN ('qualification', 'discover', 'propose', 'negotiate')) AS is_open,
+        (d.stage = 'closed_won') AS is_won,
+        (d.stage = 'closed_lost') AS is_lost,
+        FLOOR(EXTRACT(EPOCH FROM (NOW() - d.created_at))/86400)::integer AS aging_days,
+        d.forecast_category,
+        d.forecast_reason,
+        d.forecast_flagged
+      FROM crm.deals d
+      LEFT JOIN crm.companies c ON c.id = d.company_id AND c.organization_id = d.organization_id
+      LEFT JOIN accounts.setup_users su ON su.id = d.owner_user_id
+      LEFT JOIN accounts.organizations o ON o.id = d.organization_id
+      LEFT JOIN cdp.customer_profile cdp ON cdp.cdp_id = d.contact_id
+      LEFT JOIN LATERAL (
+        SELECT ik.key_value 
+        FROM cdp.identity_keys ik 
+        WHERE ik.cdp_id = d.contact_id AND ik.key_type = 'email' AND ik.organization_id = d.organization_id 
+        ORDER BY ik.created_at ASC 
+        LIMIT 1
+      ) id_k ON TRUE
+      LEFT JOIN LATERAL (
+        SELECT q.currency 
+        FROM crm.quotes q 
+        WHERE q.deal_id = d.id AND q.organization_id = d.organization_id 
+        ORDER BY CASE WHEN q.status = 'accepted' THEN 1 WHEN q.status = 'sent' THEN 2 ELSE 3 END, q.updated_at DESC 
+        LIMIT 1
+      ) pq ON TRUE
+      LEFT JOIN LATERAL (
+        SELECT CASE lower(btrim(o.country))
+          WHEN 'india' THEN 'INR'
+          WHEN 'in' THEN 'INR'
+          WHEN 'united kingdom' THEN 'GBP'
+          WHEN 'uk' THEN 'GBP'
+          WHEN 'gb' THEN 'GBP'
+          WHEN 'germany' THEN 'EUR'
+          WHEN 'de' THEN 'EUR'
+          WHEN 'canada' THEN 'CAD'
+          WHEN 'ca' THEN 'CAD'
+          WHEN 'australia' THEN 'AUD'
+          WHEN 'au' THEN 'AUD'
+          WHEN 'united states' THEN 'USD'
+          WHEN 'usa' THEN 'USD'
+          WHEN 'us' THEN 'USD'
+          WHEN 'united arab emirates' THEN 'AED'
+          WHEN 'uae' THEN 'AED'
+          WHEN 'ae' THEN 'AED'
+          ELSE NULL
+        END AS curr
+      ) cc ON TRUE
+      WHERE d.organization_id = {org_id}
+    columns:
+      id: { type: text, description: "Deal unique identifier" }
+      organization_id: { type: bigint, description: "Tenant organization identifier" }
+      title: { type: text, description: "Deal opportunity title" }
+      stage: { type: text, description: "Deal stage: qualification, discover, propose, negotiate, closed_won, closed_lost" }
+      amount: { type: numeric, description: "Deal transaction amount" }
+      currency_code: { type: text, description: "Resolved ISO currency code" }
+      stage_weight: { type: numeric, description: "Deterministic probability weight" }
+      weighted_amount: { type: numeric, description: "Weighted amount (amount * stage_weight)" }
+      company_id: { type: text, description: "Associated client company ID" }
+      company_name: { type: text, description: "Associated client company name" }
+      company_industry: { type: text, description: "Client company industry" }
+      location_id: { type: text, description: "Client location ID" }
+      contact_id: { type: text, description: "Primary contact CDP ID" }
+      contact_name: { type: text, description: "Primary contact full name" }
+      contact_email: { type: text, description: "Primary contact business email" }
+      owner_user_id: { type: bigint, description: "Assigned sales rep user ID" }
+      owner_name: { type: text, description: "Assigned sales rep full name" }
+      created_at: { type: timestamp, description: "Deal creation timestamp" }
+      closed_at: { type: timestamp, description: "Deal closing timestamp" }
+      close_ts: { type: timestamp, description: "Effective close timestamp: coalesce(closed_at, created_at)" }
+      updated_at: { type: timestamp, description: "Last modification timestamp" }
+      expected_close_date: { type: timestamp, description: "Target close date" }
+      lost_reason: { type: text, description: "Reason deal was lost" }
+      is_open: { type: boolean, description: "True if open stage" }
+      is_won: { type: boolean, description: "True if closed_won" }
+      is_lost: { type: boolean, description: "True if closed_lost" }
+      aging_days: { type: integer, description: "Whole days elapsed since creation" }
+      forecast_category: { type: text, description: "Auditor forecast category" }
+      forecast_reason: { type: text, description: "Auditor forecast reason" }
+      forecast_flagged: { type: boolean, description: "True if deal was flagged by auditor" }
+
+  deal_facts:
+    description: "Aggregated activity, touch, and quote metrics per deal."
+    source: |
+      SELECT 
+        d.id AS deal_id,
+        d.organization_id,
+        d.title,
+        d.stage,
+        COALESCE(d.amount, 0) AS amount,
+        CASE
+          WHEN pq.currency IS NOT NULL AND pq.currency <> 'USD' THEN pq.currency
+          WHEN o.country IS NOT NULL AND o.country <> 'US' AND cc.curr IS NOT NULL THEN cc.curr
+          WHEN pq.currency = 'USD' THEN 'USD'
+          WHEN o.country = 'US' THEN 'USD'
+          ELSE 'USD'
+        END AS currency_code,
+        ROUND(COALESCE(d.amount, 0) * (
+          CASE d.stage
+            WHEN 'qualification' THEN 0.10
+            WHEN 'discover' THEN 0.25
+            WHEN 'propose' THEN 0.50
+            WHEN 'negotiate' THEN 0.75
+            WHEN 'closed_won' THEN 1.00
+            WHEN 'closed_lost' THEN 0.00
+            ELSE 0.00
+          END
+        ), 2) AS weighted_amount,
+        d.company_id,
+        c.name AS company_name,
+        d.owner_user_id,
+        su.first_name || ' ' || COALESCE(su.last_name, '') AS owner_name,
+        d.created_at,
+        d.closed_at,
+        COALESCE(d.closed_at, d.created_at) AS close_ts,
+        FLOOR(EXTRACT(EPOCH FROM (NOW() - d.created_at))/86400)::integer AS aging_days,
+        COALESCE(act.total_activities, 0)::integer AS total_activities,
+        COALESCE(act.total_calls, 0)::integer AS total_calls,
+        COALESCE(act.total_meetings, 0)::integer AS total_meetings,
+        COALESCE(act.total_emails, 0)::integer AS total_emails,
+        act.days_since_last_touch::integer AS days_since_last_touch,
+        COALESCE(q_agg.quote_count, 0)::integer AS quote_count,
+        COALESCE(q_agg.accepted_quote_total, 0) AS accepted_quote_total,
+        COALESCE(q_agg.avg_discount_pct, 0) AS avg_discount_pct
+      FROM crm.deals d
+      LEFT JOIN crm.companies c ON c.id = d.company_id AND c.organization_id = d.organization_id
+      LEFT JOIN accounts.setup_users su ON su.id = d.owner_user_id
+      LEFT JOIN accounts.organizations o ON o.id = d.organization_id
+      LEFT JOIN LATERAL (
+        SELECT q.currency 
+        FROM crm.quotes q 
+        WHERE q.deal_id = d.id AND q.organization_id = d.organization_id 
+        ORDER BY CASE WHEN q.status = 'accepted' THEN 1 WHEN q.status = 'sent' THEN 2 ELSE 3 END, q.updated_at DESC 
+        LIMIT 1
+      ) pq ON TRUE
+      LEFT JOIN LATERAL (
+        SELECT CASE lower(btrim(o.country))
+          WHEN 'india' THEN 'INR'
+          WHEN 'in' THEN 'INR'
+          WHEN 'united kingdom' THEN 'GBP'
+          WHEN 'uk' THEN 'GBP'
+          WHEN 'gb' THEN 'GBP'
+          WHEN 'germany' THEN 'EUR'
+          WHEN 'de' THEN 'EUR'
+          WHEN 'canada' THEN 'CAD'
+          WHEN 'ca' THEN 'CAD'
+          WHEN 'australia' THEN 'AUD'
+          WHEN 'au' THEN 'AUD'
+          WHEN 'united states' THEN 'USD'
+          WHEN 'usa' THEN 'USD'
+          WHEN 'us' THEN 'USD'
+          WHEN 'united arab emirates' THEN 'AED'
+          WHEN 'uae' THEN 'AED'
+          WHEN 'ae' THEN 'AED'
+          ELSE NULL
+        END AS curr
+      ) cc ON TRUE
+      LEFT JOIN LATERAL (
+        SELECT 
+          COUNT(*) AS total_activities,
+          COUNT(*) FILTER (WHERE da.type = 'call') AS total_calls,
+          COUNT(*) FILTER (WHERE da.type = 'meeting') AS total_meetings,
+          COUNT(*) FILTER (WHERE da.type = 'email') AS total_emails,
+          FLOOR(EXTRACT(EPOCH FROM (NOW() - MAX(da.created_at)))/86400) AS days_since_last_touch
+        FROM crm.deal_activities da 
+        WHERE da.deal_id = d.id AND da.organization_id = d.organization_id
+      ) act ON TRUE
+      LEFT JOIN LATERAL (
+        SELECT 
+          COUNT(*) AS quote_count,
+          SUM(CASE WHEN q.status = 'accepted' THEN q.total ELSE 0 END) AS accepted_quote_total,
+          AVG(q.discount_pct) AS avg_discount_pct
+        FROM crm.quotes q 
+        WHERE q.deal_id = d.id AND q.organization_id = d.organization_id
+      ) q_agg ON TRUE
+      WHERE d.organization_id = {org_id}
+    columns:
+      deal_id: { type: text, description: "Deal ID" }
+      organization_id: { type: bigint, description: "Tenant organization ID" }
+      title: { type: text, description: "Deal title" }
+      stage: { type: text, description: "Deal stage" }
+      amount: { type: numeric, description: "Deal amount" }
+      currency_code: { type: text, description: "Resolved ISO currency" }
+      weighted_amount: { type: numeric, description: "Weighted amount" }
+      company_id: { type: text, description: "Company ID" }
+      company_name: { type: text, description: "Company name" }
+      owner_user_id: { type: bigint, description: "Owner user ID" }
+      owner_name: { type: text, description: "Owner full name" }
+      created_at: { type: timestamp, description: "Creation timestamp" }
+      closed_at: { type: timestamp, description: "Closing timestamp" }
+      close_ts: { type: timestamp, description: "Effective close timestamp" }
+      aging_days: { type: integer, description: "Aging in days" }
+      total_activities: { type: integer, description: "Total activities logged on deal" }
+      total_calls: { type: integer, description: "Calls logged on deal" }
+      total_meetings: { type: integer, description: "Meetings logged on deal" }
+      total_emails: { type: integer, description: "Emails logged on deal" }
+      days_since_last_touch: { type: integer, description: "Days since latest logged touch" }
+      quote_count: { type: integer, description: "Quotes created for deal" }
+      accepted_quote_total: { type: numeric, description: "Accepted quote total value" }
+      avg_discount_pct: { type: numeric, description: "Average discount percent on quotes" }
+
+  companies:
+    description: "B2B client accounts, holding companies, franchise networks, and store branches."
+    source: |
+      SELECT 
+        c.id,
+        c.organization_id,
+        c.name,
+        c.industry,
+        c.employee_count,
+        c.owner_user_id,
+        su.first_name || ' ' || COALESCE(su.last_name, '') AS owner_name,
+        c.domain,
+        c.channel_role,
+        c.parent_company_id,
+        p_c.name AS parent_company_name,
+        (c.channel_role IN ('franchise', 'owned_store', 'brand_hq')) AS is_channel_hub,
+        c.created_at,
+        c.updated_at
+      FROM crm.companies c
+      LEFT JOIN crm.companies p_c ON p_c.id = c.parent_company_id AND p_c.organization_id = c.organization_id
+      LEFT JOIN accounts.setup_users su ON su.id = c.owner_user_id
+      WHERE c.organization_id = {org_id}
+    columns:
+      id: { type: text, description: "Company ID" }
+      organization_id: { type: bigint, description: "Tenant organization ID" }
+      name: { type: text, description: "Company legal name" }
+      industry: { type: text, description: "Industry sector" }
+      employee_count: { type: integer, description: "Employee headcount" }
+      owner_user_id: { type: bigint, description: "Assigned owner user ID" }
+      owner_name: { type: text, description: "Assigned owner full name" }
+      domain: { type: text, description: "Corporate website domain" }
+      channel_role: { type: text, description: "Channel classification: standard, franchise, owned_store, brand_hq" }
+      parent_company_id: { type: text, description: "Parent company ID" }
+      parent_company_name: { type: text, description: "Parent company name" }
+      is_channel_hub: { type: boolean, description: "True if channel hub (franchise, owned_store, brand_hq)" }
+      created_at: { type: timestamp, description: "Creation timestamp" }
+      updated_at: { type: timestamp, description: "Modification timestamp" }
+
+  company_locations:
+    description: "Physical operating branches and headquarters addresses for companies."
+    source: |
+      SELECT 
+        cl.id,
+        cl.organization_id,
+        cl.company_id,
+        c.name AS company_name,
+        cl.name,
+        cl.type AS location_type,
+        cl.address,
+        cl.city,
+        cl.industry,
+        cl.employee_count,
+        cl.owner_user_id,
+        cl.created_at
+      FROM crm.company_locations cl
+      LEFT JOIN crm.companies c ON c.id = cl.company_id AND c.organization_id = cl.organization_id
+      WHERE cl.organization_id = {org_id}
+    columns:
+      id: { type: text, description: "Location ID" }
+      organization_id: { type: bigint, description: "Tenant organization ID" }
+      company_id: { type: text, description: "Company ID" }
+      company_name: { type: text, description: "Company name" }
+      name: { type: text, description: "Site / location name" }
+      location_type: { type: text, description: "Location type: hq, branch" }
+      address: { type: text, description: "Street address" }
+      city: { type: text, description: "City" }
+      industry: { type: text, description: "Location industry" }
+      employee_count: { type: integer, description: "Location headcount" }
+      owner_user_id: { type: bigint, description: "Owner user ID" }
+      created_at: { type: timestamp, description: "Creation timestamp" }
+
+  contacts:
+    description: "Business contacts, executives, and leads with CDP profile attributes."
+    source: |
+      SELECT 
+        cp.id,
+        cp.organization_id,
+        cp.account_contact_id,
+        cdp.first_name,
+        cdp.last_name,
+        cdp.first_name || ' ' || COALESCE(cdp.last_name, '') AS full_name,
+        cdp.contact_type,
+        cdp.region,
+        cdp.country,
+        id_k.key_value AS contact_email,
+        id_p.key_value AS contact_phone,
+        cp.company_id,
+        c.name AS company_name,
+        cp.location_id,
+        cp.owner_user_id,
+        cp.created_by_user_id,
+        su.first_name || ' ' || COALESCE(su.last_name, '') AS owner_name,
+        cp.lead_source,
+        cp.lead_status,
+        cp.disqualify_reason,
+        cp.bant_budget,
+        cp.bant_authority,
+        cp.bant_need,
+        cp.bant_timeline,
+        cp.converted_deal_id,
+        cp.crm_status,
+        (cp.crm_status = 'active') AS is_active,
+        cp.marketing_opt_out,
+        cp.created_at,
+        cp.updated_at
+      FROM crm.contact_profiles cp
+      LEFT JOIN cdp.customer_profile cdp ON cdp.cdp_id = cp.account_contact_id
+      LEFT JOIN LATERAL (
+        SELECT ik.key_value 
+        FROM cdp.identity_keys ik 
+        WHERE ik.cdp_id = cp.account_contact_id AND ik.key_type = 'email' AND ik.organization_id = cp.organization_id 
+        ORDER BY ik.created_at ASC 
+        LIMIT 1
+      ) id_k ON TRUE
+      LEFT JOIN LATERAL (
+        SELECT ik.key_value 
+        FROM cdp.identity_keys ik 
+        WHERE ik.cdp_id = cp.account_contact_id AND ik.key_type = 'phone' AND ik.organization_id = cp.organization_id 
+        ORDER BY ik.created_at ASC 
+        LIMIT 1
+      ) id_p ON TRUE
+      LEFT JOIN crm.companies c ON c.id = cp.company_id AND c.organization_id = cp.organization_id
+      LEFT JOIN accounts.setup_users su ON su.id = cp.owner_user_id
+      WHERE cp.organization_id = {org_id}
+    columns:
+      id: { type: text, description: "Contact profile ID" }
+      organization_id: { type: bigint, description: "Tenant organization ID" }
+      account_contact_id: { type: text, description: "CDP person identifier (cdp_id)" }
+      first_name: { type: text, description: "First name" }
+      last_name: { type: text, description: "Last name" }
+      full_name: { type: text, description: "Full display name" }
+      contact_type: { type: text, description: "CDP person type: lead, contact, prospect, customer, churned" }
+      region: { type: text, description: "Person region from CDP. Empty is Unassigned. Not deal city." }
+      country: { type: text, description: "Person country from CDP. Not deal city." }
+      contact_email: { type: text, description: "Primary email" }
+      contact_phone: { type: text, description: "Primary phone" }
+      company_id: { type: text, description: "Associated company ID" }
+      company_name: { type: text, description: "Associated company name" }
+      location_id: { type: text, description: "Associated branch location ID" }
+      owner_user_id: { type: bigint, description: "Assigned owner user ID" }
+      created_by_user_id: { type: bigint, description: "User who created the CRM contact row" }
+      owner_name: { type: text, description: "Assigned owner name" }
+      lead_source: { type: text, description: "Lead source origin" }
+      lead_status: { type: text, description: "Sales lifecycle status: new, contacted, qualified, disqualified, converted" }
+      disqualify_reason: { type: text, description: "Disqualification reason code" }
+      bant_budget: { type: boolean, description: "BANT: budget confirmed" }
+      bant_authority: { type: boolean, description: "BANT: authority confirmed" }
+      bant_need: { type: boolean, description: "BANT: need confirmed" }
+      bant_timeline: { type: boolean, description: "BANT: timeline confirmed" }
+      converted_deal_id: { type: text, description: "Associated deal when converted" }
+      crm_status: { type: text, description: "CRM overlay status: active, deleted" }
+      is_active: { type: boolean, description: "True if crm_status = active" }
+      marketing_opt_out: { type: boolean, description: "True if opted out of marketing" }
+      created_at: { type: timestamp, description: "Creation timestamp" }
+      updated_at: { type: timestamp, description: "Modification timestamp" }
+
+  proposals:
+    description: "Commercial proposal documents linked to deals and companies."
+    source: |
+      SELECT 
+        p.id,
+        p.organization_id,
+        p.title,
+        p.deal_id,
+        d.title AS deal_title,
+        p.company_id,
+        c.name AS company_name,
+        p.owner_user_id,
+        su.first_name || ' ' || COALESCE(su.last_name, '') AS owner_name,
+        p.status,
+        COALESCE(p.total_amount, 0) AS total_amount,
+        COALESCE(
+          CASE WHEN p.currency_code IS NOT NULL AND upper(btrim(p.currency_code)) <> 'USD' THEN p.currency_code END,
+          (
+            SELECT CASE lower(btrim(o.country))
+              WHEN 'india' THEN 'INR' WHEN 'in' THEN 'INR'
+              WHEN 'united kingdom' THEN 'GBP' WHEN 'uk' THEN 'GBP' WHEN 'gb' THEN 'GBP'
+              WHEN 'germany' THEN 'EUR' WHEN 'de' THEN 'EUR'
+              WHEN 'canada' THEN 'CAD' WHEN 'ca' THEN 'CAD'
+              WHEN 'australia' THEN 'AUD' WHEN 'au' THEN 'AUD'
+              WHEN 'united arab emirates' THEN 'AED' WHEN 'uae' THEN 'AED' WHEN 'ae' THEN 'AED'
+              WHEN 'united states' THEN 'USD' WHEN 'usa' THEN 'USD' WHEN 'us' THEN 'USD'
+              ELSE NULL
+            END
+            FROM accounts.organizations o
+            WHERE o.id = p.organization_id
+          ),
+          NULLIF(p.currency_code, ''),
+          'USD'
+        ) AS currency_code,
+        p.created_at,
+        p.updated_at
+      FROM crm.proposals p
+      LEFT JOIN crm.deals d ON d.id = p.deal_id AND d.organization_id = p.organization_id
+      LEFT JOIN crm.companies c ON c.id = p.company_id AND c.organization_id = p.organization_id
+      LEFT JOIN accounts.setup_users su ON su.id = p.owner_user_id
+      WHERE p.organization_id = {org_id}
+    columns:
+      id: { type: text, description: "Proposal ID" }
+      organization_id: { type: bigint, description: "Tenant organization ID" }
+      title: { type: text, description: "Proposal title" }
+      deal_id: { type: text, description: "Deal ID" }
+      deal_title: { type: text, description: "Deal title" }
+      company_id: { type: text, description: "Company ID" }
+      company_name: { type: text, description: "Company name" }
+      owner_user_id: { type: bigint, description: "Owner user ID" }
+      owner_name: { type: text, description: "Owner full name" }
+      status: { type: text, description: "Proposal status: draft, shared, accepted, declined" }
+      total_amount: { type: numeric, description: "Proposal total amount" }
+      currency_code: { type: text, description: "Currency code" }
+      created_at: { type: timestamp, description: "Creation timestamp" }
+      updated_at: { type: timestamp, description: "Modification timestamp" }
+
+  quotes:
+    description: "Priced sales quotes sent to prospects."
+    source: |
+      SELECT 
+        q.id,
+        q.organization_id,
+        q.deal_id,
+        d.title AS deal_title,
+        q.number AS quote_number,
+        q.version,
+        q.status,
+        COALESCE(
+          CASE WHEN q.currency IS NOT NULL AND upper(btrim(q.currency)) <> 'USD' THEN q.currency END,
+          (
+            SELECT CASE lower(btrim(o.country))
+              WHEN 'india' THEN 'INR' WHEN 'in' THEN 'INR'
+              WHEN 'united kingdom' THEN 'GBP' WHEN 'uk' THEN 'GBP' WHEN 'gb' THEN 'GBP'
+              WHEN 'germany' THEN 'EUR' WHEN 'de' THEN 'EUR'
+              WHEN 'canada' THEN 'CAD' WHEN 'ca' THEN 'CAD'
+              WHEN 'australia' THEN 'AUD' WHEN 'au' THEN 'AUD'
+              WHEN 'united arab emirates' THEN 'AED' WHEN 'uae' THEN 'AED' WHEN 'ae' THEN 'AED'
+              WHEN 'united states' THEN 'USD' WHEN 'usa' THEN 'USD' WHEN 'us' THEN 'USD'
+              ELSE NULL
+            END
+            FROM accounts.organizations o
+            WHERE o.id = q.organization_id
+          ),
+          NULLIF(q.currency, ''),
+          'USD'
+        ) AS currency_code,
+        COALESCE(q.subtotal, 0) AS subtotal,
+        COALESCE(q.discount_pct, 0) AS discount_pct,
+        ROUND(COALESCE(q.subtotal, 0) * (COALESCE(q.discount_pct, 0) / 100.0), 2) AS discount_amount,
+        COALESCE(q.total, 0) AS total,
+        q.valid_until,
+        q.sent_at,
+        q.accepted_at,
+        q.created_by_user_id,
+        d.owner_user_id,
+        su.first_name || ' ' || COALESCE(su.last_name, '') AS owner_name,
+        q.approval_status,
+        q.created_at,
+        q.updated_at
+      FROM crm.quotes q
+      LEFT JOIN crm.deals d ON d.id = q.deal_id AND d.organization_id = q.organization_id
+      LEFT JOIN accounts.setup_users su ON su.id = d.owner_user_id
+      WHERE q.organization_id = {org_id}
+    columns:
+      id: { type: text, description: "Quote ID" }
+      organization_id: { type: bigint, description: "Tenant organization ID" }
+      deal_id: { type: text, description: "Deal ID" }
+      deal_title: { type: text, description: "Deal title" }
+      quote_number: { type: text, description: "Quote reference number (e.g. Q-00001)" }
+      version: { type: integer, description: "Quote version number" }
+      status: { type: text, description: "Quote status: draft, sent, accepted, rejected, void" }
+      currency_code: { type: text, description: "Currency code" }
+      subtotal: { type: numeric, description: "Quote subtotal before discount" }
+      discount_pct: { type: numeric, description: "Discount percentage applied" }
+      discount_amount: { type: numeric, description: "Calculated discount monetary amount" }
+      total: { type: numeric, description: "Quote final total" }
+      valid_until: { type: timestamp, description: "Expiration timestamp" }
+      sent_at: { type: timestamp, description: "Timestamp sent to client" }
+      accepted_at: { type: timestamp, description: "Timestamp accepted by client" }
+      created_by_user_id: { type: bigint, description: "User ID who created quote" }
+      owner_user_id: { type: bigint, description: "Deal owner user ID" }
+      owner_name: { type: text, description: "Deal owner name" }
+      approval_status: { type: text, description: "Discount approval status: drafting, pending_approval, approved" }
+      created_at: { type: timestamp, description: "Creation timestamp" }
+      updated_at: { type: timestamp, description: "Modification timestamp" }
+
+  quote_lines:
+    description: "Individual product and service line items on quotes."
+    source: |
+      SELECT 
+        ql.id,
+        ql.organization_id,
+        ql.quote_id,
+        ql.product_id,
+        COALESCE(p.name, ql.name) AS product_name,
+        COALESCE(ql.quantity, 0) AS quantity,
+        COALESCE(ql.unit_price, 0) AS unit_price,
+        COALESCE(ql.amount, 0) AS amount,
+        ql.created_at
+      FROM crm.quote_lines ql
+      LEFT JOIN inventory.products p ON p.id = ql.product_id
+      WHERE ql.organization_id = {org_id}
+    columns:
+      id: { type: text, description: "Quote line ID" }
+      organization_id: { type: bigint, description: "Tenant organization ID" }
+      quote_id: { type: text, description: "Parent quote ID" }
+      product_id: { type: text, description: "Catalog product ID" }
+      product_name: { type: text, description: "Product display name" }
+      quantity: { type: numeric, description: "Line quantity" }
+      unit_price: { type: numeric, description: "Unit price" }
+      amount: { type: numeric, description: "Total line monetary amount" }
+      created_at: { type: timestamp, description: "Creation timestamp" }
+
+  orders:
+    description: "Confirmed commercial sales orders created from accepted quotes."
+    source: |
+      SELECT 
+        so.id,
+        so.organization_id,
+        so.number AS order_number,
+        so.deal_id,
+        d.title AS deal_title,
+        so.quote_id,
+        so.company_id,
+        c.name AS company_name,
+        so.status,
+        COALESCE(
+          CASE WHEN so.currency IS NOT NULL AND upper(btrim(so.currency)) <> 'USD' THEN so.currency END,
+          (
+            SELECT CASE lower(btrim(o.country))
+              WHEN 'india' THEN 'INR' WHEN 'in' THEN 'INR'
+              WHEN 'united kingdom' THEN 'GBP' WHEN 'uk' THEN 'GBP' WHEN 'gb' THEN 'GBP'
+              WHEN 'germany' THEN 'EUR' WHEN 'de' THEN 'EUR'
+              WHEN 'canada' THEN 'CAD' WHEN 'ca' THEN 'CAD'
+              WHEN 'australia' THEN 'AUD' WHEN 'au' THEN 'AUD'
+              WHEN 'united arab emirates' THEN 'AED' WHEN 'uae' THEN 'AED' WHEN 'ae' THEN 'AED'
+              WHEN 'united states' THEN 'USD' WHEN 'usa' THEN 'USD' WHEN 'us' THEN 'USD'
+              ELSE NULL
+            END
+            FROM accounts.organizations o
+            WHERE o.id = so.organization_id
+          ),
+          NULLIF(so.currency, ''),
+          'USD'
+        ) AS currency_code,
+        COALESCE(so.total, 0) AS total,
+        so.confirmed_at,
+        so.created_by_user_id,
+        d.owner_user_id,
+        su.first_name || ' ' || COALESCE(su.last_name, '') AS owner_name,
+        so.created_at
+      FROM crm.sales_orders so
+      LEFT JOIN crm.deals d ON d.id = so.deal_id AND d.organization_id = so.organization_id
+      LEFT JOIN crm.companies c ON c.id = so.company_id AND c.organization_id = so.organization_id
+      LEFT JOIN accounts.setup_users su ON su.id = d.owner_user_id
+      WHERE so.organization_id = {org_id}
+    columns:
+      id: { type: text, description: "Sales order ID" }
+      organization_id: { type: bigint, description: "Tenant organization ID" }
+      order_number: { type: text, description: "Order reference number (e.g. SO-00001)" }
+      deal_id: { type: text, description: "Deal ID" }
+      deal_title: { type: text, description: "Deal title" }
+      quote_id: { type: text, description: "Source quote ID" }
+      company_id: { type: text, description: "Client company ID" }
+      company_name: { type: text, description: "Client company name" }
+      status: { type: text, description: "Order status: draft, confirmed, fulfilled, cancelled" }
+      currency_code: { type: text, description: "Currency code" }
+      total: { type: numeric, description: "Order total monetary amount" }
+      confirmed_at: { type: timestamp, description: "Confirmation timestamp" }
+      created_by_user_id: { type: bigint, description: "Creator user ID" }
+      owner_user_id: { type: bigint, description: "Deal owner user ID" }
+      owner_name: { type: text, description: "Deal owner name" }
+      created_at: { type: timestamp, description: "Creation timestamp" }
+
+  order_lines:
+    description: "Line items on confirmed sales orders."
+    source: |
+      SELECT 
+        ol.id,
+        ol.organization_id,
+        ol.order_id,
+        ol.product_id,
+        COALESCE(p.name, ol.name) AS product_name,
+        COALESCE(ol.quantity, 0) AS quantity,
+        COALESCE(ol.unit_price, 0) AS unit_price,
+        COALESCE(ol.amount, 0) AS amount,
+        ol.created_at
+      FROM crm.order_lines ol
+      LEFT JOIN inventory.products p ON p.id = ol.product_id
+      WHERE ol.organization_id = {org_id}
+    columns:
+      id: { type: text, description: "Order line ID" }
+      organization_id: { type: bigint, description: "Tenant organization ID" }
+      order_id: { type: text, description: "Parent sales order ID" }
+      product_id: { type: text, description: "Catalog product ID" }
+      product_name: { type: text, description: "Product display name" }
+      quantity: { type: numeric, description: "Quantity" }
+      unit_price: { type: numeric, description: "Unit price" }
+      amount: { type: numeric, description: "Line total monetary amount" }
+      created_at: { type: timestamp, description: "Creation timestamp" }
+
+  invoices:
+    description: "Finance invoices generated from orders with collections and approval status."
+    source: |
+      SELECT 
+        inv.id,
+        inv.organization_id,
+        inv.number AS invoice_number,
+        inv.order_id,
+        inv.deal_id,
+        d.title AS deal_title,
+        inv.company_id,
+        c.name AS company_name,
+        inv.status,
+        inv.approval_status,
+        COALESCE(inv.total - COALESCE(inv.tax_amount, 0) + COALESCE(inv.discount_amount, 0), inv.total) AS subtotal,
+        COALESCE(inv.discount_amount, 0) AS discount_amount,
+        COALESCE(inv.tax_amount, 0) AS tax_amount,
+        COALESCE(inv.total, 0) AS total,
+        COALESCE(
+          CASE WHEN inv.currency IS NOT NULL AND upper(btrim(inv.currency)) <> 'USD' THEN inv.currency END,
+          (
+            SELECT CASE lower(btrim(o.country))
+              WHEN 'india' THEN 'INR' WHEN 'in' THEN 'INR'
+              WHEN 'united kingdom' THEN 'GBP' WHEN 'uk' THEN 'GBP' WHEN 'gb' THEN 'GBP'
+              WHEN 'germany' THEN 'EUR' WHEN 'de' THEN 'EUR'
+              WHEN 'canada' THEN 'CAD' WHEN 'ca' THEN 'CAD'
+              WHEN 'australia' THEN 'AUD' WHEN 'au' THEN 'AUD'
+              WHEN 'united arab emirates' THEN 'AED' WHEN 'uae' THEN 'AED' WHEN 'ae' THEN 'AED'
+              WHEN 'united states' THEN 'USD' WHEN 'usa' THEN 'USD' WHEN 'us' THEN 'USD'
+              ELSE NULL
+            END
+            FROM accounts.organizations o
+            WHERE o.id = inv.organization_id
+          ),
+          NULLIF(inv.currency, ''),
+          'USD'
+        ) AS currency_code,
+        inv.due_at,
+        inv.paid_at,
+        inv.payment_method,
+        inv.created_by_user_id,
+        d.owner_user_id,
+        su.first_name || ' ' || COALESCE(su.last_name, '') AS owner_name,
+        inv.created_at,
+        inv.updated_at,
+        (inv.status = 'overdue' OR (inv.status = 'sent' AND inv.due_at < NOW())) AS is_overdue
+      FROM crm.invoices inv
+      LEFT JOIN crm.deals d ON d.id = inv.deal_id AND d.organization_id = inv.organization_id
+      LEFT JOIN crm.companies c ON c.id = inv.company_id AND c.organization_id = inv.organization_id
+      LEFT JOIN accounts.setup_users su ON su.id = d.owner_user_id
+      WHERE inv.organization_id = {org_id}
+    columns:
+      id: { type: text, description: "Invoice ID" }
+      organization_id: { type: bigint, description: "Tenant organization ID" }
+      invoice_number: { type: text, description: "Invoice reference number" }
+      order_id: { type: text, description: "Associated sales order ID" }
+      deal_id: { type: text, description: "Associated deal ID" }
+      deal_title: { type: text, description: "Deal title" }
+      company_id: { type: text, description: "Client company ID" }
+      company_name: { type: text, description: "Client company name" }
+      status: { type: text, description: "Invoice lifecycle status: draft, sent, paid, void, overdue" }
+      approval_status: { type: text, description: "Finance approval status: drafting, pending_approval, approved" }
+      subtotal: { type: numeric, description: "Subtotal amount before tax/discounts" }
+      discount_amount: { type: numeric, description: "Discount amount" }
+      tax_amount: { type: numeric, description: "Tax amount" }
+      total: { type: numeric, description: "Total invoice billed amount" }
+      currency_code: { type: text, description: "Currency code" }
+      due_at: { type: timestamp, description: "Payment due date" }
+      paid_at: { type: timestamp, description: "Payment received timestamp" }
+      payment_method: { type: text, description: "Payment method: offline, manual, stripe, razorpay" }
+      created_by_user_id: { type: bigint, description: "Creator user ID" }
+      owner_user_id: { type: bigint, description: "Deal owner user ID" }
+      owner_name: { type: text, description: "Deal owner name" }
+      created_at: { type: timestamp, description: "Creation timestamp" }
+      updated_at: { type: timestamp, description: "Modification timestamp" }
+      is_overdue: { type: boolean, description: "True if status = overdue or sent and past due_at" }
+
+  invoice_lines:
+    description: "Billed line items on invoices."
+    source: |
+      SELECT 
+        il.id,
+        il.organization_id,
+        il.invoice_id,
+        il.kind,
+        il.product_id,
+        il.addon_id,
+        COALESCE(p.name, il.name) AS name,
+        COALESCE(il.quantity, 0) AS quantity,
+        COALESCE(il.unit_price, 0) AS unit_price,
+        COALESCE(il.tax_percent, 0) AS tax_percent,
+        COALESCE(il.amount, 0) AS amount,
+        il.created_at
+      FROM crm.invoice_lines il
+      LEFT JOIN inventory.products p ON p.id = il.product_id
+      WHERE il.organization_id = {org_id}
+    columns:
+      id: { type: text, description: "Invoice line ID" }
+      organization_id: { type: bigint, description: "Tenant organization ID" }
+      invoice_id: { type: text, description: "Parent invoice ID" }
+      kind: { type: text, description: "Line kind: product, addon" }
+      product_id: { type: text, description: "Catalog product ID" }
+      addon_id: { type: text, description: "Add-on ID" }
+      name: { type: text, description: "Product or item display name" }
+      quantity: { type: numeric, description: "Billed quantity" }
+      unit_price: { type: numeric, description: "Unit price" }
+      tax_percent: { type: numeric, description: "Tax percentage" }
+      amount: { type: numeric, description: "Total line billed amount" }
+      created_at: { type: timestamp, description: "Creation timestamp" }
+
+  contracts:
+    description: "Term contracts and annual recurring revenue (ARR) agreements."
+    source: |
+      SELECT 
+        ct.id,
+        ct.organization_id,
+        ct.title,
+        ct.company_id,
+        c.name AS company_name,
+        ct.deal_id,
+        ct.starts_at,
+        ct.ends_at,
+        COALESCE(ct.arr, 0) AS arr,
+        ct.billing_frequency,
+        ct.auto_renew,
+        ct.status,
+        ct.renew_deal_id,
+        ct.created_at
+      FROM crm.contracts ct
+      LEFT JOIN crm.companies c ON c.id = ct.company_id AND c.organization_id = ct.organization_id
+      WHERE ct.organization_id = {org_id}
+    columns:
+      id: { type: text, description: "Contract ID" }
+      organization_id: { type: bigint, description: "Tenant organization ID" }
+      title: { type: text, description: "Contract title" }
+      company_id: { type: text, description: "Client company ID" }
+      company_name: { type: text, description: "Client company name" }
+      deal_id: { type: text, description: "Associated deal ID" }
+      starts_at: { type: timestamp, description: "Start timestamp" }
+      ends_at: { type: timestamp, description: "End timestamp" }
+      arr: { type: numeric, description: "Annual recurring revenue amount" }
+      billing_frequency: { type: text, description: "Billing cadence: monthly, quarterly, annual" }
+      auto_renew: { type: boolean, description: "True if auto-renewing" }
+      status: { type: text, description: "Contract status: active, expired, cancelled" }
+      renew_deal_id: { type: text, description: "Deal ID for renewal pursuit" }
+      created_at: { type: timestamp, description: "Creation timestamp" }
+
+  billing_schedule:
+    description: "Contract recurring billing schedules."
+    source: |
+      SELECT 
+        cbs.id,
+        cbs.organization_id,
+        cbs.contract_id,
+        cbs.scheduled_for,
+        COALESCE(cbs.amount, 0) AS amount,
+        COALESCE(
+          CASE WHEN cbs.currency IS NOT NULL AND upper(btrim(cbs.currency)) <> 'USD' THEN cbs.currency END,
+          (
+            SELECT CASE lower(btrim(o.country))
+              WHEN 'india' THEN 'INR' WHEN 'in' THEN 'INR'
+              WHEN 'united kingdom' THEN 'GBP' WHEN 'uk' THEN 'GBP' WHEN 'gb' THEN 'GBP'
+              WHEN 'germany' THEN 'EUR' WHEN 'de' THEN 'EUR'
+              WHEN 'canada' THEN 'CAD' WHEN 'ca' THEN 'CAD'
+              WHEN 'australia' THEN 'AUD' WHEN 'au' THEN 'AUD'
+              WHEN 'united arab emirates' THEN 'AED' WHEN 'uae' THEN 'AED' WHEN 'ae' THEN 'AED'
+              WHEN 'united states' THEN 'USD' WHEN 'usa' THEN 'USD' WHEN 'us' THEN 'USD'
+              ELSE NULL
+            END
+            FROM accounts.organizations o
+            WHERE o.id = cbs.organization_id
+          ),
+          NULLIF(cbs.currency, ''),
+          'USD'
+        ) AS currency_code,
+        cbs.status,
+        cbs.invoice_id,
+        cbs.billing_kind,
+        cbs.created_at
+      FROM crm.contract_billing_schedules cbs
+      WHERE cbs.organization_id = {org_id}
+    columns:
+      id: { type: text, description: "Billing schedule ID" }
+      organization_id: { type: bigint, description: "Tenant organization ID" }
+      contract_id: { type: text, description: "Parent contract ID" }
+      scheduled_for: { type: date, description: "Scheduled billing date" }
+      amount: { type: numeric, description: "Scheduled billing amount" }
+      currency_code: { type: text, description: "Currency code" }
+      status: { type: text, description: "Schedule status: scheduled, generated, cancelled" }
+      invoice_id: { type: text, description: "Generated invoice ID" }
+      billing_kind: { type: text, description: "Billing category" }
+      created_at: { type: timestamp, description: "Creation timestamp" }
+
+  activities:
+    description: "Unified timeline events, calls, emails, tasks, and notes across deals and contacts."
+    source: |
+      SELECT 
+        u.id,
+        u.organization_id,
+        u.activity_source,
+        u.deal_id,
+        u.contact_id,
+        u.type,
+        u.subject,
+        u.body,
+        u.task_status,
+        u.due_at,
+        u.completed_at,
+        u.performed_by_user_id,
+        u.assignee_user_id,
+        su.first_name || ' ' || COALESCE(su.last_name, '') AS owner_name,
+        u.created_at
+      FROM (
+        SELECT 
+          da.id,
+          da.organization_id,
+          'deal' AS activity_source,
+          da.deal_id,
+          NULL::text AS contact_id,
+          da.type::text AS type,
+          da.subject,
+          da.body,
+          NULL::text AS task_status,
+          da.due_at,
+          da.completed_at,
+          da.created_by_user_id AS performed_by_user_id,
+          NULL::bigint AS assignee_user_id,
+          da.created_at
+        FROM crm.deal_activities da
+        WHERE da.organization_id = {org_id}
+        UNION ALL
+        SELECT 
+          ca.id,
+          ca.organization_id,
+          'contact' AS activity_source,
+          NULL::text AS deal_id,
+          ca.contact_id,
+          ca.type::text AS type,
+          ca.subject,
+          ca.body,
+          ca.task_status::text AS task_status,
+          ca.due_at,
+          ca.completed_at,
+          ca.created_by_user_id AS performed_by_user_id,
+          ca.assignee_user_id,
+          ca.created_at
+        FROM crm.contact_activities ca
+        WHERE ca.organization_id = {org_id}
+      ) u
+      LEFT JOIN accounts.setup_users su ON su.id = u.performed_by_user_id
+    columns:
+      id: { type: text, description: "Activity ID" }
+      organization_id: { type: bigint, description: "Tenant organization ID" }
+      activity_source: { type: text, description: "Source: deal or contact" }
+      deal_id: { type: text, description: "Deal ID" }
+      contact_id: { type: text, description: "Contact ID" }
+      type: { type: text, description: "Activity type: call, meeting, email, sms, note, task" }
+      subject: { type: text, description: "Activity subject line" }
+      body: { type: text, description: "Activity body text" }
+      task_status: { type: text, description: "Task status: open, in_progress, completed" }
+      due_at: { type: timestamp, description: "Task due date" }
+      completed_at: { type: timestamp, description: "Task completion timestamp" }
+      performed_by_user_id: { type: bigint, description: "User ID who performed activity" }
+      assignee_user_id: { type: bigint, description: "Assigned user ID for tasks" }
+      owner_name: { type: text, description: "Performer full name (created_by), not deal owner" }
+      created_at: { type: timestamp, description: "Creation timestamp" }
+
+  appointments:
+    description: "Scheduled calendar meetings and calls with attendees."
+    source: |
+      SELECT 
+        ap.id,
+        ap.organization_id,
+        ap.contact_id,
+        ap.host_user_id,
+        su.first_name || ' ' || COALESCE(su.last_name, '') AS host_name,
+        ap.source,
+        ap.status,
+        ap.title,
+        ap.starts_at,
+        ap.ends_at,
+        ap.provider,
+        ap.created_at
+      FROM crm.appointments ap
+      LEFT JOIN accounts.setup_users su ON su.id = ap.host_user_id
+      WHERE ap.organization_id = {org_id}
+    columns:
+      id: { type: text, description: "Appointment ID" }
+      organization_id: { type: bigint, description: "Tenant organization ID" }
+      contact_id: { type: text, description: "Associated contact ID" }
+      host_user_id: { type: bigint, description: "Host user ID" }
+      host_name: { type: text, description: "Host staff full name" }
+      source: { type: text, description: "Appointment source: crm_ui, api" }
+      status: { type: text, description: "Appointment status: scheduled, completed, canceled" }
+      title: { type: text, description: "Meeting title" }
+      starts_at: { type: timestamp, description: "Meeting start timestamp" }
+      ends_at: { type: timestamp, description: "Meeting end timestamp" }
+      provider: { type: text, description: "Meeting provider: google_meet, zoom" }
+      created_at: { type: timestamp, description: "Creation timestamp" }
+
+  products:
+    description: "Shared sellable product catalog from inventory."
+    source: |
+      SELECT 
+        p.id,
+        p.name,
+        p.sku,
+        p.billing_type,
+        (p.status = 'active') AS is_active,
+        p.created_at
+      FROM inventory.products p
+      WHERE p.organization_id = {org_id}
+    columns:
+      id: { type: text, description: "Product ID" }
+      name: { type: text, description: "Product display name" }
+      sku: { type: text, description: "Product SKU identifier" }
+      billing_type: { type: text, description: "Billing classification: one_time, recurring" }
+      is_active: { type: boolean, description: "True if sellable in catalog" }
+      created_at: { type: timestamp, description: "Creation timestamp" }
+
+  users:
+    description: "CRM staff users and sales reps with role assignments."
+    source: |
+      SELECT 
+        u.id,
+        u.organization_id,
+        u.first_name || ' ' || COALESCE(u.last_name, '') AS name,
+        u.first_name,
+        u.last_name,
+        u.work_email,
+        r.name AS role_name,
+        (u.status = 'active') AS is_active
+      FROM accounts.setup_users u
+      JOIN accounts.setup_user_product_access upa ON upa.user_id = u.id AND upa.product_id = 'crm'
+      JOIN accounts.setup_roles r ON r.id = upa.role_id
+      WHERE u.organization_id = {org_id}
+    columns:
+      id: { type: bigint, description: "User ID" }
+      organization_id: { type: bigint, description: "Tenant organization ID" }
+      name: { type: text, description: "User full name" }
+      first_name: { type: text, description: "First name" }
+      last_name: { type: text, description: "Last name" }
+      work_email: { type: text, description: "Work email address" }
+      role_name: { type: text, description: "CRM role: admin, sales_manager, sales_rep, presales, marketing, finance, viewer" }
+      is_active: { type: boolean, description: "True if active user" }
+
+  agent_jobs:
+    description: "Background autonomous agent jobs for lead enrichment, scoring, nurture, and lifecycle."
+    source: |
+      SELECT 
+        id,
+        organization_id,
+        job_type,
+        contact_id,
+        status,
+        created_at,
+        updated_at
+      FROM (
+        SELECT id, organization_id, 'enrichment' AS job_type, contact_id, status::text AS status, created_at, updated_at FROM crm.lead_enrichment_jobs WHERE organization_id = {org_id}
+        UNION ALL
+        SELECT id, organization_id, 'scoring' AS job_type, contact_id, status::text AS status, created_at, updated_at FROM crm.lead_scoring_jobs WHERE organization_id = {org_id}
+        UNION ALL
+        SELECT id, organization_id, 'nurture' AS job_type, contact_id, status::text AS status, created_at, updated_at FROM crm.lead_nurture_jobs WHERE organization_id = {org_id}
+        UNION ALL
+        SELECT id, organization_id, 'lifecycle' AS job_type, contact_id, status::text AS status, created_at, updated_at FROM crm.lead_lifecycle_jobs WHERE organization_id = {org_id}
+      ) aj
+    columns:
+      id: { type: text, description: "Job ID" }
+      organization_id: { type: bigint, description: "Tenant organization ID" }
+      job_type: { type: text, description: "Job classification: enrichment, scoring, nurture, lifecycle" }
+      contact_id: { type: text, description: "Target contact profile ID" }
+      status: { type: text, description: "Job status: queued, running, completed, failed" }
+      created_at: { type: timestamp, description: "Job submission timestamp" }
+      updated_at: { type: timestamp, description: "Job completion/update timestamp" }

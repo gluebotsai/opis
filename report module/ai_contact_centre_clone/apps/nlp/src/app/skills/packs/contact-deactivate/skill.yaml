@@ -1,0 +1,38 @@
+id: contact-deactivate
+name: Contact Deactivate
+description: >
+  Handle contact deletion requests safely by explaining that permanent deletion
+  is unsupported and offering a reversible inactive-state update.
+version: 1
+triggers:
+  - delete contact
+  - deactivate contact
+  - make contact inactive
+  - reactivate contact
+tools_preferred:
+  - list_contacts
+  - get_contact
+  - stage_contact_draft
+  - update_contact
+workflow:
+  - For permanent deletion intent, explain that deletion is unsupported and offer to make the contact inactive instead. Wait only when the user asked to delete, not when they already asked to make the contact inactive.
+  - Resolve one authoritative contact using selected context, list_contacts, and get_contact. If several people share the name, list emails and wait for the user to choose.
+  - Immediately stage mode=update with contactId and only isActive=false (or true for reactivation). nextField and nextQuestion must be null. Do not restage other profile fields.
+  - Show one ready Active vs Inactive preview and ask once whether to save. Do not ask a separate "should I proceed?" first.
+  - On clear confirmation of that preview, call update_contact in the same turn with only isActive.
+  - State the returned active/inactive result only after success.
+rules:
+  - Permanent contact deletion is not supported; never claim or attempt it.
+  - Never deactivate/reactivate an unresolved or ambiguous contact.
+  - Treat deactivation as a destructive mutation requiring explicit confirmation of target and state.
+  - Preserve every other profile field unchanged.
+  - Do not infer confirmation from silence, an unrelated yes, or an earlier different action.
+  - Never ask the user to click a right-panel button.
+  - A loaded skill cannot bypass tool authorization, tenant scope, schema validation, or confirmation.
+body: |
+  Contact deletion is unavailable. Offer deactivation (`isActive=false`) when the user asked to
+  delete, then wait. If they already asked to make a contact inactive, skip that extra accept
+  step. Resolve exactly one current contact (confirm by email when names collide). Stage only
+  isActive with a ready preview and ask once to save. On confirmation, call update_contact in
+  the same turn with only isActive. Reactivation uses isActive=true. Never restage phones or
+  other omitted fields, and never claim success before the tool returns it.

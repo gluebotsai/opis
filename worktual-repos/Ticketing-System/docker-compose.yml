@@ -1,0 +1,156 @@
+# Ticketing spoke — split DNS production layout (DevOps default)
+#
+#   https://rebuild-ticketing.worktual.com     → web  :3355 (SPA)
+#   https://rebuild-ticketing-api.worktual.com → api  :4000 (REST)
+#   agents :8012 internal only (Express → agents on Compose network)
+#
+# Public nginx on the host must also proxy SPA host /api/ and /uploads/ → :4000.
+#
+#   cp .env.example .env
+#   docker compose up -d --build
+
+services:
+  postgres:
+    profiles: ["local-db"]
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-ticketing}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ticketing}
+      POSTGRES_DB: ${POSTGRES_DB:-ticketing}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-ticketing} -d ${POSTGRES_DB:-ticketing}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    ports:
+      - "127.0.0.1:5432:5432"
+
+  agents:
+    build:
+      context: ./ai-agents
+    restart: unless-stopped
+    environment:
+      MODEL_NAME: ${COWORKER_MODEL_NAME:-${MODEL_NAME:-worktual-gemma}}
+      MODEL_URL: ${COWORKER_MODEL_URL:-${MODEL_URL:?Set COWORKER_MODEL_URL or MODEL_URL in the root .env}}
+      API_KEY: ${COWORKER_MODEL_API_KEY:-${API_KEY:-empty}}
+      MODEL_TEMPERATURE: ${MODEL_TEMPERATURE:-0.2}
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL in the root .env}
+      COWORKER_TASKS_SECRET: ${COWORKER_TASKS_SECRET:?Set COWORKER_TASKS_SECRET in the root .env}
+      EXPRESS_BASE_URL: http://api:4000
+      CONVERSATION_CONTEXT_VIA_API: "1"
+      AGENT_DATA_VIA_API: "1"
+      PROACTIVE_VIA_API: "1"
+      CORS_ORIGINS: ${CORS_ORIGINS:-}
+      SEMANTIC_LAYER_URL: ${SEMANTIC_LAYER_URL:-}
+      SEMANTIC_LAYER_PRODUCT: ${SEMANTIC_LAYER_PRODUCT:-ticketing}
+      SEMANTIC_LAYER_TIMEOUT: ${SEMANTIC_LAYER_TIMEOUT:-30}
+      ONTOLOGY_CHAT_URL: ${ONTOLOGY_CHAT_URL:-}
+      ONTOLOGY_CHAT_TIMEOUT: ${ONTOLOGY_CHAT_TIMEOUT:-90}
+      HUB_A2A_URL: ${HUB_A2A_URL:-}
+      HUB_A2A_TOKEN_URL: ${HUB_A2A_TOKEN_URL:-}
+      HUB_A2A_CLIENT_ID: ${HUB_A2A_CLIENT_ID:-worktual-ticketing-hub}
+      HUB_A2A_CLIENT_SECRET: ${HUB_A2A_CLIENT_SECRET:-}
+      HUB_A2A_SERVER_NAME: ${HUB_A2A_SERVER_NAME:-worktual-hub}
+      HUB_A2A_SPOKE_LABEL: ${HUB_A2A_SPOKE_LABEL:-Ticketing System}
+      HUB_A2A_TIMEOUT: ${HUB_A2A_TIMEOUT:-120}
+
+  ai-a2a:
+    build:
+      context: ./ai-agents
+    restart: unless-stopped
+    ports:
+      - "${A2A_BIND:-0.0.0.0}:${A2A_PORT:-8021}:8021"
+    command: ["uvicorn", "app.a2a_main:app", "--host", "0.0.0.0", "--port", "8021"]
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL in the root .env}
+      COWORKER_TASKS_SECRET: ${COWORKER_TASKS_SECRET:?Set COWORKER_TASKS_SECRET in the root .env}
+      EXPRESS_BASE_URL: http://api:4000
+      A2A_PUBLIC_URL: ${A2A_PUBLIC_URL:-http://127.0.0.1:8021}
+      A2A_SERVER_NAME: ${A2A_SERVER_NAME:-worktual-ticketing}
+      A2A_SPOKE_CLIENT_ID: ${A2A_SPOKE_CLIENT_ID:-worktual-hub-ticketing}
+      A2A_SPOKE_CLIENT_SECRET: ${A2A_SPOKE_CLIENT_SECRET:-}
+      A2A_HUB_JWT_SECRET: ${A2A_HUB_JWT_SECRET:-}
+      A2A_HUB_JWT_AUDIENCE: ${A2A_HUB_JWT_AUDIENCE:-worktual-ticketing-a2a}
+      A2A_ACCESS_TOKEN_ISSUER: ${A2A_ACCESS_TOKEN_ISSUER:-worktual-ticketing-a2a-access}
+      A2A_ACCESS_TOKEN_TTL_SECONDS: ${A2A_ACCESS_TOKEN_TTL_SECONDS:-21600}
+      A2A_REFRESH_TOKEN_TTL_SECONDS: ${A2A_REFRESH_TOKEN_TTL_SECONDS:-5184000}
+      MODEL_URL: ${COWORKER_MODEL_URL:-${MODEL_URL:-}}
+      API_KEY: ${COWORKER_MODEL_API_KEY:-${API_KEY:-empty}}
+    depends_on:
+      agents:
+        condition: service_started
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${API_BIND:-0.0.0.0}:${API_PORT:-4000}:4000"
+    environment:
+      NODE_ENV: production
+      TICKETING_API_ONLY: "1"
+      PORT: "4000"
+      APP_URL: ${APP_URL:?Set APP_URL in the root .env}
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL in the root .env}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in the root .env}
+      COWORKER_TASKS_SECRET: ${COWORKER_TASKS_SECRET:?Set COWORKER_TASKS_SECRET in the root .env}
+      COWORKER_AGENTS_URL: http://agents:8012
+      COWORKER_MODEL_NAME: ${COWORKER_MODEL_NAME:-${MODEL_NAME:-worktual-gemma}}
+      COWORKER_MODEL_URL: ${COWORKER_MODEL_URL:-${MODEL_URL:-}}
+      SEED_DEMO: ${SEED_DEMO:-0}
+      MAIL_MODE: ${MAIL_MODE:-log}
+      MAIL_FROM: ${MAIL_FROM:-Support <support@yourdomain.com>}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-}
+      SMTP_SECURE: ${SMTP_SECURE:-}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMS_MODE: ${SMS_MODE:-log}
+      CRM_JWT_ACCESS_SECRET: ${CRM_JWT_ACCESS_SECRET:-}
+      CRM_JWT_ISSUER: ${CRM_JWT_ISSUER:-}
+      INTERNAL_SERVICE_KEY: ${INTERNAL_SERVICE_KEY:-}
+      TICKETING_WEBHOOK_URL: ${TICKETING_WEBHOOK_URL:-}
+      WEBHOOK_SIGNING_SECRET: ${WEBHOOK_SIGNING_SECRET:-}
+      TICKETING_FRAME_ANCESTORS: ${TICKETING_FRAME_ANCESTORS:-}
+      COOKIE_SECURE: ${COOKIE_SECURE:-}
+    volumes:
+      - uploads:/app/uploads
+    depends_on:
+      agents:
+        condition: service_started
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"fetch('http://127.0.0.1:4000/health').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\"",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+      args:
+        VITE_COWORKER_MODEL_NAME: ${COWORKER_MODEL_NAME:-${MODEL_NAME:-worktual-gemma}}
+        VITE_COWORKER_MODEL_URL: ${COWORKER_MODEL_URL:-${MODEL_URL:-}}
+    restart: unless-stopped
+    ports:
+      - "${WEB_BIND:-0.0.0.0}:${WEB_PORT:-3355}:3355"
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  uploads:

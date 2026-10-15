@@ -1,0 +1,42 @@
+presets:
+  hub.orchestrator:
+    agent: Worktual Hub
+    level: platform
+    modules:
+    - core
+    - identity
+    - interaction
+    - ticket
+    - followup
+    - performance
+    - compliance
+    - hub
+    usecase: Widest CC+TK slice for spoke-query / dispatch. Not every taxonomy leaf.
+    prompt:
+      classes:
+      - Contact
+      - Consent
+      - Conversation
+      - Ticket
+      - Callback
+      - Anomaly
+      - HubRequest
+      - Strategy
+      - DispatchAction
+      actions:
+      - spoke_query
+      - run_pipeline
+      - dispatch
+      - callback
+      - create_ticket
+      taxonomy:
+      - hub.scenario
+      - channel
+      - anomaly.severity
+      - ticket.priority
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - Do not invent customer facts; CDP + payload only.
+      - Do not talk to end customers — suggestedAgentReply only.
+      - Dispatch only allowlisted actionType on enabled spokes.

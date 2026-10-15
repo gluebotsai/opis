@@ -1,0 +1,15 @@
+name: ccass.agent_capacity
+alias: cap
+schema: ccass
+grain: agent_channel
+purpose: Max and active concurrency per agent and channel.
+columns:
+  - { name: id, type: bigint, pk: true, description: Row id }
+  - { name: organization_id, type: bigint, description: Tenant id }
+  - { name: agent_id, type: bigint, fk: ccass.agents.id, description: Agent }
+  - { name: channel, type: text, description: Channel key (chat, email, ...) }
+  - { name: max_concurrency, type: int, description: Cap }
+  - { name: active_count, type: int, description: Currently active }
+  - { name: reserved_count, type: int, description: Reserved }
+sample_rows:
+  - { id: 1, agent_id: 12, channel: chat, max_concurrency: 3, active_count: 1, reserved_count: 0 }

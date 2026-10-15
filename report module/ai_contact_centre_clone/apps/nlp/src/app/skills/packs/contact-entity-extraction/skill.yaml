@@ -1,0 +1,19 @@
+id: contact-entity-extraction
+name: Contact Entity Extraction
+description: >
+  Read-only extraction and normalization of email, phone, WhatsApp number,
+  display name, company, city, and country from customer messages without guessing.
+version: 1
+triggers:
+  - entity
+  - extract
+  - contact details
+  - email
+  - phone
+workflow:
+  - Extract entity fields present in customer input.
+  - Normalize phone numbers to standard format.
+  - Output structured JSON contact_entities object.
+rules:
+  - Never invent or hallucinate contact details.
+  - Populate fields only when explicitly provided by customer.

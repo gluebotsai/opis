@@ -1,0 +1,314 @@
+# cdc-pipeline
+
+Continuously syncs PostgreSQL changes into **per-organisation Neo4j graph
+databases**.
+
+```
+PostgreSQL ──WAL──▶ Debezium ──▶ Kafka ──▶ Python consumer ──▶ Neo4j
+ (source)           (Docker)     (Docker)   (THIS PROJECT)     (per-org DBs)
+```
+
+Only the Python consumer is the deliverable. Debezium, Kafka and Neo4j run in
+Docker for local development, but this project runs against any reachable Kafka
+and Neo4j.
+
+---
+
+## Quick start
+
+```bash
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env            # fill in credentials
+
+# These two need no database and no Docker:
+python main.py validate         # all config + mapping checks, exit 0/1
+python main.py dry-run --org orga1b2c3d4    # every generated Cypher statement
+
+pytest -q                       # 100+ tests, no Docker required
+
+# Full local stack:
+cd docker && 
+python main.py preflight        # verifies wal_level, REPLICA IDENTITY, tenant_id
+./scripts/register_connector.sh
+python main.py provision --all
+python main.py verify-indexes   # MUST report NodeUniqueIndexSeek before loading
+python main.py run
+```
+
+`dry-run` is how you debug a mapping without touching a database. Use it first.
+
+---
+
+## Two open questions, and what was assumed
+
+Two items were left unanswered when the build was authorised. Both have defaults
+that are safe to run with and cheap to change **now**, and expensive to change
+later. Confirm them before production load.
+
+### 1. Organisation count → assumed **single instance**
+
+`neo4j.instances` in `connections.yaml` holds one instance and every
+organisation carries an `instance` field pointing at it. Under ~200 databases
+per Neo4j DBMS this is fine. Thousands is **not** a supported operating point --
+each database carries page-cache, transaction-log and thread overhead.
+
+The field costs nothing today and makes sharding a config change: add instances
+to the map, add an `instance` column to `accounts.organisations`, and set
+`control_plane.instance_column`. `DriverPool` already keys drivers by instance
+and `Writer` already routes per event. No code change is needed to shard.
+
+**If the real number is thousands, say so before production load** — a placement
+policy and rebalancing are additional work that belongs before onboarding, not
+after.
+
+### 2. Temporal precision → assumed **`time.precision.mode: adaptive`**
+
+The spec said `connect`, which maps to Kafka Connect logical types at
+**millisecond** resolution. PostgreSQL `timestamp(6)` is microsecond, so
+`connect` truncates three digits on the way in — irreversible, and invisible
+until someone tries to order two events inside the same millisecond in an audit
+trail. `adaptive` emits `io.debezium.time.MicroTimestamp`; Neo4j temporals hold
+nanoseconds, so nothing is lost. The coercion layer handles both modes, so this
+is reversible in config — but only before data is loaded.
+
+---
+
+## How money is stored
+
+Neo4j has no decimal type. Only 64-bit float (which rounds) and 64-bit integer.
+For a platform with BFSI tenants, rounding is not acceptable, so:
+
+**Decimals are stored as integer minor units at a scale declared per property.**
+
+```yaml
+- {name: lifetime_value, type: decimal, scale: 2, currency_column: lifetime_value_currency}
+```
+
+`1234.56` is written as:
+
+| property                  | value    |
+|---------------------------|----------|
+| `lifetime_value`          | `123456` |
+| `lifetime_value_scale`    | `2`      |
+| `lifetime_value_currency` | `"INR"`  |
+
+Rules, all enforced:
+
+- `decimal.handling.mode: string` in the connector. A float arriving here means
+  the connector is misconfigured and precision was already lost upstream — the
+  consumer refuses it rather than accepting a rounded value.
+- **Scale must be declared.** `scripts/generate_mappings.py` reads
+  `information_schema.numeric_scale`. A `NUMERIC` with no scale modifier reports
+  NULL and produces a validation error, forcing a human decision.
+- **Excess precision is quarantined, never rounded.** A value of `1.005` against
+  a declared scale of 2 fails the event. Rounding money so a write can succeed
+  is the failure mode this design exists to prevent.
+- Overflow against the signed 64-bit range is checked. Scale 2 gives ±9.2×10¹⁶
+  minor units; scale 8 gives ±9.2×10¹⁰ and warns.
+- `emit_scale_property: true` writes `<name>_scale` so the graph is
+  self-describing without the mapping file. Set to `false` to save the property.
+
+The alternative was storing money as a string: exact, but no arithmetic and no
+range queries. Integer minor units keeps the graph queryable.
+
+**Retrofitting either choice means rewriting every monetary property in every
+tenant graph.** This is decided before load, deliberately.
+
+---
+
+## Correctness rests on four properties
+
+1. **Constraints created before data.** Without a uniqueness constraint, `MERGE`
+   is a full label scan whose cost grows with the graph; with it, an index seek
+   whose cost is constant. `verify-indexes` asserts this and phase 3 gates phase 5.
+2. **`MERGE` on a stable business key.** Makes every write idempotent, which is
+   what makes at-least-once Kafka delivery and crash replay safe.
+3. **A fail-closed router.** Unknown tenant, missing tenant, inactive org,
+   unprovisioned org, unknown table — all quarantined. Never guessed.
+4. **Null-stripped property maps.** `SET x = null` *deletes* the property, so an
+   absent JSON key would silently erase a value another event set.
+
+---
+
+## Where this deviates from the build spec, and why
+
+| # | Spec said | Built | Why |
+|---|---|---|---|
+| 1 | `REPLICA IDENTITY FULL` only for TOAST-heavy tables | FULL everywhere, verified by `preflight` | Under DEFAULT a DELETE's before-image is PK-only, so `tenant_id` is absent and **every delete is quarantined**. Acceptance test 4 would fail on a correct system. |
+| 2 | no type conversion layer | `coercion.py`, driven by the Debezium value schema | `time.precision.mode` emits integers. Written through, every timestamp becomes a number and temporal queries silently misbehave. |
+| 3 | constraints for node mappings only | plus `stub_labels` in `core.yaml` | Relationship targets are MERGEd as stubs. Without a constraint, `MERGE (t:Tag {tag_id:…})` is a full label scan — the exact cost constraints exist to remove. It also fixes a contradiction: the spec's own `_TEMPLATE` declared `HOLDS → Policy` while its check 5 required every `target_label` to be a core label, and `Policy` was neither. **The shipped template failed the shipped validator.** |
+| 4 | "commit offsets after the Neo4j transaction" | per-partition offset watermark | Buffers span poll cycles and flush on a timer. Committing per poll loses buffered events on crash; committing only after a flush stalls partitions with nothing pending. |
+| 5 | buffer keyed `(database, table, op)` | keyed `(database, table)`, collapsed per business key | Splitting by op destroys per-key order: delete-then-reinsert in one window applies the upsert first and loses the row. Collapse keys differ per mode — collapsing `properties_on` by `target_key` alone would drop every attribute but the last. |
+| 6 | (not addressed) | `instance` field on every organisation | Makes DBMS sharding a config change rather than a rewrite. |
+| 7 | truncate over-length database names | truncate + 8-char SHA-1 suffix | Two UUIDs sharing a long prefix would truncate to one name and **silently merge two tenants' graphs**. |
+| 8 | `decimal.handling.mode: double` | `string` + integer minor units | `double` silently rounds money. |
+| 9 | `time.precision.mode: connect` | `adaptive` | `connect` is millisecond; `timestamp(6)` is microsecond. |
+| 10 | prefix immutability as documentation | startup assertion against a `cdcmeta` database | A comment gets ignored; an assertion does not. Neo4j 5 reserves `system`, so pipeline metadata needs its own database. |
+| 11 | schema evolution unaddressed | `unmapped_columns_total`, warned once per `(table, column)` | Ignoring new columns is the right default, but it should be a decision rather than an accident that widens for months. |
+| 12 | `properties` is a bare list | accepts bare strings **and** `{name, type, scale}` | Decimal columns need a declared scale. Both spellings normalise internally. |
+
+---
+
+## Configuration
+
+`config/connections.yaml` — connections, batching, retry, naming, money, metrics.
+`${VAR}` is substituted from the environment (secrets only; not applied to
+mapping files, where a stray `${` should be an error rather than an empty string).
+
+`config/mappings/core.yaml` — graph **identity**, identical for every tenant.
+`config/mappings/<database>.yaml` — a tenant overlay that may only **add**.
+`config/mappings/_TEMPLATE.yaml` — the format reference, shipped unmodified and
+excluded from validation (its placeholders are not a real database).
+
+An overlay may add `extra_labels`, `custom_properties`, `relationships`,
+`products` and `raw` entries. It may **not** declare `key`, `label` or `mode`,
+remove core properties, or redefine a core relationship type. Because it can
+only add, it is structurally incapable of breaking core identity — and validation
+rejects violations at startup rather than warning and continuing.
+
+### `database_naming.prefix` is immutable
+
+Persisted in `cdcmeta` on first provision and asserted on every boot. Changing it
+renames every database and orphans every mapping file.
+
+---
+
+## Mapping modes
+
+| mode | meaning |
+|---|---|
+| `node` | one row → one node, with properties, extra labels and relationships |
+| `relationship_only` | junction table → an edge, no node |
+| `properties_on` | many rows collapse onto one node as prefixed properties |
+
+`properties_on` requires a non-empty `prefix`. Without it, an attribute named
+`status` overwrites the real column property, silently.
+
+Relationship targets are always `MERGE`d, never `MATCH`ed. If the target row has
+not arrived, a **stub node** is created with just its key; when that entity
+streams in, the same `MERGE` finds the stub and fills it in. **Arrival order is
+therefore irrelevant — do not attempt to order tables.**
+
+---
+
+## Operations
+
+### Observability
+
+`/metrics` on `metrics.port` (Prometheus text), plus periodic JSON log lines.
+
+`events_consumed_total{topic}`, `events_written_total{database,table}`,
+`events_skipped_total{reason}`, `events_quarantined_total{reason}`,
+`flush_duration_seconds{database,table}`, `deadlock_retries_total{database}`,
+`kafka_consumer_lag`, `provisioning_total{result}`,
+`unmapped_columns_total{table,column}`, `flush_failures_total{database,table}`.
+
+Alert on: quarantine count rising, consumer lag rising, deadlock retries rising,
+`unmapped_columns_total` becoming non-zero (alert on **first** occurrence, not on
+a rate — the signal is "a column appeared"), and PostgreSQL replication-slot lag.
+
+**Monitor `pg_replication_slots` externally.** Growth means WAL is accumulating
+on the primary. This is why Kafka is not optional: without it, a Neo4j outage
+stops offset acknowledgement, the slot stops advancing, and **PostgreSQL retains
+WAL until the production disk fills.**
+
+### Quarantine
+
+One JSON line per rejected event in `quarantine/YYYY-MM-DD.jsonl`, with topic,
+partition, offset, reason and payload.
+
+```bash
+python main.py replay-quarantine --date 2026-08-16
+```
+
+Replay is safe because every write is idempotent.
+
+### Backfill
+
+CDC carries only changes from the moment the slot is created.
+
+```bash
+python main.py backfill --org a1b2c3d4 --product crm
+```
+
+Rows go through the **same mapping and the same generated Cypher** as the
+streaming path; only the decoder differs, because psycopg already produces
+`datetime` and `Decimal` where Debezium produces integers and strings. A second
+write path is how backfill and stream silently diverge.
+
+Backfill may run while streaming is live. One caveat the spec did not note: if a
+row is updated during the backfill, the backfill's older snapshot can overwrite
+the newer streamed value. Prefer Debezium's `snapshot.mode: initial` for the
+initial load and use `backfill.py` for newly-enabled products.
+
+---
+
+## Testing
+
+```bash
+pytest -q                       # everything that needs no server
+NEO4J_TEST_URI=bolt://192.168.11.25:7687 NEO4J_TEST_PASSWORD=… pytest -q
+```
+
+All 13 acceptance tests from the spec are in `tests/test_integration.py`.
+Tests 1–12 run against `tests/fakes.py`, an in-memory double that interprets the
+exact Cypher this project generates and models node identity as
+`(label, key, value)` — the same semantics a uniqueness constraint provides, so
+"replay changes no node count" is a real assertion rather than a tautology.
+Test 13 (`PROFILE` plan inspection) needs a real server and is skipped without
+`NEO4J_TEST_URI`.
+
+**Tests 5 (idempotency), 6 (no cross-tenant leakage) and 13 (index seek) are
+release blockers.**
+
+---
+
+## Build order
+
+Each phase has an exit criterion that must pass before the next begins.
+
+| Phase | Build | Exit criterion |
+|---|---|---|
+| 0 | compose stack, preflight, `cdcmeta` | preflight passes against seeded PostgreSQL |
+| 1 | `naming`, `config_loader`, `validation` | `validate` green; over-length hash-suffix test passes |
+| 2 | `cypher_builder`, `coercion` | `dry-run` correct for 3 modes × 2 ops with no DB |
+| 3 | `provision`, `registry` | `verify-indexes` → `NodeUniqueIndexSeek`, **including stub labels** |
+| 4 | `router`, `quarantine` | every fail-closed branch tested |
+| 5 | `writer`, `consumer` | `kill -9` mid-flush → no duplicates, no loss |
+| 6 | `backfill` | same mappings, same Cypher |
+| 7 | acceptance suite | 13/13 |
+
+**Phase 3 must pass before phase 5.** A missing constraint is invisible in
+testing and catastrophic in production.
+
+---
+
+## Known limitations
+
+- **`properties_on` rename.** If a row's `attr_name` changes, the old property is
+  orphaned. Handled via before/after diff on updates; a rename applied by
+  `UPDATE … SET attr_name` on a table without FULL replica identity cannot be
+  detected. FULL everywhere covers this.
+- **Backfill vs. live stream.** See above.
+- **`CALL { WITH n, e … }`** is deprecated in Neo4j 5.23+ and removed in 6.x. Set
+  `cypher.subquery_syntax: scoped` on 5.23+ to emit `CALL (n, e) { … }`. Default
+  is `legacy` for compatibility across 5.x.
+- **One worker per Neo4j database** is the safe default. If parallelising further,
+  partition by `tenant_id`, never round-robin — the same node key must never be
+  processed by two workers concurrently.
+- **Composite primary keys** including `tenant_id` are the cleanest solution to
+  the replica-identity problem (tenant_id lands in the before-image under DEFAULT
+  with no WAL penalty) and the least practical on existing tables, since a PK
+  change cascades to every referencing FK. It is the right answer for **new**
+  tables, so the problem stops growing.
+
+---
+
+## Requirements
+
+Python 3.11+. Neo4j **Enterprise** (Community supports exactly one user database
+and cannot run this design; startup fails fast if it detects Community).
+PostgreSQL with `wal_level = logical` (**requires a full server restart, not a
+reload**), a role with `REPLICATION`, and `REPLICA IDENTITY FULL` on every synced
+table.

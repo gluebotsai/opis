@@ -1,0 +1,46 @@
+# CDP spine — one Customer (cdp_id). Webtracking events land in customer_events / identity_keys.
+module: cdp
+layer: foundation
+depends_on: [core]
+owned_by_spoke: cdp
+readable_by: [contact_centre, ticketing, crm, campaign, hub]
+usecase: >
+  Customer profile, identity resolution, events. All spokes join on cdp_id + organization_id.
+
+classes:
+  - id: IdentityKey
+    definition: External identifier linked to a customer (email, phone, webtracking, crm, …).
+    properties: [sourceSystem, value, verified]
+    classified_by: [identity.source_system]
+    relations:
+      identifies: Contact
+
+  - id: ContactEvent
+    definition: Observed customer behaviour (includes webtracking facts pushed from ClickHouse).
+    properties: [eventType, occurredAt]
+    classified_by: [channel]
+    relations:
+      of: Contact
+
+  - id: AudienceSegment
+    definition: Named segment of customers for campaign or analytics.
+    properties: [name]
+    relations:
+      members: Contact
+
+relations:
+  - { from: IdentityKey, type: identifies, to: Contact }
+  - { from: ContactEvent, type: of, to: Contact }
+  - { from: AudienceSegment, type: includes, to: Contact }
+
+actions:
+  - id: action.resolve_identity
+    operates_on: [Contact, IdentityKey]
+    mutates: false
+    definition: Match utterance or channel identity to cdp_id via identity_keys.
+
+  - id: action.get_customer_profile
+    operates_on: [Contact]
+    mutates: false
+
+metric_ids: []

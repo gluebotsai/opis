@@ -1,0 +1,352 @@
+# =============================================================================
+# domains/education.yaml
+#   effective(org) = core.yaml + domains/education.yaml [+ org<id>.yaml]
+#   Conformance rules R1-R6 as documented in domains/healthcare.yaml §header.
+#
+# RE-VERIFIED against the updated core (catalog-hub revision):
+#   * ccass.conversations now declares queue_id / assigned_agent_id /
+#     assigned_user_id — the old C3 patch is CLOSED.
+#   * Tenant-scoped nodes now hang off SetupCatalog / ContactCenterCatalog /
+#     DataPlatformCatalog / CampaignCatalog / TicketCatalog /
+#     WebTrackingCatalog. No pack node may attach directly to Tenant (C5).
+#   * access: now uses core's own L1/L2/L3 sensitivity scale and carries
+#     domain + module, matching the shape of core `access:` blocks.
+#   * Customer / Offering / StaffRole / TicketAgent are domain `common` in core.
+#   * accounts.organization_locations is STILL commented out, and consent_json
+#     is STILL absent from cdp.customer_profile — those blockers remain valid.
+#
+# ONTOLOGIST'S NOTE
+#   inventory.products carries a course better than it has any right to:
+#   unit_of_measure per_seat and stock_on_hand give seat capacity, billing_type
+#   recurring vs one_time separates a subscription programme from a bought
+#   course, and billing_frequency is the instalment cycle. crm.deals is the
+#   admissions funnel, crm.contracts the enrolment agreement, crm.appointments
+#   the counselling session or demo class.
+#   What core cannot give is the LEARNING record — attendance, assessment,
+#   progress, credential. Those are the student information system's job, and
+#   grades are FERPA-protected education records: the blocklist keeps them out.
+#   This vertical is also the only one where the learner may be a minor, which
+#   changes consent and marketing handling — see §4 and §6.
+# =============================================================================
+
+industry: education
+pack_version: "2026.09.02"
+requires_core: ">=3"
+layer: domain
+
+applies_when:
+  accounts.organizations.industry_type:
+    [education, edtech, e-learning, elearning, university, college, school,
+     k12, higher education, training, coaching, institute, academy, upskilling,
+     test prep, vocational, corporate training, tutoring, preschool]
+
+variant_key: accounts.organizations.business_type
+variants:
+  b2c:
+    # learner-direct: edtech, coaching, test prep, K-12 admissions
+    anchor_entities: [Customer, Offering, Opportunity, Contract, Meeting, SupportCase]
+    naming_overrides:
+      Customer: {primary: Learner, aliases: [student, learner, applicant, candidate]}
+    de_emphasise: [Account, Quote, Proposal]
+  b2b:
+    # corporate training, institutional licensing, university-employer tie-ups
+    anchor_entities: [Account, Customer, Opportunity, Quote, Contract, Invoice]
+    naming_overrides:
+      Account: {primary: Client Organisation, aliases: [employer, corporate, institution, school]}
+      Customer: {primary: Programme Sponsor, aliases: [l&d head, hr contact, principal]}
+      Opportunity:    {primary: Programme Opportunity, aliases: [rfp, tender, cohort deal]}
+    de_emphasise: [LoyaltyTier]
+  b2b2c:
+    # university with partner institutes, district-led rollouts, franchise centres
+    anchor_entities: [Account, Customer, Offering, Contract, SupportCase]
+    naming_overrides:
+      Account: {primary: Partner Institution, aliases: [franchise centre, partner school, district]}
+    de_emphasise: []
+
+# =============================================================================
+# 1. NAMING
+# =============================================================================
+naming:
+  Customer:      {primary: Learner,  aliases: [student, learner, applicant, candidate, participant, parent]}
+  Lead:         {primary: Enquiry,  aliases: [enquiry, prospective student, applicant]}
+  Customer:     {primary: Enrolled Learner, aliases: [student, participant]}
+  Offering:      {primary: Course,   aliases: [programme, program, course, class, batch offering, module]}
+  OfferingPlan: {primary: Plan,     aliases: [pricing plan, package, tier, scholarship plan]}
+  Addon:        {primary: Add-on,   aliases: [elective, extra module, exam fee, material]}
+  Contract:     {primary: Enrolment, aliases: [enrolment agreement, subscription, membership]}
+  BillingSchedule: {primary: Fee Schedule, aliases: [instalment plan, fee plan]}
+  Opportunity:         {primary: Admission Opportunity, aliases: [application, admission, enquiry pipeline]}
+  Quote:        {primary: Fee Offer, aliases: [fee quotation, offer letter, scholarship offer]}
+  Invoice:      {primary: Fee Invoice, aliases: [fee bill, demand, receipt]}
+  Account:      {primary: Institution, aliases: [employer, partner school, corporate client]}
+  CompanySite:  {primary: Campus, aliases: [centre, branch, campus, location]}
+  Meeting:  {primary: Counselling Session, aliases: [demo class, counselling, orientation, parent meeting]}
+  SupportCase:       {primary: Support Request, aliases: [query, issue, complaint, request]}
+  Conversation: {primary: Learner Conversation, aliases: [chat, call, contact]}
+  KnowledgeArticle: {primary: Help Article, aliases: [faq, guide, how-to]}
+  Campaign:     {primary: Campaign, aliases: [admissions campaign, intake drive, re-engagement]}
+  AudienceSegment:      {primary: Learner AudienceSegment, aliases: [cohort segment, audience]}
+  Task:         {primary: Follow-up, aliases: [counsellor task, callback]}
+  Employee:         {primary: Staff Member, aliases: [counsellor, faculty, employee, coordinator]}
+  StaffRole:        {primary: Support Advisor, aliases: [advisor, helpdesk agent]}
+  TicketAgent:  {primary: Support Advisor, aliases: [student services agent]}
+  Team:         {primary: Team, aliases: [department, faculty, admissions team]}
+
+role_naming:
+  match_on: [AccessRole.name, AccessRole.product_id]                          # [core: accounts.setup_roles]
+  aliases:
+    sales_rep:     [Admissions Counsellor, education advisor]
+    sales_manager: [Admissions Manager]
+    marketing:     [Marketing / Outreach]
+    finance:       [Fees / Accounts]
+    agent:         [Student Services Advisor]
+    resolver:      [Academic Coordinator]
+    admin:         [Administrator, registrar]
+
+# =============================================================================
+# 2. EXTRA LABELS
+# =============================================================================
+extends:
+
+  inventory.products:
+    extra_labels:
+      - {label: Course}
+      - {label: SubscriptionProgramme, when: {billing_type: [recurring]}}     # [core: billing_type]
+      - {label: SelfPacedCourse,       when: {billing_type: [one_time]}}
+      - {label: SeatLimitedCourse,     when: {stock_on_hand: not_null}}       # [core: stock_on_hand] = seats
+      - {label: OpenForEnrolment,      when: {status: [active]}}              # [core: status]
+      - {label: PerSeatPriced,         when: {unit_of_measure: [per_seat]}}   # [core: unit_of_measure]
+      - {label: ConfigurableProgramme, when: {product_type: [customizable]}}
+    promote_property_to_node:
+      category:    {label: Discipline, key: slug, name_from: category,    edge: IN_DISCIPLINE}
+      subcategory: {label: Subject,    key: slug, name_from: subcategory, edge: IN_SUBJECT}
+      brand:       {label: School,     key: slug, name_from: brand,       edge: OFFERED_BY_SCHOOL}
+    derive_hierarchy:
+      - {from: Subject, to: Discipline, edge: PARENT_DISCIPLINE}
+    note: >-
+      stock_on_hand is seat capacity here, which makes "which courses are near
+      capacity" answerable from core with no new source. brand carries the
+      school / faculty offering the course.
+
+  crm.deals:
+    extra_labels:
+      - {label: AdmissionOpportunity}
+      - {label: EnrolledApplication, when: {stage: [closed_won]}}             # [core: stage]
+      - {label: LostApplication,     when: {stage: [closed_lost]}}
+      - {label: ActiveApplication,   when: {stage: [qualification, discover, propose, negotiate]}}
+
+  crm.contracts:
+    extra_labels:
+      - {label: Enrolment}
+      - {label: ActiveEnrolment,    when: {status: [active]}}                 # [core: status]
+      - {label: WithdrawnEnrolment, when: {status: [cancelled, canceled, withdrawn]}}
+      - {label: AutoRenewing,       when: {auto_renew: [true]}}               # [core: auto_renew]
+    note: ends_at is programme end / subscription expiry and drives re-enrolment.
+
+  crm.contract_billing_schedules:
+    extra_labels:
+      - {label: FeeSchedule}
+      - {label: ActiveSchedule, when: {status: [active]}}                     # [core: status]
+
+  crm.invoices:
+    extra_labels:
+      - {label: FeeInvoice}
+      - {label: OverdueFee, when: {status: [overdue]}}                        # [core: status]
+      - {label: PaidFee,    when: {status: [paid]}}
+
+  crm.appointments:
+    extra_labels:
+      - {label: CounsellingSession}
+      - {label: AttendedSession, when: {status: [completed]}}                 # [core: status]
+      - {label: MissedSession,   when: {status: [no_show]}}
+      - {label: ScheduledSession,when: {status: [scheduled]}}
+      - {label: OnlineSession,   when: {provider: [google_meet, zoom, teams]}} # [core: provider]
+    note: >-
+      MissedSession is the only attendance-like signal core can support, and it
+      is attendance at a COUNSELLING or demo session — never class attendance,
+      which has no source.
+
+  ticketing.tickets:
+    extra_labels:
+      - {label: SupportRequest}
+      - {label: AdmissionsQuery,  when: {category: [admissions, application, eligibility, documents]}}
+      - {label: FeeQuery,         when: {category: [fees, payment, refund, scholarship]}}
+      - {label: AcademicQuery,    when: {category: [course_content, schedule, faculty, exam]}}
+      - {label: TechnicalQuery,   when: {category: [technical, platform, login, video]}}
+      - {label: CertificateQuery, when: {category: [certificate, transcript, credential]}}
+
+  ccass.conversations:
+    extra_labels: [{label: LearnerConversation}]
+
+  cdp.customer_profile:
+    extra_labels: [{label: Learner}]
+    custom_fields:                        # allowed: core sets custom_dynamic: true
+      whitelist: [learner_id, application_number, intake_term, programme_interest,
+                  preferred_mode, prior_qualification_level, counsellor_code,
+                  guardian_relationship]
+      identity: [learner_id, application_number]
+      promote_to_node:
+        intake_term:      {label: IntakeTerm, key: name, edge: IN_INTAKE_TERM}   # cohort
+        preferred_mode:   {label: DeliveryMode, key: name, edge: PREFERS_MODE}   # online / campus / hybrid
+      blocklist:
+        # FERPA-class education records and protected attributes. Grades and
+        # assessment data belong in the SIS/LMS, never in the engagement graph.
+        [grade, grades, marks, score, gpa, cgpa, percentage, assessment_result,
+         exam_result, transcript, attendance_percentage, disability,
+         special_needs, iep, medical, health, caste, religion, family_income,
+         income, scholarship_eligibility_amount, disciplinary_record]
+      blocklist_action: drop_silently_and_log
+    note: >-
+      guardian_relationship stores the RELATIONSHIP word only (parent, guardian).
+      Guardian identity is a separate person and has no source — see not_modelled.
+
+  crm.contact_profiles:
+    extra_labels:
+      - {label: LearnerOverlay}
+      - {label: MarketingSuppressed, when: {marketing_opt_out: [true]}}       # [core: marketing_opt_out]
+
+# =============================================================================
+# 3. VOCABULARIES
+# =============================================================================
+vocabularies:
+  ticket.category:                                                # [core: ticketing.tickets.category]
+    canonical: [admissions, application, eligibility, documents, fees, payment,
+                refund, scholarship, course_content, schedule, faculty, exam,
+                certificate, transcript, technical, platform, login, grievance, general]
+  conversation.intent:                                            # [core: supported_intents]
+    canonical: [course_enquiry, fee_enquiry, eligibility_check, book_demo_class,
+                application_status, document_upload_help, batch_timing,
+                payment_issue, refund_request, certificate_request, technical_help]
+  campaign.goal:                                                  # [core: campaign.campaigns.goal]
+    canonical: [intake_drive, early_bird_offer, demo_class_drive, application_completion,
+                fee_reminder, re_enrolment, dropout_recovery, alumni_engagement,
+                referral_drive, webinar_promotion]
+  journey_state.current_stage:                                    # [core: journey_states.current_stage]
+    canonical: [enquiry, counselled, applied, offer_made, fee_paid, enrolled,
+                active_learner, at_risk, completed, alumni, dropped_out]
+  contact.lead_source:                                            # [core: crm.contact_profiles.lead_source]
+    canonical: [website, paid_ads, organic_search, social, education_fair,
+                school_tie_up, referral, walk_in, counsellor_outreach,
+                aggregator_portal, alumni_referral]
+  deal.stage:                                                     # [core: crm.deals.stage]
+    labels: {qualification: "Enquiry qualified", discover: "Counselling / demo",
+             propose: "Offer & fee plan issued", negotiate: "Scholarship / instalment discussion",
+             closed_won: "Enrolled", closed_lost: "Dropped / joined elsewhere"}
+  product.unit_of_measure:                                        # [core: inventory.products.unit_of_measure]
+    labels: {per_seat: "Per seat / per learner", flat: "Flat programme fee"}
+
+# =============================================================================
+# 4. DERIVED LABELS — batch lane
+# =============================================================================
+derived_labels:
+  lane: batch
+  Customer:
+    source: cdp.gold_customer_metrics                             # [core: DailyEngagementMetric]
+    rules:
+      - {label: FirstProgrammeLearner, when: "total_orders == 1"}
+      - {label: ReturningLearner,      when: "total_orders >= 2"}
+      - {label: DisengagedLearner,     when: "last_event_at < now() - 60d"}
+      - {label: AtRiskLearner,         when: "churn_score >= 0.7"}
+    exclusive_groups: [[FirstProgrammeLearner, ReturningLearner]]
+    note: >-
+      AtRiskLearner is a DISENGAGEMENT signal derived from platform activity.
+      It is not an academic performance judgement and must never be surfaced as
+      one — no assessment data exists in this graph by design.
+  minor_flag:
+    source: cdp.customer_profile                                  # [core: date_of_birth]
+    rules:
+      - {label: MinorLearner, when: "date_of_birth > now() - 18y"}
+    purpose: consent_and_marketing_control
+    note: >-
+      MinorLearner exists to GATE behaviour — guardian consent, marketing
+      suppression, restricted profiling — not to segment or target. It is
+      classified restricted in §6 and must never be used as a campaign audience
+      filter. If the tenant's regime sets a different age of majority, override
+      in org<id>.yaml rather than editing this pack.
+
+# =============================================================================
+# 5. METRICS
+# =============================================================================
+metrics:
+  extend_synonyms:
+    win_rate: [enquiry to enrolment rate, admission conversion, conversion rate]
+    order_volume: [enrolments, admissions, seats sold]
+    average_order_value: [average fee, average ticket size, revenue per learner]
+    contract_renewal_rate: [re-enrolment rate, retention rate, continuation rate]
+  add:
+    - metric_id: demo_to_enrolment_rate
+      canonical_name: Demo-to-Enrolment Rate
+      synonyms: [demo conversion, counselling conversion, trial class conversion]
+      unit: ratio
+      route: graph
+      computed_from: [Meeting, Opportunity]
+      direction: higher_is_better
+      caveat: proxy
+    - metric_id: seat_fill_rate
+      canonical_name: Seat Fill Rate
+      synonyms: [capacity utilisation, how full are the batches, seats remaining]
+      unit: ratio
+      route: graph
+      computed_from: [Offering]
+      direction: higher_is_better
+      caveat: >-
+        stock_on_hand is remaining seats, not enrolments; the denominator is
+        the tenant's own capacity convention.
+    - metric_id: fee_overdue_rate
+      canonical_name: Overdue Fee Rate
+      synonyms: [pending fees, fee defaults, outstanding instalments]
+      unit: ratio
+      route: graph
+      computed_from: [Invoice]
+      direction: lower_is_better
+
+# =============================================================================
+# 6. ACCESS — tighten only
+# =============================================================================
+access:
+  Discipline:   {domain: common, module: core, sensitivity: L1}
+  Subject:      {domain: common, module: core, sensitivity: L1}
+  School:       {domain: common, module: core, sensitivity: L1}
+  IntakeTerm:   {domain: common, module: core, sensitivity: L1}
+  DeliveryMode: {domain: common, module: core, sensitivity: L1}
+  tighten:
+    Customer:         {deny_properties: [date_of_birth]}   # age gates behaviour; it is not a display field
+    EngagementActivity: {sensitivity: L3, deny_properties: [transcript_text, body]}
+    CaseNote:      {sensitivity: L3, deny_properties: [body]}
+    Insight:         {sensitivity: L3, deny_properties: [summary, explanation]}
+  never_grant: [Learner, Course, MinorLearner]
+
+compliance:
+  regimes: [FERPA, COPPA, GDPR (minors), DPDP, safeguarding]
+  notes:
+    - Education records (grades, assessments, attendance) are blocklisted at ingest.
+    - MinorLearner gates marketing and profiling; it is never an audience filter.
+    - Guardian consent has no source in core — see not_modelled.
+
+# =============================================================================
+# 7. NOT MODELLED
+# =============================================================================
+not_modelled:
+  blocked_on_core:
+    - {concept: Campus / Centre, blocker: "accounts.organization_locations mapping commented out in core."}
+    - {concept: Consent (incl. guardian consent), blocker: "cdp.customer_profile.consent_json not in core properties. Acute here: minors require verifiable guardian consent."}
+    - {concept: "SupportCase -> Enrolment / Course", blocker: "ticketing.tickets has no reference to a contract or product; a fee query cannot be traced to the enrolment it concerns."}
+  no_source:
+    - {concept: Enrolment record (learner ↔ course), severity: critical, note: "crm.contracts gives the commercial agreement; the academic enrolment linking a learner to a specific batch does not exist. Every 'who is in which batch' question fails."}
+    - {concept: Batch / Section / Cohort instance, severity: critical, note: "IntakeTerm is promoted from a JSON key and is a label, not a scheduled batch with dates, capacity and an instructor."}
+    - {concept: Attendance, severity: high, note: "only counselling-session no-shows exist. Class attendance has no source."}
+    - {concept: Assessment / Grade / Progress, severity: high, note: "out of scope by design — FERPA-protected, belongs in the SIS/LMS."}
+    - {concept: Certificate / Credential, severity: medium, note: "a ticket category only; issued credentials have no record."}
+    - {concept: Instructor / Faculty assignment, severity: medium, note: "host_user_id on an appointment is the nearest thing and is not a teaching assignment."}
+    - {concept: Curriculum / Module / Lesson, severity: medium, note: "the course is a catalog row; its internal structure does not exist."}
+    - {concept: Timetable / Schedule, severity: medium}
+    - {concept: Guardian / Parent as a person, severity: medium, note: "guardian_relationship stores a word, not a linked person. There is no contact-to-contact relationship anywhere in core."}
+    - {concept: Scholarship / Financial aid award, severity: low, note: "discount_pct on a quote is the nearest proxy."}
+    - {concept: Placement / Outcome, severity: low}
+
+# =============================================================================
+# 8. ASSUMES — same C1-C4 / E1-E7 / R1-R6 as domains/healthcare.yaml §8
+#    Plus: guardian modelling would need a contact-to-contact relationship,
+#    which core does not have in any vertical (cdp.identity_links is identity
+#    merge between duplicate profiles, not a household or guardian link).
+# =============================================================================

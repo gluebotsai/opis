@@ -1,0 +1,39 @@
+name: ccass.conversations
+alias: c
+schema: ccass
+grain: conversation
+purpose: Operational conversation header. Primary fact table for volume, AHT, FRT, SLA, mix, transfers.
+aliases: [tickets, chats, calls, interactions, conversaton, conversatons]
+time_columns: [created_at, queued_at, assigned_at, first_response_at, resolved_at, ended_at, closed_at, transferred_at]
+dashboard_time_expr: COALESCE(assigned_at, resolved_at, ended_at, created_at)
+pii: [visitor_id, subject, visitor_session_token]
+blocked_select: [visitor_id, visitor_session_token]
+indexes:
+  - [organization_id, status, updated_at]
+  - [assigned_agent_id, status]
+  - [organization_id, channel, status]
+columns:
+  - { name: id, type: bigint, pk: true, description: Conversation primary key }
+  - { name: organization_id, type: bigint, description: Tenant id. Injected by executor. }
+  - { name: channel, type: text, values: [webchat, whatsapp, email, instagram, facebook, voice, sms], aliases: [chanel, whatsap, web chat], description: Channel brand key }
+  - { name: status, type: text, values: [bot_active, queued, assigned, active, resolved, closed], description: Legacy operational status }
+  - { name: queue_id, type: bigint, fk: ccass.queues.id, description: Routing queue }
+  - { name: assigned_agent_id, type: bigint, fk: ccass.agents.id, description: CCaaS agent }
+  - { name: assigned_user_id, type: bigint, description: Setup user. My Performance scope. Do not invent agent_id. }
+  - { name: contact_id, type: text, description: CDP contact id }
+  - { name: created_at, type: timestamptz, description: Conversation created }
+  - { name: queued_at, type: timestamptz, description: Entered queue }
+  - { name: assigned_at, type: timestamptz, description: Assigned to an agent }
+  - { name: first_response_at, type: timestamptz, description: First agent response }
+  - { name: resolved_at, type: timestamptz, description: Marked resolved }
+  - { name: ended_at, type: timestamptz, description: Interaction ended }
+  - { name: closed_at, type: timestamptz, description: Closed }
+  - { name: transferred_at, type: timestamptz, description: Transfer occurred }
+  - { name: lifecycle_state, type: text, values: [bot, waiting, offered, connected, ended], description: Phase-1 lifecycle }
+  - { name: disposition_code, type: text, description: Snapshot disposition code }
+  - { name: resolution_code, type: text, description: Snapshot resolution code }
+  - { name: sla_status, type: text, description: Conversation SLA snapshot }
+sample_rows:
+  - { id: 101, channel: webchat, status: resolved, queue_id: 7, assigned_agent_id: 12, assigned_user_id: 55, assigned_at: "2026-09-07T10:02:00Z", first_response_at: "2026-09-07T10:02:18Z", resolved_at: "2026-09-07T10:11:40Z", ended_at: "2026-09-07T10:11:40Z" }
+  - { id: 102, channel: whatsapp, status: closed, queue_id: 7, assigned_agent_id: 12, assigned_at: "2026-09-07T11:00:00Z", first_response_at: "2026-09-07T11:01:20Z", ended_at: "2026-09-07T11:20:00Z" }
+  - { id: 88, channel: voice, status: queued, queue_id: 9, assigned_agent_id: null, assigned_at: null }

@@ -1,0 +1,63 @@
+name: postgres_warehouse_dbt
+version: '1.0.0'
+profile: postgres_warehouse_dbt
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  postgres_warehouse_dbt:
+    +materialized: view
+    shared:
+      +tags: [shared, postgres]
+      +materialized: table
+      +schema: public
+      staging:
+        accounts:
+          +tags: [shared, accounts, postgres]
+          +materialized: view
+          +schema: shared_staging
+        cdp:
+          +tags: [shared, cdp, postgres]
+          +materialized: view
+          +schema: shared_staging
+    campaign:
+      +tags: [campaign, postgres]
+      staging:
+        +materialized: view
+        +schema: campaign_staging
+      marts:
+        +materialized: table
+        +schema: campaign_marts
+    crm:
+      +tags: [crm, postgres]
+      staging:
+        +materialized: view
+        +schema: crm_staging
+      marts:
+        +materialized: view
+        +schema: crm_marts
+    ccaas:
+      +tags: [ccaas, postgres]
+      staging:
+        +materialized: view
+        +schema: ccass_staging_aiccaas
+      marts:
+        +materialized: table
+        +schema: ccass_marts_aiccaas
+    ticketing:
+      +tags: [ticketing, postgres]
+      staging:
+        +materialized: view
+        +schema: ticketing_staging
+      marts:
+        +materialized: view
+        +schema: ticketing_marts

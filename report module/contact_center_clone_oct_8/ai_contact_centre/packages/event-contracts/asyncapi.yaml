@@ -1,0 +1,29 @@
+asyncapi: 3.0.0
+info:
+  title: Worktual Contact Centre Events
+  version: 0.1.0
+  description: Kafka topic contracts for cc-core and channel services
+
+channels:
+  cc.message.received:
+    address: cc.message.received
+    messages:
+      inboundMessage:
+        $ref: '#/components/messages/InboundMessageEvent'
+
+components:
+  messages:
+    InboundMessageEvent:
+      payload:
+        type: object
+        required:
+          - schema_version
+          - event_id
+          - tenant_id
+          - channel_type
+          - external_thread_id
+          - external_message_id
+          - customer_ref
+          - direction
+          - body
+          - occurred_at

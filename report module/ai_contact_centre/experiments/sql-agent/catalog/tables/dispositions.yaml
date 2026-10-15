@@ -1,0 +1,19 @@
+name: ccass.dispositions
+alias: d
+schema: ccass
+grain: disposition_catalog
+purpose: Tenant disposition catalog (label, code, outcome).
+aliases: [outcomes, close reasons]
+columns:
+  - { name: id, type: bigint, pk: true, description: Disposition id }
+  - { name: organization_id, type: bigint, description: Tenant id }
+  - { name: code, type: text, description: Stable code }
+  - { name: label, type: text, description: Display label }
+  - { name: category, type: text, values: [resolution, follow_up, transfer, closure, general], description: Category }
+  - { name: outcome, type: text, values: [resolved, unresolved, transferred], description: Outcome }
+  - { name: is_active, type: boolean, description: Active in picker }
+sample_rows:
+  - { id: 3, code: issue_resolved, label: Issue resolved, category: resolution, outcome: resolved }
+  - { id: 4, code: follow_up_required, label: Follow-up required, category: follow_up, outcome: unresolved }
+  - { id: 5, code: transferred_to_specialist, label: Transferred to specialist, category: transfer, outcome: transferred }
+  - { id: 6, code: customer_disconnected, label: Customer disconnected, category: closure, outcome: unresolved }

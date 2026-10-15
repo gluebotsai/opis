@@ -1,0 +1,9 @@
+total 837 ok 834 fail 3 kpis 61
+--- fails by kpi ---
+  3 mailbox_send_ready
+--- unique errors ---
+  3 That grouping is not available on this warehouse.
+--- samples ---
+FAIL mailbox_send_ready dim=- win=last 1 day REPLAN That grouping is not available on this warehouse.
+FAIL mailbox_send_ready dim=- win=last 7 days REPLAN That grouping is not available on this warehouse.
+FAIL mailbox_send_ready dim=- win=last 30 days REPLAN That grouping is not available on this warehouse.

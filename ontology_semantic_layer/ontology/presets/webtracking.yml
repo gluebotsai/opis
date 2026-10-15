@@ -1,0 +1,57 @@
+presets:
+  webtracking.analytics:
+    agent: Web Tracking Analytics Agent
+    level: L1
+    modules:
+    - cdp
+    - identity
+    usecase: >
+      Site-owner co-worker chat for website analytics. Understands visitor vs
+      session vs page language, fetches numbers for the current website only,
+      and answers in business English.
+    prompt:
+      full_ontology: true
+      full_definitions: true
+      include_module_index: false
+      metrics_mode: full
+      metrics: []
+      actions:
+      - ask_semantic
+      - spoke_query
+      relations_only_if_both_ends_in_classes: true
+      # Product guardrails live in ontoYMLs/webtracking.yml business_rules
+      # (compact product prompts do not append prompt.rules).
+      rules: []
+
+  webtracking.insights:
+    agent: Web Tracking Insights Agent
+    level: L1
+    modules:
+    - cdp
+    - identity
+    usecase: >
+      Dashboard Insights narrator. Receives a KPI snapshot and writes diagnostic,
+      predictive, and prescriptive narrative — does not chat or run ad-hoc SQL.
+    prompt:
+      full_ontology: false
+      full_definitions: true
+      include_module_index: false
+      metrics_mode: none
+      metrics: []
+      actions:
+      - ask_ontology
+      entities:
+      - Tenant
+      - Website
+      - Visitor
+      - Session
+      - Page
+      - PageView
+      - TrafficSource
+      - Campaign
+      - Conversion
+      - PerformanceMeasure
+      - Error
+      relations_only_if_both_ends_in_classes: true
+      # Product guardrails live in ontoYMLs/webtracking.yml business_rules
+      rules: []

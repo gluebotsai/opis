@@ -1,0 +1,28 @@
+shared/privatekey.pem
+shared/*.pem
+
+# Only two runtime env files — copy from *.example templates
+.env
+apps/web/.env
+
+.deploy-keys/
+.DS_Store
+apps/chat-service/secrets/
+node_modules/
+dist/
+.turbo/
+apps/web/dist/
+apps/nlp/.venv/
+apps/nlp/uv.lock
+apps/social-service/logs/
+apps/cc-core/uploads/scheduled-reports/
+# Runtime service logs — never commit (GitHub 100MB limit)
+*.log
+**/logs/*
+!**/logs/.gitkeep
+**/processed_message_ids.json
+.cursor/
+
+# Local Hub A2A lab credentials
+apps/a2a-server/.hub-lab-credentials
+apps/nlp.zip

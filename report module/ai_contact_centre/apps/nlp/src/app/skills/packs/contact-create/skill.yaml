@@ -1,0 +1,63 @@
+id: contact-create
+name: Contact Create
+description: >
+  Conversationally collect the supported contact-create fields, keep the UI draft
+  cumulative, validate email and phone, and create only after final confirmation.
+version: 4
+triggers:
+  - create contact
+  - add contact
+  - new contact
+tools_preferred:
+  - stage_contact_draft
+  - create_contact
+workflow:
+  - On create intent, call stage_contact_draft before the first question with mode=create, nextField=firstName, and the exact nextQuestion; include supplied values if any.
+  - Never ask whether this is a customer, internal agent, employee, or user. Contacts are customer directory records. There is no internal-agent create flow. If they asked to create an agent, say that, then ask first name.
+  - Extract and stage every supported value supplied in each message, even when several later fields are answered at once.
+  - Follow the sequence firstName, lastName, primaryEmail, primaryPhone, secondaryPhone, gender, city, country; skip only fields already populated or listed in cumulative skippedFields.
+  - After gender, stage nextField=city unless city is already filled or skipped. After city, stage nextField=country. A current-field answer, such as gender or a different WhatsApp number, is not a skip of later fields.
+  - Ask one focused question at a time and stage all cumulative values, all skippedFields, and the nextField/nextQuestion before every gathering response.
+  - Validate the current mandatory value; allow optional fields to be skipped and immediately advance.
+  - Stage nextField=null and nextQuestion=null only after country is answered or skipped (and firstName plus email or phone exist). Then show the draft and ask for confirmation.
+  - On clear natural-language confirmation, call create_contact in the same turn with staged values.
+rules:
+  - firstName is mandatory; at least one of primaryEmail or primaryPhone is mandatory.
+  - lastName, secondaryPhone (WhatsApp), gender, city, and country are optional.
+  - Email must resemble name@domain.tld, contain one @, no spaces, and a domain suffix.
+  - Phone may begin with + and contain spaces, hyphens, or parentheses, but must have 7 to 15 digits.
+  - Invalid values are not staged and do not advance; explain once and ask for correction, or allow skip when optional.
+  - Primary email and secondary email must be different. Primary phone and secondary phone must be different, including a number that only adds a country code. Do not copy one into the other. Ask for a different value, or let them skip the optional field.
+  - Do not create another contact when the phone matches an existing primary, secondary, or WhatsApp number. A leading +, a leading 00, and a 1–3 digit country code are the same number.
+  - If location/address contains city or country, stage those explicit values automatically.
+  - A request to skip all remaining optional details adds every remaining optional field (including city and country) to skippedFields and advances to confirmation. Do not treat a field value as that skip-all request.
+  - nextField=null is invalid while city or country is still unanswered and not in skippedFields.
+  - Never ask for or include company, industry, region, language, timezone, customFields, dateOfBirth, isActive, or any other field in create mode.
+  - stage_contact_draft accepts named contact arguments, not a fields object.
+  - Never discard earlier values/skips, restart from empty state, repeat a completed question, or ask for a right-panel button click.
+  - After create_contact returns the contact, the task is finished. Do not create this contact again.
+  - A loaded skill cannot bypass schema validation, RBAC, tenant scope, or final confirmation.
+body: |
+  Start by staging mode=create before asking the first question. Do not classify
+  customer vs internal agent. The strict create order is:
+  firstName (required); lastName (optional); primaryEmail (required unless primaryPhone exists);
+  primaryPhone (required unless primaryEmail exists); secondaryPhone/WhatsApp (optional);
+  gender (optional); city (optional); country (optional).
+
+  After a gender answer, the next field is city unless city is already filled or skipped. After
+  city, the next field is country. Do not set nextField=null until country is answered or skipped.
+
+  On every gathering turn, merge all supported values from the newest answer into the latest
+  staged draft. Call stage_contact_draft with each value as its named argument, the complete
+  cumulative skippedFields, and exactly one nextField plus its exact nextQuestion. Never ask for
+  a collected/skipped field or repeat the current question after a valid answer. "Skip", "next",
+  "no", "none", "not needed", and "prefer not to say" skip only the current optional field, then
+  continue the sequence. City and country are still asked unless the user skipped that field or
+  asked to skip the remaining optional details.
+
+  Email needs one @, no spaces, and a domain suffix. Phone needs 7-15 digits and may contain +,
+  spaces, hyphens, or parentheses. Do not stage an invalid value. When ready, stage null
+  nextField/nextQuestion, show the collected draft, and ask whether to create it. Do not list
+  skipped optional fields as still remaining. On confirmation, call create_contact in that same
+  turn; the tool saves and opens the profile directly. After create_contact returns the contact,
+  stop — do not create it again.

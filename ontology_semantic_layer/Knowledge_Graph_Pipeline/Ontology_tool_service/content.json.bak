@@ -1,0 +1,747 @@
+[
+  {
+    "id": "label_tenant",
+    "type": "node_label",
+    "name": "Tenant",
+    "description": "The root organization or business entity that owns and operates the contact center platform",
+    "category": "Organization",
+    "synonyms": [
+      "organization",
+      "company",
+      "firm",
+      "enterprise",
+      "business entity",
+      "corporate entity",
+      "tenant organization"
+    ]
+  },
+  {
+    "id": "label_role",
+    "type": "node_label",
+    "name": "Role",
+    "description": "A defined function or position within the organization that determines permissions and capabilities",
+    "category": "Access Control",
+    "synonyms": [
+      "job function",
+      "position",
+      "title",
+      "access level",
+      "permission set",
+      "security role",
+      "user role"
+    ]
+  },
+  {
+    "id": "label_team",
+    "type": "node_label",
+    "name": "Team",
+    "description": "A group of agents who work together and share common goals or responsibilities",
+    "category": "Organization",
+    "synonyms": [
+      "agent group",
+      "work group",
+      "department",
+      "unit",
+      "crew",
+      "staff team",
+      "service team"
+    ]
+  },
+  {
+    "id": "label_user",
+    "type": "node_label",
+    "name": "User",
+    "description": "A human user of the system, typically an employee or staff member",
+    "category": "User Management",
+    "synonyms": [
+      "agent",
+      "employee",
+      "staff member",
+      "worker",
+      "rep",
+      "system user",
+      "agent user"
+    ]
+  },
+  {
+    "id": "label_holidaycalendar",
+    "type": "node_label",
+    "name": "HolidayCalendar",
+    "description": "Defines holidays and non-working days that affect business hours and scheduling",
+    "category": "Scheduling",
+    "synonyms": []
+  },
+  {
+    "id": "label_businesshours",
+    "type": "node_label",
+    "name": "BusinessHours",
+    "description": "Specifies the operating hours and availability windows for service delivery",
+    "category": "Scheduling",
+    "synonyms": []
+  },
+  {
+    "id": "label_channel",
+    "type": "node_label",
+    "name": "Channel",
+    "description": "A communication medium or touchpoint through which customers interact (voice, chat, email, etc.)",
+    "category": "Communication",
+    "synonyms": []
+  },
+  {
+    "id": "label_agent",
+    "type": "node_label",
+    "name": "Agent",
+    "description": "A customer service representative who handles customer interactions and conversations",
+    "category": "Service Delivery",
+    "synonyms": []
+  },
+  {
+    "id": "label_skill",
+    "type": "node_label",
+    "name": "Skill",
+    "description": "A specific capability, expertise, or competency that an agent possesses for handling interactions",
+    "category": "Service Delivery",
+    "synonyms": []
+  },
+  {
+    "id": "label_queue",
+    "type": "node_label",
+    "name": "Queue",
+    "description": "A waiting area for interactions waiting to be assigned to an available agent",
+    "category": "Routing",
+    "synonyms": []
+  },
+  {
+    "id": "label_routingpolicy",
+    "type": "node_label",
+    "name": "RoutingPolicy",
+    "description": "Rules and logic that determine how interactions are distributed to agents",
+    "category": "Routing",
+    "synonyms": []
+  },
+  {
+    "id": "label_disposition",
+    "type": "node_label",
+    "name": "Disposition",
+    "description": "A categorization or outcome code assigned to completed interactions",
+    "category": "Analytics",
+    "synonyms": []
+  },
+  {
+    "id": "label_sla",
+    "type": "node_label",
+    "name": "SLA",
+    "description": "Service Level Agreement defining performance targets and response time commitments",
+    "category": "Compliance",
+    "synonyms": []
+  },
+  {
+    "id": "label_channelautomationpolicy",
+    "type": "node_label",
+    "name": "ChannelAutomationPolicy",
+    "description": "Automated rules and actions for handling interactions on specific channels",
+    "category": "Automation",
+    "synonyms": []
+  },
+  {
+    "id": "label_conversation",
+    "type": "node_label",
+    "name": "Conversation",
+    "description": "A single interaction or thread between a customer and the contact center",
+    "category": "Interaction",
+    "synonyms": []
+  },
+  {
+    "id": "label_conversationsummary",
+    "type": "node_label",
+    "name": "ConversationSummary",
+    "description": "An AI-generated or manual summary capturing the key points of a conversation",
+    "category": "Interaction",
+    "synonyms": []
+  },
+  {
+    "id": "label_slainstance",
+    "type": "node_label",
+    "name": "SLAInstance",
+    "description": "An active or completed service level commitment for a specific interaction",
+    "category": "Compliance",
+    "synonyms": []
+  },
+  {
+    "id": "label_attachment",
+    "type": "node_label",
+    "name": "Attachment",
+    "description": "A file or document associated with an interaction or record",
+    "category": "Content",
+    "synonyms": []
+  },
+  {
+    "id": "label_worknote",
+    "type": "node_label",
+    "name": "WorkNote",
+    "description": "Internal notes or annotations added by agents during interaction handling",
+    "category": "Content",
+    "synonyms": []
+  },
+  {
+    "id": "label_conversationparticipant",
+    "type": "node_label",
+    "name": "ConversationParticipant",
+    "description": "A person or system involved in a conversation",
+    "category": "Interaction",
+    "synonyms": []
+  },
+  {
+    "id": "label_assignment",
+    "type": "node_label",
+    "name": "Assignment",
+    "description": "The act of allocating an interaction or task to a specific agent or queue",
+    "category": "Routing",
+    "synonyms": []
+  },
+  {
+    "id": "label_transfer",
+    "type": "node_label",
+    "name": "Transfer",
+    "description": "The movement of an interaction from one agent, queue, or channel to another",
+    "category": "Routing",
+    "synonyms": []
+  },
+  {
+    "id": "label_routingattempt",
+    "type": "node_label",
+    "name": "RoutingAttempt",
+    "description": "A single attempt by the routing system to assign an interaction to an available resource",
+    "category": "Routing",
+    "synonyms": []
+  },
+  {
+    "id": "label_webchatsession",
+    "type": "node_label",
+    "name": "WebchatSession",
+    "description": "An active web-based chat session between a customer and an agent",
+    "category": "Channel",
+    "synonyms": []
+  },
+  {
+    "id": "label_task",
+    "type": "node_label",
+    "name": "Task",
+    "description": "A work item or action item that needs to be completed",
+    "category": "Work Management",
+    "synonyms": [
+      "work item",
+      "assignment",
+      "to-do",
+      "action item",
+      "job",
+      "deliverable",
+      "activity task"
+    ]
+  },
+  {
+    "id": "label_sharednote",
+    "type": "node_label",
+    "name": "SharedNote",
+    "description": "A collaborative note accessible to multiple users or teams",
+    "category": "Content",
+    "synonyms": []
+  },
+  {
+    "id": "label_contact",
+    "type": "node_label",
+    "name": "Contact",
+    "description": "A customer who has purchased any offering of the business [tenant]",
+    "category": "Customer",
+    "synonyms": [
+      "customer",
+      "prospect",
+      "lead",
+      "person",
+      "individual",
+      "client contact",
+      "external party"
+    ]
+  },
+  {
+    "id": "label_contactpoint",
+    "type": "node_label",
+    "name": "ContactPoint",
+    "description": "A specific communication endpoint (phone, email, etc.) associated with a contact",
+    "category": "Customer",
+    "synonyms": [
+      "phone number",
+      "email address",
+      "channel endpoint",
+      "communication method",
+      "contact method",
+      "reachable point"
+    ]
+  },
+  {
+    "id": "label_customerscore",
+    "type": "node_label",
+    "name": "CustomerScore",
+    "description": "A numerical or categorical value representing customer value, satisfaction, or risk",
+    "category": "Analytics",
+    "synonyms": []
+  },
+  {
+    "id": "label_insight",
+    "type": "node_label",
+    "name": "Insight",
+    "description": "A derived observation or finding from data analysis",
+    "category": "Analytics",
+    "synonyms": []
+  },
+  {
+    "id": "label_recommendation",
+    "type": "node_label",
+    "name": "Recommendation",
+    "description": "A suggested action or next best offer based on analysis",
+    "category": "Analytics",
+    "synonyms": []
+  },
+  {
+    "id": "label_segment",
+    "type": "node_label",
+    "name": "Segment",
+    "description": "A grouping of contacts or customers based on common characteristics",
+    "category": "Marketing",
+    "synonyms": []
+  },
+  {
+    "id": "label_order",
+    "type": "node_label",
+    "name": "Order",
+    "description": "A customer order or purchase transaction",
+    "category": "Commerce",
+    "synonyms": [
+      "purchase order",
+      "transaction",
+      "sale",
+      "buy order",
+      "customer order",
+      "sales order",
+      "order record"
+    ]
+  },
+  {
+    "id": "label_offering",
+    "type": "node_label",
+    "name": "Offering",
+    "description": "A product, service, or solution available for purchase or subscription",
+    "category": "Commerce",
+    "synonyms": []
+  },
+  {
+    "id": "rel_defines_role",
+    "type": "relationship",
+    "name": "DEFINES_ROLE",
+    "description": "Tenant defines Role - assigns functional responsibilities within the organization",
+    "synonyms": []
+  },
+  {
+    "id": "rel_has_agent",
+    "type": "relationship",
+    "name": "HAS_AGENT",
+    "description": "Tenant or Queue has Agent - assigns an agent to work for tenant or queue",
+    "synonyms": []
+  },
+  {
+    "id": "rel_has_skill",
+    "type": "relationship",
+    "name": "HAS_SKILL",
+    "description": "Agent has Skill - agent possesses a specific capability",
+    "synonyms": []
+  },
+  {
+    "id": "rel_supports_channel",
+    "type": "relationship",
+    "name": "SUPPORTS_CHANNEL",
+    "description": "Agent supports Channel - agent can handle interactions via this channel",
+    "synonyms": []
+  },
+  {
+    "id": "rel_part_of_team",
+    "type": "relationship",
+    "name": "PART_OF_TEAM",
+    "description": "Agent is part of Team - agent belongs to a team",
+    "synonyms": []
+  },
+  {
+    "id": "rel_uses_policy",
+    "type": "relationship",
+    "name": "USES_POLICY",
+    "description": "Tenant uses Routing Policy - policy governs routing logic",
+    "synonyms": []
+  },
+  {
+    "id": "rel_applies_sla",
+    "type": "relationship",
+    "name": "APPLIES_SLA",
+    "description": "Tenant applies SLA - service level commitments",
+    "synonyms": []
+  },
+  {
+    "id": "rel_operates_during",
+    "type": "relationship",
+    "name": "OPERATES_DURING",
+    "description": "Queue operates during BusinessHours - queue availability",
+    "synonyms": []
+  },
+  {
+    "id": "rel_has_calendar",
+    "type": "relationship",
+    "name": "HAS_CALENDAR",
+    "description": "Tenant has HolidayCalendar - holiday schedule",
+    "synonyms": []
+  },
+  {
+    "id": "rel_enables_automation",
+    "type": "relationship",
+    "name": "ENABLES_AUTOMATION",
+    "description": "Channel enables ChannelAutomationPolicy - automation rules",
+    "synonyms": []
+  },
+  {
+    "id": "rel_created_by",
+    "type": "relationship",
+    "name": "CREATED_BY",
+    "description": "Conversation created by Agent - agent initiated conversation",
+    "synonyms": []
+  },
+  {
+    "id": "rel_has_participant",
+    "type": "relationship",
+    "name": "HAS_PARTICIPANT",
+    "description": "Conversation has Participant - person involved in conversation",
+    "synonyms": []
+  },
+  {
+    "id": "rel_has_summary",
+    "type": "relationship",
+    "name": "HAS_SUMMARY",
+    "description": "Conversation has Summary - conversation summary",
+    "synonyms": []
+  },
+  {
+    "id": "rel_contains_attachment",
+    "type": "relationship",
+    "name": "CONTAINS_ATTACHMENT",
+    "description": "Conversation contains Attachment - file shared in conversation",
+    "synonyms": []
+  },
+  {
+    "id": "rel_assigned_to",
+    "type": "relationship",
+    "name": "ASSIGNED_TO",
+    "description": "Conversation assigned to Agent - routing assignment",
+    "synonyms": []
+  },
+  {
+    "id": "rel_transferred_to",
+    "type": "relationship",
+    "name": "TRANSFERRED_TO",
+    "description": "Conversation transferred to Agent/Queue - transfer action",
+    "synonyms": []
+  },
+  {
+    "id": "rel_tracked_by_sla",
+    "type": "relationship",
+    "name": "TRACKED_BY_SLA",
+    "description": "Conversation tracked by SLAInstance - service level monitoring",
+    "synonyms": []
+  },
+  {
+    "id": "rel_dispositioned_as",
+    "type": "relationship",
+    "name": "DISPOSITIONED_AS",
+    "description": "Conversation dispositioned as Disposition - outcome categorization",
+    "synonyms": []
+  },
+  {
+    "id": "rel_has_note",
+    "type": "relationship",
+    "name": "HAS_NOTE",
+    "description": "Conversation has WorkNote/SharedNote - internal notes",
+    "synonyms": []
+  },
+  {
+    "id": "rel_belongs_to_queue",
+    "type": "relationship",
+    "name": "BELONGS_TO_QUEUE",
+    "description": "Conversation belongs to Queue - queue assignment",
+    "synonyms": []
+  },
+  {
+    "id": "rel_contact_has_point",
+    "type": "relationship",
+    "name": "HAS_CONTACT_POINT",
+    "description": "Contact has ContactPoint - communication endpoint",
+    "synonyms": []
+  },
+  {
+    "id": "rel_contact_has_score",
+    "type": "relationship",
+    "name": "HAS_SCORE",
+    "description": "Contact has CustomerScore - value/risk assessment",
+    "synonyms": []
+  },
+  {
+    "id": "rel_contact_in_segment",
+    "type": "relationship",
+    "name": "IN_SEGMENT",
+    "description": "Contact in Segment - segment membership",
+    "synonyms": []
+  },
+  {
+    "id": "rel_contact_generated_insight",
+    "type": "relationship",
+    "name": "GENERATED_INSIGHT",
+    "description": "Contact generated Insight - analytics findings",
+    "synonyms": []
+  },
+  {
+    "id": "rel_recommendation_for",
+    "type": "relationship",
+    "name": "RECOMMENDATION_FOR",
+    "description": "Recommendation for Contact - next best action",
+    "synonyms": []
+  },
+  {
+    "id": "rel_order_placed_by",
+    "type": "relationship",
+    "name": "PLACED_BY",
+    "description": "Order placed by Contact - purchase transaction",
+    "synonyms": []
+  },
+  {
+    "id": "rel_order_contains",
+    "type": "relationship",
+    "name": "CONTAINS_OFFERING",
+    "description": "Order contains Offering - line items",
+    "synonyms": []
+  },
+  {
+    "id": "concept_customer",
+    "type": "business_concept",
+    "name": "Customer",
+    "description": "A contact who has purchased any offering of the business [tenant]",
+    "synonyms": []
+  },
+  {
+    "id": "concept_first_contact_resolution",
+    "type": "business_concept",
+    "name": "First Contact Resolution (FCR)",
+    "description": "Metric measuring interactions resolved on first interaction without escalation",
+    "synonyms": []
+  },
+  {
+    "id": "concept_average_handle_time",
+    "type": "business_concept",
+    "name": "Average Handle Time (AHT)",
+    "description": "Average duration to handle an interaction including talk time and after-call work",
+    "synonyms": []
+  },
+  {
+    "id": "concept_service_level",
+    "type": "business_concept",
+    "name": "Service Level",
+    "description": "Percentage of interactions answered within defined threshold (e.g., 80% in 20 seconds)",
+    "synonyms": []
+  },
+  {
+    "id": "concept_occupancy",
+    "type": "business_concept",
+    "name": "Occupancy",
+    "description": "Percentage of time agents spend handling interactions vs available time",
+    "synonyms": []
+  },
+  {
+    "id": "concept_abandonment_rate",
+    "type": "business_concept",
+    "name": "Abandonment Rate",
+    "description": "Percentage of callers who disconnect before speaking to an agent",
+    "synonyms": []
+  },
+  {
+    "id": "concept_wrap_up_time",
+    "type": "business_concept",
+    "name": "Wrap-up Time",
+    "description": "Time after call ends for agents to complete documentation and notes",
+    "synonyms": []
+  },
+  {
+    "id": "concept_shrinkage",
+    "type": "business_concept",
+    "name": "Shrinkage",
+    "description": "Percentage of scheduled time unavailable for calls due to breaks, training, etc.",
+    "synonyms": []
+  },
+  {
+    "id": "label_orgprofile",
+    "type": "node_label",
+    "name": "OrgProfile",
+    "description": "Organizational profile capturing the structure, identity, and key attributes of an organization within the CRM",
+    "category": "Organization",
+    "synonyms": [
+      "Organization Profile",
+      "Org Info",
+      "Organization Details",
+      "Org Info",
+      "Business Profile",
+      "Corporate Profile"
+    ]
+  },
+  {
+    "id": "label_company",
+    "type": "node_label",
+    "name": "Company",
+    "description": "A business entity representing an organization that interacts with the CRM, including prospects, customers, and partners",
+    "category": "Organization",
+    "synonyms": [
+      "Organization",
+      "Business",
+      "Client",
+      "Account",
+      "Firm",
+      "Enterprise"
+    ]
+  },
+  {
+    "id": "label_deal",
+    "type": "node_label",
+    "name": "Deal",
+    "description": "A commercial opportunity representing a potential revenue transaction tracked through stages of a sales pipeline",
+    "category": "Sales",
+    "synonyms": [
+      "Opportunity",
+      "Pipeline Deal",
+      "Sales Deal",
+      "Win",
+      "Potential Deal",
+      "Revenue Opportunity"
+    ]
+  },
+  {
+    "id": "label_proposal",
+    "type": "node_label",
+    "name": "Proposal",
+    "description": "A formal document sent to a prospect or customer outlining the terms, pricing, and scope of a proposed solution",
+    "category": "Sales",
+    "synonyms": [
+      "Business Proposal",
+      "Sales Proposal",
+      "Solution Proposal",
+      "Pitch",
+      "Quote Proposal",
+      "Bid"
+    ]
+  },
+  {
+    "id": "label_quote",
+    "type": "node_label",
+    "name": "Quote",
+    "description": "A price quotation provided to a customer detailing the cost of products or services before order creation",
+    "category": "Sales",
+    "synonyms": [
+      "Price Quote",
+      "Quotation",
+      "Estimate",
+      "Pricing",
+      "Cost Estimate",
+      "Quoted Price"
+    ]
+  },
+  {
+    "id": "label_salesorder",
+    "type": "node_label",
+    "name": "SalesOrder",
+    "description": "An official order issued to a customer confirming the purchase of products or services",
+    "category": "Sales",
+    "synonyms": [
+      "Order",
+      "Sales Order",
+      "Purchase Order",
+      "SO",
+      "Customer Order",
+      "Contract Order"
+    ]
+  },
+  {
+    "id": "label_invoice",
+    "type": "node_label",
+    "name": "Invoice",
+    "description": "A financial document requesting payment from a customer for products or services delivered",
+    "category": "Finance",
+    "synonyms": [
+      "Bill",
+      "Billing Invoice",
+      "Receipt",
+      "Statement",
+      "Payment Request",
+      "AR Invoice"
+    ]
+  },
+  {
+    "id": "label_contactprofile",
+    "type": "node_label",
+    "name": "ContactProfile",
+    "description": "Detailed profile of an individual contact including demographic, behavioral, and preference data",
+    "category": "Contact",
+    "synonyms": [
+      "Contact Info",
+      "Contact Details",
+      "Profile",
+      "Customer Profile",
+      "Lead Profile",
+      "Contact Card"
+    ]
+  },
+  {
+    "id": "label_activity",
+    "type": "node_label",
+    "name": "Activity",
+    "description": "A tracked event or interaction involving contacts, such as calls, emails, meetings, or task completions",
+    "category": "Activity",
+    "synonyms": [
+      "Interaction",
+      "Event",
+      "Task Activity",
+      "Call Log",
+      "Meeting",
+      "Engagement"
+    ]
+  },
+  {
+    "id": "label_note",
+    "type": "node_label",
+    "name": "Note",
+    "description": "A free-text annotation or comment attached to a CRM entity for context or documentation purposes",
+    "category": "Activity",
+    "synonyms": [
+      "Comment",
+      "Annotation",
+      "Remark",
+      "Memo",
+      "Observation",
+      "Documentation"
+    ]
+  },
+  {
+    "id": "label_campaign",
+    "type": "node_label",
+    "name": "Campaign",
+    "description": "A marketing initiative targeting a set of contacts or segments to achieve specific business goals",
+    "category": "Marketing",
+    "synonyms": [
+      "Marketing Campaign",
+      "Ad Campaign",
+      "Promotional Campaign",
+      "Outreach Campaign",
+      "Email Campaign",
+      "Campaign Initiative"
+    ]
+  }
+]

@@ -1,0 +1,30 @@
+# Copy to product/coverage.yml
+# One row per schema.table.column in schemas marked in. Fill from the database first.
+
+schemas_in: []
+schemas_out: []
+
+columns:
+  - column: schema.table.column
+    disposition: expose   # expose | hide | join_only | derive
+    object: deal
+    grain: "one deal"
+    meaning: "When the user says status on a deal, they mean this column."
+    user_phrases: [status, stage]
+    not_the_same_as: [invoice status, lead status]
+    groupable: true
+    sample_values_sql: "SELECT DISTINCT stage FROM schema.table WHERE organization_id = :org_id"
+    hide_reason: ""       # required when disposition is hide
+    derive_from: []       # required when disposition is derive
+
+# Per-metric HITL files live under product/hitl/<kpi_id>.yml
+# (copy templates/metric-column-decisions.yml). Gate fails if reviewed_by is empty.
+
+missing_kpis:
+  - id_hint: ""
+    meaning: ""
+    reason: "No locked formula yet"
+
+waivers:
+  - item: ""
+    reason: ""            # empty reason fails the gate

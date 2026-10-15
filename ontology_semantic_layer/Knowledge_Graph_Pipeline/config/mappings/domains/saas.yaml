@@ -1,0 +1,809 @@
+# =============================================================================
+# domains/saas.yaml   —   v2
+#   effective(org) = core.yaml + domains/saas.yaml [+ org<id>.yaml]
+#
+# CHANGES FROM v1 (2026.09.02):
+#   * BUG FIX (scope, silent): campaign.organization_products was mapped as
+#     Entitlement / ActiveEntitlement / ExpiredEntitlement. That table is
+#     PlatformProduct licensing — WORKTUAL's own modules (AI CCaaS / CRM /
+#     Ticketing / Campaign) granted to the tenant org, per core's own
+#     stub_labels comment ("distinct from inventory catalog Offering nodes").
+#     It has nothing to do with a SaaS tenant's END CUSTOMERS' feature
+#     entitlements. An agent querying Entitlement for a tenant's customer
+#     would get Worktual's own licensing data back with full confidence.
+#     Re-filed to not_modelled.no_source with the scope distinction stated
+#     explicitly, so nobody re-introduces this mapping without reading why.
+#   * SupportCase -> Subscription/Account link re-filed from blocked_on_core to
+#     no_source and ranked #1 — same correction ecommerce v4 made to its
+#     SupportCase -> Purchase gap, same reasoning: blocked_on_core implies a one-line
+#     fix (column exists in Postgres, core just doesn't map it); this column
+#     doesn't exist anywhere, and it's the highest-frequency CX question.
+#   * never_grant_enforcement + never_grant_note added — ecommerce v4's fix
+#     for the same unenforceable-at-FGAC problem, ported here unapplied in v1.
+#   * PII/PCI blocklist UNIONED with the credential blocklist rather than
+#     replacing it. v1 dropped religion/caste/ethnicity/health/pregnancy_
+#     status when it added password/api_key/token — compliance obligations
+#     don't relax because the vertical changed.
+#   * "workspace" de-duplicated as an alias — it appeared on Account,
+#     ClientAccount, AND as a customer_profile custom field, which is real
+#     ambiguity for whatever layer resolves user language to a label.
+#   * routing_precedence + segments (crm_fit tiers) ported in from
+#     domains/ecommerce.yaml — same value there (emphasis tuning without a
+#     data gate), not present in SaaS v1.
+#   * no_source severity=critical entries now carry rank, matching
+#     ecommerce v4's top-three pattern.
+#
+# CONFORMANCE (identical across all packs):
+#   R1 table must exist in core `tables:`
+#   R2 every column named in when: / from_column: / name_from: must be in that
+#      table's core `properties:` list
+#   R3 custom_fields only where core sets custom_dynamic: true
+#   R4 additive only - never rename, re-key or remove a core construct
+#   R5 anything failing R1-R4 lives in not_modelled: and EMITS NOTHING
+#   R6 access may only TIGHTEN core; sensitivity uses core's L1/L2/L3 scale
+#   Provenance annotated inline as [core: table.column].
+#
+# ONTOLOGIST'S NOTE
+#   This is the vertical core fits BEST, which is unsurprising - Worktual is
+#   itself a SaaS business and the schema was built from the inside out.
+#   crm.product_offers already carries billing_type / billing_frequency /
+#   included_qty / meter_key. crm.product_addons carries pricing_model,
+#   is_overage, unit_price and step pricing, with crm.product_addon_tiers for
+#   volume bands. crm.contracts carries arr, auto_renew, ends_at and
+#   renew_deal_id. crm.companies carries channel_role, parent_company_id and
+#   expansion_signal. inventory.products.unit_of_measure IS the pricing model
+#   this vertical needs (per_seat / per_agent / per_ticket / flat). That is a
+#   subscription business modelled properly.
+#
+#   Three things are defined but never measured or are conflated with a
+#   different concept, and they are the headline gaps:
+#   (1) meter_key exists on both OfferingPlan and Addon, but NO usage or
+#       metering table exists anywhere in core - usage-based billing is
+#       priced and never counted;
+#   (2) contracts.arr is a single current value with no history, so NRR, GRR
+#       and any ARR waterfall are uncomputable;
+#   (3) there is no per-end-customer feature entitlement record at all -
+#       campaign.organization_products looks like one but is Worktual's own
+#       platform licensing, a different relationship entirely.
+#   All three are in not_modelled. Nothing is synthesised for any of them.
+# =============================================================================
+
+industry: saas
+pack_version: "2026.09.05"
+requires_core: ">=3"          # updated core: catalog hubs + conversation join cols
+layer: domain
+
+applies_when:
+  accounts.organizations.industry_type:
+    [saas, software, b2b saas, software as a service, technology, tech,
+     it services, cloud, platform, devtools, martech, adtech, hrtech,
+     fintech saas, api, plg, enterprise software, isv]
+
+# =============================================================================
+# ROUTING PRECEDENCE — resolve applies_when collisions BEFORE segment logic
+# =============================================================================
+routing_precedence:
+  defer_to:
+    - {segment: ecommerce_platform_tooling, pack: ecommerce,
+       reason: "a tool that helps merchants sell physical goods (storefront
+                builders, inventory apps, POS software) is commerce
+                infrastructure — inventory.products / cdp.orders carry the
+                real business. Route here only if the VENDOR's own revenue is
+                subscription access to the tool, not a cut of merchant GMV."}
+    - {segment: vertical_clinical_saas, pack: healthcare,
+       reason: "practice management / EHR software needs a clinical
+                blocklist this pack does not define. Defer."}
+    - {segment: vertical_property_saas, pack: real-estate,
+       reason: "leasing / tenancy software is anchored on crm.contracts +
+                crm.appointments the same way this pack is, but the real-
+                estate pack's naming and compliance notes are correct for
+                landlords/tenants; this pack's are not."}
+    - {segment: vertical_education_saas, pack: education,
+       reason: "LMS / course-delivery software with seats-per-cohort belongs
+                to education.yaml, which understands enrollment and
+                academic-term semantics this pack does not attempt."}
+  resolution_rule: >-
+    A tenant matches at most ONE pack. If industry_type matches both this
+    pack and a deferred pack, the deferred pack wins. org<id>.yaml is the
+    only override and must state a reason.
+  unclaimed:
+    - {segment: dev_infra_api_platforms, note: "no infra/devtools pack
+       exists. Routes here on usage_based_infra_saas. Metering is the
+       differentiator and this pack's metering support is partial — see
+       not_modelled.usage_metering."}
+
+# =============================================================================
+# SEGMENTS — third axis, below industry and business_type. crm_fit is an
+# EMPHASIS TIER, never a data gate — same principle as ecommerce.yaml. A
+# freemium tenant that lands an enterprise logo must not have silently lost
+# the ability to run a Opportunity.
+# =============================================================================
+segment_key: accounts.organizations.industry_type
+segment_scale_key: accounts.organizations.company_size
+
+crm_fit_profiles:
+  high:
+    emphasise: [Account, AccountContact, Opportunity, Quote, Contract, BillingSchedule,
+                EngagementActivity, Meeting, SupportCase, CoachingNote]
+    agent_defaults: {volunteer_relationship_context: true, surface_next_best_action: true}
+    note: sales-led motion — pipeline, negotiated contracts, dedicated CS
+  moderate:
+    emphasise: [Customer, Contract, DailyEngagementMetric, SupportCase, Campaign]
+    agent_defaults: {volunteer_relationship_context: true, surface_next_best_action: false}
+    note: hybrid motion — some sales assist, but usage and lifecycle drive most outcomes
+  situational:
+    emphasise: [Customer, Contract, Campaign, BehaviourEvent]
+    agent_defaults: {volunteer_relationship_context: false, surface_next_best_action: false}
+    note: self-serve; CRM value is expansion/retention campaigns, not pipeline
+  low:
+    emphasise: [Contract, BehaviourEvent, Campaign]
+    de_emphasise: [Opportunity, Quote, Meeting, EngagementActivity]
+    agent_defaults: {volunteer_relationship_context: false, surface_next_best_action: false}
+    note: near-zero human touch. De-emphasised, never disabled.
+
+segments:
+  enterprise_saas:
+    crm_fit: high
+    matches: [enterprise software, named-account software]
+    default_variant: b2b
+    anchor_entities: [Account, Customer, Opportunity, Quote, Contract, BillingSchedule, SupportCase]
+    core_strengths: [crm.deals, crm.quotes, crm.contracts, crm.contract_billing_schedules,
+                     crm.contact_profiles.bant_*]
+    note: ARR and renewal pipeline are native — Contract.renew_deal_id, not simulated.
+
+  mid_market_plg_hybrid_saas:
+    crm_fit: high
+    matches: [mid-market saas, b2b saas, workflow software, plg with sales assist]
+    default_variant: b2b
+    anchor_entities: [Account, Customer, Opportunity, Contract, SupportCase, DailyEngagementMetric]
+    core_strengths: [crm.companies.expansion_signal]
+    note: expansion_signal is real, AI-populated, not invented by this pack.
+
+  usage_based_infra_saas:
+    crm_fit: moderate
+    matches: [usage-based, consumption pricing, api platform, devtools, pay-as-you-go]
+    default_variant: b2b
+    anchor_entities: [Account, Contract, DailyEngagementMetric, SupportCase]
+    core_strengths: [crm.product_addons.meter_key, inventory.products.unit_of_measure]
+    gaps: [usage_metering]
+    note: the meter's PRICE is fully modelled; the meter's READING is not.
+
+  smb_plg_self_serve_saas:
+    crm_fit: moderate
+    matches: [smb saas, self-serve saas, product-led growth, plg]
+    default_variant: b2b
+    anchor_entities: [Customer, Contract, DailyEngagementMetric, Campaign, SupportCase]
+    gaps: [usage_metering, seat_licence_assignment]
+
+  b2c_subscription_apps:
+    crm_fit: moderate
+    matches: [consumer subscription app, b2c saas, prosumer software]
+    default_variant: b2c
+    anchor_entities: [Customer, Contract, Purchase, DailyEngagementMetric, Campaign, SupportCase]
+    note: dual anchor (Purchase + Contract) — the checkout moment and the ongoing subscription are two different nodes, not one.
+
+  embedded_platform_saas:
+    crm_fit: high
+    matches: [embedded saas, white-label platform, reseller/oem/msp-sold platform]
+    default_variant: b2b2c
+    anchor_entities: [Account, Customer, Contract, Opportunity, SupportCase]
+    core_strengths: [crm.companies.channel_role, crm.companies.parent_company_id]
+    gaps: [partner_commercial_objects, sub_tenant_provisioning]
+    note: hierarchy is expressible; commission/settlement and sub-tenant provisioning are not — same class of gap as ecommerce's b2b2c segment.
+
+  freemium_saas:
+    crm_fit: low
+    matches: [freemium, free tier saas, viral saas]
+    default_variant: b2b
+    anchor_entities: [Contract, BehaviourEvent, Campaign]
+    de_emphasise: [Opportunity, Quote, Meeting, EngagementActivity]
+    note: honest recommendation is conversion campaigns off usage triggers, not pipeline — de-emphasised, never disabled.
+
+# =============================================================================
+# VARIANTS
+# =============================================================================
+variant_key: accounts.organizations.business_type
+variants:
+  b2b:
+    # Primary motion. Named accounts, seats, renewals, expansion.
+    anchor_entities: [Account, Customer, Opportunity, Contract, OfferingPlan, Invoice, SupportCase]
+    naming_overrides:
+      Account:  {primary: Account,  aliases: [customer, logo, tenant, org, workspace]}
+      Customer:  {primary: Employee Customer, aliases: [champion, admin, decision maker, end user]}
+      Opportunity:     {primary: Opportunity, aliases: [new business, expansion, renewal, upsell]}
+      Contract: {primary: Subscription, aliases: [subscription, agreement, order form]}
+    de_emphasise: [CommerceOrder, LoyaltyTier]
+  b2c:
+    # Self-serve / prosumer. Individual subscribes directly, no Account.
+    anchor_entities: [Customer, Contract, OfferingPlan, Purchase, SupportCase]
+    naming_overrides:
+      Customer:  {primary: Subscriber, aliases: [user, member, account holder]}
+      Contract: {primary: Plan, aliases: [subscription, membership]}
+    de_emphasise: [Account, Opportunity, Quote, Proposal, SalesOrder]
+  b2b2c:
+    # Reseller / OEM / marketplace partner sells the product onward.
+    # channel_role and parent_company_id are REAL core columns - the partner
+    # hierarchy is enforceable, not aspirational.
+    # [core: crm.companies.channel_role, crm.companies.parent_company_id]
+    anchor_entities: [Account, Customer, Opportunity, Contract, ProductEntitlement]
+    naming_overrides:
+      Account: {primary: Partner, aliases: [reseller, oem, msp, distributor, marketplace partner]}
+    partner_hierarchy:
+      role_column: channel_role          # standard | franchise | owned_store | brand_hq
+      parent_column: parent_company_id   # (Account)-[:PARENT_COMPANY]->(Account)
+    de_emphasise: []
+
+# =============================================================================
+# 1. NAMING - meta-graph only
+# =============================================================================
+naming:
+  Account:          {primary: Account, aliases: [customer, logo, org, tenant account]}
+  CompanySite:      {primary: Business Unit, aliases: [division, region, subsidiary]}
+  Customer:          {primary: Employee, aliases: [champion, admin, end user, seat holder, contact]}
+  Lead:             {primary: Signup, aliases: [trial signup, free user, prospect, lead]}
+  Customer:         {primary: Paying Customer, aliases: [subscriber, paid account]}
+  Offering:          {primary: Offering, aliases: [module, app, edition, sku]}
+  OfferingPlan:     {primary: Plan, aliases: [tier, package, edition, pricing plan, subscription plan]}
+  Addon:            {primary: Add-on, aliases: [usage item, overage, metered item, extra seat]}
+  AddonTier:        {primary: Volume Tier, aliases: [pricing band, usage tier]}
+  PriceList:        {primary: Price List, aliases: [rate card, regional pricing]}
+  Contract:         {primary: Subscription, aliases: [subscription, order form, agreement, term]}
+  BillingSchedule:  {primary: Billing Schedule, aliases: [invoice schedule, billing plan]}
+  Opportunity:             {primary: Opportunity, aliases: [new business, expansion, upsell, renewal, land, expand]}
+  Quote:            {primary: Quote, aliases: [order form, pricing proposal]}
+  SalesOrder:       {primary: Purchase Form, aliases: [signed order, booking]}
+  Invoice:          {primary: Invoice, aliases: [bill, statement]}
+  SupportCase:           {primary: Support SupportCase, aliases: [case, issue, bug report, request]}
+  ClientAccount:    {primary: Support Account, aliases: [customer account]}
+  Conversation:     {primary: Conversation, aliases: [chat, in-app chat, support chat]}
+  KnowledgeArticle: {primary: Help Doc, aliases: [documentation, kb article, guide]}
+  Campaign:         {primary: Campaign, aliases: [lifecycle campaign, nurture, product announcement]}
+  AudienceSegment:          {primary: AudienceSegment, aliases: [cohort, audience, account list]}
+  BehaviourEvent:    {primary: Offering Event, aliases: [feature usage, in-app event, telemetry]}
+  Visit:  {primary: App Session, aliases: [login session, usage session]}
+  JourneyState:     {primary: Lifecycle Stage, aliases: [funnel stage, adoption stage]}
+  DailyEngagementMetric:   {primary: Account Health, aliases: [usage summary, health metrics]}
+  CustomerScorecard:    {primary: Health Score, aliases: [churn score, risk score, engagement score]}
+  ProductEntitlement: {primary: Platform Licence, aliases: [worktual module access, provisioned platform product]}
+  Employee:             {primary: Employee, aliases: [staff, team member, csm, ae]}
+  StaffRole:            {primary: Support Engineer, aliases: [support agent, advisor]}
+  TicketAgent:      {primary: Support Engineer, aliases: [support rep, helpdesk agent]}
+  Team:             {primary: Team, aliases: [pod, squad, department]}
+  note: >-
+    "workspace" appears exactly once (Account alias) — v1 also carried it on
+    ClientAccount and as a customer_profile.workspace_id custom field. Kept
+    the Account alias only; workspace_id remains a plain identity key, not a
+    naming term, to avoid three overlapping resolutions of the same word.
+
+role_naming:
+  match_on: [AccessRole.name, AccessRole.product_id]           # [core: accounts.setup_roles]
+  aliases:
+    sales_rep:     [Account Executive, AE, sales rep]
+    sales_manager: [Sales Manager, VP Sales]
+    agent:         [Support Engineer, tier 1]
+    resolver:      [Escalation Engineer, tier 2]
+    marketing:     [Growth / Marketing]
+    finance:       [Billing / RevOps]
+    admin:         [Administrator]
+    viewer:        [Read-only]
+  unmapped_note: >-
+    "Customer Success Manager" and "Solutions Engineer" are the two roles a
+    SaaS org will ask for that accounts.setup_roles has no value for today.
+    Vocabulary only - nothing is emitted.
+
+# =============================================================================
+# 2. EXTRA LABELS - every condition verified against core properties
+# =============================================================================
+extends:
+
+  # --- product catalogue -----------------------------------------------------
+  inventory.products:
+    extra_labels:
+      - {label: SoftwareProduct}
+      - {label: SubscriptionProduct, when: {billing_type: [recurring]}}      # [core: billing_type]
+      - {label: PerpetualProduct,    when: {billing_type: [one_time]}}
+      - {label: SeatBasedProduct,    when: {unit_of_measure: [per_seat]}}    # [core: unit_of_measure]
+      - {label: AgentBasedProduct,   when: {unit_of_measure: [per_agent]}}
+      - {label: UsageBasedProduct,   when: {unit_of_measure: [per_ticket]}}
+      - {label: FlatRateProduct,     when: {unit_of_measure: [flat]}}
+      - {label: GenerallyAvailable,  when: {status: [active]}}               # [core: status]
+      - {label: SunsetProduct,       when: {status: [archived]}}
+      - {label: ConfigurableProduct, when: {product_type: [customizable]}}   # [core: product_type]
+    promote_property_to_node:
+      category:    {label: ProductLine,   key: slug, name_from: category,    edge: IN_PRODUCT_LINE}
+      subcategory: {label: ProductModule, key: slug, name_from: subcategory, edge: IN_MODULE}
+    derive_hierarchy:
+      - {from: ProductModule, to: ProductLine, edge: PARENT_PRODUCT_LINE}
+    note: >-
+      unit_of_measure is the pricing model in this vertical and core already
+      carries the exact enum a SaaS business needs. Cleanest single mapping
+      in the pack.
+
+  crm.product_offers:
+    extra_labels:
+      - {label: Plan}
+      - {label: RecurringPlan,  when: {billing_type: [recurring]}}           # [core: billing_type]
+      - {label: MonthlyPlan,    when: {billing_frequency: [monthly]}}        # [core: billing_frequency]
+      - {label: AnnualPlan,     when: {billing_frequency: [annual]}}
+      - {label: MeteredPlan,    when: {meter_key: not_null}}                 # [core: meter_key]
+      - {label: ActivePlan,     when: {status: [active]}}                    # [core: status]
+    note: >-
+      included_qty is the seat or unit allowance on the plan. meter_key names
+      the meter that overage is billed against - the meter itself does not
+      exist in core (see not_modelled.usage_metering).
+
+  crm.product_addons:
+    extra_labels:
+      - {label: AddOn}
+      - {label: OverageItem,   when: {is_overage: [true]}}                   # [core: is_overage]
+      - {label: MeteredAddOn,  when: {meter_key: not_null}}                  # [core: meter_key]
+      - {label: TieredAddOn,   when: {pricing_model: [tiered, volume, graduated]}}  # [core: pricing_model]
+      - {label: FlatAddOn,     when: {pricing_model: [flat]}}
+
+  crm.product_addon_tiers:
+    extra_labels: [{label: VolumeTier}]
+
+  # --- subscription lifecycle -----------------------------------------------
+  crm.contracts:
+    extra_labels:
+      - {label: Subscription}
+      - {label: ActiveSubscription,    when: {status: [active]}}             # [core: status]
+      - {label: ChurnedSubscription,   when: {status: [cancelled, canceled, churned, expired]}}
+      - {label: AutoRenewing,          when: {auto_renew: [true]}}           # [core: auto_renew]
+      - {label: ManualRenewal,         when: {auto_renew: [false]}}
+      - {label: AnnualSubscription,    when: {billing_frequency: [annual]}}  # [core: billing_frequency]
+      - {label: MonthlySubscription,   when: {billing_frequency: [monthly]}}
+    note: >-
+      ends_at drives the renewal book - the single most asked SaaS question
+      ("what is up for renewal this quarter"). renew_deal_id already links the
+      renewal opportunity, and cancelled_at gives the churn date. arr is a
+      CURRENT snapshot only, which is why NRR is in not_modelled.
+
+  crm.contract_billing_schedules:
+    extra_labels:
+      - {label: BillingPlan}
+      - {label: ActiveSchedule, when: {status: [active]}}                    # [core: status]
+
+  crm.deals:
+    extra_labels:
+      - {label: Opportunity}
+      - {label: ClosedWonDeal,  when: {stage: [closed_won]}}                 # [core: stage]
+      - {label: ClosedLostDeal, when: {stage: [closed_lost]}}
+      - {label: OpenPipeline,   when: {stage: [qualification, discover, propose, negotiate]}}
+      - {label: CommitDeal,     when: {forecast_category: [commit]}}         # [core: forecast_category]
+      - {label: BestCaseDeal,   when: {forecast_category: [best_case, upside]}}
+      - {label: FlaggedForecast,when: {forecast_flagged: [true]}}            # [core: forecast_flagged]
+    note: >-
+      Land / expand / renew is a property of the deal in a SaaS business but
+      core has no deal_type column. Renewals ARE identifiable via
+      Contract.renew_deal_id (a direct FK); expansion is only identifiable via
+      Account.expansion_signal (a separate table, no direct link back to a
+      specific Opportunity). New-business vs upsell is not distinguishable without a
+      batch semi-join against crm.contracts.renew_deal_id — see
+      not_modelled.deal_type.
+
+  crm.companies:
+    extra_labels:
+      - {label: Account}
+      - {label: ExpansionCandidate, when: {expansion_signal: not_null}}      # [core: expansion_signal]
+      - {label: PartnerAccount,     when: {channel_role: [franchise, brand_hq, owned_store]}}  # [core: channel_role]
+      - {label: SubsidiaryAccount,  when: {parent_company_id: not_null}}     # [core: parent_company_id]
+    promote_property_to_node:
+      industry: {label: AccountIndustry, key: slug, name_from: industry, edge: IN_INDUSTRY}
+    note: >-
+      expansion_signal / expansion_reason / expansion_draft are already in core
+      and are the closest thing to a PLG expansion trigger the platform has.
+
+  crm.invoices:
+    extra_labels:
+      - {label: SubscriptionInvoice}
+      - {label: OverdueInvoice, when: {status: [overdue]}}                   # [core: status]
+      - {label: PaidInvoice,    when: {status: [paid]}}
+      - {label: EscalatedCollection, when: {escalation_severity: [high, critical]}}  # [core: escalation_severity]
+
+  # --- product usage (telemetry) --------------------------------------------
+  cdp.customer_events:
+    extra_labels:
+      - {label: ProductEvent}
+      - {label: ActivationEvent, when: {event_name: [signup_completed, first_login,
+                                                     workspace_created, invite_sent,
+                                                     integration_connected, onboarding_completed]}}  # [core: event_name]
+      - {label: FeatureUsageEvent, when: {event_name: [feature_used, report_run,
+                                                       api_call, export_created,
+                                                       automation_triggered]}}
+      - {label: ExpansionSignalEvent, when: {event_name: [seat_limit_reached,
+                                                          usage_limit_reached,
+                                                          upgrade_viewed, pricing_viewed]}}
+      - {label: RiskSignalEvent, when: {event_name: [seat_removed, integration_disconnected,
+                                                     export_all_data, cancel_viewed,
+                                                     downgrade_requested]}}
+    note: >-
+      event_name is a free-text core column; these are the canonical values a
+      SaaS tenant should emit (see vocabularies). Nothing is emitted for a
+      tenant that does not use them.
+
+  cdp.customer_sessions:
+    extra_labels:
+      - {label: AppSession}
+      - {label: ShortSession, when: {is_bounce: [true]}}                     # [core: is_bounce]
+
+  cdp.customer_profile:
+    extra_labels: [{label: ProductUser}]
+    custom_fields:                       # allowed: core sets custom_dynamic: true
+      whitelist: [workspace_id, external_user_id, seat_role, plan_code,
+                  signup_source, trial_ends_at, onboarding_stage, last_active_at]
+      identity: [external_user_id, workspace_id]   # -> ContactPoint key_type
+      promote_to_node:
+        plan_code: {label: Plan, key: code, edge: ON_PLAN}
+        seat_role: {label: SeatRole, key: name, edge: HAS_SEAT_ROLE}
+      conditional_labels:
+        - {label: TrialUser, when: {trial_ends_at: not_null}}
+      blocklist:
+        # UNIONED, not swapped: universal PII/PCI (same set every other pack
+        # in this ontology carries) PLUS the credentials that are specific to
+        # a product-usage/identity graph and don't appear elsewhere.
+        [card_number, cvv, bank_account, income, credit_score, religion, caste,
+         ethnicity, health, pregnancy_status,
+         password, api_key, api_token, secret, access_token, refresh_token,
+         ssn, tax_id, ip_address_history, session_token]
+      blocklist_action: drop_silently_and_log
+
+  crm.contact_profiles:
+    extra_labels:
+      - {label: AccountContact}
+      - {label: MarketingSuppressed, when: {marketing_opt_out: [true]}}      # [core: marketing_opt_out]
+      - {label: QualifiedLead,       when: {lead_status: [qualified, mql, sql]}}  # [core: lead_status]
+
+  # --- support ---------------------------------------------------------------
+  ticketing.tickets:
+    extra_labels:
+      - {label: SupportTicket}
+      - {label: BugReport,     when: {category: [bug, defect, incident, outage]}}   # [core: category]
+      - {label: HowToRequest,  when: {category: [how_to, question, documentation]}}
+      - {label: BillingRequest,when: {category: [billing, invoice, subscription, payment]}}
+      - {label: FeatureRequest,when: {category: [feature_request, enhancement]}}
+      - {label: AccessRequest, when: {category: [access, permissions, sso, provisioning]}}
+      - {label: EscalatedTicket, when: {priority: [urgent]}}                 # [core: priority]
+
+  ticketing.ticketing_accounts:
+    extra_labels: [{label: SupportAccount}]
+    note: >-
+      B2B SaaS support is account-scoped, and core already provides
+      (SupportCase)-[:REPORTED_VIA]->(SupportProfile)-[:OF_ACCOUNT]->(ClientAccount).
+      That path works today - no pack extension needed for it. It gives WHICH
+      ACCOUNT a ticket belongs to; it does not give WHICH SUBSCRIPTION — see
+      not_modelled, rank 1.
+
+  ccass.conversations:
+    extra_labels: [{label: ProductConversation}]
+
+# =============================================================================
+# 3. VOCABULARIES
+# =============================================================================
+vocabularies:
+  product.unit_of_measure:                                       # [core: inventory.products.unit_of_measure]
+    labels: {per_seat: "Per seat / per user", per_agent: "Per agent",
+             per_ticket: "Per ticket (usage)", flat: "Flat platform fee"}
+
+  customer_event.event_name:                                     # [core: cdp.customer_events.event_name]
+    canonical: [signup_completed, first_login, workspace_created, invite_sent,
+                integration_connected, onboarding_completed, feature_used,
+                report_run, api_call, export_created, automation_triggered,
+                seat_limit_reached, usage_limit_reached, upgrade_viewed,
+                pricing_viewed, seat_removed, integration_disconnected,
+                cancel_viewed, downgrade_requested, trial_started, trial_expired,
+                subscription_started, subscription_cancelled]
+    aliases: {activation: onboarding_completed, aha_moment: feature_used}
+
+  ticket.category:                                               # [core: ticketing.tickets.category]
+    canonical: [bug, defect, incident, outage, how_to, question, documentation,
+                billing, invoice, subscription, payment, feature_request,
+                enhancement, access, permissions, sso, provisioning,
+                integration, performance, data_export, other]
+
+  ticket.skill:                                                  # [core: ticketing.tickets.skill]
+    canonical: [tier1, tier2, billing_ops, integrations, security, data]
+
+  conversation.intent:                                           # [core: queue_routing_profiles.supported_intents]
+    canonical: [how_do_i, bug_report, billing_question, upgrade_plan,
+                add_seats, cancel_subscription, sso_setup, api_help,
+                integration_issue, data_export, security_question]
+
+  deal.stage:                                                    # [core: crm.deals.stage]
+    labels: {qualification: "Discovery / qualification",
+             discover: "Technical evaluation / POC",
+             propose: "Proposal & order form",
+             negotiate: "Procurement, security review & redlines",
+             closed_won: "Closed won", closed_lost: "Closed lost"}
+
+  deal.forecast_category:                                        # [core: crm.deals.forecast_category]
+    canonical: [pipeline, best_case, upside, commit, closed]
+
+  journey_state.current_stage:                                   # [core: journey_states.current_stage]
+    canonical: [visitor, signup, trial, activated, paying, expanded,
+                at_risk, churned, winback]
+
+  journey_state.journey_name:
+    canonical: [plg_funnel, onboarding, adoption, renewal, expansion, winback]
+
+  campaign.goal:                                                 # [core: campaign.campaigns.goal]
+    canonical: [trial_activation, onboarding_nurture, feature_adoption,
+                upgrade_prompt, seat_expansion, renewal_reminder,
+                winback, product_announcement, webinar, usage_milestone,
+                dormant_reactivation]
+
+  contact.lead_source:                                           # [core: crm.contact_profiles.lead_source]
+    canonical: [organic_search, paid_search, content, webinar, product_led_signup,
+                partner_referral, marketplace, outbound, referral, event,
+                review_site, community]
+
+  contract.billing_frequency:                                    # [core: crm.contracts.billing_frequency]
+    labels: {monthly: "Monthly subscription", quarterly: "Quarterly",
+             annual: "Annual contract"}
+
+# =============================================================================
+# 4. DERIVED LABELS - batch lane, recompute-only
+# =============================================================================
+derived_labels:
+  lane: batch
+  Customer:
+    source: cdp.gold_customer_metrics                            # [core: DailyEngagementMetric]
+    rules:
+      - {label: ActiveUser,    when: "last_event_at >= now() - 30d"}         # [core: last_event_at]
+      - {label: DormantUser,   when: "last_event_at < now() - 60d"}
+      - {label: PowerUser,     when: "total_events >= p90(total_events)"}    # [core: total_events]
+      - {label: AtRiskUser,    when: "churn_score >= 0.7"}                   # [core: churn_score]
+    exclusive_groups: [[ActiveUser, DormantUser]]
+    note: >-
+      These are ACCOUNT-ENGAGEMENT labels derived from product telemetry. They
+      are not a commercial health score and must never be presented as one -
+      account-level health needs the usage ledger that does not exist.
+  Opportunity:
+    source: crm.deals + crm.contracts    # requires a semi-join, not a row-level filter
+    rules:
+      - {label: RenewalDeal, when: "Opportunity.id appears as crm.contracts.renew_deal_id for any Contract"}
+    note: >-
+      Not a single-table predicate — needs a batch job that joins against
+      crm.contracts, same constraint as ecommerce.yaml's engine op E8.
+      ExpansionDeal is intentionally NOT derived here: Account.expansion_
+      signal marks the ACCOUNT as expansion-ready, but nothing links that
+      signal to a specific Opportunity row, so an ExpansionDeal label would be a
+      guess dressed as a derivation. Leave it to the agent to join
+      ExpansionCandidate (Account) and OpenPipeline (Opportunity) at query time
+      instead of pretending the label is certain.
+
+# =============================================================================
+# 5. METRICS
+# =============================================================================
+metrics:
+  extend_synonyms:
+    active_arr:                [arr, annual recurring revenue, run rate, book of business]
+    contracts_due_for_renewal: [renewals due, up for renewal, renewal book, expiring subscriptions]
+    contract_renewal_rate:     [renewal rate, retention rate, gross retention]
+    win_rate:                  [close rate, conversion rate]
+    days_sales_outstanding:    [dso, collection days]
+  add:
+    - metric_id: renewal_book_next_90d
+      canonical_name: Renewal Book (next 90 days)
+      synonyms: [what is up for renewal, expiring contracts, renewals this quarter]
+      unit: currency
+      route: graph
+      computed_from: [Contract]
+      direction: neutral
+      note: sums Contract.arr where ends_at falls in the window
+    - metric_id: logo_churn_count
+      canonical_name: Logo Churn
+      synonyms: [customers lost, churned accounts, cancellations, logos lost]
+      unit: count
+      route: graph
+      computed_from: [Contract, Account]
+      direction: lower_is_better
+      note: counts Contract.cancelled_at in the period
+    - metric_id: expansion_candidate_count
+      canonical_name: Expansion Candidates
+      synonyms: [upsell opportunities, accounts ready to expand, expansion signals]
+      unit: count
+      route: graph
+      computed_from: [Account]
+      direction: higher_is_better
+      note: Account.expansion_signal is set by the existing expansion agent
+    - metric_id: trial_conversion_rate
+      canonical_name: Trial-to-Paid Rate
+      synonyms: [trial conversion, signup to paid, free to paid]
+      unit: ratio
+      route: graph
+      computed_from: [Customer, Contract]
+      direction: higher_is_better
+      caveat: >-
+        proxy - core has no Trial object; derived from JourneyState transitions
+        and trial_ends_at in custom_fields, so it only works for tenants that
+        populate that key.
+    - metric_id: support_tickets_per_account
+      canonical_name: Tickets per Account
+      synonyms: [support load per customer, ticket density]
+      unit: ratio
+      route: graph
+      computed_from: [SupportCase, ClientAccount]
+      direction: lower_is_better
+  cannot_compute:
+    - {metric: net_revenue_retention, reason: "contracts.arr is a current snapshot with no history; NRR needs beginning-of-period ARR per cohort"}
+    - {metric: gross_revenue_retention, reason: "same - no ARR history table"}
+    - {metric: arr_waterfall, reason: "new / expansion / contraction / churn split needs ARR movement records; core stores only the latest value"}
+    - {metric: seat_utilisation, reason: "OfferingPlan.included_qty gives entitlement; there is no record of seats actually consumed"}
+    - {metric: usage_vs_entitlement, reason: "meter_key names a meter with no readings - see not_modelled.usage_metering"}
+    - {metric: feature_adoption_rate, reason: "no per-end-customer entitlement record exists at all - see not_modelled.feature_entitlement; do not substitute campaign.organization_products, which is Worktual's own licensing to the tenant, not the tenant's to its customers"}
+    # Note: These are the metrics a SaaS exec asks for first. Listed so the agent can
+    # explain why it cannot answer rather than proxying with a wrong number.
+
+# =============================================================================
+# 6. ACCESS - tighten only; sensitivity uses core's L1/L2/L3 scale
+# =============================================================================
+access:
+  ProductLine:     {domain: common,   module: core,      sensitivity: L1}
+  ProductModule:   {domain: common,   module: core,      sensitivity: L1}
+  AccountIndustry: {domain: crm,      module: sales,     sensitivity: L1}
+  Plan:            {domain: crm,      module: sales,     sensitivity: L1}
+  SeatRole:        {domain: common,   module: analytics, sensitivity: L1}
+  tighten:
+    EngagementActivity: {sensitivity: L3, deny_properties: [transcript_text, body]}
+    TranscriptSegment: {sensitivity: L3, deny_properties: [text]}
+    Invoice:         {sensitivity: L3, deny_properties: [tax_id, billing_address]}
+  never_grant: [SoftwareProduct, Subscription, ProductUser, SupportTicket]
+  never_grant_enforcement: query_layer_only
+  never_grant_note: >-
+    ENFORCEABLE in the Cypher guard, which parses every label in a query and
+    denies any outside the session allowlist. NOT enforceable at Neo4j FGAC:
+    a node carrying both :Contract and :Subscription is visible to anyone
+    granted :Contract, because FGAC grants are per-label and a node has many.
+    Treat this list as a query-layer convention. Grant concrete core labels,
+    never these.
+
+compliance:
+  regimes: [SOC2, GDPR, DPDP, ISO27001]
+  notes:
+    - Credentials and tokens are blocklisted at ingest, not masked downstream.
+    - Contract and pricing terms are commercially sensitive; §6 restricts
+      invoice identifiers by default.
+
+governance:
+  data_owner: RevOps
+  data_steward: Platform Engineering
+  retention:
+    Contract: contractual + 7 years
+    Invoice: 7 years (statutory)
+    BehaviourEvent: 24 months rolling
+    SupportCase: 3 years
+  pii_flag: [Customer, ContactPoint, ContactProfile, EngagementActivity]
+
+# =============================================================================
+# 7. NOT MODELLED - emits nothing
+# =============================================================================
+not_modelled:
+  blocked_on_core:
+    - {concept: Consent, blocker: "cdp.customer_profile.consent_json not in core `properties:`. Gates every lifecycle campaign send."}
+    - {concept: Preference, blocker: "cdp.customer_profile.preferences_json / traits_json not in core `properties:`."}
+    - {concept: Business unit / Office, blocker: "accounts.organization_locations mapping is still commented out in core."}
+  no_source:
+    - concept: "SupportCase -> Subscription link (SupportCase -> Contract, Conversation -> Contract)"
+      severity: critical
+      rank: 1
+      note: >-
+        Re-filed from blocked_on_core in v2 — same correction ecommerce v4
+        made to SupportCase -> Purchase. ticketing.tickets and ccass.conversations
+        have NO contract reference at all, so this is no_source, not a
+        one-line core fix. Ranked first: "what plan is this account on,"
+        "is this billing issue tied to an active or past-due subscription"
+        is the bulk of SaaS support CX. SupportProfile -> ClientAccount
+        gives the ACCOUNT; it does not give the SUBSCRIPTION.
+        Fix: add contract_ref to ticketing.tickets AND ccass.conversations.
+    - concept: Usage metering ledger
+      severity: critical
+      rank: 2
+      note: >-
+        meter_key exists on BOTH crm.product_offers and crm.product_addons, and
+        crm.product_addon_tiers prices volume bands - but no table anywhere in
+        core records a meter reading. Usage-based billing is fully priced and
+        never counted.
+    - concept: ARR history / revenue movement
+      severity: critical
+      rank: 3
+      note: >-
+        crm.contracts.arr is one current number. Without a period-over-period
+        ARR record there is no NRR, no GRR, no expansion/contraction split.
+    - concept: Feature / entitlement flag per end customer
+      severity: critical
+      rank: 4
+      note: >-
+        No table anywhere records which FEATURES a specific tenant's specific
+        end customer is entitled to. campaign.organization_products was
+        mapped to this in v1 and has been removed — it grants WORKTUAL's own
+        platform modules to the tenant org, a completely different
+        relationship (Worktual -> tenant, not tenant -> tenant's customer).
+        Do not re-introduce that mapping without re-reading this note.
+    - concept: Trial
+      severity: high
+      note: >-
+        No trial object, no trial start/end, no conversion event. Only a
+        custom_fields key. For a PLG business this is a first-class entity.
+    - concept: Seat / Licence assignment
+      severity: high
+      note: >-
+        included_qty is the allowance. Which named users hold a seat, and how
+        many are active, has no source. "Are they using what they pay for" is
+        the most common CSM question and it is unanswerable.
+    - concept: Opportunity type (new / expansion / renewal)
+      severity: medium
+      note: >-
+        Renewals are inferable from Contract.renew_deal_id (a real FK,
+        recovered via derived_labels.Opportunity.RenewalDeal above). Expansion is
+        only inferable at the ACCOUNT level via Account.expansion_signal,
+        with no link back to a specific Opportunity — so ExpansionDeal is
+        deliberately NOT derived (see derived_labels.Opportunity note). New-business
+        vs upsell cannot be separated at the Opportunity level. One deal_type column
+        would fix all three at once.
+    - concept: Account health score
+      severity: medium
+      note: >-
+        CustomerScorecard.churn_score is per CONTACT, not per ACCOUNT. A SaaS
+        health score is account-level and needs usage + support + billing
+        rolled up to Account. No such rollup exists.
+    - concept: Plan -> SLA linkage
+      severity: medium
+      note: "no link from a Contract or OfferingPlan to which SLA tier (ticketing.sla_policies / ccass.sla_policies) that plan is entitled to."
+    - concept: Offering roadmap / release
+      severity: low
+      note: feature requests land as tickets; there is no release or roadmap object.
+    - concept: Partner commission / MDF / deal registration
+      severity: medium
+      note: >-
+        b2b2c partner hierarchy is expressible via channel_role and
+        parent_company_id, but the commercial partner objects the BA B2B2C
+        workbook lists (deal registration, MDF, commission, settlement) have
+        no source. Same class of gap as ecommerce's b2b2c segment.
+    - concept: Sub-tenant / customer-of-customer provisioning
+      severity: medium
+      note: "Tenant is Worktual's own multi-tenancy boundary, not reusable for a b2b2c partner's own end customers."
+    - concept: NPS / product survey
+      severity: low
+      note: SupportCase.csat_score is the only satisfaction signal and it is support-only.
+
+# =============================================================================
+# 8. ASSUMES
+#   CORE PATCHES still outstanding (all tenants):
+#     C1 cdp.order_items -> carry quantity + unit_price
+#     C2 supertypes: Purchase (Purchase, SalesOrder), Case (SupportCase, Conversation),
+#        Person/Staff over Employee + StaffRole + TicketAgent. Never granted in RBAC.
+#     C4 conditional-label removal on update (an ActiveSubscription that
+#        becomes ChurnedSubscription must lose the first label). §2 depends on it.
+#     C5 node counts under the catalog hubs. Core routes tenant-scoped
+#        nodes through SetupCatalog / ContactCenterCatalog / DataPlatformCatalog /
+#        CampaignCatalog / TicketCatalog / WebTrackingCatalog instead of Tenant.
+#        Any tenant-scoped node a pack adds must attach to the right catalog,
+#        never directly to Tenant, or the supernode fan-out returns.
+#     (C3 - ccass.conversations missing join columns - RESOLVED: queue_id,
+#      assigned_agent_id and assigned_user_id are in `properties:`.)
+#   SAAS-SPECIFIC PATCHES (numbered independently, new in v2):
+#     S1 ticketing.tickets + ccass.conversations -> contract_ref
+#     S2 usage_records table (contract_id or addon_id, meter_key, quantity, recorded_at)
+#     S3 arr_snapshots (contract_id, period, arr) for retention/cohort metrics
+#     S4 feature_entitlements table (contract_id or company_id, feature_key,
+#        enabled) — a NEW table, do not reuse campaign.organization_products
+#     S5 seat/license table (contract_id, contact_id, seat_status, assigned_at)
+#     S6 deal_type column on crm.deals (new_business | expansion | renewal)
+#
+#   ENGINE OPS: E1 extra_labels with when: (IN / is_null / not_null), removable ·
+#     E2 promote_property_to_node + derive_hierarchy · E3 custom_fields
+#     whitelist / identity / promote_to_node / conditional_labels / blocklist ·
+#     E5 naming + vocabularies -> meta-graph only · E6 derived_labels batch lane ·
+#     E7 variants incl. partner_hierarchy ·
+#     E8 derived_labels evaluator must support a semi-join against a second
+#        table (see derived_labels.Opportunity.RenewalDeal) — not just single-table
+#        row filters.
+#
+#   VALIDATOR: R1-R6 · one access domain per label · pairwise connectivity per
+#     domain union common · not_modelled emits nothing · blocklist enforced ·
+#     no tenant-scoped node attached directly to Tenant (C5) · scope check on
+#     any table reused across packs, not just column-existence (the
+#     campaign.organization_products bug) — the validator must confirm the
+#     TABLE's relationship (who-to-whom), not only that the columns exist.
+# =============================================================================

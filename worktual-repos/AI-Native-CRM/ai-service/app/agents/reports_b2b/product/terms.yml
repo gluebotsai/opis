@@ -1,0 +1,102 @@
+version: 1
+# The planner picks one id. Code applies that slot. The model does not write the filter.
+
+terms:
+  recent:
+    slot: time
+    window: "last 1 hour"
+    say: "This is for the last 1 hour."
+  latest:
+    slot: limit
+    limit: 10
+    skip_count: true
+    say: "These are the {n} most recently created, not the full set."
+  not_high:
+    slot: polarity
+    only_kpi: high_probability_deals
+    sql: "stage_weight < 0.75"
+  high:
+    slot: polarity
+    only_kpi: high_probability_deals
+    sql: "stage_weight >= 0.75"
+  not_good:
+    slot: ask
+    say: "Do you mean lost, stalled, or flagged?"
+  cold:
+    slot: redirect_from
+    from_kpis: [high_probability_deals]
+    kpi: days_since_last_touch
+  overdue:
+    slot: none
+  top:
+    slot: redirect
+    kpi: top_open_opportunities
+  open:
+    slot: none
+  closed:
+    slot: none
+  won:
+    slot: none
+  lost:
+    slot: none
+  lead:
+    slot: none
+  prospect:
+    slot: reject_on
+    kpis: [lead_count, lead_status_mix, unassigned_leads, lead_source_conversion]
+    say: "That is a prospect count, not the lead count."
+  customer:
+    slot: reject_on
+    kpis: [lead_count, lead_status_mix, unassigned_leads, lead_source_conversion]
+    say: "That is a customer count, not the lead count."
+  contact:
+    slot: reject_on
+    kpis: [lead_count, lead_status_mix, unassigned_leads, lead_source_conversion]
+    say: "How many contacts is not the lead count."
+  unassigned:
+    slot: redirect_from
+    from_kpis: [lead_count, lead_status_mix, lead_source_conversion]
+    kpi: unassigned_leads
+  mine:
+    slot: none
+  new:
+    slot: status
+    value: new
+    only_kpi: lead_count
+  contacted:
+    slot: status
+    value: contacted
+    only_kpi: lead_count
+  qualified:
+    slot: status
+    value: qualified
+    only_kpi: lead_count
+  disqualified:
+    slot: status
+    value: disqualified
+    only_kpi: lead_count
+  converted:
+    slot: status
+    value: converted
+    only_kpi: lead_count
+  stale:
+    slot: redirect_from
+    from_kpis: [high_probability_deals, lead_count]
+    kpi: days_since_last_touch
+  aging:
+    slot: ask_unless
+    kpis: [average_aging, aging_bands]
+    say: "Do you want one average, or age bands?"
+  stuck:
+    slot: redirect_from
+    from_kpis: [high_probability_deals, days_since_last_touch, lead_count]
+    kpi: average_aging
+    say: "State the aging number. The graph task explains the stall."
+  large:
+    slot: redirect
+    kpi: deal_size_bands
+  small:
+    slot: redirect
+    kpi: deal_size_bands
+  rate:
+    slot: none

@@ -1,0 +1,16 @@
+version: 1
+product_id: contact_center
+schema: ccass
+tenant_column: organization_id
+engine: postgres
+defaults:
+  timezone: UTC
+  week_start: monday
+  row_limit: 500
+  statement_timeout_ms: 15000
+  display_timezone: UTC
+hub:
+  purchase_table: accounts.active_products
+  purchase_product_id: contact_center
+  cdp_schema: cdp
+  cdp_customer_table: customer_profile

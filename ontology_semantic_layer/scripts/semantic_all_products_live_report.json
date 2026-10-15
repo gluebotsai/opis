@@ -1,0 +1,158 @@
+{
+  "passed": 11,
+  "failed": 1,
+  "checks": [
+    {
+      "name": "extra NL query -> 422",
+      "ok": true,
+      "detail": "HTTP 422"
+    },
+    {
+      "name": "unknown product -> 400",
+      "ok": true,
+      "detail": "HTTP 400"
+    },
+    {
+      "name": "CDP product fail-closed or skip",
+      "ok": true,
+      "detail": "HTTP 400 (expected: no cdp MF/catalog path)"
+    },
+    {
+      "name": "CCaaS/total_conversations",
+      "ok": true,
+      "detail": "http=3.15s path=sql_template"
+    },
+    {
+      "name": "CCaaS/open_conversations",
+      "ok": true,
+      "detail": "http=3.18s path=sql_template"
+    },
+    {
+      "name": "Ticketing/ticket_volume",
+      "ok": true,
+      "detail": "http=2.81s path=sql_template"
+    },
+    {
+      "name": "Ticketing/unassigned_tickets_metric",
+      "ok": true,
+      "detail": "http=2.83s path=sql_template"
+    },
+    {
+      "name": "CRM/deal_volume",
+      "ok": true,
+      "detail": "http=3.01s path=sql_template"
+    },
+    {
+      "name": "CRM/open_pipeline_value",
+      "ok": true,
+      "detail": "http=2.91s path=sql_template"
+    },
+    {
+      "name": "Campaign/campaign_volume",
+      "ok": true,
+      "detail": "http=2.82s path=sql_template"
+    },
+    {
+      "name": "Campaign/sent_touch_count",
+      "ok": true,
+      "detail": "http=2.77s path=sql_template"
+    },
+    {
+      "name": "Webtracking/web_session_volume",
+      "ok": false,
+      "detail": "http=3.73s path=sql_template http_latency=3.73s"
+    }
+  ],
+  "rows": [
+    {
+      "case": "CCaaS/total_conversations",
+      "code": 200,
+      "metric": "total_conversations",
+      "api_value": 43.0,
+      "warehouse_value": 43.0,
+      "elapsed_s": 3.152219207957387,
+      "source": "sql_template",
+      "path": "sql_template"
+    },
+    {
+      "case": "CCaaS/open_conversations",
+      "code": 200,
+      "metric": "open_conversations",
+      "api_value": 4.0,
+      "warehouse_value": 4.0,
+      "elapsed_s": 3.184891534037888,
+      "source": "sql_template",
+      "path": "sql_template"
+    },
+    {
+      "case": "Ticketing/ticket_volume",
+      "code": 200,
+      "metric": "ticket_volume",
+      "api_value": 64.0,
+      "warehouse_value": 64.0,
+      "elapsed_s": 2.8103757640346885,
+      "source": "sql_template",
+      "path": "sql_template"
+    },
+    {
+      "case": "Ticketing/unassigned_tickets_metric",
+      "code": 200,
+      "metric": "unassigned_tickets_metric",
+      "api_value": 2.0,
+      "warehouse_value": 2.0,
+      "elapsed_s": 2.8298090978059918,
+      "source": "sql_template",
+      "path": "sql_template"
+    },
+    {
+      "case": "CRM/deal_volume",
+      "code": 200,
+      "metric": "deal_volume",
+      "api_value": 42.0,
+      "warehouse_value": 42.0,
+      "elapsed_s": 3.0086005930788815,
+      "source": "sql_template",
+      "path": "sql_template"
+    },
+    {
+      "case": "CRM/open_pipeline_value",
+      "code": 200,
+      "metric": "open_pipeline_value",
+      "api_value": 0.0,
+      "warehouse_value": 0.0,
+      "elapsed_s": 2.91134109091945,
+      "source": "sql_template",
+      "path": "sql_template"
+    },
+    {
+      "case": "Campaign/campaign_volume",
+      "code": 200,
+      "metric": "campaign_volume",
+      "api_value": 6.0,
+      "warehouse_value": 6.0,
+      "elapsed_s": 2.821658998960629,
+      "source": "sql_template",
+      "path": "sql_template"
+    },
+    {
+      "case": "Campaign/sent_touch_count",
+      "code": 200,
+      "metric": "sent_touch_count",
+      "api_value": 5.0,
+      "warehouse_value": 5.0,
+      "elapsed_s": 2.7701951519120485,
+      "source": "sql_template",
+      "path": "sql_template"
+    },
+    {
+      "case": "Webtracking/web_session_volume",
+      "code": 200,
+      "metric": "web_session_volume",
+      "api_value": 0.0,
+      "warehouse_value": 0.0,
+      "elapsed_s": 3.7286189389415085,
+      "source": "sql_template",
+      "path": "sql_template"
+    }
+  ]
+}

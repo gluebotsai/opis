@@ -1,0 +1,702 @@
+{
+  "timestamp": "2026-09-15T12:25:31Z",
+  "api": "http://127.0.0.1:8766",
+  "org": 1000,
+  "user_id": 1,
+  "agent": "tk.reporting",
+  "health": {
+    "status": "ok",
+    "metricflow": {
+      "warm": [
+        "crm",
+        "ccaas",
+        "ticketing",
+        "campaign"
+      ],
+      "failed": {},
+      "cached": [
+        "campaign",
+        "ccaas",
+        "crm",
+        "ticketing"
+      ],
+      "elapsed_s": 17.72
+    },
+    "sqlAgent": {
+      "endpoint": "/v1/sql/query",
+      "registered": true
+    },
+    "requiredWarm": [
+      "ccaas",
+      "ticketing"
+    ],
+    "missingWarm": []
+  },
+  "observe": {
+    "runs": [
+      {
+        "curl": 1,
+        "http": 200,
+        "elapsed_s": 50.524,
+        "rows": 1,
+        "detail": null
+      },
+      {
+        "curl": 2,
+        "http": 200,
+        "elapsed_s": 48.57,
+        "rows": 1,
+        "detail": null
+      }
+    ],
+    "gap_note": "Compare elapsed_s between curl #1 and #2; check logs for Finished running query runtime",
+    "second_minus_first_s": -1.954
+  },
+  "phase_a": {
+    "metrics": [
+      {
+        "metric": "open_tickets_metric",
+        "http": 200,
+        "elapsed_s": 50.055,
+        "value": 0,
+        "error": null
+      },
+      {
+        "metric": "ticket_volume",
+        "http": 200,
+        "elapsed_s": 54.446,
+        "value": 0,
+        "error": null
+      },
+      {
+        "metric": "resolution_sla_compliance_rate",
+        "http": 200,
+        "elapsed_s": 67.558,
+        "value": 0.4,
+        "error": null
+      },
+      {
+        "metric": "unassigned_tickets_metric",
+        "http": 200,
+        "elapsed_s": 63.051,
+        "value": 2,
+        "error": null
+      }
+    ],
+    "passed": 4
+  },
+  "phase_b": {
+    "total": 95,
+    "passed": 94,
+    "failed": 1,
+    "timed_out": 0,
+    "deny_controls": [
+      {
+        "agent": "tk.super",
+        "http": 400,
+        "elapsed_s": 1.728,
+        "passed": true
+      },
+      {
+        "agent": "tk.tickets",
+        "http": 400,
+        "elapsed_s": 1.574,
+        "passed": true
+      }
+    ],
+    "metrics": [
+      {
+        "metric": "ticket_volume",
+        "http": 200,
+        "elapsed_s": 63.552,
+        "error": null
+      },
+      {
+        "metric": "resolved_tickets_metric",
+        "http": 200,
+        "elapsed_s": 59.308,
+        "error": null
+      },
+      {
+        "metric": "open_tickets_metric",
+        "http": 200,
+        "elapsed_s": 58.69,
+        "error": null
+      },
+      {
+        "metric": "active_tickets_metric",
+        "http": 200,
+        "elapsed_s": 62.598,
+        "error": null
+      },
+      {
+        "metric": "resolution_rate",
+        "http": 200,
+        "elapsed_s": 58.732,
+        "error": null
+      },
+      {
+        "metric": "unassigned_tickets_metric",
+        "http": 200,
+        "elapsed_s": 61.088,
+        "error": null
+      },
+      {
+        "metric": "unassignment_rate",
+        "http": 200,
+        "elapsed_s": 64.245,
+        "error": null
+      },
+      {
+        "metric": "customers_served",
+        "http": 200,
+        "elapsed_s": 58.673,
+        "error": null
+      },
+      {
+        "metric": "accounts_served",
+        "http": 200,
+        "elapsed_s": 66.903,
+        "error": null
+      },
+      {
+        "metric": "open_ticket_age_days_total",
+        "http": 200,
+        "elapsed_s": 68.034,
+        "error": null
+      },
+      {
+        "metric": "average_open_ticket_age_days",
+        "http": 200,
+        "elapsed_s": 56.767,
+        "error": null
+      },
+      {
+        "metric": "tickets_created_today_metric",
+        "http": 200,
+        "elapsed_s": 51.913,
+        "error": null
+      },
+      {
+        "metric": "tickets_last_30_days",
+        "http": 200,
+        "elapsed_s": 48.258,
+        "error": null
+      },
+      {
+        "metric": "days_since_last_ticket",
+        "http": 200,
+        "elapsed_s": 45.622,
+        "error": null
+      },
+      {
+        "metric": "reopened_tickets_metric",
+        "http": 200,
+        "elapsed_s": 43.258,
+        "error": null
+      },
+      {
+        "metric": "high_priority_open_tickets_metric",
+        "http": 200,
+        "elapsed_s": 50.678,
+        "error": null
+      },
+      {
+        "metric": "closed_tickets_metric",
+        "http": 200,
+        "elapsed_s": 40.207,
+        "error": null
+      },
+      {
+        "metric": "pending_tickets_metric",
+        "http": 200,
+        "elapsed_s": 39.609,
+        "error": null
+      },
+      {
+        "metric": "assigned_tickets_metric",
+        "http": 200,
+        "elapsed_s": 39.338,
+        "error": null
+      },
+      {
+        "metric": "assignment_rate",
+        "http": 200,
+        "elapsed_s": 39.893,
+        "error": null
+      },
+      {
+        "metric": "tickets_last_7_days",
+        "http": 200,
+        "elapsed_s": 39.213,
+        "error": null
+      },
+      {
+        "metric": "average_tickets_per_day",
+        "http": 200,
+        "elapsed_s": 40.292,
+        "error": null
+      },
+      {
+        "metric": "active_customers_metric",
+        "http": 200,
+        "elapsed_s": 39.672,
+        "error": null
+      },
+      {
+        "metric": "breached_tickets_metric",
+        "http": 200,
+        "elapsed_s": 39.33,
+        "error": null
+      },
+      {
+        "metric": "sla_breach_rate",
+        "http": 200,
+        "elapsed_s": 40.561,
+        "error": null
+      },
+      {
+        "metric": "resolution_hours_total",
+        "http": 200,
+        "elapsed_s": 46.305,
+        "error": null
+      },
+      {
+        "metric": "resolved_for_avg",
+        "http": 200,
+        "elapsed_s": 46.926,
+        "error": null
+      },
+      {
+        "metric": "average_resolution_time_hours",
+        "http": 200,
+        "elapsed_s": 43.806,
+        "error": null
+      },
+      {
+        "metric": "first_response_hours_total",
+        "http": 200,
+        "elapsed_s": 41.307,
+        "error": null
+      },
+      {
+        "metric": "tickets_with_first_response_metric",
+        "http": 200,
+        "elapsed_s": 42.111,
+        "error": null
+      },
+      {
+        "metric": "average_first_response_hours",
+        "http": 200,
+        "elapsed_s": 40.102,
+        "error": null
+      },
+      {
+        "metric": "average_first_response_minutes",
+        "http": 200,
+        "elapsed_s": 40.646,
+        "error": null
+      },
+      {
+        "metric": "first_response_sla_met_metric",
+        "http": 200,
+        "elapsed_s": 40.784,
+        "error": null
+      },
+      {
+        "metric": "tickets_with_first_response_sla_target_metric",
+        "http": 200,
+        "elapsed_s": 48.344,
+        "error": null
+      },
+      {
+        "metric": "first_response_sla_compliance_rate",
+        "http": 200,
+        "elapsed_s": 45.475,
+        "error": null
+      },
+      {
+        "metric": "first_response_coverage_rate",
+        "http": 200,
+        "elapsed_s": 41.003,
+        "error": null
+      },
+      {
+        "metric": "resolution_hours_variance_total",
+        "http": 200,
+        "elapsed_s": 41.433,
+        "error": null
+      },
+      {
+        "metric": "tickets_with_sla_target_metric",
+        "http": 200,
+        "elapsed_s": 44.717,
+        "error": null
+      },
+      {
+        "metric": "average_resolution_hours_variance",
+        "http": 200,
+        "elapsed_s": 49.293,
+        "error": null
+      },
+      {
+        "metric": "tickets_with_resolution_sla_target_metric",
+        "http": 500,
+        "elapsed_s": 48.722,
+        "error": "{'error': 'ValueError', 'message': \"No platform threshold row for metric 'tickets_with_resolution_sla_target_metric'\"}"
+      },
+      {
+        "metric": "resolution_sla_met_metric",
+        "http": 200,
+        "elapsed_s": 45.786,
+        "error": null
+      },
+      {
+        "metric": "resolution_sla_compliance_rate",
+        "http": 200,
+        "elapsed_s": 46.03,
+        "error": null
+      },
+      {
+        "metric": "due_today_tickets_metric",
+        "http": 200,
+        "elapsed_s": 45.917,
+        "error": null
+      },
+      {
+        "metric": "current_overdue_tickets_metric",
+        "http": 200,
+        "elapsed_s": 44.908,
+        "error": null
+      },
+      {
+        "metric": "unanswered_tickets_metric",
+        "http": 200,
+        "elapsed_s": 44.563,
+        "error": null
+      },
+      {
+        "metric": "sla_at_risk_tickets_metric",
+        "http": 200,
+        "elapsed_s": 40.437,
+        "error": null
+      },
+      {
+        "metric": "average_overdue_hours",
+        "http": 200,
+        "elapsed_s": 44.883,
+        "error": null
+      },
+      {
+        "metric": "queues_at_risk_metric",
+        "http": 200,
+        "elapsed_s": 40.197,
+        "error": null
+      },
+      {
+        "metric": "csat_score_total",
+        "http": 200,
+        "elapsed_s": 39.753,
+        "error": null
+      },
+      {
+        "metric": "csat_rated_metric",
+        "http": 200,
+        "elapsed_s": 44.755,
+        "error": null
+      },
+      {
+        "metric": "average_csat_score",
+        "http": 200,
+        "elapsed_s": 43.939,
+        "error": null
+      },
+      {
+        "metric": "csat_response_rate",
+        "http": 200,
+        "elapsed_s": 43.142,
+        "error": null
+      },
+      {
+        "metric": "csat_promoter_metric",
+        "http": 200,
+        "elapsed_s": 45.23,
+        "error": null
+      },
+      {
+        "metric": "csat_neutral_metric",
+        "http": 200,
+        "elapsed_s": 44.824,
+        "error": null
+      },
+      {
+        "metric": "csat_detractor_metric",
+        "http": 200,
+        "elapsed_s": 44.967,
+        "error": null
+      },
+      {
+        "metric": "csat_promoter_rate",
+        "http": 200,
+        "elapsed_s": 46.415,
+        "error": null
+      },
+      {
+        "metric": "csat_detractor_rate",
+        "http": 200,
+        "elapsed_s": 44.511,
+        "error": null
+      },
+      {
+        "metric": "reopen_rate",
+        "http": 200,
+        "elapsed_s": 45.576,
+        "error": null
+      },
+      {
+        "metric": "queue_coverage_count",
+        "http": 200,
+        "elapsed_s": 47.094,
+        "error": null
+      },
+      {
+        "metric": "distinct_agents_in_queues",
+        "http": 200,
+        "elapsed_s": 43.97,
+        "error": null
+      },
+      {
+        "metric": "distinct_queues_covered",
+        "http": 200,
+        "elapsed_s": 45.658,
+        "error": null
+      },
+      {
+        "metric": "tickets_with_resolver_metric",
+        "http": 200,
+        "elapsed_s": 45.077,
+        "error": null
+      },
+      {
+        "metric": "tickets_without_resolver_metric",
+        "http": 200,
+        "elapsed_s": 41.234,
+        "error": null
+      },
+      {
+        "metric": "active_agents_metric",
+        "http": 200,
+        "elapsed_s": 40.552,
+        "error": null
+      },
+      {
+        "metric": "queue_count",
+        "http": 200,
+        "elapsed_s": 43.788,
+        "error": null
+      },
+      {
+        "metric": "note_volume",
+        "http": 200,
+        "elapsed_s": 42.594,
+        "error": null
+      },
+      {
+        "metric": "internal_note_volume",
+        "http": 200,
+        "elapsed_s": 42.452,
+        "error": null
+      },
+      {
+        "metric": "customer_reply_volume",
+        "http": 200,
+        "elapsed_s": 45.054,
+        "error": null
+      },
+      {
+        "metric": "internal_note_ratio",
+        "http": 200,
+        "elapsed_s": 47.619,
+        "error": null
+      },
+      {
+        "metric": "average_notes_per_ticket",
+        "http": 200,
+        "elapsed_s": 43.964,
+        "error": null
+      },
+      {
+        "metric": "notification_volume",
+        "http": 200,
+        "elapsed_s": 42.077,
+        "error": null
+      },
+      {
+        "metric": "unread_notifications_metric",
+        "http": 200,
+        "elapsed_s": 41.829,
+        "error": null
+      },
+      {
+        "metric": "outbound_email_volume",
+        "http": 200,
+        "elapsed_s": 41.699,
+        "error": null
+      },
+      {
+        "metric": "audit_event_volume",
+        "http": 200,
+        "elapsed_s": 40.675,
+        "error": null
+      },
+      {
+        "metric": "escalation_volume",
+        "http": 200,
+        "elapsed_s": 42.681,
+        "error": null
+      },
+      {
+        "metric": "reassignment_volume",
+        "http": 200,
+        "elapsed_s": 42.352,
+        "error": null
+      },
+      {
+        "metric": "escalation_rate",
+        "http": 200,
+        "elapsed_s": 50.931,
+        "error": null
+      },
+      {
+        "metric": "kb_article_volume",
+        "http": 200,
+        "elapsed_s": 49.152,
+        "error": null
+      },
+      {
+        "metric": "kb_published_article_metric",
+        "http": 200,
+        "elapsed_s": 59.581,
+        "error": null
+      },
+      {
+        "metric": "kb_views_total",
+        "http": 200,
+        "elapsed_s": 64.802,
+        "error": null
+      },
+      {
+        "metric": "macro_volume",
+        "http": 200,
+        "elapsed_s": 61.152,
+        "error": null
+      },
+      {
+        "metric": "recommendation_volume",
+        "http": 200,
+        "elapsed_s": 55.771,
+        "error": null
+      },
+      {
+        "metric": "accepted_recommendations_metric",
+        "http": 200,
+        "elapsed_s": 41.156,
+        "error": null
+      },
+      {
+        "metric": "dismissed_recommendations_metric",
+        "http": 200,
+        "elapsed_s": 41.51,
+        "error": null
+      },
+      {
+        "metric": "open_recommendations_metric",
+        "http": 200,
+        "elapsed_s": 42.376,
+        "error": null
+      },
+      {
+        "metric": "recommendation_acceptance_rate",
+        "http": 200,
+        "elapsed_s": 40.039,
+        "error": null
+      },
+      {
+        "metric": "approval_volume",
+        "http": 200,
+        "elapsed_s": 43.506,
+        "error": null
+      },
+      {
+        "metric": "approved_metric",
+        "http": 200,
+        "elapsed_s": 44.08,
+        "error": null
+      },
+      {
+        "metric": "rejected_metric",
+        "http": 200,
+        "elapsed_s": 45.984,
+        "error": null
+      },
+      {
+        "metric": "pending_approvals_metric",
+        "http": 200,
+        "elapsed_s": 40.887,
+        "error": null
+      },
+      {
+        "metric": "approval_rate",
+        "http": 200,
+        "elapsed_s": 40.976,
+        "error": null
+      },
+      {
+        "metric": "decision_hours_total",
+        "http": 200,
+        "elapsed_s": 41.901,
+        "error": null
+      },
+      {
+        "metric": "decided_approvals_metric",
+        "http": 200,
+        "elapsed_s": 41.082,
+        "error": null
+      },
+      {
+        "metric": "average_decision_hours",
+        "http": 200,
+        "elapsed_s": 42.923,
+        "error": null
+      },
+      {
+        "metric": "proactive_audit_volume",
+        "http": 200,
+        "elapsed_s": 43.338,
+        "error": null
+      }
+    ]
+  },
+  "phase_c": {
+    "metrics": [
+      {
+        "metric": "ticket_volume",
+        "http": 200,
+        "elapsed_s": 41.695,
+        "uses_time_spine_in_sql": false,
+        "spine_mentioned_in_error": null,
+        "error": null,
+        "sql_snippet": null
+      },
+      {
+        "metric": "open_tickets_metric",
+        "http": 200,
+        "elapsed_s": 40.722,
+        "uses_time_spine_in_sql": false,
+        "spine_mentioned_in_error": null,
+        "error": null,
+        "sql_snippet": null
+      }
+    ]
+  }
+}

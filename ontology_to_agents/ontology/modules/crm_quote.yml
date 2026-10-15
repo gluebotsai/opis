@@ -1,0 +1,39 @@
+# CRM quotes and proposals
+module: crm_quote
+layer: domain
+depends_on: [core, crm_deal]
+owned_by_spoke: crm
+usecase: Quote, proposal, acceptance before order.
+
+classes:
+  - id: Quote
+    definition: Priced offer linked to a deal.
+    properties: [number, status, total]
+    relations:
+      of: Deal
+      hasLines: QuoteLine
+
+  - id: Proposal
+    definition: Formal proposal document with sections.
+    properties: [title, status]
+    relations:
+      of: Deal
+
+  - id: QuoteLine
+    definition: Line item on a quote.
+    properties: [product, quantity, price]
+
+relations:
+  - { from: Quote, type: of, to: Deal }
+  - { from: Proposal, type: of, to: Deal }
+
+actions:
+  - id: action.create_quote
+    operates_on: [Quote]
+    requires: [userConfirmed]
+
+metric_ids:
+  - proposal_sent_metric
+  - proposal_accepted_metric
+  - proposal_acceptance_rate
+  - quote_to_close_rate

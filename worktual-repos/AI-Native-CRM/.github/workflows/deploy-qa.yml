@@ -1,0 +1,146 @@
+# Does NOT run on git push. Click "Run workflow" in GitHub → Actions → Deploy QA.
+name: Deploy QA
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_migrations:
+        description: "Run prisma migrate deploy on the QA database"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: deploy-qa
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build images and deploy to QA
+    runs-on: ubuntu-latest
+    environment: qa
+    env:
+      IMAGE_REGISTRY: ghcr.io/${{ github.repository }}
+      IMAGE_TAG: ${{ github.sha }}
+      # QA SSH listens on 4204 (not 22). Not a secret — do not put this in Environment secrets
+      # with trailing spaces (that caused: Bad port '4204 ').
+      QA_SSH_PORT: "4204"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Lowercase image registry (GHCR requires lowercase)
+        run: echo "IMAGE_REGISTRY=$(echo "$IMAGE_REGISTRY" | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push images
+        env:
+          VITE_GOOGLE_CLOUD_PROJECT_NUMBER: ${{ vars.VITE_GOOGLE_CLOUD_PROJECT_NUMBER }}
+        run: |
+          docker build -f backend/Dockerfile \
+            -t "$IMAGE_REGISTRY/api:$IMAGE_TAG" \
+            -t "$IMAGE_REGISTRY/api:qa" .
+          docker build -f frontend/Dockerfile \
+            --build-arg "VITE_GOOGLE_CLOUD_PROJECT_NUMBER=$VITE_GOOGLE_CLOUD_PROJECT_NUMBER" \
+            -t "$IMAGE_REGISTRY/web:$IMAGE_TAG" \
+            -t "$IMAGE_REGISTRY/web:qa" .
+          docker build -f ai-service/Dockerfile \
+            -t "$IMAGE_REGISTRY/ai:$IMAGE_TAG" \
+            -t "$IMAGE_REGISTRY/ai:qa" .
+          docker build -f meeting-service/Dockerfile \
+            -t "$IMAGE_REGISTRY/meeting:$IMAGE_TAG" \
+            -t "$IMAGE_REGISTRY/meeting:qa" \
+            meeting-service
+          docker build -f meeting-service/deploy/whisper-adapter/Dockerfile \
+            -t "$IMAGE_REGISTRY/whisper-adapter:$IMAGE_TAG" \
+            -t "$IMAGE_REGISTRY/whisper-adapter:qa" \
+            meeting-service/deploy/whisper-adapter
+          docker push "$IMAGE_REGISTRY/api:$IMAGE_TAG"
+          docker push "$IMAGE_REGISTRY/api:qa"
+          docker push "$IMAGE_REGISTRY/web:$IMAGE_TAG"
+          docker push "$IMAGE_REGISTRY/web:qa"
+          docker push "$IMAGE_REGISTRY/ai:$IMAGE_TAG"
+          docker push "$IMAGE_REGISTRY/ai:qa"
+          docker push "$IMAGE_REGISTRY/meeting:$IMAGE_TAG"
+          docker push "$IMAGE_REGISTRY/meeting:qa"
+          docker push "$IMAGE_REGISTRY/whisper-adapter:$IMAGE_TAG"
+          docker push "$IMAGE_REGISTRY/whisper-adapter:qa"
+
+      - name: Require SSH secrets
+        env:
+          QA_SSH_HOST: ${{ secrets.QA_SSH_HOST }}
+          QA_SSH_USER: ${{ secrets.QA_SSH_USER }}
+          QA_SSH_KEY: ${{ secrets.QA_SSH_KEY }}
+          QA_DEPLOY_PATH: ${{ secrets.QA_DEPLOY_PATH }}
+        run: |
+          missing=0
+          for name in QA_SSH_HOST QA_SSH_USER QA_SSH_KEY QA_DEPLOY_PATH; do
+            if [ -z "${!name}" ]; then
+              echo "Missing GitHub secret: $name (Settings → Environments → qa)"
+              missing=1
+            fi
+          done
+          echo "Using SSH port: $QA_SSH_PORT"
+          exit "$missing"
+
+      - name: Install SSH key
+        uses: webfactory/ssh-agent@v0.9.1
+        with:
+          ssh-private-key: ${{ secrets.QA_SSH_KEY }}
+
+      - name: Trust QA host
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          ssh-keyscan -p "$QA_SSH_PORT" -H "${{ secrets.QA_SSH_HOST }}" >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Copy compose files to the QA server
+        run: |
+          ssh -p "$QA_SSH_PORT" \
+            "${{ secrets.QA_SSH_USER }}@${{ secrets.QA_SSH_HOST }}" \
+            "mkdir -p '${{ secrets.QA_DEPLOY_PATH }}'"
+          ssh -p "$QA_SSH_PORT" \
+            "${{ secrets.QA_SSH_USER }}@${{ secrets.QA_SSH_HOST }}" \
+            "mkdir -p '${{ secrets.QA_DEPLOY_PATH }}/scripts' '${{ secrets.QA_DEPLOY_PATH }}/meeting-service/scripts' '${{ secrets.QA_DEPLOY_PATH }}/meeting-service/patches'"
+          scp -P "$QA_SSH_PORT" \
+            deploy/docker-compose.yml deploy/deploy.sh deploy/nginx.conf \
+            "${{ secrets.QA_SSH_USER }}@${{ secrets.QA_SSH_HOST }}:${{ secrets.QA_DEPLOY_PATH }}/"
+          scp -P "$QA_SSH_PORT" \
+            meeting-service/scripts/patch-vexa-live-pcm.sh \
+            "${{ secrets.QA_SSH_USER }}@${{ secrets.QA_SSH_HOST }}:${{ secrets.QA_DEPLOY_PATH }}/meeting-service/scripts/"
+          scp -P "$QA_SSH_PORT" \
+            meeting-service/patches/vexa-live-pcm-forward.ts \
+            "${{ secrets.QA_SSH_USER }}@${{ secrets.QA_SSH_HOST }}:${{ secrets.QA_DEPLOY_PATH }}/meeting-service/patches/"
+          scp -P "$QA_SSH_PORT" \
+            deploy/scripts/env-upsert.sh \
+            deploy/scripts/update-oauth-env.sh \
+            deploy/scripts/verify-llm.sh \
+            deploy/scripts/patch-llm-env.sh \
+            deploy/scripts/patch-proposal-gemini-env.sh \
+            deploy/scripts/verify-meeting-assist.sh \
+            "${{ secrets.QA_SSH_USER }}@${{ secrets.QA_SSH_HOST }}:${{ secrets.QA_DEPLOY_PATH }}/scripts/"
+          ssh -p "$QA_SSH_PORT" \
+            "${{ secrets.QA_SSH_USER }}@${{ secrets.QA_SSH_HOST }}" \
+            "chmod +x '${{ secrets.QA_DEPLOY_PATH }}/deploy.sh' '${{ secrets.QA_DEPLOY_PATH }}/meeting-service/scripts/patch-vexa-live-pcm.sh' '${{ secrets.QA_DEPLOY_PATH }}/scripts/update-oauth-env.sh' '${{ secrets.QA_DEPLOY_PATH }}/scripts/verify-llm.sh' '${{ secrets.QA_DEPLOY_PATH }}/scripts/patch-llm-env.sh' '${{ secrets.QA_DEPLOY_PATH }}/scripts/patch-proposal-gemini-env.sh' '${{ secrets.QA_DEPLOY_PATH }}/scripts/verify-meeting-assist.sh'"
+
+      - name: Pull images and start stack on QA
+        env:
+          RUN_MIGRATIONS: ${{ inputs.run_migrations }}
+          GHCR_TOKEN: ${{ secrets.GHCR_PULL_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          ssh -p "$QA_SSH_PORT" \
+            "${{ secrets.QA_SSH_USER }}@${{ secrets.QA_SSH_HOST }}" \
+            "IMAGE_REGISTRY='$IMAGE_REGISTRY' IMAGE_TAG='$IMAGE_TAG' \
+             GHCR_USER='${{ github.actor }}' GHCR_TOKEN='$GHCR_TOKEN' \
+             RUN_MIGRATIONS='$RUN_MIGRATIONS' \
+             bash '${{ secrets.QA_DEPLOY_PATH }}/deploy.sh'"

@@ -1,0 +1,16 @@
+{
+  "conversations": [
+    {
+      "id": "performance-to-analytics",
+      "title": "Route a metric question to analytics",
+      "turns": [
+        { "role": "user", "content": "What was first-reply SLA last week?" },
+        {
+          "role": "assistant",
+          "content": "",
+          "tools": ["route_to_agent"]
+        }
+      ]
+    }
+  ]
+}

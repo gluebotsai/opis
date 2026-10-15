@@ -1,0 +1,9 @@
+-- DEPRECATED — do not run.
+-- Google email/calendar OAuth now lives in crm_qa.user_integration_connections
+-- (Prisma model UserIntegrationConnection). See:
+--   prisma/migrations/20260715170000_user_integration_connections/
+--   scripts/migrate-integration-connections.ts
+--
+-- my_account_qa remains limited to contacts for this CRM app.
+-- This file is kept only so existing local DBs that already created
+-- public.user_calendar_connections are documented; we do not drop that table.

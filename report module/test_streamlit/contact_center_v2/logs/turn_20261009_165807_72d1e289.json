@@ -1,0 +1,62 @@
+{
+  "turn_id": "72d1e289",
+  "timestamp": "2026-10-09T11:28:07.343688+00:00",
+  "question": "total conversations count for last 7 days\n\n channel wise",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1016,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>What came back</strong></p><ul><li>6</li><li>channel=email; total=6</li><li>channel=facebook; total=5</li><li>channel=instagram; total=7</li><li>channel=webchat; total=123</li><li>channel=whatsapp; total=15</li><li>channel=call; total=212</li></ul><p>Want this broken down another way?</p>",
+  "card": "card: none",
+  "facts": "result_id: r1\nwindow: past 7 days (UTC)\nkpi: total\ncertified: true\nunit: conversations\ntask_goal: Count the total number of started conversations for the last 7 days, including those still open, split by channel.\nanswer_type: number\nrow_count: 6\nrow 1: channel=email; total=6\nrow 2: channel=facebook; total=5\nrow 3: channel=instagram; total=7\nrow 4: channel=webchat; total=123\nrow 5: channel=whatsapp; total=15\nrow 6: channel=call; total=212",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1016,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "total conversations count for last 7 days\n\n channel wise",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants the total number of started conversations for the last 7 days, broken down by channel.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Count the total number of started conversations for the last 7 days, including those still open, split by channel.",
+          "time": "last 7 days",
+          "scope": "org",
+          "slice": [
+            "channel"
+          ],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "total",
+        "row_count": 6
+      }
+    ],
+    "facts": "result_id: r1\nwindow: past 7 days (UTC)\nkpi: total\ncertified: true\nunit: conversations\ntask_goal: Count the total number of started conversations for the last 7 days, including those still open, split by channel.\nanswer_type: number\nrow_count: 6\nrow 1: channel=email; total=6\nrow 2: channel=facebook; total=5\nrow 3: channel=instagram; total=7\nrow 4: channel=webchat; total=123\nrow 5: channel=whatsapp; total=15\nrow 6: channel=call; total=212",
+    "grounded": true,
+    "card": "card: none"
+  },
+  "error": null
+}

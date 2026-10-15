@@ -1,0 +1,55 @@
+# Fill from THIS spoke's product and database. Do not copy another spoke's intake.
+
+spoke: ""
+pack: reports_analytics_agent_<spoke>_v2
+
+product:
+  what_it_does: ""
+  dashboard_metrics: []
+  industry_metrics_not_to_miss: []
+  neighbour_pairs: []
+  # example neighbour_pairs: "ticket_count vs avg_tickets_per_day", "won_revenue vs collected_revenue"
+
+schemas:
+  in: []
+  out: []       # each excluded schema: name + reason
+
+tables_in: []   # schema.table
+
+join_graph:
+  # grain_object: ticket
+  # grain_table: ticketing.tickets
+  # many_to_one: [ticketing.queues, cdp.people]
+  # many_to_many: [ticketing.ticket_products]   # EXISTS / COUNT DISTINCT required
+  []
+
+roles:
+  # admin:
+  #   default_scope: org
+  #   my_rows_column: assignee_id
+
+objects:
+  # ticket:
+  #   owner_table: ticketing.tickets
+  #   user_words: [ticket, case]
+  #   collisions:
+  #     status: "lifecycle Open/Pending/... — not SLA sla_status, not CSAT"
+
+metric_wish_list: []
+  # - id_hint: ""
+  #   grain: ""
+  #   meaning: ""
+  #   time_column: ""
+  #   not: ""
+
+time:
+  zone: UTC
+  week: monday_sunday
+  # If metrics use different dates, list them on each wish-list item, not one global column.
+
+identity_from_ui:
+  - organization_id
+  - user_id
+  - role
+  extra: []     # branch_id, queue_ids, or empty
+llm_must_not_invent: true

@@ -1,0 +1,40 @@
+# How this folder is used (machine + human)
+#
+# ontology/catalog.yml     module usecases + agent presets + prompt allowlists
+# ontology/taxonomy.yml    classification trees
+# ontology/modules/*.yml   classes, relations, actions, metric_ids
+# ontology/industry/       labels + taxonomy_adds + optional extra types
+# ontology/noun_map.yml    legacy noun → wt:* map (reference only)
+# ontology/slice.py        fetch_ontology_slice → as_prompt()
+# ontology/slices/*.yml    optional compiled preset dumps (regen_slices.py — not runtime)
+# ontology/AGENT_INVENTORY.yml  full agent map from product docs (reference/)
+# semantic/metric_registry.yml  certified agent metric ids → MetricFlow
+#
+# Two layers:
+#   LEGAL SLICE  = union of selected modules + depends_on + core
+#                  (what tools/policy may validate)
+#   PROMPT SLICE = preset.prompt allowlist, rendered compact
+#                  (what the LLM sees every turn)
+#
+# Fetch:
+#   pack = fetch_ontology_slice(preset="cc.ai_support")
+#   context = pack.as_prompt()                 # compact — inject this
+#   debug   = pack.as_prompt(mode="verbose")   # admin / debug only
+#
+# Slice algorithm:
+#   modules = preset.modules
+#   expand depends_on; always include core
+#   legal = union(classes, relations, actions, metric_ids)
+#   prompt = filter(legal, preset.prompt)
+#   skip classes with prompt: false unless allowlisted
+#   relations kept only if both ends are in prompt classes (when set)
+#
+# Token targets:
+#   L3 executor / Super compact  400–800
+#   sentiment / recovery         150–300
+#   verbose dump                 debug only — do not inject
+#
+# Do not GraphRAG this graph to pick modules.
+# Do not inject pack.to_dict() or raw module YAML into the LLM.
+# Field-level create/update shape lives on MCP tools, not in ontology context.
+# Semantic layer owns formulas/thresholds; prompt only lists metric ids.

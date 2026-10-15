@@ -1,0 +1,22 @@
+# syntax=docker/dockerfile:1
+
+FROM python:3.12-slim
+
+WORKDIR /workspace
+
+RUN pip install --no-cache-dir uv
+
+COPY apps/nlp /workspace/apps/nlp
+COPY apps/a2a-server /workspace/apps/a2a-server
+
+WORKDIR /workspace/apps/a2a-server
+
+# Install NLP runtime first, then the A2A spoke (path dependency resolves to ../nlp).
+RUN uv pip install --system -e ../nlp && uv pip install --system .
+
+EXPOSE 8020
+
+ENV A2A_ENABLED=false
+ENV PORT=8020
+
+CMD ["uvicorn", "cc_a2a.main:app", "--app-dir", "src", "--host", "0.0.0.0", "--port", "8020"]

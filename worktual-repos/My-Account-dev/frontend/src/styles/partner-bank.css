@@ -1,0 +1,285 @@
+/**
+ * Partner Bank details — full-width admin chrome.
+ * Form content-sized; slabs panel fills leftover height.
+ * Canvas #F4F4F6 · surfaces #FFFFFF · border #C9C9CF.
+ */
+
+.app-shell--partner .app-content:has(.partner-bank-page) {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.app-shell--partner .app-content:has(.partner-bank-page) > .customer-portal-context {
+  flex: 0 0 auto;
+  margin-bottom: 16px;
+}
+
+.admin-users-page.partner-bank-page {
+  --au-canvas: #f4f4f6;
+  background: #f4f4f6;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 24px;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  width: 100%;
+}
+
+.partner-bank-page__header {
+  flex: 0 0 auto;
+  width: 100%;
+}
+
+.partner-bank-page__header .admin-users-page__subtitle {
+  max-width: 720px;
+}
+
+.partner-bank-page .partner-bank-form-panel,
+.partner-bank-page .admin-users-panel.partner-bank-form-panel {
+  flex: 0 0 auto;
+  height: auto;
+  max-width: none;
+  min-height: 0;
+  width: 100%;
+}
+
+.partner-bank-form {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  min-height: 0;
+  width: 100%;
+}
+
+.partner-bank-form__body {
+  flex: 0 0 auto;
+  padding: 20px 24px 8px;
+}
+
+.partner-bank-form__grid {
+  display: grid;
+  gap: 16px 24px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: 100%;
+}
+
+.partner-bank-form__field--full {
+  grid-column: 1 / -1;
+}
+
+.partner-bank-form__footer {
+  border-top: 0;
+  display: flex;
+  flex: 0 0 auto;
+  justify-content: flex-end;
+  padding: 16px 24px;
+}
+
+.partner-bank-form__save {
+  border-radius: 12px;
+  min-height: 40px;
+  min-width: 160px;
+}
+
+/* Commission slabs absorbs leftover height */
+.partner-bank-page .partner-bank-slabs-panel,
+.partner-bank-page .admin-users-panel.partner-bank-slabs-panel {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  height: auto;
+  max-width: none;
+  min-height: 0;
+  width: 100%;
+}
+
+.partner-bank-page .partner-bank-slabs-panel > .admin-users-panel__body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  padding: 0;
+}
+
+.partner-bank-page .partner-bank-slabs-panel .admin-users-panel__table-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
+/* Slabs has 2 data columns — do not use admin sticky 56px Actions column.
+   Keep thead sticky as one row (avoid position:static on th:last-child). */
+.partner-bank-page .admin-users-table.finance-partner-commissions-slabs-table th,
+.partner-bank-page .admin-users-table.finance-partner-commissions-slabs-table td {
+  color: #3f3f49;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.4;
+  padding: 14px 12px;
+  vertical-align: middle;
+}
+
+.partner-bank-page .admin-users-table.finance-partner-commissions-slabs-table th {
+  color: #5e5e69;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: none;
+}
+
+.partner-bank-page .admin-users-table.finance-partner-commissions-slabs-table th:last-child,
+.partner-bank-page .admin-users-table.finance-partner-commissions-slabs-table td:last-child {
+  box-shadow: none;
+  max-width: none;
+  min-width: 10rem;
+  overflow: visible;
+  right: auto;
+  text-align: left;
+  text-overflow: clip;
+  width: 28%;
+}
+
+.partner-bank-page .admin-users-table.finance-partner-commissions-slabs-table thead th:last-child {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+}
+
+.partner-bank-page .admin-users-table.finance-partner-commissions-slabs-table td:last-child {
+  position: static;
+  z-index: auto;
+}
+
+.partner-bank-page .admin-users-table.finance-partner-commissions-slabs-table th:first-child,
+.partner-bank-page .admin-users-table.finance-partner-commissions-slabs-table td:first-child {
+  width: 72%;
+}
+
+.partner-bank-page .partner-bank-slabs-empty,
+.partner-bank-page .partner-bank-slabs-loading {
+  color: #5e5e69;
+  font-size: 0.875rem;
+  margin: 0;
+  padding: 32px 24px;
+  text-align: center;
+}
+
+.partner-bank-page .finance-partner-commissions-empty {
+  align-content: center;
+  flex: 1 1 auto;
+  min-height: 160px;
+}
+
+.partner-bank-page .partner-bank-slabs-table-wrap {
+  overflow-x: auto;
+}
+
+.partner-bank-page .partner-bank-slabs-table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+}
+
+.partner-bank-page .partner-bank-slabs-table th,
+.partner-bank-page .partner-bank-slabs-table td {
+  border-bottom: 1px solid #c9c9cf;
+  overflow: hidden;
+  padding: 12px 24px;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.partner-bank-page .partner-bank-slabs-table th {
+  background: #f4f4f6;
+  color: #5e5e69;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.partner-bank-page .partner-bank-slabs-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.partner-bank-page .partner-bank-country {
+  display: block;
+  margin: 0;
+  min-width: 200px;
+}
+
+.partner-bank-page .partner-bank-country > span {
+  color: #5e5e69;
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+.partner-bank-page .partner-bank-country select {
+  -webkit-appearance: none;
+  appearance: none;
+  background-color: var(--bg-surface);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%237E7E88' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-position: right 16px center;
+  background-repeat: no-repeat;
+  background-size: 16px 16px;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 0.875rem;
+  min-height: 38px;
+  padding: 8px 48px 8px 16px;
+  width: 100%;
+}
+
+.partner-bank-page .partner-bank-country select:hover {
+  background-color: var(--bg-subtle);
+  border-color: var(--border-strong);
+}
+
+.partner-bank-page .partner-bank-country select:focus,
+.partner-bank-page .partner-bank-country select:focus-visible {
+  border-color: #5f1fb0;
+  box-shadow: 0 0 0 3px color-mix(in srgb, #5f1fb0 18%, transparent);
+  outline: none;
+}
+
+@media (max-width: 720px) {
+  .partner-bank-form__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-height: 720px) {
+  .admin-users-page.partner-bank-page {
+    gap: 20px;
+  }
+
+  .partner-bank-form__body {
+    padding: 16px 20px 8px;
+  }
+
+  .partner-bank-form__footer {
+    padding: 12px 20px;
+  }
+
+  .partner-bank-page__header .admin-users-page__subtitle {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+}
+
+@media (max-height: 600px) {
+  .admin-users-page.partner-bank-page {
+    gap: 16px;
+  }
+}

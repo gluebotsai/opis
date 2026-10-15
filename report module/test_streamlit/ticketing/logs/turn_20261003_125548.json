@@ -1,0 +1,86 @@
+{
+  "question": "what is teh csat score for this ticket #7150",
+  "answer": "The CSAT score is **5**.",
+  "trace": {
+    "question": "what is teh csat score for this ticket #7150",
+    "identity": {
+      "organization_id": 1012,
+      "user_id": 1038,
+      "role": "admin",
+      "queue_ids": [
+        1060,
+        1061,
+        1062,
+        1063,
+        1064,
+        1065,
+        1066,
+        1071,
+        1072,
+        1073,
+        1074,
+        1075,
+        1076
+      ]
+    },
+    "model": "worktual-gemma",
+    "tasks": [
+      {
+        "status": "ok",
+        "store": "sql",
+        "sql": "WITH rpt_tickets AS (\nSELECT src.id, src.ticket_number, src.subject, src.description, src.status, src.priority, src.channel, src.category, src.skill, src.customer_id, src.customer_name, src.customer_email, src.customer_phone, src.assignee_id, src.assignee_name, src.resolver_id, src.resolver_name, src.queue_id, src.queue_name, src.created_by_id, src.created_by_name, src.due_at, src.first_response_at, src.resolved_at, src.csat_score, src.csat_rated_at, src.csat_comment, src.ai_summary, src.created_at, src.updated_at FROM (\nSELECT * FROM ticketing.tickets WHERE organization_id = %(_org_id)s\n) src WHERE TRUE\n)\nSELECT csat_score FROM rpt_tickets AS tickets WHERE ticket_number = '7150' OR ticket_number = '#7150' LIMIT 50",
+        "views": [
+          "tickets"
+        ],
+        "guard_notes": [],
+        "rows": [
+          {
+            "csat_score": 5
+          }
+        ],
+        "row_cap": 500,
+        "capped": false,
+        "attempts": [
+          {
+            "raw": "```json\n{\"tool\": \"run_sql\", \"sql\": \"SELECT csat_score FROM rpt.tickets WHERE ticket_number = '7150' OR ticket_number = '#7150' LIMIT 50\"}\n```",
+            "call": {
+              "kind": "run_sql",
+              "sql": "SELECT csat_score FROM rpt.tickets WHERE ticket_number = '7150' OR ticket_number = '#7150' LIMIT 50"
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "time_status": "all_time",
+        "tool": "run_sql",
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": null,
+          "goal": "Find the CSAT score for ticket #7150",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "list"
+        }
+      }
+    ],
+    "domain_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"quick\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": null,\n      \"goal\": \"Find the CSAT score for ticket #7150\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"answer_type\": \"list\"\n    }\n  ]\n}\n```",
+    "plan": {
+      "kind": "plan",
+      "depth": "quick",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": null,
+          "goal": "Find the CSAT score for ticket #7150",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "list"
+        }
+      ]
+    },
+    "facts": "window: overall (no date filter, UTC)\nRESULT: csat_score = 5",
+    "grounded": true,
+    "briefing_raw": "The CSAT score for ticket #7150 is **5**."
+  }
+}

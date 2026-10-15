@@ -1,0 +1,112 @@
+{
+  "turn_id": "fdc941bc",
+  "timestamp": "2026-10-03T16:32:49.599524+00:00",
+  "question": "how many campaign are there",
+  "identity": {
+    "organization_id": 1000,
+    "user_id": 1000,
+    "branch_id": 1000,
+    "role": "admin"
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma",
+    "dsn_set": true
+  },
+  "answer": "There are **40** campaigns in All branch campaigns.",
+  "facts": "window: overall (no date filter, UTC)\nRESULT: campaigns_ran = 40",
+  "trace": {
+    "identity": {
+      "organization_id": 1000,
+      "user_id": 1000,
+      "branch_id": 1000,
+      "role": "admin",
+      "scope_label": "All branch campaigns",
+      "timezone": "UTC"
+    },
+    "question": "how many campaign are there",
+    "supervisor": {
+      "kind": "route",
+      "target": "domain"
+    },
+    "supervisor_raw": "```json\n{\"kind\": \"route\", \"target\": \"domain\"}\n```",
+    "interpret_raw": "```json\n{\n  \"kind\": \"interpret\",\n  \"need\": \"Determine the total number of campaigns existing in the branch.\",\n  \"object\": \"campaign\",\n  \"metric_family\": \"count\",\n  \"slice\": null,\n  \"time\": \"all time\",\n  \"scope_words\": \"branch\",\n  \"echo\": \"How many campaigns are there in the branch?\",\n  \"ask_user\": \"\"\n}\n```",
+    "interpret": {
+      "kind": "interpret",
+      "need": "Determine the total number of campaigns existing in the branch.",
+      "object": "campaign",
+      "metric_family": "count",
+      "slice": null,
+      "time": "all time",
+      "scope_words": "branch",
+      "echo": "How many campaigns are there in the branch?",
+      "ask_user": ""
+    },
+    "retrieved_kpis": [
+      "campaigns_ran",
+      "audience_selected",
+      "campaigns_failed",
+      "campaigns_sent",
+      "entitlement_health",
+      "monitor_preview",
+      "contact_campaigns_received",
+      "messages_bounced"
+    ],
+    "task_results": [
+      {
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "campaigns_ran",
+          "goal": "Count all campaigns that have launched or ran in the branch",
+          "time": "all time",
+          "scope": "org",
+          "dimensions": [],
+          "answer_type": "kpi",
+          "depends_on": []
+        },
+        "status": "ok",
+        "error_type": null,
+        "error": null,
+        "kpi_id": "campaigns_ran",
+        "store": "sql",
+        "sql": "SELECT\n    \n    COUNT(*)::bigint AS campaigns_ran\n\nFROM (\nSELECT\n  c.id,\n  c.organization_id,\n  c.branch_id,\n  c.name,\n  c.description,\n  c.status,\n  c.starts_at,\n  c.ends_at,\n  c.source_channel,\n  c.created_by_user_id,\n  c.created_at,\n  c.updated_at,\n  c.goal,\n  c.objective,\n  c.session_id,\n  c.audience_summary,\n  c.audience_count,\n  c.launch_plan,\n  c.launch_local_date,\n  c.launch_local_time,\n  c.timezone\nFROM campaign.campaigns c\nWHERE c.organization_id = 1000\n  AND c.branch_id = 1000\n\n) campaigns\nWHERE TRUE\n  AND TRUE\n  AND EXISTS (SELECT 1 FROM campaign.campaign_channels ch WHERE ch.campaign_id = campaigns.id AND ch.organization_id = 1000 AND ch.channel <> 'ppc')\n  AND TRUE\n\n  AND status IN ('live','completed','cancelled')\n\n\n",
+        "row_count": 1,
+        "time_echo": "overall (no date filter, UTC)"
+      }
+    ],
+    "plan": {
+      "kind": "plan",
+      "understanding": {
+        "need": "Determine the total number of campaigns existing in the branch.",
+        "object": "campaign",
+        "metric_family": "count",
+        "slice": null,
+        "time": "all time",
+        "scope_words": "branch",
+        "echo": "How many campaigns are there in the branch?",
+        "ask_user": ""
+      },
+      "depth": "quick",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "campaigns_ran",
+          "goal": "Count all campaigns that have launched or ran in the branch",
+          "time": "all time",
+          "scope": "org",
+          "dimensions": [],
+          "answer_type": "kpi",
+          "depends_on": []
+        }
+      ]
+    },
+    "plan_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"understanding\": {\n    \"need\": \"Determine the total number of campaigns existing in the branch.\",\n    \"object\": \"campaign\",\n    \"metric_family\": \"count\",\n    \"slice\": null,\n    \"time\": \"all time\",\n    \"scope_words\": \"branch\",\n    \"echo\": \"How many campaigns are there in the branch?\",\n    \"ask_user\": \"\"\n  },\n  \"depth\": \"quick\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"campaigns_ran\",\n      \"goal\": \"Count all campaigns that have launched or ran in the branch\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"dimensions\": [],\n      \"answer_type\": \"kpi\",\n      \"depends_on\": []\n    }\n  ]\n}\n```",
+    "facts": "window: overall (no date filter, UTC)\nRESULT: campaigns_ran = 40",
+    "loop_errors": [],
+    "briefing_raw": "There are **40** campaigns in All branch campaigns.",
+    "grounded": true
+  },
+  "error": null
+}

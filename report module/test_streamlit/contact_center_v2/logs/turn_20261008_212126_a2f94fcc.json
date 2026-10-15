@@ -1,0 +1,37 @@
+{
+  "turn_id": "a2f94fcc",
+  "timestamp": "2026-10-08T15:51:26.418144+00:00",
+  "question": "what is the total conversation count",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1014,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p>Which period should I use for all conversations, including ones still open? For example last 7 days, this month, or a start and end date.</p>",
+  "card": "card: none",
+  "facts": "",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1014,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "what is the total conversation count",
+    "plan": {
+      "kind": "plan",
+      "understanding": "They want every conversation that started, including ones still open. Not handled and not resolved. No window was named and the sidebar has no period.",
+      "ask_user": "Which period should I use for all conversations, including ones still open? For example last 7 days, this month, or a start and end date.",
+      "tasks": []
+    }
+  },
+  "error": null
+}

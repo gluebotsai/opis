@@ -1,0 +1,61 @@
+# Shape only. Replace deal_count with this spoke's metric. Do not keep CRM names.
+
+version: 1
+kpis:
+  deal_count:
+    label: Deal count
+    grain: one deal row
+    unit: deals
+    family: volume
+    aggregation: count
+    when_to_use: "How many deals, including a breakdown by stage when the user says status."
+    when_not: "Not won revenue, not a list of deal names, not invoice count."
+    not_confused_with:
+      - won_revenue
+    user_phrases:
+      - how many deals
+      - deal count
+      - deals by status
+      - deals by stage
+    definition:
+      numerator: COUNT of deals in scope
+      denominator: none
+      includes: deals that match tenant, scope, time, and declared filters
+      excludes: invoices, leads
+    default_time_column: deals.created_at
+    time_kind: timestamptz
+    allowed_scope_levels: [org, own]
+    allowed_dimensions: [stage, owner, region, product, day]
+    filters:
+      stage:
+        column: deals.stage
+        param: :stage
+      owner:
+        column: deals.owner_id
+        param: :owner_id
+      region:
+        column: companies.region
+        join: "JOIN rpt.companies ON companies.id = deals.company_id"
+        param: :region
+      product:
+        column: products.name
+        join: "JOIN rpt.deal_products ON deal_products.deal_id = deals.id JOIN rpt.products ON products.id = deal_products.product_id"
+        param: :product
+      customer:
+        column: deals.customer_id
+        param: :customer_id
+      contact:
+        column: deals.contact_id
+        param: :contact_id
+      amount_min:
+        column: deals.amount
+        param: :amount_min
+    unsupported_filters:
+      - name: description
+        reason: "Free-text blob. Lists only."
+    hitl:
+      reviewed_by: ""
+      reviewed_at: ""
+      decisions_file: product/hitl/deal_count.yml
+    compare: false
+    admin_only: false

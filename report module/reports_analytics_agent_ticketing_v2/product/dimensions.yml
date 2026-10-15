@@ -1,0 +1,107 @@
+version: 1
+# Canonical GROUP BY ids for certified KPIs. SQL expressions apply on ticket-grain CTEs
+# (base_ticket / rpt.tickets column names). Domain chooses an id from user words.
+
+dimensions:
+  status:
+    sql: status
+    view: tickets
+    means: Ticket lifecycle stored on rpt.tickets.status (Open, Pending, Reopened, Overdue, Resolved, Closed).
+    user_words: [status, lifecycle, open vs closed, stage of the ticket]
+    do_not_confuse_with: "Not SLA sla_status on queues. Not CSAT. Not recommendation/approval/macro status."
+
+  priority:
+    sql: priority
+    view: tickets
+    means: Ticket urgency low/medium/high/urgent.
+    user_words: [priority, urgency, p1, high priority]
+    do_not_confuse_with: "Not ticket status. Not automation_rules.priority (integer order)."
+
+  channel:
+    sql: channel
+    view: tickets
+    means: Intake channel (Email, Chat, Phone, webchat).
+    user_words: [channel, source, how they contacted us, email vs chat]
+    do_not_confuse_with: "Not a queue/team. Not category."
+
+  category:
+    sql: category
+    view: tickets
+    means: Issue category on the ticket (or KB article category when the KPI is kb_article_count).
+    user_words: [category, issue type, topic]
+    do_not_confuse_with: "Not status. Not queue."
+
+  skill:
+    sql: skill
+    view: tickets
+    means: Routing skill tag on the ticket.
+    user_words: [skill, skills, routing skill]
+    do_not_confuse_with: "Not queue. Not agent role."
+
+  queue:
+    sql: queue_name
+    view: tickets
+    means: Queue / team name.
+    user_words: [queue, team, department, desk]
+    do_not_confuse_with: "Not channel. Not skill."
+
+  agent:
+    sql: assignee_name
+    view: tickets
+    means: L1 assignee display name.
+    user_words: [agent, assignee, owner, assigned to]
+    do_not_confuse_with: "Not resolver (L2). Not created_by."
+
+  resolver:
+    sql: resolver_name
+    view: tickets
+    means: L2 resolver display name.
+    user_words: [resolver, L2, second line]
+    do_not_confuse_with: "Not assignee/agent."
+
+  customer:
+    sql: customer_name
+    view: tickets
+    means: Customer display name on the ticket.
+    user_words: [customer, contact, requester]
+    do_not_confuse_with: "Not B2B account name. Not agent."
+
+  created_by:
+    sql: created_by_name
+    view: tickets
+    means: Staff member who created the ticket.
+    user_words: [created by, creator, opened by]
+    do_not_confuse_with: "Not assignee. Not customer."
+
+  day:
+    sql: "DATE_TRUNC('day', created_at)::date"
+    view: tickets
+    means: UTC calendar day the ticket (or event) was created.
+    user_words: [per day, daily, by day]
+    do_not_confuse_with: "Not avg_tickets_per_day (that KPI is a rate, not a day slice of ticket_count)."
+
+  week:
+    sql: "DATE_TRUNC('week', created_at)::date"
+    view: tickets
+    means: UTC week starting Monday.
+    user_words: [per week, weekly, by week]
+    do_not_confuse_with: "Not month."
+
+  month:
+    sql: "DATE_TRUNC('month', created_at)::date"
+    view: tickets
+    means: UTC calendar month.
+    user_words: [per month, monthly, by month]
+    do_not_confuse_with: "Not week."
+
+aliases:
+  assignee: agent
+  owner: agent
+  team: queue
+  department: queue
+  queue_name: queue
+  assignee_name: agent
+  resolver_name: resolver
+  customer_name: customer
+  created_by_name: created_by
+  skill_tag: skill

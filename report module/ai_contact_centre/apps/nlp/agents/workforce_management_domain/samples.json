@@ -1,0 +1,28 @@
+{
+  "conversations": [
+    {
+      "id": "workforce-to-queue",
+      "title": "Route staffing to queue",
+      "turns": [
+        { "role": "user", "content": "Add Meera to the Billing queue" },
+        {
+          "role": "assistant",
+          "content": "",
+          "tools": ["route_to_agent"]
+        }
+      ]
+    },
+    {
+      "id": "workforce-to-monitoring",
+      "title": "Route live wait questions to monitoring",
+      "turns": [
+        { "role": "user", "content": "How many people are waiting right now?" },
+        {
+          "role": "assistant",
+          "content": "",
+          "tools": ["route_to_agent"]
+        }
+      ]
+    }
+  ]
+}

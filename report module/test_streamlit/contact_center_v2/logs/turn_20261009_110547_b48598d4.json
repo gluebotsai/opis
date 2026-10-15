@@ -1,0 +1,60 @@
+{
+  "turn_id": "b48598d4",
+  "timestamp": "2026-10-09T05:35:47.457342+00:00",
+  "question": "Would you like to see how many conversations were queued earlier today?\nyes ",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1016,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Conversations queued today</strong></p><p>There were <strong>0</strong> conversations queued today (UTC).</p><p>Would you like to see this number broken down by channel?</p>",
+  "card": "card: none",
+  "facts": "result_id: r1\nwindow: today (UTC)\ncertified: false\ntask_goal: Count the number of conversations that were queued today.\nanswer_type: number\nrow_count: 1\nrow 1: count=0",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1016,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "Would you like to see how many conversations were queued earlier today?\nyes ",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants to know the total number of conversations that entered a queue at any point earlier today.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Count the number of conversations that were queued today.",
+          "time": "today",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": false,
+        "kpi_id": null,
+        "row_count": 1
+      }
+    ],
+    "facts": "result_id: r1\nwindow: today (UTC)\ncertified: false\ntask_goal: Count the number of conversations that were queued today.\nanswer_type: number\nrow_count: 1\nrow 1: count=0",
+    "grounded": true,
+    "card": "card: none"
+  },
+  "error": null
+}

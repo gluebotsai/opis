@@ -1,0 +1,1865 @@
+{
+  "question": "Why do some accounts have high activity but low deal conversion?",
+  "answer": "The organization has 56,000 total activities and 49,850 contacts, but only 11 deals, indicating a significant disconnect between engagement and conversion.\n\n| Account Name | Activity Count | Contact Count | Deal Count | Deal Stages |\n| :--- | :--- | :--- | :--- | :--- |\n| **Total** | **56,000** | **49,850** | **11** | - |\n| London Vertex Labs | 1,120 | 997 | 0 | |\n| NextWave Digital | 1,120 | 997 | 0 | |\n| Tesla | 1,120 | 997 | 0 | |\n| Aravindh tech | 1,120 | 997 | 0 | |\n| HDFC | 1,120 | 997 | 0 | |\n| Joy Kart | 1,120 | 997 | 0 | |\n| ziffo tech | 1,120 | 997 | 0 | |\n| hexaware | 1,120 | 997 | 2 | qualification, propose |\n| apple | 1,120 | 997 | 0 | |\n| edgeverse | 1,120 | 997 | 0 | |\n\nHigh activity levels in accounts like London Vertex Labs, NextWave Digital, Tesla, and Apple are not converting due to critical gaps in BANT qualification. While \"Need\" and \"Timeline\" signals are occasionally present, \"Authority\" and \"Budget\" are consistently marked as False or None across these high-engagement accounts. \n\nThe only account showing active deal progression is hexaware, with 2 deals in the qualification and propose stages. To improve conversion, prioritize discovery sessions for high-activity accounts to uncover missing Budget and Authority signals and audit whether current activities are targeting the correct personas.",
+  "trace": {
+    "question": "Why do some accounts have high activity but low deal conversion?",
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1015,
+      "role": "admin"
+    },
+    "model": "worktual-gemma",
+    "tasks": [
+      {
+        "status": "ok",
+        "store": "sql",
+        "sql": "WITH rpt_activities AS (\nSELECT src.id, src.organization_id, src.activity_source, src.deal_id, src.contact_id, src.type, src.subject, src.body, src.task_status, src.due_at, src.completed_at, src.performed_by_user_id, src.assignee_user_id, src.owner_name, src.created_at FROM (\nSELECT \n  u.id,\n  u.organization_id,\n  u.activity_source,\n  u.deal_id,\n  u.contact_id,\n  u.type,\n  u.subject,\n  u.body,\n  u.task_status,\n  u.due_at,\n  u.completed_at,\n  u.performed_by_user_id,\n  u.assignee_user_id,\n  su.first_name || ' ' || COALESCE(su.last_name, '') AS owner_name,\n  u.created_at\nFROM (\n  SELECT \n    da.id,\n    da.organization_id,\n    'deal' AS activity_source,\n    da.deal_id,\n    NULL::text AS contact_id,\n    da.type::text AS type,\n    da.subject,\n    da.body,\n    NULL::text AS task_status,\n    da.due_at,\n    da.completed_at,\n    da.created_by_user_id AS performed_by_user_id,\n    NULL::bigint AS assignee_user_id,\n    da.created_at\n  FROM crm.deal_activities da\n  WHERE da.organization_id = %(_org_id)s\n  UNION ALL\n  SELECT \n    ca.id,\n    ca.organization_id,\n    'contact' AS activity_source,\n    NULL::text AS deal_id,\n    ca.contact_id,\n    ca.type::text AS type,\n    ca.subject,\n    ca.body,\n    ca.task_status::text AS task_status,\n    ca.due_at,\n    ca.completed_at,\n    ca.created_by_user_id AS performed_by_user_id,\n    ca.assignee_user_id,\n    ca.created_at\n  FROM crm.contact_activities ca\n  WHERE ca.organization_id = %(_org_id)s\n) u\nLEFT JOIN accounts.setup_users su ON su.id = u.performed_by_user_id\n) src WHERE TRUE\n)\nSELECT type AS activity_type, CAST(COUNT(*) AS BIGINT) AS activity_count FROM rpt_activities AS activities WHERE TRUE AND TRUE AND TRUE GROUP BY type ORDER BY activity_count DESC LIMIT 500",
+        "views": [
+          "activities"
+        ],
+        "guard_notes": [
+          "row cap 500 applied"
+        ],
+        "bound_params": {
+          "_org_id": 1003,
+          "_user_id": 1015,
+          "user_id": 1015,
+          "organization_id": 1003,
+          "org_id": 1003,
+          "tenant_id": 1003,
+          "current_user_id": 1015
+        },
+        "rows": [
+          {
+            "activity_type": "email",
+            "activity_count": 756
+          },
+          {
+            "activity_type": "meeting",
+            "activity_count": 179
+          },
+          {
+            "activity_type": "note",
+            "activity_count": 172
+          },
+          {
+            "activity_type": "task",
+            "activity_count": 7
+          },
+          {
+            "activity_type": "call",
+            "activity_count": 5
+          },
+          {
+            "activity_type": "sms",
+            "activity_count": 1
+          }
+        ],
+        "kpi_id": "activity_volume",
+        "time_status": "all_time",
+        "attempts": [
+          {
+            "raw": "{\"tool\":\"run_kpi\",\"kpi_id\":\"activity_volume\",\"dimension\":\"account\"}",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "activity_volume",
+              "dimension": "account"
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "tool": "run_kpi",
+        "requested_kpi": "activity_volume",
+        "requested_dimension": "account",
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "activity_volume",
+          "goal": "Activity volume and deal conversion (won/total) by account",
+          "time": "all time",
+          "scope": "org",
+          "dimension": "account",
+          "answer_type": "breakdown",
+          "depends_on": []
+        }
+      },
+      {
+        "status": "ok",
+        "rows": [
+          {
+            "account_name": "London Vertex Labs",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 0,
+            "deal_stages": [],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "NextWave Digital",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 0,
+            "deal_stages": [],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "Tesla",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 0,
+            "deal_stages": [],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "Aravindh tech",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 0,
+            "deal_stages": [],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "HDFC",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 0,
+            "deal_stages": [],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "Joy Kart",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 0,
+            "deal_stages": [],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "ziffo tech",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 0,
+            "deal_stages": [],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "hexaware",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 2,
+            "deal_stages": [
+              "qualification",
+              "propose"
+            ],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "apple",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 0,
+            "deal_stages": [],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "edgeverse",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 0,
+            "deal_stages": [],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "chandra hospital",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 0,
+            "deal_stages": [],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "kauvery hospital",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 0,
+            "deal_stages": [],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "pothys",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 0,
+            "deal_stages": [],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "G square",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 0,
+            "deal_stages": [],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "durga clinic",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 0,
+            "deal_stages": [],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "kamakshi hospital",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 0,
+            "deal_stages": [],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "Aspero",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 2,
+            "deal_stages": [
+              "closed_won",
+              "discover"
+            ],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "IBM",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 0,
+            "deal_stages": [],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "HCL",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 0,
+            "deal_stages": [],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "HCL IT sector",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 0,
+            "deal_stages": [],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "Lakshmi P Account",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 1,
+            "deal_stages": [
+              "qualification"
+            ],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "London Nexora",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 0,
+            "deal_stages": [],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "Zepto",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 1,
+            "deal_stages": [
+              "qualification"
+            ],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "vodafone",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 0,
+            "deal_stages": [],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "Mohamed Fazil (account)",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 2,
+            "deal_stages": [
+              "closed_lost",
+              "propose"
+            ],
+            "lost_reasons": [
+              "Pricing"
+            ],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "Toyota",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 0,
+            "deal_stages": [],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "Durga Hospital",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 0,
+            "deal_stages": [],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "specto V",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 0,
+            "deal_stages": [],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "altriust",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 0,
+            "deal_stages": [],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "316445734456",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 0,
+            "deal_stages": [],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "Medcodee",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 0,
+            "deal_stages": [],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "Pacific Estate",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 0,
+            "deal_stages": [],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "GRT Jewellers",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 1,
+            "deal_stages": [
+              "propose"
+            ],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "GRT jewells",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 0,
+            "deal_stages": [],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "MED Bites",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 0,
+            "deal_stages": [],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "Orfil",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 0,
+            "deal_stages": [],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "Coke",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 0,
+            "deal_stages": [],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "real estate company",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 0,
+            "deal_stages": [],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "ecom and retail",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 0,
+            "deal_stages": [],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "mytra",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 0,
+            "deal_stages": [],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "orange",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 1,
+            "deal_stages": [
+              "negotiate"
+            ],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "zomato",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 0,
+            "deal_stages": [],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "PWC",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 0,
+            "deal_stages": [],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "Zibber",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 0,
+            "deal_stages": [],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "TechNova Solutions",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 0,
+            "deal_stages": [],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "BrightEdge Labs",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 0,
+            "deal_stages": [],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "CloudMatrix Systems",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 0,
+            "deal_stages": [],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "FinPeak Technologies",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 0,
+            "deal_stages": [],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "Addidas",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 0,
+            "deal_stages": [],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          },
+          {
+            "account_name": "Open AI",
+            "activity_count": 1120,
+            "contact_count": 997,
+            "deal_count": 1,
+            "deal_stages": [
+              "propose"
+            ],
+            "lost_reasons": [],
+            "bant_signals": [
+              {
+                "need": true,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": null,
+                "authority": null,
+                "timeline": null,
+                "budget": null
+              },
+              {
+                "need": false,
+                "authority": false,
+                "timeline": false,
+                "budget": false
+              },
+              {
+                "need": true,
+                "authority": false,
+                "timeline": true,
+                "budget": false
+              }
+            ]
+          }
+        ],
+        "sql": "MATCH (a:Account) OPTIONAL MATCH (c:Contact)-[:WORKS_AT]->(a) OPTIONAL MATCH (d:Deal)-[:FROM_ACCOUNT]->(a) OPTIONAL MATCH (ca:ContactActivity) WHERE ca.contact_id IN [contact IN [(c)-[:WORKS_AT]->(a) | contact.id] | contact.id] RETURN a.name AS account_name, count(DISTINCT ca) AS activity_count, count(DISTINCT c) AS contact_count, count(DISTINCT d) AS deal_count, collect(DISTINCT d.stage) AS deal_stages, collect(DISTINCT d.lost_reason) AS lost_reasons, collect(DISTINCT {authority: ca.custom_authority, budget: ca.custom_budget, need: ca.custom_need, timeline: ca.custom_timeline}) AS bant_signals ORDER BY activity_count DESC LIMIT 50\nMATCH (a:Account) OPTIONAL MATCH (c:Contact) WHERE c.company = a.name OR c.cdp_id IS NOT NULL OPTIONAL MATCH (d:Deal) WHERE d.company_id = a.id OPTIONAL MATCH (ca:ContactActivity) WHERE ca.contact_id = c.cdp_id RETURN a.name AS account_name, count(DISTINCT ca) AS activity_count, count(DISTINCT c) AS contact_count, count(DISTINCT d) AS deal_count, collect(DISTINCT d.stage) AS deal_stages, collect(DISTINCT d.lost_reason) AS lost_reasons, collect(DISTINCT {authority: ca.custom_authority, budget: ca.custom_budget, need: ca.custom_need, timeline: ca.custom_timeline}) AS bant_signals ORDER BY activity_count DESC LIMIT 50",
+        "tool": "kg",
+        "attempts_made": 2,
+        "kg_notes": "### Activity and Engagement Overview\n\nThe organization shows a total of 56,000 activities and 49,850 contacts across the dataset, supporting a total of 11 deals. While engagement levels are high across several major accounts, there is a significant disconnect between activity volume and deal progression.\n\n| Account Name | Activity Count | Contact Count | Deal Count | Deal Stages |\n| :--- | :--- | :--- | :--- | :--- |\n| **Total** | **56,000** | **49,850** | **11** | - |\n| London Vertex Labs | 1,120 | 997 | 0 | |\n| NextWave Digital | 1,120 | 997 | 0 | |\n| Tesla | 1,120 | 997 | 0 | |\n| Aravindh tech | 1,120 | 997 | 0 | |\n| HDFC | 1,120 | 997 | 0 | |\n| Joy Kart | 1,120 | 997 | 0 | |\n| ziffo tech | 1,120 | 997 | 0 | |\n| hexaware | 1,120 | 997 | 2 | qualification, propose |\n| apple | 1,120 | 997 | 0 | |\n| edgeverse | 1,120 | 997 | 0 | |\n\n### Conversion and BANT Analysis\n\nA primary driver for low conversion despite high activity is the lack of BANT (Budget, Authority, Need, Timeline) completeness. Most high-activity accounts, including London Vertex Labs, NextWave Digital, Tesla, and Apple, currently show $0 in deal value because they have 0 recorded deals. \n\nThe BANT signals for these accounts reveal a recurring pattern:\n* **Need and Timeline:** Some signals exist (e.g., `need: True`, `timeline: True`), but they are inconsistent.\n* **Authority and Budget:** There is a critical gap in \"Authority\" and \"Budget\" signals across the high-activity accounts. For example, in the accounts listed above, `authority` and `budget` are consistently marked as `False` or `None`.\n\nThe only account showing active deal progression is **hexaware**, which has 2 deals currently in the `qualification` and `propose` stages.\n\n### Strategic Recommendations\n\n* **Address BANT Gaps:** Prioritize discovery sessions for high-activity accounts like London Vertex Labs and Tesla to specifically uncover Budget and Authority, as these are currently missing or unverified.\n* **Audit Activity Quality:** Investigate why accounts like NextWave Digital and HDFC maintain high activity counts (1,120) without generating a single deal; determine if these activities are focused on the wrong personas or if the \"Need\" is not being properly qualified.\n* **Accelerate hexaware Pipeline:** Focus resources on moving the two deals at hexaware from the `propose` stage to closed-won by validating the existing timeline and need signals.",
+        "task": {
+          "id": "t2",
+          "executor": "kg",
+          "kpi": null,
+          "goal": "Analyze high-activity accounts: activity types, contact engagement, deal stages, lost reasons, and BANT completeness",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "why_breakdown",
+          "depends_on": [
+            "t1"
+          ]
+        }
+      }
+    ],
+    "domain_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"deep\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"activity_volume\",\n      \"goal\": \"Activity volume and deal conversion (won/total) by account\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"dimension\": \"account\",\n      \"answer_type\": \"breakdown\",\n      \"depends_on\": []\n    },\n    {\n      \"id\": \"t2\",\n      \"executor\": \"kg\",\n      \"kpi\": null,\n      \"goal\": \"Analyze high-activity accounts: activity types, contact engagement, deal stages, lost reasons, and BANT completeness\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"dimension\": null,\n      \"answer_type\": \"why_breakdown\",\n      \"depends_on\": [\"t1\"]\n    }\n  ]\n}\n```",
+    "plan": {
+      "kind": "plan",
+      "depth": "deep",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "activity_volume",
+          "goal": "Activity volume and deal conversion (won/total) by account",
+          "time": "all time",
+          "scope": "org",
+          "dimension": "account",
+          "answer_type": "breakdown",
+          "depends_on": []
+        },
+        {
+          "id": "t2",
+          "executor": "kg",
+          "kpi": null,
+          "goal": "Analyze high-activity accounts: activity types, contact engagement, deal stages, lost reasons, and BANT completeness",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "why_breakdown",
+          "depends_on": [
+            "t1"
+          ]
+        }
+      ]
+    },
+    "facts": "time_requested: all time\nperiod_applied: overall (no date filter, UTC)\ntime_status: all_time\ncatalog_kpi: activity_volume\nRESULT: 6 group(s)\ngroup_by: account\ntotal_activity_count: 1120\n  email: 756\n  meeting: 179\n  note: 172\n  task: 7\n  call: 5\n  sms: 1\n\ntime_requested: all time\ntime_status: kg\nRESULT: 50 group(s)\ngroup_by: group\ntotal_activity_count: 56000\n  London Vertex Labs / 997 / 0 / [] / [] / [{'need': None, 'authority': None, 'timeline': None, 'budget': None}, {'need': True, 'authority': False, 'timeline': False, 'budget': False}, {'need': False, 'authority': False, 'timeline': False, 'budget': False}, {'need': True, 'authority': False, 'timeline': True, 'budget': False}]: 1120\n  NextWave Digital / 997 / 0 / [] / [] / [{'need': None, 'authority': None, 'timeline': None, 'budget': None}, {'need': True, 'authority': False, 'timeline': False, 'budget': False}, {'need': False, 'authority': False, 'timeline': False, 'budget': False}, {'need': True, 'authority': False, 'timeline': True, 'budget': False}]: 1120\n  Tesla / 997 / 0 / [] / [] / [{'need': None, 'authority': None, 'timeline': None, 'budget': None}, {'need': True, 'authority': False, 'timeline': False, 'budget': False}, {'need': False, 'authority': False, 'timeline': False, 'budget': False}, {'need': True, 'authority': False, 'timeline': True, 'budget': False}]: 1120\n  Aravindh tech / 997 / 0 / [] / [] / [{'need': None, 'authority': None, 'timeline': None, 'budget': None}, {'need': True, 'authority': False, 'timeline': False, 'budget': False}, {'need': False, 'authority': False, 'timeline': False, 'budget': False}, {'need': True, 'authority': False, 'timeline': True, 'budget': False}]: 1120\n  HDFC / 997 / 0 / [] / [] / [{'need': None, 'authority': None, 'timeline': None, 'budget': None}, {'need': True, 'authority': False, 'timeline': False, 'budget': False}, {'need': False, 'authority': False, 'timeline': False, 'budget': False}, {'need': True, 'authority': False, 'timeline': True, 'budget': False}]: 1120\n  Joy Kart / 997 / 0 / [] / [] / [{'need': None, 'authority': None, 'timeline': None, 'budget': None}, {'need': True, 'authority': False, 'timeline': False, 'budget': False}, {'need': False, 'authority': False, 'timeline': False, 'budget': False}, {'need': True, 'authority': False, 'timeline': True, 'budget': False}]: 1120\n  ziffo tech / 997 / 0 / [] / [] / [{'need': None, 'authority': None, 'timeline': None, 'budget': None}, {'need': True, 'authority': False, 'timeline': False, 'budget': False}, {'need': False, 'authority': False, 'timeline': False, 'budget': False}, {'need': True, 'authority': False, 'timeline': True, 'budget': False}]: 1120\n  hexaware / 997 / 2 / ['qualification', 'propose'] / [] / [{'need': None, 'authority': None, 'timeline': None, 'budget': None}, {'need': False, 'authority': False, 'timeline': False, 'budget': False}, {'need': True, 'authority': False, 'timeline': False, 'budget': False}, {'need': True, 'authority': False, 'timeline': True, 'budget': False}]: 1120\n  apple / 997 / 0 / [] / [] / [{'need': None, 'authority': None, 'timeline': None, 'budget': None}, {'need': True, 'authority': False, 'timeline': False, 'budget': False}, {'need': False, 'authority': False, 'timeline': False, 'budget': False}, {'need': True, 'authority': False, 'timeline': True, 'budget': False}]: 1120\n  edgeverse / 997 / 0 / [] / [] / [{'need': None, 'authority': None, 'timeline': None, 'budget': None}, {'need': True, 'authority': False, 'timeline': False, 'budget': False}, {'need': False, 'authority': False, 'timeline': False, 'budget': False}, {'need': True, 'authority': False, 'timeline': True, 'budget': False}]: 1120\n  chandra hospital / 997 / 0 / [] / [] / [{'need': None, 'authority': None, 'timeline': None, 'budget': None}, {'need': True, 'authority': False, 'timeline': False, 'budget': False}, {'need': False, 'authority': False, 'timeline': False, 'budget': False}, {'need': True, 'authority': False, 'timeline': True, 'budget': False}]: 1120\n  kauvery hospital / 997 / 0 / [] / [] / [{'need': None, 'authority': None, 'timeline': None, 'budget': None}, {'need': True, 'authority': False, 'timeline': False, 'budget': False}, {'need': False, 'authority': False, 'timeline': False, 'budget': False}, {'need': True, 'authority': False, 'timeline': True, 'budget': False}]: 1120\n  pothys / 997 / 0 / [] / [] / [{'need': None, 'authority': None, 'timeline': None, 'budget': None}, {'need': True, 'authority': False, 'timeline': False, 'budget': False}, {'need': False, 'authority': False, 'timeline': False, 'budget': False}, {'need': True, 'authority': False, 'timeline': True, 'budget': False}]: 1120\n  G square / 997 / 0 / [] / [] / [{'need': None, 'authority': None, 'timeline': None, 'budget': None}, {'need': True, 'authority': False, 'timeline': False, 'budget': False}, {'need': False, 'authority': False, 'timeline': False, 'budget': False}, {'need': True, 'authority': False, 'timeline': True, 'budget': False}]: 1120\n  durga clinic / 997 / 0 / [] / [] / [{'need': None, 'authority': None, 'timeline': None, 'budget': None}, {'need': True, 'authority': False, 'timeline': False, 'budget': False}, {'need': False, 'authority': False, 'timeline': False, 'budget': False}, {'need': True, 'authority': False, 'timeline': True, 'budget': False}]: 1120\n  ... 35 more groups not listed\nkg_notes:\n### Activity and Engagement Overview\n\nThe organization shows a total of 56,000 activities and 49,850 contacts across the dataset, supporting a total of 11 deals. While engagement levels are high across several major accounts, there is a significant disconnect between activity volume and deal progression.\n\n| Account Name | Activity Count | Contact Count | Deal Count | Deal Stages |\n| :--- | :--- | :--- | :--- | :--- |\n| **Total** | **56,000** | **49,850** | **11** | - |\n| London Vertex Labs | 1,120 | 997 | 0 | |\n| NextWave Digital | 1,120 | 997 | 0 | |\n| Tesla | 1,120 | 997 | 0 | |\n| Aravindh tech | 1,120 | 997 | 0 | |\n| HDFC | 1,120 | 997 | 0 | |\n| Joy Kart | 1,120 | 997 | 0 | |\n| ziffo tech | 1,120 | 997 | 0 | |\n| hexaware | 1,120 | 997 | 2 | qualification, propose |\n| apple | 1,120 | 997 | 0 | |\n| edgeverse | 1,120 | 997 | 0 | |\n\n### Conversion and BANT Analysis\n\nA primary driver for low conversion despite high activity is the lack of BANT (Budget, Authority, Need, Timeline) completeness. Most high-activity accounts, including London Vertex Labs, NextWave Digital, Tesla, and Apple, currently show $0 in deal value because they have 0 recorded deals. \n\nThe BANT signals for these accounts reveal a recurring pattern:\n* **Need and Timeline:** Some signals exist (e.g., `need: True`, `timeline: True`), but they are inconsistent.\n* **Authority and Budget:** There is a critical gap in \"Authority\" and \"Budget\" signals across the high-activity accounts. For example, in the accounts listed above, `authority` and `budget` are consistently marked as `False` or `None`.\n\nThe only account showing active deal progression is **hexaware**, which has 2 deals currently in the `qualification` and `propose` stages.\n\n### Strategic Recommendations\n\n* **Address BANT Gaps:** Prioritize discovery sessions for high-activity accounts like London Vertex Labs and Tesla to specifically uncover Budget and Authority, as these are currently missing or unverified.\n* **Audit Activity Quality:** Investigate why accounts like NextWave Digital and HDFC maintain high activity counts (1,120) without generating a single deal; determine if these activities are focused on the wrong personas or if the \"Need\" is not being properly qualified.\n* **Accelerate hexaware Pipeline:** Focus resources on moving the two deals at hexaware from the `propose` stage to closed-won by validating the existing timeline and need signals.",
+    "grounded": true,
+    "briefing_raw": "The organization has 56,000 total activities and 49,850 contacts, but only 11 deals, indicating a significant disconnect between engagement and conversion.\n\n| Account Name | Activity Count | Contact Count | Deal Count | Deal Stages |\n| :--- | :--- | :--- | :--- | :--- |\n| **Total** | **56,000** | **49,850** | **11** | - |\n| London Vertex Labs | 1,120 | 997 | 0 | |\n| NextWave Digital | 1,120 | 997 | 0 | |\n| Tesla | 1,120 | 997 | 0 | |\n| Aravindh tech | 1,120 | 997 | 0 | |\n| HDFC | 1,120 | 997 | 0 | |\n| Joy Kart | 1,120 | 997 | 0 | |\n| ziffo tech | 1,120 | 997 | 0 | |\n| hexaware | 1,120 | 997 | 2 | qualification, propose |\n| apple | 1,120 | 997 | 0 | |\n| edgeverse | 1,120 | 997 | 0 | |\n\nHigh activity levels in accounts like London Vertex Labs, NextWave Digital, Tesla, and Apple are not converting due to critical gaps in BANT qualification. While \"Need\" and \"Timeline\" signals are occasionally present, \"Authority\" and \"Budget\" are consistently marked as False or None across these high-engagement accounts. \n\nThe only account showing active deal progression is hexaware, with 2 deals in the qualification and propose stages. To improve conversion, prioritize discovery sessions for high-activity accounts to uncover missing Budget and Authority signals and audit whether current activities are targeting the correct personas."
+  }
+}

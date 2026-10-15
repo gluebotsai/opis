@@ -1,0 +1,4041 @@
+{
+  "ran_at": "2026-10-09T14:18:52.288178+00:00",
+  "org": 1003,
+  "windows": {
+    "all time": {
+      "start": null,
+      "end": null,
+      "echo": "all time"
+    },
+    "last 1 day": {
+      "start": "2026-10-09T00:00:00+00:00",
+      "end": "2026-10-10T00:00:00+00:00",
+      "echo": "past 1 days (UTC calendar: today + previous 0 days)"
+    },
+    "last 7 days": {
+      "start": "2026-10-03T00:00:00+00:00",
+      "end": "2026-10-10T00:00:00+00:00",
+      "echo": "past 7 days (UTC calendar: today + previous 6 days)"
+    },
+    "last 30 days": {
+      "start": "2026-09-10T00:00:00+00:00",
+      "end": "2026-10-10T00:00:00+00:00",
+      "echo": "past 30 days (UTC calendar: today + previous 29 days)"
+    },
+    "this month": {
+      "start": "2026-10-01T00:00:00+00:00",
+      "end": "2026-11-01T00:00:00+00:00",
+      "echo": "this month (UTC)"
+    },
+    "this quarter": {
+      "start": "2026-10-01T00:00:00+00:00",
+      "end": "2027-01-01T00:00:00+00:00",
+      "echo": "Q4 2026 (UTC)"
+    }
+  },
+  "runs": 282,
+  "ok": 272,
+  "failed": 10,
+  "failures": [
+    "FAIL avg_hold_time | all time | by channel: unknown dimension: 'channel' (resolved 'channel') has no SQL expression for object 'call_cdr'.",
+    "FAIL missed_rate | all time | by channel: missing FROM-clause entry for table \"missed_contacts\"\nLINE 91: SELECT missed_contacts.channel AS channel, COUNT(*) FILTER(W...\n                ^\n",
+    "FAIL avg_messages_per_conversation | all time | by channel: unknown dimension: 'channel' (resolved 'channel') has no SQL expression for object 'message'.",
+    "FAIL offer_accept_rate | all time | by channel: unknown dimension: 'channel' (resolved 'channel') has no SQL expression for object 'assignment'.",
+    "FAIL failed_send_rate | all time | by channel: unknown dimension: 'channel' (resolved 'channel') has no SQL expression for object 'message'.",
+    "FAIL bot_grounded_rate | all time | by channel: unknown dimension: 'channel' (resolved 'channel') has no SQL expression for object 'nlp_turn'.",
+    "FAIL copilot_acceptance_rate | all time | by channel: unknown dimension: 'channel' (resolved 'channel') has no SQL expression for object 'copilot_turn'.",
+    "FAIL ready_agents | now | by presence_state: unknown dimension: 'presence_state' (resolved 'presence_state') has no SQL expression for object 'agent'.",
+    "FAIL logged_in_agents | now | by presence_state: unknown dimension: 'presence_state' (resolved 'presence_state') has no SQL expression for object 'agent'.",
+    "FAIL offers_ringing | now | by channel: unknown dimension: 'channel' (resolved 'channel') has no SQL expression for object 'assignment'."
+  ],
+  "results": [
+    {
+      "kpi": "total",
+      "window": "all time",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 1,
+      "headline": {
+        "total": 640
+      },
+      "channels": []
+    },
+    {
+      "kpi": "total",
+      "window": "last 1 day",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 1 days (UTC calendar: today + previous 0 days)",
+      "row_count": 1,
+      "headline": {
+        "total": 24
+      },
+      "channels": []
+    },
+    {
+      "kpi": "total",
+      "window": "last 7 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 7 days (UTC calendar: today + previous 6 days)",
+      "row_count": 1,
+      "headline": {
+        "total": 377
+      },
+      "channels": []
+    },
+    {
+      "kpi": "total",
+      "window": "last 30 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 30 days (UTC calendar: today + previous 29 days)",
+      "row_count": 1,
+      "headline": {
+        "total": 505
+      },
+      "channels": []
+    },
+    {
+      "kpi": "total",
+      "window": "this month",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "this month (UTC)",
+      "row_count": 1,
+      "headline": {
+        "total": 388
+      },
+      "channels": []
+    },
+    {
+      "kpi": "total",
+      "window": "this quarter",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "Q4 2026 (UTC)",
+      "row_count": 1,
+      "headline": {
+        "total": 388
+      },
+      "channels": []
+    },
+    {
+      "kpi": "total",
+      "window": "all time",
+      "dimension": "channel",
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 6,
+      "headline": {
+        "total": 6
+      },
+      "channels": [
+        "email",
+        "facebook",
+        "instagram",
+        "webchat",
+        "whatsapp",
+        "call"
+      ]
+    },
+    {
+      "kpi": "call_count",
+      "window": "all time",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 1,
+      "headline": {
+        "call_count": 215
+      },
+      "channels": []
+    },
+    {
+      "kpi": "call_count",
+      "window": "last 1 day",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 1 days (UTC calendar: today + previous 0 days)",
+      "row_count": 1,
+      "headline": {
+        "call_count": 12
+      },
+      "channels": []
+    },
+    {
+      "kpi": "call_count",
+      "window": "last 7 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 7 days (UTC calendar: today + previous 6 days)",
+      "row_count": 1,
+      "headline": {
+        "call_count": 215
+      },
+      "channels": []
+    },
+    {
+      "kpi": "call_count",
+      "window": "last 30 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 30 days (UTC calendar: today + previous 29 days)",
+      "row_count": 1,
+      "headline": {
+        "call_count": 215
+      },
+      "channels": []
+    },
+    {
+      "kpi": "call_count",
+      "window": "this month",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "this month (UTC)",
+      "row_count": 1,
+      "headline": {
+        "call_count": 215
+      },
+      "channels": []
+    },
+    {
+      "kpi": "call_count",
+      "window": "this quarter",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "Q4 2026 (UTC)",
+      "row_count": 1,
+      "headline": {
+        "call_count": 215
+      },
+      "channels": []
+    },
+    {
+      "kpi": "call_count",
+      "window": "all time",
+      "dimension": "channel",
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 1,
+      "headline": {
+        "call_count": 215
+      },
+      "channels": [
+        "call"
+      ]
+    },
+    {
+      "kpi": "social_count",
+      "window": "all time",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 1,
+      "headline": {
+        "social_count": 51
+      },
+      "channels": []
+    },
+    {
+      "kpi": "social_count",
+      "window": "last 1 day",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 1 days (UTC calendar: today + previous 0 days)",
+      "row_count": 1,
+      "headline": {
+        "social_count": 3
+      },
+      "channels": []
+    },
+    {
+      "kpi": "social_count",
+      "window": "last 7 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 7 days (UTC calendar: today + previous 6 days)",
+      "row_count": 1,
+      "headline": {
+        "social_count": 30
+      },
+      "channels": []
+    },
+    {
+      "kpi": "social_count",
+      "window": "last 30 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 30 days (UTC calendar: today + previous 29 days)",
+      "row_count": 1,
+      "headline": {
+        "social_count": 47
+      },
+      "channels": []
+    },
+    {
+      "kpi": "social_count",
+      "window": "this month",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "this month (UTC)",
+      "row_count": 1,
+      "headline": {
+        "social_count": 30
+      },
+      "channels": []
+    },
+    {
+      "kpi": "social_count",
+      "window": "this quarter",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "Q4 2026 (UTC)",
+      "row_count": 1,
+      "headline": {
+        "social_count": 30
+      },
+      "channels": []
+    },
+    {
+      "kpi": "social_count",
+      "window": "all time",
+      "dimension": "channel",
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 3,
+      "headline": {
+        "social_count": 10
+      },
+      "channels": [
+        "instagram",
+        "facebook",
+        "whatsapp"
+      ]
+    },
+    {
+      "kpi": "handled",
+      "window": "all time",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 1,
+      "headline": {
+        "handled": 615
+      },
+      "channels": []
+    },
+    {
+      "kpi": "handled",
+      "window": "last 1 day",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 1 days (UTC calendar: today + previous 0 days)",
+      "row_count": 1,
+      "headline": {
+        "handled": 23
+      },
+      "channels": []
+    },
+    {
+      "kpi": "handled",
+      "window": "last 7 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 7 days (UTC calendar: today + previous 6 days)",
+      "row_count": 1,
+      "headline": {
+        "handled": 352
+      },
+      "channels": []
+    },
+    {
+      "kpi": "handled",
+      "window": "last 30 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 30 days (UTC calendar: today + previous 29 days)",
+      "row_count": 1,
+      "headline": {
+        "handled": 481
+      },
+      "channels": []
+    },
+    {
+      "kpi": "handled",
+      "window": "this month",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "this month (UTC)",
+      "row_count": 1,
+      "headline": {
+        "handled": 363
+      },
+      "channels": []
+    },
+    {
+      "kpi": "handled",
+      "window": "this quarter",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "Q4 2026 (UTC)",
+      "row_count": 1,
+      "headline": {
+        "handled": 363
+      },
+      "channels": []
+    },
+    {
+      "kpi": "handled",
+      "window": "all time",
+      "dimension": "channel",
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 6,
+      "headline": {
+        "handled": 6
+      },
+      "channels": [
+        "email",
+        "facebook",
+        "instagram",
+        "webchat",
+        "whatsapp",
+        "call"
+      ]
+    },
+    {
+      "kpi": "handled_change",
+      "window": "all time",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 1,
+      "headline": {
+        "handled_now": 0,
+        "handled_prev": 0,
+        "change_pct": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "handled_change",
+      "window": "last 1 day",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 1 days (UTC calendar: today + previous 0 days)",
+      "row_count": 1,
+      "headline": {
+        "handled_now": 23,
+        "handled_prev": 34,
+        "change_pct": -32.4
+      },
+      "channels": []
+    },
+    {
+      "kpi": "handled_change",
+      "window": "last 7 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 7 days (UTC calendar: today + previous 6 days)",
+      "row_count": 1,
+      "headline": {
+        "handled_now": 352,
+        "handled_prev": 18,
+        "change_pct": 1855.6
+      },
+      "channels": []
+    },
+    {
+      "kpi": "handled_change",
+      "window": "last 30 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 30 days (UTC calendar: today + previous 29 days)",
+      "row_count": 1,
+      "headline": {
+        "handled_now": 481,
+        "handled_prev": 134,
+        "change_pct": 259.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "handled_change",
+      "window": "this month",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "this month (UTC)",
+      "row_count": 1,
+      "headline": {
+        "handled_now": 363,
+        "handled_prev": 187,
+        "change_pct": 94.1
+      },
+      "channels": []
+    },
+    {
+      "kpi": "handled_change",
+      "window": "this quarter",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "Q4 2026 (UTC)",
+      "row_count": 1,
+      "headline": {
+        "handled_now": 363,
+        "handled_prev": 252,
+        "change_pct": 44.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "handled_change",
+      "window": "all time",
+      "dimension": "channel",
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 0,
+      "headline": {},
+      "channels": []
+    },
+    {
+      "kpi": "avg_daily_handled",
+      "window": "all time",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 1,
+      "headline": {
+        "avg_daily_handled": 18.08823529411765
+      },
+      "channels": []
+    },
+    {
+      "kpi": "avg_daily_handled",
+      "window": "last 1 day",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 1 days (UTC calendar: today + previous 0 days)",
+      "row_count": 1,
+      "headline": {
+        "avg_daily_handled": 23.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "avg_daily_handled",
+      "window": "last 7 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 7 days (UTC calendar: today + previous 6 days)",
+      "row_count": 1,
+      "headline": {
+        "avg_daily_handled": 50.285714285714285
+      },
+      "channels": []
+    },
+    {
+      "kpi": "avg_daily_handled",
+      "window": "last 30 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 30 days (UTC calendar: today + previous 29 days)",
+      "row_count": 1,
+      "headline": {
+        "avg_daily_handled": 21.863636363636363
+      },
+      "channels": []
+    },
+    {
+      "kpi": "avg_daily_handled",
+      "window": "this month",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "this month (UTC)",
+      "row_count": 1,
+      "headline": {
+        "avg_daily_handled": 40.333333333333336
+      },
+      "channels": []
+    },
+    {
+      "kpi": "avg_daily_handled",
+      "window": "this quarter",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "Q4 2026 (UTC)",
+      "row_count": 1,
+      "headline": {
+        "avg_daily_handled": 40.333333333333336
+      },
+      "channels": []
+    },
+    {
+      "kpi": "avg_daily_handled",
+      "window": "all time",
+      "dimension": "channel",
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 6,
+      "headline": {
+        "avg_daily_handled": 32.166666666666664
+      },
+      "channels": [
+        "call",
+        "email",
+        "facebook",
+        "instagram",
+        "webchat",
+        "whatsapp"
+      ]
+    },
+    {
+      "kpi": "avg_monthly_handled",
+      "window": "all time",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 1,
+      "headline": {
+        "avg_monthly_handled": 205.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "avg_monthly_handled",
+      "window": "last 1 day",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 1 days (UTC calendar: today + previous 0 days)",
+      "row_count": 1,
+      "headline": {
+        "avg_monthly_handled": 23.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "avg_monthly_handled",
+      "window": "last 7 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 7 days (UTC calendar: today + previous 6 days)",
+      "row_count": 1,
+      "headline": {
+        "avg_monthly_handled": 352.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "avg_monthly_handled",
+      "window": "last 30 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 30 days (UTC calendar: today + previous 29 days)",
+      "row_count": 1,
+      "headline": {
+        "avg_monthly_handled": 240.5
+      },
+      "channels": []
+    },
+    {
+      "kpi": "avg_monthly_handled",
+      "window": "this month",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "this month (UTC)",
+      "row_count": 1,
+      "headline": {
+        "avg_monthly_handled": 363.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "avg_monthly_handled",
+      "window": "this quarter",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "Q4 2026 (UTC)",
+      "row_count": 1,
+      "headline": {
+        "avg_monthly_handled": 363.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "avg_monthly_handled",
+      "window": "all time",
+      "dimension": "channel",
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 6,
+      "headline": {
+        "avg_monthly_handled": 193.0
+      },
+      "channels": [
+        "call",
+        "email",
+        "facebook",
+        "instagram",
+        "webchat",
+        "whatsapp"
+      ]
+    },
+    {
+      "kpi": "resolved",
+      "window": "all time",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 1,
+      "headline": {
+        "resolved": 80
+      },
+      "channels": []
+    },
+    {
+      "kpi": "resolved",
+      "window": "last 1 day",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 1 days (UTC calendar: today + previous 0 days)",
+      "row_count": 1,
+      "headline": {
+        "resolved": 2
+      },
+      "channels": []
+    },
+    {
+      "kpi": "resolved",
+      "window": "last 7 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 7 days (UTC calendar: today + previous 6 days)",
+      "row_count": 1,
+      "headline": {
+        "resolved": 36
+      },
+      "channels": []
+    },
+    {
+      "kpi": "resolved",
+      "window": "last 30 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 30 days (UTC calendar: today + previous 29 days)",
+      "row_count": 1,
+      "headline": {
+        "resolved": 64
+      },
+      "channels": []
+    },
+    {
+      "kpi": "resolved",
+      "window": "this month",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "this month (UTC)",
+      "row_count": 1,
+      "headline": {
+        "resolved": 37
+      },
+      "channels": []
+    },
+    {
+      "kpi": "resolved",
+      "window": "this quarter",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "Q4 2026 (UTC)",
+      "row_count": 1,
+      "headline": {
+        "resolved": 37
+      },
+      "channels": []
+    },
+    {
+      "kpi": "resolved",
+      "window": "all time",
+      "dimension": "channel",
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 6,
+      "headline": {
+        "resolved": 6
+      },
+      "channels": [
+        "email",
+        "webchat",
+        "facebook",
+        "whatsapp",
+        "instagram",
+        "call"
+      ]
+    },
+    {
+      "kpi": "resolution_rate",
+      "window": "all time",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 1,
+      "headline": {
+        "resolved_n": 80,
+        "handled_n": 615,
+        "rate_pct": 13.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "resolution_rate",
+      "window": "last 1 day",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 1 days (UTC calendar: today + previous 0 days)",
+      "row_count": 1,
+      "headline": {
+        "resolved_n": 2,
+        "handled_n": 23,
+        "rate_pct": 8.7
+      },
+      "channels": []
+    },
+    {
+      "kpi": "resolution_rate",
+      "window": "last 7 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 7 days (UTC calendar: today + previous 6 days)",
+      "row_count": 1,
+      "headline": {
+        "resolved_n": 36,
+        "handled_n": 352,
+        "rate_pct": 10.2
+      },
+      "channels": []
+    },
+    {
+      "kpi": "resolution_rate",
+      "window": "last 30 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 30 days (UTC calendar: today + previous 29 days)",
+      "row_count": 1,
+      "headline": {
+        "resolved_n": 64,
+        "handled_n": 481,
+        "rate_pct": 13.3
+      },
+      "channels": []
+    },
+    {
+      "kpi": "resolution_rate",
+      "window": "this month",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "this month (UTC)",
+      "row_count": 1,
+      "headline": {
+        "resolved_n": 37,
+        "handled_n": 363,
+        "rate_pct": 10.2
+      },
+      "channels": []
+    },
+    {
+      "kpi": "resolution_rate",
+      "window": "this quarter",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "Q4 2026 (UTC)",
+      "row_count": 1,
+      "headline": {
+        "resolved_n": 37,
+        "handled_n": 363,
+        "rate_pct": 10.2
+      },
+      "channels": []
+    },
+    {
+      "kpi": "resolution_rate",
+      "window": "all time",
+      "dimension": "channel",
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 6,
+      "headline": {
+        "resolved_n": 6,
+        "handled_n": 6,
+        "rate_pct": 100.0
+      },
+      "channels": [
+        "email",
+        "facebook",
+        "instagram",
+        "webchat",
+        "whatsapp",
+        "call"
+      ]
+    },
+    {
+      "kpi": "transferred",
+      "window": "all time",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 1,
+      "headline": {
+        "transferred": 3
+      },
+      "channels": []
+    },
+    {
+      "kpi": "transferred",
+      "window": "last 1 day",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 1 days (UTC calendar: today + previous 0 days)",
+      "row_count": 1,
+      "headline": {
+        "transferred": 0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "transferred",
+      "window": "last 7 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 7 days (UTC calendar: today + previous 6 days)",
+      "row_count": 1,
+      "headline": {
+        "transferred": 0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "transferred",
+      "window": "last 30 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 30 days (UTC calendar: today + previous 29 days)",
+      "row_count": 1,
+      "headline": {
+        "transferred": 3
+      },
+      "channels": []
+    },
+    {
+      "kpi": "transferred",
+      "window": "this month",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "this month (UTC)",
+      "row_count": 1,
+      "headline": {
+        "transferred": 0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "transferred",
+      "window": "this quarter",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "Q4 2026 (UTC)",
+      "row_count": 1,
+      "headline": {
+        "transferred": 0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "transferred",
+      "window": "all time",
+      "dimension": "channel",
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 1,
+      "headline": {
+        "transferred": 3
+      },
+      "channels": [
+        "webchat"
+      ]
+    },
+    {
+      "kpi": "transfer_rate",
+      "window": "all time",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 1,
+      "headline": {
+        "transferred_n": 3,
+        "handled_n": 615,
+        "rate_pct": 0.5
+      },
+      "channels": []
+    },
+    {
+      "kpi": "transfer_rate",
+      "window": "last 1 day",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 1 days (UTC calendar: today + previous 0 days)",
+      "row_count": 1,
+      "headline": {
+        "transferred_n": 0,
+        "handled_n": 23,
+        "rate_pct": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "transfer_rate",
+      "window": "last 7 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 7 days (UTC calendar: today + previous 6 days)",
+      "row_count": 1,
+      "headline": {
+        "transferred_n": 0,
+        "handled_n": 352,
+        "rate_pct": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "transfer_rate",
+      "window": "last 30 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 30 days (UTC calendar: today + previous 29 days)",
+      "row_count": 1,
+      "headline": {
+        "transferred_n": 3,
+        "handled_n": 481,
+        "rate_pct": 0.6
+      },
+      "channels": []
+    },
+    {
+      "kpi": "transfer_rate",
+      "window": "this month",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "this month (UTC)",
+      "row_count": 1,
+      "headline": {
+        "transferred_n": 0,
+        "handled_n": 363,
+        "rate_pct": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "transfer_rate",
+      "window": "this quarter",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "Q4 2026 (UTC)",
+      "row_count": 1,
+      "headline": {
+        "transferred_n": 0,
+        "handled_n": 363,
+        "rate_pct": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "transfer_rate",
+      "window": "all time",
+      "dimension": "channel",
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 6,
+      "headline": {
+        "transferred_n": 0,
+        "handled_n": 6,
+        "rate_pct": 0.0
+      },
+      "channels": [
+        "email",
+        "facebook",
+        "instagram",
+        "webchat",
+        "whatsapp",
+        "call"
+      ]
+    },
+    {
+      "kpi": "fcr",
+      "window": "all time",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 1,
+      "headline": {
+        "fcr_n": 47,
+        "resolved_n": 80,
+        "rate_pct": 58.8
+      },
+      "channels": []
+    },
+    {
+      "kpi": "fcr",
+      "window": "last 1 day",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 1 days (UTC calendar: today + previous 0 days)",
+      "row_count": 1,
+      "headline": {
+        "fcr_n": 2,
+        "resolved_n": 2,
+        "rate_pct": 100.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "fcr",
+      "window": "last 7 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 7 days (UTC calendar: today + previous 6 days)",
+      "row_count": 1,
+      "headline": {
+        "fcr_n": 30,
+        "resolved_n": 36,
+        "rate_pct": 83.3
+      },
+      "channels": []
+    },
+    {
+      "kpi": "fcr",
+      "window": "last 30 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 30 days (UTC calendar: today + previous 29 days)",
+      "row_count": 1,
+      "headline": {
+        "fcr_n": 41,
+        "resolved_n": 64,
+        "rate_pct": 64.1
+      },
+      "channels": []
+    },
+    {
+      "kpi": "fcr",
+      "window": "this month",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "this month (UTC)",
+      "row_count": 1,
+      "headline": {
+        "fcr_n": 30,
+        "resolved_n": 37,
+        "rate_pct": 81.1
+      },
+      "channels": []
+    },
+    {
+      "kpi": "fcr",
+      "window": "this quarter",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "Q4 2026 (UTC)",
+      "row_count": 1,
+      "headline": {
+        "fcr_n": 30,
+        "resolved_n": 37,
+        "rate_pct": 81.1
+      },
+      "channels": []
+    },
+    {
+      "kpi": "fcr",
+      "window": "all time",
+      "dimension": "channel",
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 6,
+      "headline": {
+        "fcr_n": 6,
+        "resolved_n": 6,
+        "rate_pct": 100.0
+      },
+      "channels": [
+        "email",
+        "webchat",
+        "facebook",
+        "whatsapp",
+        "instagram",
+        "call"
+      ]
+    },
+    {
+      "kpi": "reopen_rate",
+      "window": "all time",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 1,
+      "headline": {
+        "reopen_n": 33,
+        "resolved_n": 80,
+        "rate_pct": 41.2
+      },
+      "channels": []
+    },
+    {
+      "kpi": "reopen_rate",
+      "window": "last 1 day",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 1 days (UTC calendar: today + previous 0 days)",
+      "row_count": 1,
+      "headline": {
+        "reopen_n": 0,
+        "resolved_n": 2,
+        "rate_pct": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "reopen_rate",
+      "window": "last 7 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 7 days (UTC calendar: today + previous 6 days)",
+      "row_count": 1,
+      "headline": {
+        "reopen_n": 6,
+        "resolved_n": 36,
+        "rate_pct": 16.7
+      },
+      "channels": []
+    },
+    {
+      "kpi": "reopen_rate",
+      "window": "last 30 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 30 days (UTC calendar: today + previous 29 days)",
+      "row_count": 1,
+      "headline": {
+        "reopen_n": 23,
+        "resolved_n": 64,
+        "rate_pct": 35.9
+      },
+      "channels": []
+    },
+    {
+      "kpi": "reopen_rate",
+      "window": "this month",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "this month (UTC)",
+      "row_count": 1,
+      "headline": {
+        "reopen_n": 7,
+        "resolved_n": 37,
+        "rate_pct": 18.9
+      },
+      "channels": []
+    },
+    {
+      "kpi": "reopen_rate",
+      "window": "this quarter",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "Q4 2026 (UTC)",
+      "row_count": 1,
+      "headline": {
+        "reopen_n": 7,
+        "resolved_n": 37,
+        "rate_pct": 18.9
+      },
+      "channels": []
+    },
+    {
+      "kpi": "reopen_rate",
+      "window": "all time",
+      "dimension": "channel",
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 6,
+      "headline": {
+        "reopen_n": 0,
+        "resolved_n": 6,
+        "rate_pct": 0.0
+      },
+      "channels": [
+        "email",
+        "webchat",
+        "facebook",
+        "whatsapp",
+        "instagram",
+        "call"
+      ]
+    },
+    {
+      "kpi": "bot_containment",
+      "window": "all time",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 1,
+      "headline": {
+        "contained_n": 505,
+        "handled_n": 615,
+        "rate_pct": 82.1
+      },
+      "channels": []
+    },
+    {
+      "kpi": "bot_containment",
+      "window": "last 1 day",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 1 days (UTC calendar: today + previous 0 days)",
+      "row_count": 1,
+      "headline": {
+        "contained_n": 19,
+        "handled_n": 23,
+        "rate_pct": 82.6
+      },
+      "channels": []
+    },
+    {
+      "kpi": "bot_containment",
+      "window": "last 7 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 7 days (UTC calendar: today + previous 6 days)",
+      "row_count": 1,
+      "headline": {
+        "contained_n": 295,
+        "handled_n": 352,
+        "rate_pct": 83.8
+      },
+      "channels": []
+    },
+    {
+      "kpi": "bot_containment",
+      "window": "last 30 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 30 days (UTC calendar: today + previous 29 days)",
+      "row_count": 1,
+      "headline": {
+        "contained_n": 389,
+        "handled_n": 481,
+        "rate_pct": 80.9
+      },
+      "channels": []
+    },
+    {
+      "kpi": "bot_containment",
+      "window": "this month",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "this month (UTC)",
+      "row_count": 1,
+      "headline": {
+        "contained_n": 302,
+        "handled_n": 363,
+        "rate_pct": 83.2
+      },
+      "channels": []
+    },
+    {
+      "kpi": "bot_containment",
+      "window": "this quarter",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "Q4 2026 (UTC)",
+      "row_count": 1,
+      "headline": {
+        "contained_n": 302,
+        "handled_n": 363,
+        "rate_pct": 83.2
+      },
+      "channels": []
+    },
+    {
+      "kpi": "bot_containment",
+      "window": "all time",
+      "dimension": "channel",
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 6,
+      "headline": {
+        "contained_n": 6,
+        "handled_n": 6,
+        "rate_pct": 100.0
+      },
+      "channels": [
+        "email",
+        "facebook",
+        "instagram",
+        "webchat",
+        "whatsapp",
+        "call"
+      ]
+    },
+    {
+      "kpi": "first_replies",
+      "window": "all time",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 1,
+      "headline": {
+        "first_replies": 48
+      },
+      "channels": []
+    },
+    {
+      "kpi": "first_replies",
+      "window": "last 1 day",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 1 days (UTC calendar: today + previous 0 days)",
+      "row_count": 1,
+      "headline": {
+        "first_replies": 0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "first_replies",
+      "window": "last 7 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 7 days (UTC calendar: today + previous 6 days)",
+      "row_count": 1,
+      "headline": {
+        "first_replies": 7
+      },
+      "channels": []
+    },
+    {
+      "kpi": "first_replies",
+      "window": "last 30 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 30 days (UTC calendar: today + previous 29 days)",
+      "row_count": 1,
+      "headline": {
+        "first_replies": 32
+      },
+      "channels": []
+    },
+    {
+      "kpi": "first_replies",
+      "window": "this month",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "this month (UTC)",
+      "row_count": 1,
+      "headline": {
+        "first_replies": 10
+      },
+      "channels": []
+    },
+    {
+      "kpi": "first_replies",
+      "window": "this quarter",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "Q4 2026 (UTC)",
+      "row_count": 1,
+      "headline": {
+        "first_replies": 10
+      },
+      "channels": []
+    },
+    {
+      "kpi": "first_replies",
+      "window": "all time",
+      "dimension": "channel",
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 4,
+      "headline": {
+        "first_replies": 4
+      },
+      "channels": [
+        "facebook",
+        "instagram",
+        "webchat",
+        "whatsapp"
+      ]
+    },
+    {
+      "kpi": "first_reply_sla",
+      "window": "all time",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 1,
+      "headline": {
+        "sla_n": 33,
+        "replies_n": 48,
+        "rate_pct": 68.8
+      },
+      "channels": []
+    },
+    {
+      "kpi": "first_reply_sla",
+      "window": "last 1 day",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 1 days (UTC calendar: today + previous 0 days)",
+      "row_count": 1,
+      "headline": {
+        "sla_n": 0,
+        "replies_n": 0,
+        "rate_pct": null
+      },
+      "channels": []
+    },
+    {
+      "kpi": "first_reply_sla",
+      "window": "last 7 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 7 days (UTC calendar: today + previous 6 days)",
+      "row_count": 1,
+      "headline": {
+        "sla_n": 6,
+        "replies_n": 7,
+        "rate_pct": 85.7
+      },
+      "channels": []
+    },
+    {
+      "kpi": "first_reply_sla",
+      "window": "last 30 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 30 days (UTC calendar: today + previous 29 days)",
+      "row_count": 1,
+      "headline": {
+        "sla_n": 20,
+        "replies_n": 32,
+        "rate_pct": 62.5
+      },
+      "channels": []
+    },
+    {
+      "kpi": "first_reply_sla",
+      "window": "this month",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "this month (UTC)",
+      "row_count": 1,
+      "headline": {
+        "sla_n": 7,
+        "replies_n": 10,
+        "rate_pct": 70.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "first_reply_sla",
+      "window": "this quarter",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "Q4 2026 (UTC)",
+      "row_count": 1,
+      "headline": {
+        "sla_n": 7,
+        "replies_n": 10,
+        "rate_pct": 70.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "first_reply_sla",
+      "window": "all time",
+      "dimension": "channel",
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 4,
+      "headline": {
+        "sla_n": 1,
+        "replies_n": 4,
+        "rate_pct": 25.0
+      },
+      "channels": [
+        "facebook",
+        "instagram",
+        "webchat",
+        "whatsapp"
+      ]
+    },
+    {
+      "kpi": "avg_first_response",
+      "window": "all time",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 1,
+      "headline": {
+        "avg_first_response": 1.01
+      },
+      "channels": []
+    },
+    {
+      "kpi": "avg_first_response",
+      "window": "last 1 day",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 1 days (UTC calendar: today + previous 0 days)",
+      "row_count": 1,
+      "headline": {
+        "avg_first_response": null
+      },
+      "channels": []
+    },
+    {
+      "kpi": "avg_first_response",
+      "window": "last 7 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 7 days (UTC calendar: today + previous 6 days)",
+      "row_count": 1,
+      "headline": {
+        "avg_first_response": 0.5
+      },
+      "channels": []
+    },
+    {
+      "kpi": "avg_first_response",
+      "window": "last 30 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 30 days (UTC calendar: today + previous 29 days)",
+      "row_count": 1,
+      "headline": {
+        "avg_first_response": 1.18
+      },
+      "channels": []
+    },
+    {
+      "kpi": "avg_first_response",
+      "window": "this month",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "this month (UTC)",
+      "row_count": 1,
+      "headline": {
+        "avg_first_response": 0.69
+      },
+      "channels": []
+    },
+    {
+      "kpi": "avg_first_response",
+      "window": "this quarter",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "Q4 2026 (UTC)",
+      "row_count": 1,
+      "headline": {
+        "avg_first_response": 0.69
+      },
+      "channels": []
+    },
+    {
+      "kpi": "avg_first_response",
+      "window": "all time",
+      "dimension": "channel",
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 4,
+      "headline": {
+        "avg_first_response": 2.43
+      },
+      "channels": [
+        "facebook",
+        "instagram",
+        "webchat",
+        "whatsapp"
+      ]
+    },
+    {
+      "kpi": "avg_handle_time",
+      "window": "all time",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 1,
+      "headline": {
+        "avg_handle_time": 61.84
+      },
+      "channels": []
+    },
+    {
+      "kpi": "avg_handle_time",
+      "window": "last 1 day",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 1 days (UTC calendar: today + previous 0 days)",
+      "row_count": 1,
+      "headline": {
+        "avg_handle_time": 0.89
+      },
+      "channels": []
+    },
+    {
+      "kpi": "avg_handle_time",
+      "window": "last 7 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 7 days (UTC calendar: today + previous 6 days)",
+      "row_count": 1,
+      "headline": {
+        "avg_handle_time": 58.42
+      },
+      "channels": []
+    },
+    {
+      "kpi": "avg_handle_time",
+      "window": "last 30 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 30 days (UTC calendar: today + previous 29 days)",
+      "row_count": 1,
+      "headline": {
+        "avg_handle_time": 72.65
+      },
+      "channels": []
+    },
+    {
+      "kpi": "avg_handle_time",
+      "window": "this month",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "this month (UTC)",
+      "row_count": 1,
+      "headline": {
+        "avg_handle_time": 54.81
+      },
+      "channels": []
+    },
+    {
+      "kpi": "avg_handle_time",
+      "window": "this quarter",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "Q4 2026 (UTC)",
+      "row_count": 1,
+      "headline": {
+        "avg_handle_time": 54.81
+      },
+      "channels": []
+    },
+    {
+      "kpi": "avg_handle_time",
+      "window": "all time",
+      "dimension": "channel",
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 5,
+      "headline": {
+        "avg_handle_time": 7.32
+      },
+      "channels": [
+        "facebook",
+        "instagram",
+        "webchat",
+        "whatsapp",
+        "call"
+      ]
+    },
+    {
+      "kpi": "asa",
+      "window": "all time",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 1,
+      "headline": {
+        "asa": 1.1,
+        "asa_n": 54
+      },
+      "channels": []
+    },
+    {
+      "kpi": "asa",
+      "window": "last 1 day",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 1 days (UTC calendar: today + previous 0 days)",
+      "row_count": 1,
+      "headline": {
+        "asa": null,
+        "asa_n": 0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "asa",
+      "window": "last 7 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 7 days (UTC calendar: today + previous 6 days)",
+      "row_count": 1,
+      "headline": {
+        "asa": 0.0,
+        "asa_n": 8
+      },
+      "channels": []
+    },
+    {
+      "kpi": "asa",
+      "window": "last 30 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 30 days (UTC calendar: today + previous 29 days)",
+      "row_count": 1,
+      "headline": {
+        "asa": 1.6,
+        "asa_n": 37
+      },
+      "channels": []
+    },
+    {
+      "kpi": "asa",
+      "window": "this month",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "this month (UTC)",
+      "row_count": 1,
+      "headline": {
+        "asa": 0.0,
+        "asa_n": 11
+      },
+      "channels": []
+    },
+    {
+      "kpi": "asa",
+      "window": "this quarter",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "Q4 2026 (UTC)",
+      "row_count": 1,
+      "headline": {
+        "asa": 0.0,
+        "asa_n": 11
+      },
+      "channels": []
+    },
+    {
+      "kpi": "asa",
+      "window": "all time",
+      "dimension": "channel",
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 6,
+      "headline": {
+        "asa": null,
+        "asa_n": 0
+      },
+      "channels": [
+        "email",
+        "facebook",
+        "instagram",
+        "webchat",
+        "whatsapp",
+        "call"
+      ]
+    },
+    {
+      "kpi": "queue_service_level",
+      "window": "all time",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 1,
+      "headline": {
+        "sl_n": 51,
+        "answered_n": 54,
+        "rate_pct": 94.4
+      },
+      "channels": []
+    },
+    {
+      "kpi": "queue_service_level",
+      "window": "last 1 day",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 1 days (UTC calendar: today + previous 0 days)",
+      "row_count": 1,
+      "headline": {
+        "sl_n": 0,
+        "answered_n": 0,
+        "rate_pct": null
+      },
+      "channels": []
+    },
+    {
+      "kpi": "queue_service_level",
+      "window": "last 7 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 7 days (UTC calendar: today + previous 6 days)",
+      "row_count": 1,
+      "headline": {
+        "sl_n": 8,
+        "answered_n": 8,
+        "rate_pct": 100.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "queue_service_level",
+      "window": "last 30 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 30 days (UTC calendar: today + previous 29 days)",
+      "row_count": 1,
+      "headline": {
+        "sl_n": 34,
+        "answered_n": 37,
+        "rate_pct": 91.9
+      },
+      "channels": []
+    },
+    {
+      "kpi": "queue_service_level",
+      "window": "this month",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "this month (UTC)",
+      "row_count": 1,
+      "headline": {
+        "sl_n": 11,
+        "answered_n": 11,
+        "rate_pct": 100.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "queue_service_level",
+      "window": "this quarter",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "Q4 2026 (UTC)",
+      "row_count": 1,
+      "headline": {
+        "sl_n": 11,
+        "answered_n": 11,
+        "rate_pct": 100.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "queue_service_level",
+      "window": "all time",
+      "dimension": "channel",
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 4,
+      "headline": {
+        "sl_n": 4,
+        "answered_n": 4,
+        "rate_pct": 100.0
+      },
+      "channels": [
+        "facebook",
+        "instagram",
+        "webchat",
+        "whatsapp"
+      ]
+    },
+    {
+      "kpi": "abandoned",
+      "window": "all time",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 1,
+      "headline": {
+        "abandoned": 0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "abandoned",
+      "window": "last 1 day",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 1 days (UTC calendar: today + previous 0 days)",
+      "row_count": 1,
+      "headline": {
+        "abandoned": 0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "abandoned",
+      "window": "last 7 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 7 days (UTC calendar: today + previous 6 days)",
+      "row_count": 1,
+      "headline": {
+        "abandoned": 0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "abandoned",
+      "window": "last 30 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 30 days (UTC calendar: today + previous 29 days)",
+      "row_count": 1,
+      "headline": {
+        "abandoned": 0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "abandoned",
+      "window": "this month",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "this month (UTC)",
+      "row_count": 1,
+      "headline": {
+        "abandoned": 0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "abandoned",
+      "window": "this quarter",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "Q4 2026 (UTC)",
+      "row_count": 1,
+      "headline": {
+        "abandoned": 0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "abandoned",
+      "window": "all time",
+      "dimension": "channel",
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 0,
+      "headline": {},
+      "channels": []
+    },
+    {
+      "kpi": "abandonment_rate",
+      "window": "all time",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 1,
+      "headline": {
+        "abandoned_n": 0,
+        "queued_finished_n": 54,
+        "rate_pct": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "abandonment_rate",
+      "window": "last 1 day",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 1 days (UTC calendar: today + previous 0 days)",
+      "row_count": 1,
+      "headline": {
+        "abandoned_n": 0,
+        "queued_finished_n": 0,
+        "rate_pct": null
+      },
+      "channels": []
+    },
+    {
+      "kpi": "abandonment_rate",
+      "window": "last 7 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 7 days (UTC calendar: today + previous 6 days)",
+      "row_count": 1,
+      "headline": {
+        "abandoned_n": 0,
+        "queued_finished_n": 8,
+        "rate_pct": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "abandonment_rate",
+      "window": "last 30 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 30 days (UTC calendar: today + previous 29 days)",
+      "row_count": 1,
+      "headline": {
+        "abandoned_n": 0,
+        "queued_finished_n": 37,
+        "rate_pct": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "abandonment_rate",
+      "window": "this month",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "this month (UTC)",
+      "row_count": 1,
+      "headline": {
+        "abandoned_n": 0,
+        "queued_finished_n": 11,
+        "rate_pct": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "abandonment_rate",
+      "window": "this quarter",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "Q4 2026 (UTC)",
+      "row_count": 1,
+      "headline": {
+        "abandoned_n": 0,
+        "queued_finished_n": 11,
+        "rate_pct": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "abandonment_rate",
+      "window": "all time",
+      "dimension": "channel",
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 6,
+      "headline": {
+        "abandoned_n": 0,
+        "queued_finished_n": 0,
+        "rate_pct": null
+      },
+      "channels": [
+        "email",
+        "facebook",
+        "instagram",
+        "webchat",
+        "whatsapp",
+        "call"
+      ]
+    },
+    {
+      "kpi": "waiting",
+      "window": "now",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "live (no date window)",
+      "row_count": 1,
+      "headline": {
+        "waiting": 0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "waiting",
+      "window": "now",
+      "dimension": "channel",
+      "status": "ok",
+      "error": null,
+      "time_echo": "live (no date window)",
+      "row_count": 0,
+      "headline": {},
+      "channels": []
+    },
+    {
+      "kpi": "active",
+      "window": "now",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "live (no date window)",
+      "row_count": 1,
+      "headline": {
+        "active": 0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "active",
+      "window": "now",
+      "dimension": "channel",
+      "status": "ok",
+      "error": null,
+      "time_echo": "live (no date window)",
+      "row_count": 0,
+      "headline": {},
+      "channels": []
+    },
+    {
+      "kpi": "bot_active",
+      "window": "now",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "live (no date window)",
+      "row_count": 1,
+      "headline": {
+        "bot_active": 25
+      },
+      "channels": []
+    },
+    {
+      "kpi": "bot_active",
+      "window": "now",
+      "dimension": "channel",
+      "status": "ok",
+      "error": null,
+      "time_echo": "live (no date window)",
+      "row_count": 2,
+      "headline": {
+        "bot_active": 22
+      },
+      "channels": [
+        "call",
+        "whatsapp"
+      ]
+    },
+    {
+      "kpi": "sla_at_risk",
+      "window": "now",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "live (no date window)",
+      "row_count": 1,
+      "headline": {
+        "sla_at_risk": 0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "sla_at_risk",
+      "window": "now",
+      "dimension": "channel",
+      "status": "ok",
+      "error": null,
+      "time_echo": "live (no date window)",
+      "row_count": 0,
+      "headline": {},
+      "channels": []
+    },
+    {
+      "kpi": "sla_breached_live",
+      "window": "now",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "live (no date window)",
+      "row_count": 1,
+      "headline": {
+        "sla_breached_live": 0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "sla_breached_live",
+      "window": "now",
+      "dimension": "channel",
+      "status": "ok",
+      "error": null,
+      "time_echo": "live (no date window)",
+      "row_count": 0,
+      "headline": {},
+      "channels": []
+    },
+    {
+      "kpi": "avg_hold_time",
+      "window": "all time",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 1,
+      "headline": {
+        "avg_hold_time": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "avg_hold_time",
+      "window": "last 1 day",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 1 days (UTC calendar: today + previous 0 days)",
+      "row_count": 1,
+      "headline": {
+        "avg_hold_time": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "avg_hold_time",
+      "window": "last 7 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 7 days (UTC calendar: today + previous 6 days)",
+      "row_count": 1,
+      "headline": {
+        "avg_hold_time": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "avg_hold_time",
+      "window": "last 30 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 30 days (UTC calendar: today + previous 29 days)",
+      "row_count": 1,
+      "headline": {
+        "avg_hold_time": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "avg_hold_time",
+      "window": "this month",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "this month (UTC)",
+      "row_count": 1,
+      "headline": {
+        "avg_hold_time": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "avg_hold_time",
+      "window": "this quarter",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "Q4 2026 (UTC)",
+      "row_count": 1,
+      "headline": {
+        "avg_hold_time": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "avg_hold_time",
+      "window": "all time",
+      "dimension": "channel",
+      "status": "error",
+      "error": "unknown dimension: 'channel' (resolved 'channel') has no SQL expression for object 'call_cdr'.",
+      "time_echo": null,
+      "row_count": 0,
+      "headline": {},
+      "channels": []
+    },
+    {
+      "kpi": "missed_contacts",
+      "window": "all time",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 1,
+      "headline": {
+        "missed_contacts": 117
+      },
+      "channels": []
+    },
+    {
+      "kpi": "missed_contacts",
+      "window": "last 1 day",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 1 days (UTC calendar: today + previous 0 days)",
+      "row_count": 1,
+      "headline": {
+        "missed_contacts": 0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "missed_contacts",
+      "window": "last 7 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 7 days (UTC calendar: today + previous 6 days)",
+      "row_count": 1,
+      "headline": {
+        "missed_contacts": 12
+      },
+      "channels": []
+    },
+    {
+      "kpi": "missed_contacts",
+      "window": "last 30 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 30 days (UTC calendar: today + previous 29 days)",
+      "row_count": 1,
+      "headline": {
+        "missed_contacts": 98
+      },
+      "channels": []
+    },
+    {
+      "kpi": "missed_contacts",
+      "window": "this month",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "this month (UTC)",
+      "row_count": 1,
+      "headline": {
+        "missed_contacts": 20
+      },
+      "channels": []
+    },
+    {
+      "kpi": "missed_contacts",
+      "window": "this quarter",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "Q4 2026 (UTC)",
+      "row_count": 1,
+      "headline": {
+        "missed_contacts": 20
+      },
+      "channels": []
+    },
+    {
+      "kpi": "missed_contacts",
+      "window": "all time",
+      "dimension": "channel",
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 3,
+      "headline": {
+        "missed_contacts": 12
+      },
+      "channels": [
+        "facebook",
+        "whatsapp",
+        "webchat"
+      ]
+    },
+    {
+      "kpi": "missed_rate",
+      "window": "all time",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 1,
+      "headline": {
+        "missed_n": 117,
+        "total_n": 640,
+        "rate_pct": 18.3
+      },
+      "channels": []
+    },
+    {
+      "kpi": "missed_rate",
+      "window": "last 1 day",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 1 days (UTC calendar: today + previous 0 days)",
+      "row_count": 1,
+      "headline": {
+        "missed_n": 0,
+        "total_n": 24,
+        "rate_pct": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "missed_rate",
+      "window": "last 7 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 7 days (UTC calendar: today + previous 6 days)",
+      "row_count": 1,
+      "headline": {
+        "missed_n": 12,
+        "total_n": 377,
+        "rate_pct": 3.2
+      },
+      "channels": []
+    },
+    {
+      "kpi": "missed_rate",
+      "window": "last 30 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 30 days (UTC calendar: today + previous 29 days)",
+      "row_count": 1,
+      "headline": {
+        "missed_n": 98,
+        "total_n": 505,
+        "rate_pct": 19.4
+      },
+      "channels": []
+    },
+    {
+      "kpi": "missed_rate",
+      "window": "this month",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "this month (UTC)",
+      "row_count": 1,
+      "headline": {
+        "missed_n": 20,
+        "total_n": 388,
+        "rate_pct": 5.2
+      },
+      "channels": []
+    },
+    {
+      "kpi": "missed_rate",
+      "window": "this quarter",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "Q4 2026 (UTC)",
+      "row_count": 1,
+      "headline": {
+        "missed_n": 20,
+        "total_n": 388,
+        "rate_pct": 5.2
+      },
+      "channels": []
+    },
+    {
+      "kpi": "missed_rate",
+      "window": "all time",
+      "dimension": "channel",
+      "status": "error",
+      "error": "missing FROM-clause entry for table \"missed_contacts\"\nLINE 91: SELECT missed_contacts.channel AS channel, COUNT(*) FILTER(W...\n                ^\n",
+      "time_echo": "all time",
+      "row_count": 0,
+      "headline": {},
+      "channels": []
+    },
+    {
+      "kpi": "avg_messages_per_conversation",
+      "window": "all time",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 1,
+      "headline": {
+        "avg_messages_per_conversation": 11.456869009584665
+      },
+      "channels": []
+    },
+    {
+      "kpi": "avg_messages_per_conversation",
+      "window": "last 1 day",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 1 days (UTC calendar: today + previous 0 days)",
+      "row_count": 1,
+      "headline": {
+        "avg_messages_per_conversation": 20.347826086956523
+      },
+      "channels": []
+    },
+    {
+      "kpi": "avg_messages_per_conversation",
+      "window": "last 7 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 7 days (UTC calendar: today + previous 6 days)",
+      "row_count": 1,
+      "headline": {
+        "avg_messages_per_conversation": 11.479338842975206
+      },
+      "channels": []
+    },
+    {
+      "kpi": "avg_messages_per_conversation",
+      "window": "last 30 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 30 days (UTC calendar: today + previous 29 days)",
+      "row_count": 1,
+      "headline": {
+        "avg_messages_per_conversation": 12.036659877800407
+      },
+      "channels": []
+    },
+    {
+      "kpi": "avg_messages_per_conversation",
+      "window": "this month",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "this month (UTC)",
+      "row_count": 1,
+      "headline": {
+        "avg_messages_per_conversation": 11.31283422459893
+      },
+      "channels": []
+    },
+    {
+      "kpi": "avg_messages_per_conversation",
+      "window": "this quarter",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "Q4 2026 (UTC)",
+      "row_count": 1,
+      "headline": {
+        "avg_messages_per_conversation": 11.31283422459893
+      },
+      "channels": []
+    },
+    {
+      "kpi": "avg_messages_per_conversation",
+      "window": "all time",
+      "dimension": "channel",
+      "status": "error",
+      "error": "unknown dimension: 'channel' (resolved 'channel') has no SQL expression for object 'message'.",
+      "time_echo": null,
+      "row_count": 0,
+      "headline": {},
+      "channels": []
+    },
+    {
+      "kpi": "negative_sentiment_rate",
+      "window": "all time",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 1,
+      "headline": {
+        "negative_n": 0,
+        "with_sentiment_n": 0,
+        "rate_pct": null
+      },
+      "channels": []
+    },
+    {
+      "kpi": "negative_sentiment_rate",
+      "window": "last 1 day",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 1 days (UTC calendar: today + previous 0 days)",
+      "row_count": 1,
+      "headline": {
+        "negative_n": 1,
+        "with_sentiment_n": 3,
+        "rate_pct": 33.3
+      },
+      "channels": []
+    },
+    {
+      "kpi": "negative_sentiment_rate",
+      "window": "last 7 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 7 days (UTC calendar: today + previous 6 days)",
+      "row_count": 1,
+      "headline": {
+        "negative_n": 15,
+        "with_sentiment_n": 39,
+        "rate_pct": 38.5
+      },
+      "channels": []
+    },
+    {
+      "kpi": "negative_sentiment_rate",
+      "window": "last 30 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 30 days (UTC calendar: today + previous 29 days)",
+      "row_count": 1,
+      "headline": {
+        "negative_n": 27,
+        "with_sentiment_n": 67,
+        "rate_pct": 40.3
+      },
+      "channels": []
+    },
+    {
+      "kpi": "negative_sentiment_rate",
+      "window": "this month",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "this month (UTC)",
+      "row_count": 1,
+      "headline": {
+        "negative_n": 16,
+        "with_sentiment_n": 42,
+        "rate_pct": 38.1
+      },
+      "channels": []
+    },
+    {
+      "kpi": "negative_sentiment_rate",
+      "window": "this quarter",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "Q4 2026 (UTC)",
+      "row_count": 1,
+      "headline": {
+        "negative_n": 16,
+        "with_sentiment_n": 42,
+        "rate_pct": 38.1
+      },
+      "channels": []
+    },
+    {
+      "kpi": "negative_sentiment_rate",
+      "window": "all time",
+      "dimension": "channel",
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 6,
+      "headline": {
+        "negative_n": 0,
+        "with_sentiment_n": 0,
+        "rate_pct": null
+      },
+      "channels": [
+        "call",
+        "email",
+        "facebook",
+        "instagram",
+        "webchat",
+        "whatsapp"
+      ]
+    },
+    {
+      "kpi": "offer_accept_rate",
+      "window": "all time",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 1,
+      "headline": {
+        "accepted_n": 0,
+        "offered_n": 26,
+        "rate_pct": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "offer_accept_rate",
+      "window": "last 1 day",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 1 days (UTC calendar: today + previous 0 days)",
+      "row_count": 1,
+      "headline": {
+        "accepted_n": 0,
+        "offered_n": 0,
+        "rate_pct": null
+      },
+      "channels": []
+    },
+    {
+      "kpi": "offer_accept_rate",
+      "window": "last 7 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 7 days (UTC calendar: today + previous 6 days)",
+      "row_count": 1,
+      "headline": {
+        "accepted_n": 0,
+        "offered_n": 4,
+        "rate_pct": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "offer_accept_rate",
+      "window": "last 30 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 30 days (UTC calendar: today + previous 29 days)",
+      "row_count": 1,
+      "headline": {
+        "accepted_n": 0,
+        "offered_n": 20,
+        "rate_pct": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "offer_accept_rate",
+      "window": "this month",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "this month (UTC)",
+      "row_count": 1,
+      "headline": {
+        "accepted_n": 0,
+        "offered_n": 8,
+        "rate_pct": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "offer_accept_rate",
+      "window": "this quarter",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "Q4 2026 (UTC)",
+      "row_count": 1,
+      "headline": {
+        "accepted_n": 0,
+        "offered_n": 8,
+        "rate_pct": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "offer_accept_rate",
+      "window": "all time",
+      "dimension": "channel",
+      "status": "error",
+      "error": "unknown dimension: 'channel' (resolved 'channel') has no SQL expression for object 'assignment'.",
+      "time_echo": null,
+      "row_count": 0,
+      "headline": {},
+      "channels": []
+    },
+    {
+      "kpi": "failed_send_rate",
+      "window": "all time",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 1,
+      "headline": {
+        "failed_n": 25,
+        "outbound_visible_n": 3838,
+        "rate_pct": 0.7
+      },
+      "channels": []
+    },
+    {
+      "kpi": "failed_send_rate",
+      "window": "last 1 day",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 1 days (UTC calendar: today + previous 0 days)",
+      "row_count": 1,
+      "headline": {
+        "failed_n": 0,
+        "outbound_visible_n": 244,
+        "rate_pct": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "failed_send_rate",
+      "window": "last 7 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 7 days (UTC calendar: today + previous 6 days)",
+      "row_count": 1,
+      "headline": {
+        "failed_n": 3,
+        "outbound_visible_n": 2171,
+        "rate_pct": 0.1
+      },
+      "channels": []
+    },
+    {
+      "kpi": "failed_send_rate",
+      "window": "last 30 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 30 days (UTC calendar: today + previous 29 days)",
+      "row_count": 1,
+      "headline": {
+        "failed_n": 25,
+        "outbound_visible_n": 3123,
+        "rate_pct": 0.8
+      },
+      "channels": []
+    },
+    {
+      "kpi": "failed_send_rate",
+      "window": "this month",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "this month (UTC)",
+      "row_count": 1,
+      "headline": {
+        "failed_n": 3,
+        "outbound_visible_n": 2212,
+        "rate_pct": 0.1
+      },
+      "channels": []
+    },
+    {
+      "kpi": "failed_send_rate",
+      "window": "this quarter",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "Q4 2026 (UTC)",
+      "row_count": 1,
+      "headline": {
+        "failed_n": 3,
+        "outbound_visible_n": 2212,
+        "rate_pct": 0.1
+      },
+      "channels": []
+    },
+    {
+      "kpi": "failed_send_rate",
+      "window": "all time",
+      "dimension": "channel",
+      "status": "error",
+      "error": "unknown dimension: 'channel' (resolved 'channel') has no SQL expression for object 'message'.",
+      "time_echo": null,
+      "row_count": 0,
+      "headline": {},
+      "channels": []
+    },
+    {
+      "kpi": "bot_grounded_rate",
+      "window": "all time",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 1,
+      "headline": {
+        "grounded_n": 7,
+        "turns_n": 1448,
+        "rate_pct": 0.5
+      },
+      "channels": []
+    },
+    {
+      "kpi": "bot_grounded_rate",
+      "window": "last 1 day",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 1 days (UTC calendar: today + previous 0 days)",
+      "row_count": 1,
+      "headline": {
+        "grounded_n": 0,
+        "turns_n": 35,
+        "rate_pct": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "bot_grounded_rate",
+      "window": "last 7 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 7 days (UTC calendar: today + previous 6 days)",
+      "row_count": 1,
+      "headline": {
+        "grounded_n": 7,
+        "turns_n": 474,
+        "rate_pct": 1.5
+      },
+      "channels": []
+    },
+    {
+      "kpi": "bot_grounded_rate",
+      "window": "last 30 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 30 days (UTC calendar: today + previous 29 days)",
+      "row_count": 1,
+      "headline": {
+        "grounded_n": 7,
+        "turns_n": 978,
+        "rate_pct": 0.7
+      },
+      "channels": []
+    },
+    {
+      "kpi": "bot_grounded_rate",
+      "window": "this month",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "this month (UTC)",
+      "row_count": 1,
+      "headline": {
+        "grounded_n": 7,
+        "turns_n": 496,
+        "rate_pct": 1.4
+      },
+      "channels": []
+    },
+    {
+      "kpi": "bot_grounded_rate",
+      "window": "this quarter",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "Q4 2026 (UTC)",
+      "row_count": 1,
+      "headline": {
+        "grounded_n": 7,
+        "turns_n": 496,
+        "rate_pct": 1.4
+      },
+      "channels": []
+    },
+    {
+      "kpi": "bot_grounded_rate",
+      "window": "all time",
+      "dimension": "channel",
+      "status": "error",
+      "error": "unknown dimension: 'channel' (resolved 'channel') has no SQL expression for object 'nlp_turn'.",
+      "time_echo": null,
+      "row_count": 0,
+      "headline": {},
+      "channels": []
+    },
+    {
+      "kpi": "copilot_acceptance_rate",
+      "window": "all time",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 1,
+      "headline": {
+        "accepted_n": 138,
+        "suggested_n": 138,
+        "rate_pct": 100.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "copilot_acceptance_rate",
+      "window": "last 1 day",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 1 days (UTC calendar: today + previous 0 days)",
+      "row_count": 1,
+      "headline": {
+        "accepted_n": 0,
+        "suggested_n": 0,
+        "rate_pct": null
+      },
+      "channels": []
+    },
+    {
+      "kpi": "copilot_acceptance_rate",
+      "window": "last 7 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 7 days (UTC calendar: today + previous 6 days)",
+      "row_count": 1,
+      "headline": {
+        "accepted_n": 9,
+        "suggested_n": 9,
+        "rate_pct": 100.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "copilot_acceptance_rate",
+      "window": "last 30 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 30 days (UTC calendar: today + previous 29 days)",
+      "row_count": 1,
+      "headline": {
+        "accepted_n": 110,
+        "suggested_n": 110,
+        "rate_pct": 100.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "copilot_acceptance_rate",
+      "window": "this month",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "this month (UTC)",
+      "row_count": 1,
+      "headline": {
+        "accepted_n": 12,
+        "suggested_n": 12,
+        "rate_pct": 100.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "copilot_acceptance_rate",
+      "window": "this quarter",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "Q4 2026 (UTC)",
+      "row_count": 1,
+      "headline": {
+        "accepted_n": 12,
+        "suggested_n": 12,
+        "rate_pct": 100.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "copilot_acceptance_rate",
+      "window": "all time",
+      "dimension": "channel",
+      "status": "error",
+      "error": "unknown dimension: 'channel' (resolved 'channel') has no SQL expression for object 'copilot_turn'.",
+      "time_echo": null,
+      "row_count": 0,
+      "headline": {},
+      "channels": []
+    },
+    {
+      "kpi": "callback_count",
+      "window": "all time",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 1,
+      "headline": {
+        "callback_count": 7
+      },
+      "channels": []
+    },
+    {
+      "kpi": "callback_count",
+      "window": "last 1 day",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 1 days (UTC calendar: today + previous 0 days)",
+      "row_count": 1,
+      "headline": {
+        "callback_count": 0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "callback_count",
+      "window": "last 7 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 7 days (UTC calendar: today + previous 6 days)",
+      "row_count": 1,
+      "headline": {
+        "callback_count": 0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "callback_count",
+      "window": "last 30 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 30 days (UTC calendar: today + previous 29 days)",
+      "row_count": 1,
+      "headline": {
+        "callback_count": 7
+      },
+      "channels": []
+    },
+    {
+      "kpi": "callback_count",
+      "window": "this month",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "this month (UTC)",
+      "row_count": 1,
+      "headline": {
+        "callback_count": 0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "callback_count",
+      "window": "this quarter",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "Q4 2026 (UTC)",
+      "row_count": 1,
+      "headline": {
+        "callback_count": 0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "callback_count",
+      "window": "all time",
+      "dimension": "channel",
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 2,
+      "headline": {
+        "callback_count": 2
+      },
+      "channels": [
+        "facebook",
+        "whatsapp"
+      ]
+    },
+    {
+      "kpi": "present_days",
+      "window": "all time",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 1,
+      "headline": {
+        "present_days": 38
+      },
+      "channels": []
+    },
+    {
+      "kpi": "present_days",
+      "window": "last 1 day",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 1 days (UTC calendar: today + previous 0 days)",
+      "row_count": 1,
+      "headline": {
+        "present_days": 1
+      },
+      "channels": []
+    },
+    {
+      "kpi": "present_days",
+      "window": "last 7 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 7 days (UTC calendar: today + previous 6 days)",
+      "row_count": 1,
+      "headline": {
+        "present_days": 7
+      },
+      "channels": []
+    },
+    {
+      "kpi": "present_days",
+      "window": "last 30 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 30 days (UTC calendar: today + previous 29 days)",
+      "row_count": 1,
+      "headline": {
+        "present_days": 26
+      },
+      "channels": []
+    },
+    {
+      "kpi": "present_days",
+      "window": "this month",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "this month (UTC)",
+      "row_count": 1,
+      "headline": {
+        "present_days": 9
+      },
+      "channels": []
+    },
+    {
+      "kpi": "present_days",
+      "window": "this quarter",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "Q4 2026 (UTC)",
+      "row_count": 1,
+      "headline": {
+        "present_days": 9
+      },
+      "channels": []
+    },
+    {
+      "kpi": "present_days",
+      "window": "all time",
+      "dimension": "presence_state",
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 5,
+      "headline": {
+        "present_days": 21
+      },
+      "channels": []
+    },
+    {
+      "kpi": "occupancy",
+      "window": "all time",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 1,
+      "headline": {
+        "busy_acw_seconds": 0.0,
+        "logged_in_seconds": 0.0,
+        "rate_pct": null
+      },
+      "channels": []
+    },
+    {
+      "kpi": "occupancy",
+      "window": "last 1 day",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 1 days (UTC calendar: today + previous 0 days)",
+      "row_count": 1,
+      "headline": {
+        "busy_acw_seconds": 0.0,
+        "logged_in_seconds": 0.0,
+        "rate_pct": null
+      },
+      "channels": []
+    },
+    {
+      "kpi": "occupancy",
+      "window": "last 7 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 7 days (UTC calendar: today + previous 6 days)",
+      "row_count": 1,
+      "headline": {
+        "busy_acw_seconds": 0.0,
+        "logged_in_seconds": 0.0,
+        "rate_pct": null
+      },
+      "channels": []
+    },
+    {
+      "kpi": "occupancy",
+      "window": "last 30 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 30 days (UTC calendar: today + previous 29 days)",
+      "row_count": 1,
+      "headline": {
+        "busy_acw_seconds": 0.0,
+        "logged_in_seconds": 0.0,
+        "rate_pct": null
+      },
+      "channels": []
+    },
+    {
+      "kpi": "occupancy",
+      "window": "this month",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "this month (UTC)",
+      "row_count": 1,
+      "headline": {
+        "busy_acw_seconds": 0.0,
+        "logged_in_seconds": 0.0,
+        "rate_pct": null
+      },
+      "channels": []
+    },
+    {
+      "kpi": "occupancy",
+      "window": "this quarter",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "Q4 2026 (UTC)",
+      "row_count": 1,
+      "headline": {
+        "busy_acw_seconds": 0.0,
+        "logged_in_seconds": 0.0,
+        "rate_pct": null
+      },
+      "channels": []
+    },
+    {
+      "kpi": "occupancy",
+      "window": "all time",
+      "dimension": "presence_state",
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 6,
+      "headline": {
+        "busy_acw_seconds": null,
+        "logged_in_seconds": 0.0,
+        "rate_pct": null
+      },
+      "channels": []
+    },
+    {
+      "kpi": "ready_hours",
+      "window": "all time",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 1,
+      "headline": {
+        "ready_hours": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "ready_hours",
+      "window": "last 1 day",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 1 days (UTC calendar: today + previous 0 days)",
+      "row_count": 1,
+      "headline": {
+        "ready_hours": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "ready_hours",
+      "window": "last 7 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 7 days (UTC calendar: today + previous 6 days)",
+      "row_count": 1,
+      "headline": {
+        "ready_hours": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "ready_hours",
+      "window": "last 30 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 30 days (UTC calendar: today + previous 29 days)",
+      "row_count": 1,
+      "headline": {
+        "ready_hours": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "ready_hours",
+      "window": "this month",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "this month (UTC)",
+      "row_count": 1,
+      "headline": {
+        "ready_hours": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "ready_hours",
+      "window": "this quarter",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "Q4 2026 (UTC)",
+      "row_count": 1,
+      "headline": {
+        "ready_hours": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "ready_hours",
+      "window": "all time",
+      "dimension": "presence_state",
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 6,
+      "headline": {
+        "ready_hours": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "busy_hours",
+      "window": "all time",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 1,
+      "headline": {
+        "busy_hours": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "busy_hours",
+      "window": "last 1 day",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 1 days (UTC calendar: today + previous 0 days)",
+      "row_count": 1,
+      "headline": {
+        "busy_hours": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "busy_hours",
+      "window": "last 7 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 7 days (UTC calendar: today + previous 6 days)",
+      "row_count": 1,
+      "headline": {
+        "busy_hours": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "busy_hours",
+      "window": "last 30 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 30 days (UTC calendar: today + previous 29 days)",
+      "row_count": 1,
+      "headline": {
+        "busy_hours": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "busy_hours",
+      "window": "this month",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "this month (UTC)",
+      "row_count": 1,
+      "headline": {
+        "busy_hours": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "busy_hours",
+      "window": "this quarter",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "Q4 2026 (UTC)",
+      "row_count": 1,
+      "headline": {
+        "busy_hours": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "busy_hours",
+      "window": "all time",
+      "dimension": "presence_state",
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 6,
+      "headline": {
+        "busy_hours": null
+      },
+      "channels": []
+    },
+    {
+      "kpi": "not_ready_hours",
+      "window": "all time",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 1,
+      "headline": {
+        "not_ready_hours": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "not_ready_hours",
+      "window": "last 1 day",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 1 days (UTC calendar: today + previous 0 days)",
+      "row_count": 1,
+      "headline": {
+        "not_ready_hours": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "not_ready_hours",
+      "window": "last 7 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 7 days (UTC calendar: today + previous 6 days)",
+      "row_count": 1,
+      "headline": {
+        "not_ready_hours": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "not_ready_hours",
+      "window": "last 30 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 30 days (UTC calendar: today + previous 29 days)",
+      "row_count": 1,
+      "headline": {
+        "not_ready_hours": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "not_ready_hours",
+      "window": "this month",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "this month (UTC)",
+      "row_count": 1,
+      "headline": {
+        "not_ready_hours": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "not_ready_hours",
+      "window": "this quarter",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "Q4 2026 (UTC)",
+      "row_count": 1,
+      "headline": {
+        "not_ready_hours": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "not_ready_hours",
+      "window": "all time",
+      "dimension": "presence_state",
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 6,
+      "headline": {
+        "not_ready_hours": null
+      },
+      "channels": []
+    },
+    {
+      "kpi": "break_hours",
+      "window": "all time",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 1,
+      "headline": {
+        "break_hours": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "break_hours",
+      "window": "last 1 day",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 1 days (UTC calendar: today + previous 0 days)",
+      "row_count": 1,
+      "headline": {
+        "break_hours": null
+      },
+      "channels": []
+    },
+    {
+      "kpi": "break_hours",
+      "window": "last 7 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 7 days (UTC calendar: today + previous 6 days)",
+      "row_count": 1,
+      "headline": {
+        "break_hours": null
+      },
+      "channels": []
+    },
+    {
+      "kpi": "break_hours",
+      "window": "last 30 days",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "past 30 days (UTC calendar: today + previous 29 days)",
+      "row_count": 1,
+      "headline": {
+        "break_hours": 0.0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "break_hours",
+      "window": "this month",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "this month (UTC)",
+      "row_count": 1,
+      "headline": {
+        "break_hours": null
+      },
+      "channels": []
+    },
+    {
+      "kpi": "break_hours",
+      "window": "this quarter",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "Q4 2026 (UTC)",
+      "row_count": 1,
+      "headline": {
+        "break_hours": null
+      },
+      "channels": []
+    },
+    {
+      "kpi": "break_hours",
+      "window": "all time",
+      "dimension": "presence_state",
+      "status": "ok",
+      "error": null,
+      "time_echo": "all time",
+      "row_count": 6,
+      "headline": {
+        "break_hours": null
+      },
+      "channels": []
+    },
+    {
+      "kpi": "ready_agents",
+      "window": "now",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "live (no date window)",
+      "row_count": 1,
+      "headline": {
+        "ready_agents": 0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "ready_agents",
+      "window": "now",
+      "dimension": "presence_state",
+      "status": "error",
+      "error": "unknown dimension: 'presence_state' (resolved 'presence_state') has no SQL expression for object 'agent'.",
+      "time_echo": null,
+      "row_count": 0,
+      "headline": {},
+      "channels": []
+    },
+    {
+      "kpi": "logged_in_agents",
+      "window": "now",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "live (no date window)",
+      "row_count": 1,
+      "headline": {
+        "logged_in_agents": 2
+      },
+      "channels": []
+    },
+    {
+      "kpi": "logged_in_agents",
+      "window": "now",
+      "dimension": "presence_state",
+      "status": "error",
+      "error": "unknown dimension: 'presence_state' (resolved 'presence_state') has no SQL expression for object 'agent'.",
+      "time_echo": null,
+      "row_count": 0,
+      "headline": {},
+      "channels": []
+    },
+    {
+      "kpi": "offers_ringing",
+      "window": "now",
+      "dimension": null,
+      "status": "ok",
+      "error": null,
+      "time_echo": "live (no date window)",
+      "row_count": 1,
+      "headline": {
+        "offers_ringing": 0
+      },
+      "channels": []
+    },
+    {
+      "kpi": "offers_ringing",
+      "window": "now",
+      "dimension": "channel",
+      "status": "error",
+      "error": "unknown dimension: 'channel' (resolved 'channel') has no SQL expression for object 'assignment'.",
+      "time_echo": null,
+      "row_count": 0,
+      "headline": {},
+      "channels": []
+    }
+  ]
+}

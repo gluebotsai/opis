@@ -1,0 +1,227 @@
+version: 1
+# Runtime enforces this file. Identity comes only from trusted session context.
+
+roles:
+  admin:
+    can_view_all: true
+    default_scope: org
+  sales_manager:
+    can_view_all: true
+    default_scope: org
+  sales_rep:
+    can_view_all: false
+    default_scope: own
+  presales:
+    can_view_all: false
+    default_scope: own
+  marketing:
+    can_view_all: false
+    default_scope: own
+  finance:
+    can_view_all: true
+    default_scope: org
+  viewer:
+    can_view_all: false
+    default_scope: own
+
+scope_levels:
+  - org
+  - own
+  - channel
+  - team
+
+matrix:
+  org:
+    admin: all
+    sales_manager: all
+    finance: all
+    sales_rep: deny
+    presales: deny
+    marketing: deny
+    viewer: deny
+  own:
+    admin: all
+    sales_manager: all
+    finance: all
+    sales_rep: all
+    presales: all
+    marketing: all
+    viewer: all
+  channel:
+    admin: all
+    sales_manager: all
+    finance: all
+    sales_rep: all
+    presales: all
+    marketing: deny
+    viewer: deny
+  team:
+    admin: all
+    sales_manager: all
+    finance: all
+    sales_rep: deny
+    presales: deny
+    marketing: deny
+    viewer: deny
+
+channel_membership:
+  hub_roles:
+    - franchise
+    - owned_store
+    - brand_hq
+
+# ---------------------------------------------------------------------------
+# Virtual views for LLM-written SQL (sql_guard). One entry per role.
+# A view with scope: "1=0" or not accessible returns 0 rows / access denied.
+#
+# Macros filled by Python with bound parameters:
+#   {org_id} {user_id} {user_channel_companies}
+# ---------------------------------------------------------------------------
+views:
+
+  admin:
+    deals:             { scope: "TRUE" }
+    deal_facts:        { scope: "TRUE" }
+    companies:         { scope: "TRUE" }
+    company_locations: { scope: "TRUE" }
+    contacts:          { scope: "TRUE" }
+    proposals:         { scope: "TRUE" }
+    quotes:            { scope: "TRUE" }
+    quote_lines:       { scope: "TRUE" }
+    orders:            { scope: "TRUE" }
+    order_lines:       { scope: "TRUE" }
+    invoices:          { scope: "TRUE" }
+    invoice_lines:     { scope: "TRUE" }
+    contracts:         { scope: "TRUE" }
+    billing_schedule:  { scope: "TRUE" }
+    activities:        { scope: "TRUE" }
+    appointments:      { scope: "TRUE" }
+    products:          { scope: "TRUE" }
+    users:             { scope: "TRUE" }
+    agent_jobs:        { scope: "TRUE" }
+
+  sales_manager:
+    deals:             { scope: "TRUE" }
+    deal_facts:        { scope: "TRUE" }
+    companies:         { scope: "TRUE" }
+    company_locations: { scope: "TRUE" }
+    contacts:          { scope: "TRUE" }
+    proposals:         { scope: "TRUE" }
+    quotes:            { scope: "TRUE" }
+    quote_lines:       { scope: "TRUE" }
+    orders:            { scope: "TRUE" }
+    order_lines:       { scope: "TRUE" }
+    invoices:          { scope: "TRUE" }
+    invoice_lines:     { scope: "TRUE" }
+    contracts:         { scope: "TRUE" }
+    billing_schedule:  { scope: "TRUE" }
+    activities:        { scope: "TRUE" }
+    appointments:      { scope: "TRUE" }
+    products:          { scope: "TRUE" }
+    users:             { scope: "TRUE" }
+    agent_jobs:        { scope: "TRUE" }
+
+  sales_rep:
+    deals:             { scope: "src.owner_user_id = {user_id} OR src.company_id IN ({user_channel_companies})" }
+    deal_facts:        { scope: "src.owner_user_id = {user_id} OR src.company_id IN ({user_channel_companies})" }
+    companies:         { scope: "src.owner_user_id = {user_id} OR src.id IN ({user_channel_companies})" }
+    company_locations: { scope: "src.company_id IN (SELECT c.id FROM crm.companies c WHERE c.organization_id = {org_id} AND (c.owner_user_id = {user_id} OR c.id IN ({user_channel_companies})))" }
+    contacts:          { scope: "src.owner_user_id = {user_id} OR src.company_id IN ({user_channel_companies})" }
+    proposals:         { scope: "src.owner_user_id = {user_id} OR src.deal_id IN (SELECT d.id FROM crm.deals d WHERE d.organization_id = {org_id} AND (d.owner_user_id = {user_id} OR d.company_id IN ({user_channel_companies})))" }
+    quotes:            { scope: "src.owner_user_id = {user_id} OR src.created_by_user_id = {user_id} OR src.deal_id IN (SELECT d.id FROM crm.deals d WHERE d.organization_id = {org_id} AND (d.owner_user_id = {user_id} OR d.company_id IN ({user_channel_companies})))" }
+    quote_lines:       { scope: "src.quote_id IN (SELECT q.id FROM crm.quotes q JOIN crm.deals d ON d.id = q.deal_id WHERE q.organization_id = {org_id} AND (d.owner_user_id = {user_id} OR d.company_id IN ({user_channel_companies})))" }
+    orders:            { scope: "src.owner_user_id = {user_id} OR src.created_by_user_id = {user_id} OR src.deal_id IN (SELECT d.id FROM crm.deals d WHERE d.organization_id = {org_id} AND (d.owner_user_id = {user_id} OR d.company_id IN ({user_channel_companies})))" }
+    order_lines:       { scope: "src.order_id IN (SELECT o.id FROM crm.sales_orders o JOIN crm.deals d ON d.id = o.deal_id WHERE o.organization_id = {org_id} AND (d.owner_user_id = {user_id} OR d.company_id IN ({user_channel_companies})))" }
+    invoices:          { scope: "src.owner_user_id = {user_id} OR src.deal_id IN (SELECT d.id FROM crm.deals d WHERE d.organization_id = {org_id} AND (d.owner_user_id = {user_id} OR d.company_id IN ({user_channel_companies})))" }
+    invoice_lines:     { scope: "src.invoice_id IN (SELECT inv.id FROM crm.invoices inv JOIN crm.deals d ON d.id = inv.deal_id WHERE inv.organization_id = {org_id} AND (d.owner_user_id = {user_id} OR d.company_id IN ({user_channel_companies})))" }
+    contracts:         { scope: "src.deal_id IN (SELECT d.id FROM crm.deals d WHERE d.organization_id = {org_id} AND (d.owner_user_id = {user_id} OR d.company_id IN ({user_channel_companies}))) OR src.company_id IN ({user_channel_companies})" }
+    billing_schedule:  { scope: "src.contract_id IN (SELECT c.id FROM crm.contracts c JOIN crm.deals d ON d.id = c.deal_id WHERE c.organization_id = {org_id} AND (d.owner_user_id = {user_id} OR d.company_id IN ({user_channel_companies})))" }
+    activities:        { scope: "src.performed_by_user_id = {user_id} OR src.assignee_user_id = {user_id} OR src.deal_id IN (SELECT d.id FROM crm.deals d WHERE d.organization_id = {org_id} AND (d.owner_user_id = {user_id} OR d.company_id IN ({user_channel_companies}))) OR src.contact_id IN (SELECT cp.id FROM crm.contact_profiles cp WHERE cp.organization_id = {org_id} AND cp.owner_user_id = {user_id})" }
+    appointments:      { scope: "src.host_user_id = {user_id} OR src.contact_id IN (SELECT cp.id FROM crm.contact_profiles cp WHERE cp.organization_id = {org_id} AND cp.owner_user_id = {user_id})" }
+    products:          { scope: "TRUE" }
+    users:             { scope: "TRUE" }
+    agent_jobs:        { scope: "1=0" }
+
+  presales:
+    deals:             { scope: "src.owner_user_id = {user_id} OR src.company_id IN ({user_channel_companies})" }
+    deal_facts:        { scope: "src.owner_user_id = {user_id} OR src.company_id IN ({user_channel_companies})" }
+    companies:         { scope: "src.owner_user_id = {user_id} OR src.id IN ({user_channel_companies})" }
+    company_locations: { scope: "src.company_id IN (SELECT c.id FROM crm.companies c WHERE c.organization_id = {org_id} AND (c.owner_user_id = {user_id} OR c.id IN ({user_channel_companies})))" }
+    contacts:          { scope: "src.owner_user_id = {user_id} OR src.company_id IN ({user_channel_companies})" }
+    proposals:         { scope: "src.owner_user_id = {user_id} OR src.deal_id IN (SELECT d.id FROM crm.deals d WHERE d.organization_id = {org_id} AND (d.owner_user_id = {user_id} OR d.company_id IN ({user_channel_companies})))" }
+    quotes:            { scope: "src.owner_user_id = {user_id} OR src.created_by_user_id = {user_id} OR src.deal_id IN (SELECT d.id FROM crm.deals d WHERE d.organization_id = {org_id} AND (d.owner_user_id = {user_id} OR d.company_id IN ({user_channel_companies})))" }
+    quote_lines:       { scope: "src.quote_id IN (SELECT q.id FROM crm.quotes q JOIN crm.deals d ON d.id = q.deal_id WHERE q.organization_id = {org_id} AND (d.owner_user_id = {user_id} OR d.company_id IN ({user_channel_companies})))" }
+    orders:            { scope: "src.owner_user_id = {user_id} OR src.created_by_user_id = {user_id} OR src.deal_id IN (SELECT d.id FROM crm.deals d WHERE d.organization_id = {org_id} AND (d.owner_user_id = {user_id} OR d.company_id IN ({user_channel_companies})))" }
+    order_lines:       { scope: "src.order_id IN (SELECT o.id FROM crm.sales_orders o JOIN crm.deals d ON d.id = o.deal_id WHERE o.organization_id = {org_id} AND (d.owner_user_id = {user_id} OR d.company_id IN ({user_channel_companies})))" }
+    invoices:          { scope: "src.owner_user_id = {user_id} OR src.deal_id IN (SELECT d.id FROM crm.deals d WHERE d.organization_id = {org_id} AND (d.owner_user_id = {user_id} OR d.company_id IN ({user_channel_companies})))" }
+    invoice_lines:     { scope: "src.invoice_id IN (SELECT inv.id FROM crm.invoices inv JOIN crm.deals d ON d.id = inv.deal_id WHERE inv.organization_id = {org_id} AND (d.owner_user_id = {user_id} OR d.company_id IN ({user_channel_companies})))" }
+    contracts:         { scope: "src.deal_id IN (SELECT d.id FROM crm.deals d WHERE d.organization_id = {org_id} AND (d.owner_user_id = {user_id} OR d.company_id IN ({user_channel_companies}))) OR src.company_id IN ({user_channel_companies})" }
+    billing_schedule:  { scope: "src.contract_id IN (SELECT c.id FROM crm.contracts c JOIN crm.deals d ON d.id = c.deal_id WHERE c.organization_id = {org_id} AND (d.owner_user_id = {user_id} OR d.company_id IN ({user_channel_companies})))" }
+    activities:        { scope: "src.performed_by_user_id = {user_id} OR src.assignee_user_id = {user_id} OR src.deal_id IN (SELECT d.id FROM crm.deals d WHERE d.organization_id = {org_id} AND (d.owner_user_id = {user_id} OR d.company_id IN ({user_channel_companies}))) OR src.contact_id IN (SELECT cp.id FROM crm.contact_profiles cp WHERE cp.organization_id = {org_id} AND cp.owner_user_id = {user_id})" }
+    appointments:      { scope: "src.host_user_id = {user_id} OR src.contact_id IN (SELECT cp.id FROM crm.contact_profiles cp WHERE cp.organization_id = {org_id} AND cp.owner_user_id = {user_id})" }
+    products:          { scope: "TRUE" }
+    users:             { scope: "TRUE" }
+    agent_jobs:        { scope: "1=0" }
+
+  marketing:
+    contacts:          { scope: "src.owner_user_id = {user_id}" }
+    companies:         { scope: "src.owner_user_id = {user_id}" }
+    company_locations: { scope: "src.company_id IN (SELECT c.id FROM crm.companies c WHERE c.organization_id = {org_id} AND c.owner_user_id = {user_id})" }
+    activities:        { scope: "src.contact_id IN (SELECT cp.id FROM crm.contact_profiles cp WHERE cp.organization_id = {org_id} AND cp.owner_user_id = {user_id})" }
+    appointments:      { scope: "src.host_user_id = {user_id} OR src.contact_id IN (SELECT cp.id FROM crm.contact_profiles cp WHERE cp.organization_id = {org_id} AND cp.owner_user_id = {user_id})" }
+    products:          { scope: "TRUE" }
+    users:             { scope: "TRUE" }
+    deals:             { scope: "1=0" }
+    deal_facts:        { scope: "1=0" }
+    proposals:         { scope: "1=0" }
+    quotes:            { scope: "1=0" }
+    quote_lines:       { scope: "1=0" }
+    orders:            { scope: "1=0" }
+    order_lines:       { scope: "1=0" }
+    invoices:          { scope: "1=0" }
+    invoice_lines:     { scope: "1=0" }
+    contracts:         { scope: "1=0" }
+    billing_schedule:  { scope: "1=0" }
+    agent_jobs:        { scope: "1=0" }
+
+  finance:
+    invoices:          { scope: "TRUE" }
+    invoice_lines:     { scope: "TRUE" }
+    contracts:         { scope: "TRUE" }
+    billing_schedule:  { scope: "TRUE" }
+    companies:         { scope: "TRUE" }
+    company_locations: { scope: "TRUE" }
+    products:          { scope: "TRUE" }
+    users:             { scope: "TRUE" }
+    quotes:            { scope: "TRUE" }
+    quote_lines:       { scope: "TRUE" }
+    orders:            { scope: "TRUE" }
+    order_lines:       { scope: "TRUE" }
+    contacts:          { scope: "TRUE" }
+    proposals:         { scope: "TRUE" }
+    activities:        { scope: "TRUE" }
+    appointments:      { scope: "TRUE" }
+    deals:             { scope: "src.id IN (SELECT quote.deal_id FROM crm.quotes quote JOIN crm.sales_orders so ON so.quote_id = quote.id JOIN crm.invoices inv ON inv.order_id = so.id WHERE inv.organization_id = {org_id})" }
+    deal_facts:        { scope: "src.deal_id IN (SELECT quote.deal_id FROM crm.quotes quote JOIN crm.sales_orders so ON so.quote_id = quote.id JOIN crm.invoices inv ON inv.order_id = so.id WHERE inv.organization_id = {org_id})" }
+    agent_jobs:        { scope: "1=0" }
+
+  viewer:
+    deals:             { scope: "src.owner_user_id = {user_id}" }
+    deal_facts:        { scope: "src.owner_user_id = {user_id}" }
+    companies:         { scope: "src.owner_user_id = {user_id}" }
+    company_locations: { scope: "src.company_id IN (SELECT c.id FROM crm.companies c WHERE c.organization_id = {org_id} AND c.owner_user_id = {user_id})" }
+    contacts:          { scope: "src.owner_user_id = {user_id}" }
+    proposals:         { scope: "src.owner_user_id = {user_id}" }
+    quotes:            { scope: "src.owner_user_id = {user_id}" }
+    quote_lines:       { scope: "src.quote_id IN (SELECT q.id FROM crm.quotes q JOIN crm.deals d ON d.id = q.deal_id WHERE q.organization_id = {org_id} AND d.owner_user_id = {user_id})" }
+    orders:            { scope: "src.owner_user_id = {user_id}" }
+    order_lines:       { scope: "src.order_id IN (SELECT o.id FROM crm.sales_orders o JOIN crm.deals d ON d.id = o.deal_id WHERE o.organization_id = {org_id} AND d.owner_user_id = {user_id})" }
+    activities:        { scope: "src.performed_by_user_id = {user_id} OR src.assignee_user_id = {user_id}" }
+    appointments:      { scope: "src.host_user_id = {user_id}" }
+    products:          { scope: "TRUE" }
+    users:             { scope: "TRUE" }
+    invoices:          { scope: "1=0" }
+    invoice_lines:     { scope: "1=0" }
+    contracts:         { scope: "1=0" }
+    billing_schedule:  { scope: "1=0" }
+    agent_jobs:        { scope: "1=0" }

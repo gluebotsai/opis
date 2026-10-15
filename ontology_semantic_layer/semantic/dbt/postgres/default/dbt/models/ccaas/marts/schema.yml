@@ -1,0 +1,198 @@
+version: 2
+
+models:
+  - name: mart_conversations
+    description: One row per CCaaS conversation with queue/agent names denormalized.
+    meta:
+      grain: conversation
+      purpose: Primary CCaaS fact for volume, SLA, channel, and resolution metrics.
+      tenant_column: organization_id
+      row_scope_column: assigned_agent_id
+    columns:
+      - name: conversation_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+        description: Multi-tenant isolation key — required on every query.
+      - name: status
+        description: Conversation lifecycle status from source.
+      - name: channel
+        description: Interaction channel (voice, chat, email, etc.).
+      - name: direction
+        description: Customer-initiated (inbound) vs agent callback/proactive (outbound).
+        tests:
+          - accepted_values:
+              arguments:
+                values: [inbound, outbound]
+                quote: true
+      - name: queue_name
+        description: Denormalized queue display name for reporting group_by.
+      - name: assigned_agent_name
+        description: Denormalized agent display name on the conversation.
+
+  - name: mart_conversation_assignments
+    description: Assignment offer/accept events; canonical AHT source.
+    meta:
+      grain: assignment
+      purpose: Handle time, missed contacts, occupancy numerators.
+      tenant_column: organization_id
+      row_scope_column: agent_id
+    columns:
+      - name: assignment_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+      - name: channel
+        description: Denormalized from conversation for group_by without join ambiguity.
+      - name: direction
+        description: Denormalized from conversation (inbound/outbound).
+      - name: queue_name
+      - name: agent_name
+
+  - name: mart_conversation_sla_state
+    description: Per-conversation SLA breach state.
+    meta:
+      grain: conversation_sla
+      purpose: SLA breach rate numerator/denominator.
+      tenant_column: organization_id
+    columns:
+      - name: sla_state_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+      - name: channel
+      - name: direction
+      - name: queue_name
+      - name: priority
+
+  - name: mart_agents
+    meta:
+      grain: agent
+      tenant_column: organization_id
+    columns:
+      - name: agent_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: mart_agent_tasks
+    meta:
+      grain: agent_task
+      tenant_column: organization_id
+      row_scope_column: agent_id
+    columns:
+      - name: task_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: mart_dispositions
+    meta:
+      grain: disposition_catalog
+      tenant_column: organization_id
+    columns:
+      - name: disposition_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: mart_conversation_dispositions
+    meta:
+      grain: disposition_event
+      tenant_column: organization_id
+    columns:
+      - name: disposition_entry_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: mart_conversation_transfers
+    meta:
+      grain: transfer
+      tenant_column: organization_id
+    columns:
+      - name: transfer_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: mart_setup_users
+    meta:
+      grain: user
+      tenant_column: organization_id
+    columns:
+      - name: user_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: mart_setup_ccaas_queues
+    meta:
+      grain: queue
+      tenant_column: organization_id
+    columns:
+      - name: queue_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: mart_setup_ccaas_queue_agents
+    meta:
+      grain: queue_membership
+      tenant_column: organization_id
+    columns:
+      - name: queue_agent_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: mart_setup_teams
+    meta:
+      grain: team
+      tenant_column: organization_id
+    columns:
+      - name: team_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: mart_agent_capacity
+    meta:
+      grain: agent_channel_capacity
+      tenant_column: organization_id
+    columns:
+      - name: capacity_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: mart_agent_presence_history
+    meta:
+      grain: presence_interval
+      tenant_column: organization_id
+      row_scope_column: agent_id
+    columns:
+      - name: presence_event_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: mart_copilot_turns
+    meta:
+      grain: copilot_turn
+      tenant_column: organization_id
+    columns:
+      - name: suggestion_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: mart_copilot_skill_executions
+    meta:
+      grain: skill_execution
+      tenant_column: organization_id
+    columns:
+      - name: execution_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]

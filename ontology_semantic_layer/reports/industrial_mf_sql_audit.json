@@ -1,0 +1,237 @@
+{
+  "summary": {
+    "org": 1000,
+    "user": 1001,
+    "api": "http://127.0.0.1:8765",
+    "total_cases": 25,
+    "passed": 11,
+    "failed": 14,
+    "pass_rate_pct": 44.0,
+    "latency_ms_p50": 8560.9,
+    "latency_ms_p95": 9262.1,
+    "by_layer": {
+      "mf": {
+        "passed": 9,
+        "total": 18,
+        "pass_rate_pct": 50.0
+      },
+      "sql": {
+        "passed": 0,
+        "total": 4,
+        "pass_rate_pct": 0.0
+      },
+      "accuracy": {
+        "passed": 0,
+        "total": 1,
+        "pass_rate_pct": 0.0
+      },
+      "parity": {
+        "passed": 2,
+        "total": 2,
+        "pass_rate_pct": 100.0
+      }
+    }
+  },
+  "cases": [
+    {
+      "id": "mf_scalar_total_conversations",
+      "layer": "mf",
+      "category": "no_time",
+      "ok": true,
+      "latency_ms": 9164.7,
+      "detail": "HTTP 200 value=42"
+    },
+    {
+      "id": "mf_scalar_open_conversations",
+      "layer": "mf",
+      "category": "no_time",
+      "ok": true,
+      "latency_ms": 8529.5,
+      "detail": "HTTP 200 value=0"
+    },
+    {
+      "id": "mf_scalar_ai_containment_rate",
+      "layer": "mf",
+      "category": "no_time",
+      "ok": true,
+      "latency_ms": 8612.1,
+      "detail": "HTTP 200 value=0.546875"
+    },
+    {
+      "id": "mf_scalar_average_handle_time",
+      "layer": "mf",
+      "category": "no_time",
+      "ok": true,
+      "latency_ms": 8530.1,
+      "detail": "HTTP 200 value=1946.4281686511629"
+    },
+    {
+      "id": "mf_scalar_sla_breach_rate",
+      "layer": "mf",
+      "category": "no_time",
+      "ok": false,
+      "latency_ms": 8414.2,
+      "detail": "HTTP 200 value=None"
+    },
+    {
+      "id": "mf_bundle_open_sla",
+      "layer": "mf",
+      "category": "no_time",
+      "ok": false,
+      "latency_ms": 9710.4,
+      "detail": "HTTP 200 execution=None open=0 sla=None"
+    },
+    {
+      "id": "mf_bundle_group_by_queue",
+      "layer": "mf",
+      "category": "no_time",
+      "ok": true,
+      "latency_ms": 9262.1,
+      "detail": "HTTP 200 rows=1 execution=None"
+    },
+    {
+      "id": "mf_time_range_total_conversations",
+      "layer": "mf",
+      "category": "time_range",
+      "ok": true,
+      "latency_ms": 8409.3,
+      "detail": "HTTP 200 value=0"
+    },
+    {
+      "id": "mf_time_range_average_handle_time",
+      "layer": "mf",
+      "category": "time_range",
+      "ok": false,
+      "latency_ms": 8651.6,
+      "detail": "HTTP 200 value=None"
+    },
+    {
+      "id": "mf_grain_day",
+      "layer": "mf",
+      "category": "time_grain",
+      "ok": false,
+      "latency_ms": 8619.0,
+      "detail": "HTTP 200 rows=0"
+    },
+    {
+      "id": "mf_grain_week",
+      "layer": "mf",
+      "category": "time_grain",
+      "ok": false,
+      "latency_ms": 8683.9,
+      "detail": "HTTP 200 rows=0"
+    },
+    {
+      "id": "mf_grain_month",
+      "layer": "mf",
+      "category": "time_grain",
+      "ok": false,
+      "latency_ms": 8598.9,
+      "detail": "HTTP 200 rows=0"
+    },
+    {
+      "id": "mf_grain_quarter",
+      "layer": "mf",
+      "category": "time_grain",
+      "ok": false,
+      "latency_ms": 7374.1,
+      "detail": "HTTP 400 rows=0"
+    },
+    {
+      "id": "mf_grain_year",
+      "layer": "mf",
+      "category": "time_grain",
+      "ok": false,
+      "latency_ms": 7361.3,
+      "detail": "HTTP 400 rows=0"
+    },
+    {
+      "id": "mf_period_this_quarter",
+      "layer": "mf",
+      "category": "time_period",
+      "ok": true,
+      "latency_ms": 8343.9,
+      "detail": "HTTP 200 value=42"
+    },
+    {
+      "id": "mf_period_this_year",
+      "layer": "mf",
+      "category": "time_period",
+      "ok": true,
+      "latency_ms": 8560.9,
+      "detail": "HTTP 200 value=42"
+    },
+    {
+      "id": "mf_period_last_30_days",
+      "layer": "mf",
+      "category": "time_period",
+      "ok": true,
+      "latency_ms": 8913.3,
+      "detail": "HTTP 200 value=42"
+    },
+    {
+      "id": "mf_filter_channel_time_day",
+      "layer": "mf",
+      "category": "time_filter",
+      "ok": false,
+      "latency_ms": 8978.2,
+      "detail": "HTTP 200 rows=0"
+    },
+    {
+      "id": "sql_list_open",
+      "layer": "sql",
+      "category": "no_time",
+      "ok": false,
+      "latency_ms": 2.1,
+      "detail": "HTTP 404 source=None rowCount=None"
+    },
+    {
+      "id": "sql_list_queue_filter",
+      "layer": "sql",
+      "category": "no_time",
+      "ok": false,
+      "latency_ms": 1.9,
+      "detail": "HTTP 404 rowCount=None"
+    },
+    {
+      "id": "sql_metric_mf_path",
+      "layer": "sql",
+      "category": "no_time",
+      "ok": false,
+      "latency_ms": 2.4,
+      "detail": "HTTP 404 source=None"
+    },
+    {
+      "id": "sql_metric_time_day",
+      "layer": "sql",
+      "category": "time_grain",
+      "ok": false,
+      "latency_ms": 2.4,
+      "detail": "HTTP 404 source=None rows=0"
+    },
+    {
+      "id": "gt_postgres",
+      "layer": "accuracy",
+      "category": "ground_truth",
+      "ok": false,
+      "latency_ms": 0,
+      "detail": "column \"breached_count\" does not exist\nLINE 2:         SELECT SUM(breached_count)::float / NULLIF(SUM(sla_s...\n                           ^\n"
+    },
+    {
+      "id": "parity_mf_fallback_open_conversations",
+      "layer": "parity",
+      "category": "no_time",
+      "ok": true,
+      "latency_ms": 0,
+      "detail": "mf=0 fallback=0"
+    },
+    {
+      "id": "parity_mf_fallback_ai_containment_rate",
+      "layer": "parity",
+      "category": "no_time",
+      "ok": true,
+      "latency_ms": 0,
+      "detail": "mf=0.546875 fallback=0.546875"
+    }
+  ]
+}

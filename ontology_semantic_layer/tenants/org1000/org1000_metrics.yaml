@@ -1,0 +1,24 @@
+# Org 1000 metric thresholds — formulas stay in MetricFlow base.
+# Same metric ids as ontology/metric_policies.yml; org wins on threshold only.
+
+organizationId: 1000
+
+metrics:
+  high_priority_ticket_volume:
+    threshold: { warn: 1, critical: 2 }
+  open_tickets_metric:
+    threshold: { warn: 25, critical: 60 }
+  sla_breach_rate:
+    threshold: { warn_percent: 5, critical_percent: 10 }
+  missed_contact_rate:
+    threshold: { warn_percent: 8, critical_percent: 15 }
+  human_agent_occupancy_rate_presence:
+    threshold: { warn_percent: 85 }
+  average_csat_score:
+    threshold: { warn_lt: 3.5 }
+  open_conversations:
+    threshold: { warn: 80, critical: 200 }
+  callback_tasks:
+    threshold: { warn: 25, critical: 60 }
+  open_agent_tasks:
+    threshold: { warn: 35, critical: 90 }

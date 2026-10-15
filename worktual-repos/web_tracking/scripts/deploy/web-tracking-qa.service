@@ -1,0 +1,28 @@
+# Install (as root on QA server):
+#   sudo cp scripts/deploy/web-tracking-qa.service /etc/systemd/system/web-tracking-qa.service
+#   sudo sed -i "s|@PROJECT_ROOT@|/home/webtracking/Web_tracking_workspace/web_tracking_QA|g" /etc/systemd/system/web-tracking-qa.service
+#   sudo sed -i "s|@PYTHON@|$(which python)|g" /etc/systemd/system/web-tracking-qa.service
+#   sudo sed -i "s|@USER@|webtracking|g" /etc/systemd/system/web-tracking-qa.service
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now web-tracking-qa
+#
+# Logs: journalctl -u web-tracking-qa -f
+# Per-service logs: .local/logs/{ingest,api,web,...}.log
+
+[Unit]
+Description=Worktual Web Tracking QA (ingest, api, web, ai-chat, kafka)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=@USER@
+WorkingDirectory=@PROJECT_ROOT@
+EnvironmentFile=-@PROJECT_ROOT@/.env
+ExecStart=@PYTHON@ @PROJECT_ROOT@/run_backend.py --all
+ExecStop=@PYTHON@ @PROJECT_ROOT@/run_backend.py --stop
+TimeoutStartSec=120
+
+[Install]
+WantedBy=multi-user.target

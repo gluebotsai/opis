@@ -1,0 +1,41 @@
+version: 2
+
+sources:
+  - name: web_tracking
+    schema: web_tracking
+    description: "ClickHouse web_tracking database containing SDK browser event batches, parsed facts, and entity dimensions."
+    tables:
+      - name: dim_websites
+        description: "Registered website entities and properties."
+      - name: dim_visitors
+        description: "Unique visitor entity profiles (ReplacingMergeTree)."
+      - name: dim_sessions
+        description: "Browsing session entity profiles with attribution and device context (ReplacingMergeTree). Bounce/duration/pageview_count on this table are stale — use v_session_bounce."
+      - name: dim_known_users
+        description: "Authenticated user ↔ visitor identity mappings with email/phone traits (ReplacingMergeTree)."
+      - name: v_session_bounce
+        description: "Canonical per-session bounce metrics (pageview_count, activity-span duration, is_bounce). Dashboard Tier-1 source of truth."
+      - name: ecommerce
+        description: "Daily e-commerce KPI view over agg_ecommerce_daily (merged states)."
+      - name: fact_page_views
+        description: "Individual page view and page load events."
+      - name: fact_interaction_events
+        description: "User interactions: clicks, rage clicks, dead clicks, scroll depth, mouse moves."
+      - name: fact_form_events
+        description: "Form lifecycle interactions: view, start, focus, submit, success, failure, abandon."
+      - name: fact_conversion_events
+        description: "Goal completion and monetary conversion events."
+      - name: fact_custom_events
+        description: "Custom business events dispatched via WebtualAnalytics.track()."
+      - name: fact_product_interactions
+        description: "Ecommerce product catalog views, clicks, and impressions."
+      - name: fact_performance_events
+        description: "Core Web Vitals and navigation timing measurements."
+      - name: fact_error_events
+        description: "Client-side JavaScript runtime exceptions and resource load errors."
+      - name: fact_cookie_operations
+        description: "Cookie consent choices and cookie lifecycle audit events."
+      - name: fact_replay_chunks
+        description: "Recorded session replay rrweb chunks."
+      - name: raw_payloads
+        description: "Raw ingested HTTP JSON batch payloads."

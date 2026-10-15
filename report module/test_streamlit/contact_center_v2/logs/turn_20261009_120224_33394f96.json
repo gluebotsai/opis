@@ -1,0 +1,64 @@
+{
+  "turn_id": "33394f96",
+  "timestamp": "2026-10-09T06:32:24.224099+00:00",
+  "question": "compare the average handle time for bharathi and raghu",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1016,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "I'm sorry, I'm having trouble retrieving those specific handle times right now.\n\n<p><strong>Average handle time comparison</strong></p>\n<p>I could not calculate the average handle time for Bharathi and Raghu at this time.</p>\n<p>Would you like me to try looking at the total call duration for these agents instead?</p>",
+  "card": "card: none",
+  "facts": "result_id: r1\nwindow: all time\ncertified: false\ntask_goal: Compare the average handle time for Bharathi and Raghu.\nanswer_type: number\nEXECUTION_ERROR\nerror_type: REPLAN\nmessage: Column agent_id is not in rpt.call_cdr. Available: agent_hold_duration, business_end_time, business_start_time, call_duration, created_at, dial_duration, disconnected_by, disposition_id, hold_seconds, hours_of_operation, id, is_abandoned, is_autobot, is_barge, is_bot, is_ccaas, is_crm, is_inbound, is_listen, is_missed, is_transferred, is_whisper, leg_duration, leg_end_time, leg_start_time, outbound_campaign, queue_duration, queue_id, queue_name, recording_duration, session_end_time, session_id, session_start_time, transferred_time, transferred_type_id, umn_status, wait_duration.",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1016,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "compare the average handle time for bharathi and raghu",
+    "plan": {
+      "kind": "plan",
+      "understanding": "Compare the average handle time for Bharathi and Raghu.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Compare the average handle time for Bharathi and Raghu.",
+          "time": "all time",
+          "scope": "org",
+          "slice": [
+            "Bharathi",
+            "Raghu"
+          ],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "free_sql_fallback": true,
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "error",
+        "error_type": "REPLAN",
+        "certified": false,
+        "kpi_id": null,
+        "row_count": 0
+      }
+    ],
+    "facts": "result_id: r1\nwindow: all time\ncertified: false\ntask_goal: Compare the average handle time for Bharathi and Raghu.\nanswer_type: number\nEXECUTION_ERROR\nerror_type: REPLAN\nmessage: Column agent_id is not in rpt.call_cdr. Available: agent_hold_duration, business_end_time, business_start_time, call_duration, created_at, dial_duration, disconnected_by, disposition_id, hold_seconds, hours_of_operation, id, is_abandoned, is_autobot, is_barge, is_bot, is_ccaas, is_crm, is_inbound, is_listen, is_missed, is_transferred, is_whisper, leg_duration, leg_end_time, leg_start_time, outbound_campaign, queue_duration, queue_id, queue_name, recording_duration, session_end_time, session_id, session_start_time, transferred_time, transferred_type_id, umn_status, wait_duration.",
+    "grounded": true,
+    "card": "card: none"
+  },
+  "error": null
+}

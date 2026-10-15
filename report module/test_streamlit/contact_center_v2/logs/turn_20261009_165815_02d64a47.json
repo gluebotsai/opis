@@ -1,0 +1,60 @@
+{
+  "turn_id": "02d64a47",
+  "timestamp": "2026-10-09T11:28:15.583353+00:00",
+  "question": "What percentage of interactions were successfully resolved?",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1018,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Resolution rate</strong></p><p>The resolution rate for all time is not available in Contact Center reports.</p><p>Would you like to see the total number of handled conversations instead?</p>",
+  "card": "card: none",
+  "facts": "result_id: r1\nwindow: all time\nkpi: resolution_rate\ncertified: true\nunit: percent\ntask_goal: Calculate the percentage of handled conversations that have a resolution code.\nanswer_type: percentage\nrow_count: 1\nrow 1: resolved_n=0; handled_n=0; rate_pct=None",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1018,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "What percentage of interactions were successfully resolved?",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants to know the percentage of handled interactions that were resolved.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Calculate the percentage of handled conversations that have a resolution code.",
+          "time": "all time",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "percentage"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "resolution_rate",
+        "row_count": 1
+      }
+    ],
+    "facts": "result_id: r1\nwindow: all time\nkpi: resolution_rate\ncertified: true\nunit: percent\ntask_goal: Calculate the percentage of handled conversations that have a resolution code.\nanswer_type: percentage\nrow_count: 1\nrow 1: resolved_n=0; handled_n=0; rate_pct=None",
+    "grounded": true,
+    "card": "card: none"
+  },
+  "error": null
+}

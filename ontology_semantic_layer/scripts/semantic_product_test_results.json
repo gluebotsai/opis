@@ -1,0 +1,83 @@
+[
+  {
+    "case": "CRM normal",
+    "code": 200,
+    "row_count": 5,
+    "rows": [
+      {
+        "deal__stage": "closed_lost",
+        "won_deal_rate": 0.0
+      },
+      {
+        "deal__stage": "closed_won",
+        "won_deal_rate": 1.0
+      },
+      {
+        "deal__stage": "discover",
+        "won_deal_rate": null
+      }
+    ]
+  },
+  {
+    "case": "CRM time+avg",
+    "code": 200,
+    "row_count": 1,
+    "rows": [
+      {
+        "won_deal_rate": 0.625
+      }
+    ]
+  },
+  {
+    "case": "Ticketing normal",
+    "code": 200,
+    "row_count": 2,
+    "rows": [
+      {
+        "ticket__priority": "high",
+        "open_tickets_metric": 0
+      },
+      {
+        "ticket__priority": "medium",
+        "open_tickets_metric": 0
+      }
+    ]
+  },
+  {
+    "case": "Ticketing time+avg",
+    "code": 200,
+    "row_count": 2,
+    "rows": [
+      {
+        "ticket__queue_name": "Bug Solvers",
+        "average_resolution_time_hours": 7.562891521111111
+      },
+      {
+        "ticket__queue_name": null,
+        "average_resolution_time_hours": null
+      }
+    ]
+  },
+  {
+    "case": "Campaign normal",
+    "code": 200,
+    "row_count": 1,
+    "rows": [
+      {
+        "campaign__source_channel": "standalone_campaign",
+        "delivery_rate": 1.0
+      }
+    ]
+  },
+  {
+    "case": "Campaign time+avg",
+    "code": 200,
+    "row_count": 1,
+    "rows": [
+      {
+        "campaign__source_channel": "standalone_campaign",
+        "open_rate": 0.2
+      }
+    ]
+  }
+]

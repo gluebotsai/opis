@@ -1,0 +1,16 @@
+version: 2
+
+models:
+  - name: stg_cdp_customer_profile
+    columns:
+      - name: contact_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: stg_cdp_identity_keys
+    columns:
+      - name: identity_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]

@@ -1,0 +1,244 @@
+{
+  "question": "tell me the performanace of all the agents",
+  "answer": "Won revenue is 270,000.00 and collected revenue is 15,317.99 for the overall period.\n\n| Owner | Won Revenue | Collected Revenue | Open Deals |\n| :--- | :--- | :--- | :--- |\n| Yaswanth MG | 150,000.00 | \u2014 | 27 |\n| Aravind Selvaraj | \u2014 | \u2014 | 21 |\n| Unassigned | 120,000.00 | \u2014 | 3 |\n| Sample Name | \u2014 | \u2014 | 1 |\n| 2 | \u2014 | 15,317.99 | \u2014 |",
+  "trace": {
+    "question": "tell me the performanace of all the agents",
+    "identity": {
+      "organization_id": 1000,
+      "user_id": 1000,
+      "role": "admin"
+    },
+    "model": "worktual-gemma",
+    "tasks": [
+      {
+        "status": "ok",
+        "store": "sql",
+        "sql": "WITH rpt_deals AS (\nSELECT src.id, src.organization_id, src.title, src.stage, src.amount, src.currency_code, src.stage_weight, src.weighted_amount, src.company_id, src.company_name, src.company_industry, src.location_id, src.contact_id, src.contact_name, src.contact_email, src.owner_user_id, src.owner_name, src.created_at, src.closed_at, src.close_ts, src.updated_at, src.expected_close_date, src.lost_reason, src.is_open, src.is_won, src.is_lost, src.aging_days, src.forecast_category, src.forecast_reason, src.forecast_flagged FROM (\nSELECT \n  d.id,\n  d.organization_id,\n  d.title,\n  d.stage,\n  COALESCE(d.amount, 0) AS amount,\n  CASE\n    WHEN pq.currency IS NOT NULL AND pq.currency <> 'USD' THEN pq.currency\n    WHEN o.country IS NOT NULL AND o.country <> 'US' AND cc.curr IS NOT NULL THEN cc.curr\n    WHEN pq.currency = 'USD' THEN 'USD'\n    WHEN o.country = 'US' THEN 'USD'\n    ELSE 'USD'\n  END AS currency_code,\n  CASE d.stage\n    WHEN 'qualification' THEN 0.10\n    WHEN 'discover' THEN 0.25\n    WHEN 'propose' THEN 0.50\n    WHEN 'negotiate' THEN 0.75\n    WHEN 'closed_won' THEN 1.00\n    WHEN 'closed_lost' THEN 0.00\n    ELSE 0.00\n  END AS stage_weight,\n  ROUND(COALESCE(d.amount, 0) * (\n    CASE d.stage\n      WHEN 'qualification' THEN 0.10\n      WHEN 'discover' THEN 0.25\n      WHEN 'propose' THEN 0.50\n      WHEN 'negotiate' THEN 0.75\n      WHEN 'closed_won' THEN 1.00\n      WHEN 'closed_lost' THEN 0.00\n      ELSE 0.00\n    END\n  ), 2) AS weighted_amount,\n  d.company_id,\n  c.name AS company_name,\n  c.industry AS company_industry,\n  d.location_id,\n  d.contact_id,\n  COALESCE(d.contact_name, cdp.first_name || ' ' || COALESCE(cdp.last_name, '')) AS contact_name,\n  COALESCE(d.contact_email, id_k.key_value) AS contact_email,\n  d.owner_user_id,\n  su.first_name || ' ' || COALESCE(su.last_name, '') AS owner_name,\n  d.created_at,\n  d.closed_at,\n  COALESCE(d.closed_at, d.created_at) AS close_ts,\n  d.updated_at,\n  d.expected_close_date,\n  d.lost_reason,\n  (d.stage IN ('qualification', 'discover', 'propose', 'negotiate')) AS is_open,\n  (d.stage = 'closed_won') AS is_won,\n  (d.stage = 'closed_lost') AS is_lost,\n  FLOOR(EXTRACT(EPOCH FROM (NOW() - d.created_at))/86400)::integer AS aging_days,\n  d.forecast_category,\n  d.forecast_reason,\n  d.forecast_flagged\nFROM crm.deals d\nLEFT JOIN crm.companies c ON c.id = d.company_id AND c.organization_id = d.organization_id\nLEFT JOIN accounts.setup_users su ON su.id = d.owner_user_id\nLEFT JOIN accounts.organizations o ON o.id = d.organization_id\nLEFT JOIN cdp.customer_profile cdp ON cdp.cdp_id = d.contact_id\nLEFT JOIN LATERAL (\n  SELECT ik.key_value \n  FROM cdp.identity_keys ik \n  WHERE ik.cdp_id = d.contact_id AND ik.key_type = 'email' AND ik.organization_id = d.organization_id \n  ORDER BY ik.created_at ASC \n  LIMIT 1\n) id_k ON TRUE\nLEFT JOIN LATERAL (\n  SELECT q.currency \n  FROM crm.quotes q \n  WHERE q.deal_id = d.id AND q.organization_id = d.organization_id \n  ORDER BY CASE WHEN q.status = 'accepted' THEN 1 WHEN q.status = 'sent' THEN 2 ELSE 3 END, q.updated_at DESC \n  LIMIT 1\n) pq ON TRUE\nLEFT JOIN LATERAL (\n  SELECT CASE o.country \n    WHEN 'India' THEN 'INR' \n    WHEN 'United Kingdom' THEN 'GBP' \n    WHEN 'Germany' THEN 'EUR' \n    WHEN 'Canada' THEN 'CAD' \n    WHEN 'Australia' THEN 'AUD' \n    ELSE 'USD' \n  END AS curr\n) cc ON TRUE\nWHERE d.organization_id = %(_org_id)s\n) src WHERE TRUE\n)\nSELECT COALESCE(CAST(owner_name AS TEXT), 'Unassigned') AS owner, CAST(COALESCE(SUM(amount), 0) AS DECIMAL(15, 2)) AS won_revenue FROM rpt_deals AS deals WHERE is_won = TRUE AND TRUE AND TRUE AND TRUE GROUP BY COALESCE(CAST(owner_name AS TEXT), 'Unassigned') ORDER BY 2 DESC NULLS LAST LIMIT 500",
+        "views": [
+          "deals"
+        ],
+        "guard_notes": [
+          "row cap 500 applied"
+        ],
+        "bound_params": {
+          "_org_id": 1000,
+          "_user_id": 1000,
+          "user_id": 1000,
+          "organization_id": 1000,
+          "org_id": 1000,
+          "tenant_id": 1000,
+          "current_user_id": 1000
+        },
+        "rows": [
+          {
+            "owner": "Yaswanth MG",
+            "won_revenue": "150000.00"
+          },
+          {
+            "owner": "Unassigned",
+            "won_revenue": "120000.00"
+          }
+        ],
+        "kpi_id": "won_revenue",
+        "dimension": "owner",
+        "time_status": "all_time",
+        "attempts": [
+          {
+            "raw": "{\"tool\":\"run_kpi\",\"kpi_id\":\"won_revenue\",\"dimension\":\"owner\"}",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "won_revenue",
+              "dimension": "owner"
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "tool": "run_kpi",
+        "requested_kpi": "won_revenue",
+        "requested_dimension": "owner",
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "won_revenue",
+          "goal": "Won revenue by owner",
+          "time": "all time",
+          "scope": "org",
+          "dimension": "owner",
+          "answer_type": "breakdown",
+          "depends_on": []
+        }
+      },
+      {
+        "status": "ok",
+        "store": "sql",
+        "sql": "WITH rpt_invoices AS (\nSELECT src.id, src.organization_id, src.invoice_number, src.order_id, src.deal_id, src.deal_title, src.company_id, src.company_name, src.status, src.approval_status, src.subtotal, src.discount_amount, src.tax_amount, src.total, src.currency_code, src.due_at, src.paid_at, src.payment_method, src.created_by_user_id, src.owner_user_id, src.owner_name, src.created_at, src.updated_at, src.is_overdue FROM (\nSELECT \n  inv.id,\n  inv.organization_id,\n  inv.number AS invoice_number,\n  inv.order_id,\n  inv.deal_id,\n  d.title AS deal_title,\n  inv.company_id,\n  c.name AS company_name,\n  inv.status,\n  inv.approval_status,\n  COALESCE(inv.total - COALESCE(inv.tax_amount, 0) + COALESCE(inv.discount_amount, 0), inv.total) AS subtotal,\n  COALESCE(inv.discount_amount, 0) AS discount_amount,\n  COALESCE(inv.tax_amount, 0) AS tax_amount,\n  COALESCE(inv.total, 0) AS total,\n  COALESCE(inv.currency, 'USD') AS currency_code,\n  inv.due_at,\n  inv.paid_at,\n  inv.payment_method,\n  inv.created_by_user_id,\n  d.owner_user_id,\n  su.first_name || ' ' || COALESCE(su.last_name, '') AS owner_name,\n  inv.created_at,\n  inv.updated_at,\n  (inv.status = 'overdue' OR (inv.status = 'sent' AND inv.due_at < NOW())) AS is_overdue\nFROM crm.invoices inv\nLEFT JOIN crm.deals d ON d.id = inv.deal_id AND d.organization_id = inv.organization_id\nLEFT JOIN crm.companies c ON c.id = inv.company_id AND c.organization_id = inv.organization_id\nLEFT JOIN accounts.setup_users su ON su.id = d.owner_user_id\nWHERE inv.organization_id = %(_org_id)s\n) src WHERE TRUE\n)\nSELECT CAST(COALESCE(SUM(total), 0) AS DECIMAL(15, 2)) AS collected_revenue, CAST(COUNT(*) AS BIGINT) AS paid_invoice_count FROM rpt_invoices AS invoices WHERE status = 'paid' AND TRUE AND TRUE AND TRUE LIMIT 500",
+        "views": [
+          "invoices"
+        ],
+        "guard_notes": [
+          "row cap 500 applied"
+        ],
+        "bound_params": {
+          "_org_id": 1000,
+          "_user_id": 1000,
+          "user_id": 1000,
+          "organization_id": 1000,
+          "org_id": 1000,
+          "tenant_id": 1000,
+          "current_user_id": 1000
+        },
+        "rows": [
+          {
+            "collected_revenue": "15317.99",
+            "paid_invoice_count": 2
+          }
+        ],
+        "kpi_id": "collected_revenue",
+        "dimension": "owner",
+        "time_status": "all_time",
+        "attempts": [
+          {
+            "raw": "{\"tool\":\"run_kpi\",\"kpi_id\":\"collected_revenue\",\"dimension\":\"owner\"}",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "collected_revenue",
+              "dimension": "owner"
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "tool": "run_kpi",
+        "requested_kpi": "collected_revenue",
+        "requested_dimension": "owner",
+        "task": {
+          "id": "t2",
+          "executor": "sql",
+          "kpi": "collected_revenue",
+          "goal": "Collected revenue by owner",
+          "time": "all time",
+          "scope": "org",
+          "dimension": "owner",
+          "answer_type": "breakdown",
+          "depends_on": [
+            "t1"
+          ]
+        }
+      },
+      {
+        "status": "ok",
+        "store": "sql",
+        "sql": "WITH rpt_deals AS (\nSELECT src.id, src.organization_id, src.title, src.stage, src.amount, src.currency_code, src.stage_weight, src.weighted_amount, src.company_id, src.company_name, src.company_industry, src.location_id, src.contact_id, src.contact_name, src.contact_email, src.owner_user_id, src.owner_name, src.created_at, src.closed_at, src.close_ts, src.updated_at, src.expected_close_date, src.lost_reason, src.is_open, src.is_won, src.is_lost, src.aging_days, src.forecast_category, src.forecast_reason, src.forecast_flagged FROM (\nSELECT \n  d.id,\n  d.organization_id,\n  d.title,\n  d.stage,\n  COALESCE(d.amount, 0) AS amount,\n  CASE\n    WHEN pq.currency IS NOT NULL AND pq.currency <> 'USD' THEN pq.currency\n    WHEN o.country IS NOT NULL AND o.country <> 'US' AND cc.curr IS NOT NULL THEN cc.curr\n    WHEN pq.currency = 'USD' THEN 'USD'\n    WHEN o.country = 'US' THEN 'USD'\n    ELSE 'USD'\n  END AS currency_code,\n  CASE d.stage\n    WHEN 'qualification' THEN 0.10\n    WHEN 'discover' THEN 0.25\n    WHEN 'propose' THEN 0.50\n    WHEN 'negotiate' THEN 0.75\n    WHEN 'closed_won' THEN 1.00\n    WHEN 'closed_lost' THEN 0.00\n    ELSE 0.00\n  END AS stage_weight,\n  ROUND(COALESCE(d.amount, 0) * (\n    CASE d.stage\n      WHEN 'qualification' THEN 0.10\n      WHEN 'discover' THEN 0.25\n      WHEN 'propose' THEN 0.50\n      WHEN 'negotiate' THEN 0.75\n      WHEN 'closed_won' THEN 1.00\n      WHEN 'closed_lost' THEN 0.00\n      ELSE 0.00\n    END\n  ), 2) AS weighted_amount,\n  d.company_id,\n  c.name AS company_name,\n  c.industry AS company_industry,\n  d.location_id,\n  d.contact_id,\n  COALESCE(d.contact_name, cdp.first_name || ' ' || COALESCE(cdp.last_name, '')) AS contact_name,\n  COALESCE(d.contact_email, id_k.key_value) AS contact_email,\n  d.owner_user_id,\n  su.first_name || ' ' || COALESCE(su.last_name, '') AS owner_name,\n  d.created_at,\n  d.closed_at,\n  COALESCE(d.closed_at, d.created_at) AS close_ts,\n  d.updated_at,\n  d.expected_close_date,\n  d.lost_reason,\n  (d.stage IN ('qualification', 'discover', 'propose', 'negotiate')) AS is_open,\n  (d.stage = 'closed_won') AS is_won,\n  (d.stage = 'closed_lost') AS is_lost,\n  FLOOR(EXTRACT(EPOCH FROM (NOW() - d.created_at))/86400)::integer AS aging_days,\n  d.forecast_category,\n  d.forecast_reason,\n  d.forecast_flagged\nFROM crm.deals d\nLEFT JOIN crm.companies c ON c.id = d.company_id AND c.organization_id = d.organization_id\nLEFT JOIN accounts.setup_users su ON su.id = d.owner_user_id\nLEFT JOIN accounts.organizations o ON o.id = d.organization_id\nLEFT JOIN cdp.customer_profile cdp ON cdp.cdp_id = d.contact_id\nLEFT JOIN LATERAL (\n  SELECT ik.key_value \n  FROM cdp.identity_keys ik \n  WHERE ik.cdp_id = d.contact_id AND ik.key_type = 'email' AND ik.organization_id = d.organization_id \n  ORDER BY ik.created_at ASC \n  LIMIT 1\n) id_k ON TRUE\nLEFT JOIN LATERAL (\n  SELECT q.currency \n  FROM crm.quotes q \n  WHERE q.deal_id = d.id AND q.organization_id = d.organization_id \n  ORDER BY CASE WHEN q.status = 'accepted' THEN 1 WHEN q.status = 'sent' THEN 2 ELSE 3 END, q.updated_at DESC \n  LIMIT 1\n) pq ON TRUE\nLEFT JOIN LATERAL (\n  SELECT CASE o.country \n    WHEN 'India' THEN 'INR' \n    WHEN 'United Kingdom' THEN 'GBP' \n    WHEN 'Germany' THEN 'EUR' \n    WHEN 'Canada' THEN 'CAD' \n    WHEN 'Australia' THEN 'AUD' \n    ELSE 'USD' \n  END AS curr\n) cc ON TRUE\nWHERE d.organization_id = %(_org_id)s\n) src WHERE TRUE\n)\nSELECT COALESCE(CAST(owner_name AS TEXT), 'Unassigned') AS owner, CAST(COUNT(*) AS BIGINT) AS total_opportunities FROM rpt_deals AS deals WHERE TRUE AND TRUE AND TRUE GROUP BY COALESCE(CAST(owner_name AS TEXT), 'Unassigned') ORDER BY 2 DESC NULLS LAST LIMIT 500",
+        "views": [
+          "deals"
+        ],
+        "guard_notes": [
+          "row cap 500 applied"
+        ],
+        "bound_params": {
+          "_org_id": 1000,
+          "_user_id": 1000,
+          "user_id": 1000,
+          "organization_id": 1000,
+          "org_id": 1000,
+          "tenant_id": 1000,
+          "current_user_id": 1000
+        },
+        "rows": [
+          {
+            "owner": "Yaswanth MG",
+            "total_opportunities": 27
+          },
+          {
+            "owner": "Aravind Selvaraj",
+            "total_opportunities": 21
+          },
+          {
+            "owner": "Unassigned",
+            "total_opportunities": 3
+          },
+          {
+            "owner": "Sample Name",
+            "total_opportunities": 1
+          }
+        ],
+        "kpi_id": "total_opportunities",
+        "dimension": "owner",
+        "time_status": "all_time",
+        "attempts": [
+          {
+            "raw": "{\"tool\":\"run_kpi\",\"kpi_id\":\"total_opportunities\",\"dimension\":\"owner\"}",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "total_opportunities",
+              "dimension": "owner"
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "tool": "run_kpi",
+        "requested_kpi": "total_opportunities",
+        "requested_dimension": "owner",
+        "task": {
+          "id": "t3",
+          "executor": "sql",
+          "kpi": "total_opportunities",
+          "goal": "Open deal count by owner",
+          "time": "all time",
+          "scope": "org",
+          "dimension": "owner",
+          "answer_type": "breakdown",
+          "depends_on": [
+            "t2"
+          ]
+        }
+      }
+    ],
+    "domain_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"standard\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"won_revenue\",\n      \"goal\": \"Won revenue by owner\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"dimension\": \"owner\",\n      \"answer_type\": \"breakdown\",\n      \"depends_on\": []\n    },\n    {\n      \"id\": \"t2\",\n      \"executor\": \"sql\",\n      \"kpi\": \"collected_revenue\",\n      \"goal\": \"Collected revenue by owner\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"dimension\": \"owner\",\n      \"answer_type\": \"breakdown\",\n      \"depends_on\": [\"t1\"]\n    },\n    {\n      \"id\": \"t3\",\n      \"executor\": \"sql\",\n      \"kpi\": \"total_opportunities\",\n      \"goal\": \"Open deal count by owner\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"dimension\": \"owner\",\n      \"answer_type\": \"breakdown\",\n      \"depends_on\": [\"t2\"]\n    }\n  ]\n}\n```",
+    "plan": {
+      "kind": "plan",
+      "depth": "standard",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "won_revenue",
+          "goal": "Won revenue by owner",
+          "time": "all time",
+          "scope": "org",
+          "dimension": "owner",
+          "answer_type": "breakdown",
+          "depends_on": []
+        },
+        {
+          "id": "t2",
+          "executor": "sql",
+          "kpi": "collected_revenue",
+          "goal": "Collected revenue by owner",
+          "time": "all time",
+          "scope": "org",
+          "dimension": "owner",
+          "answer_type": "breakdown",
+          "depends_on": [
+            "t1"
+          ]
+        },
+        {
+          "id": "t3",
+          "executor": "sql",
+          "kpi": "total_opportunities",
+          "goal": "Open deal count by owner",
+          "time": "all time",
+          "scope": "org",
+          "dimension": "owner",
+          "answer_type": "breakdown",
+          "depends_on": [
+            "t2"
+          ]
+        }
+      ]
+    },
+    "facts": "time_requested: all time\nperiod_applied: overall (no date filter, UTC)\ntime_status: all_time\ncatalog_kpi: won_revenue\nRESULT: 2 group(s)\ngroup_by: owner\ntotal_won_revenue: 270000\n  Yaswanth MG: 150000.00\n  Unassigned: 120000.00\n\ntime_requested: all time\nperiod_applied: overall (no date filter, UTC)\ntime_status: all_time\ncatalog_kpi: collected_revenue\nRESULT: 1 group(s)\ngroup_by: owner\ntotal_collected_revenue: 15317.99\n  2: 15317.99\n\ntime_requested: all time\nperiod_applied: overall (no date filter, UTC)\ntime_status: all_time\ncatalog_kpi: total_opportunities\nRESULT: 4 group(s)\ngroup_by: owner\ntotal_total_opportunities: 52\n  Yaswanth MG: 27\n  Aravind Selvaraj: 21\n  Unassigned: 3\n  Sample Name: 1",
+    "grounded": true,
+    "briefing_raw": "Won revenue is 270,000.00 and collected revenue is 15,317.99 for the overall period.\n\n| Owner | Won Revenue | Collected Revenue | Open Deals |\n| :--- | :--- | :--- | :--- |\n| Yaswanth MG | 150,000.00 | \u2014 | 27 |\n| Aravind Selvaraj | \u2014 | \u2014 | 21 |\n| Unassigned | 120,000.00 | \u2014 | 3 |\n| Sample Name | \u2014 | \u2014 | 1 |\n| 2 | \u2014 | 15,317.99 | \u2014 |"
+  }
+}

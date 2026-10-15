@@ -1,0 +1,40 @@
+{
+  "conversations": [
+    {
+      "id": "monitoring-waiting",
+      "title": "Who is waiting",
+      "turns": [
+        { "role": "user", "content": "Who is waiting in queue?" },
+        {
+          "role": "assistant",
+          "content": "<p>3 contacts waiting. Longest wait is <strong>4m 12s</strong> on Support webchat.</p>",
+          "tools": ["get_monitoring_snapshot"]
+        }
+      ]
+    },
+    {
+      "id": "monitoring-callback",
+      "title": "Create a callback",
+      "turns": [
+        { "role": "user", "content": "Create a WhatsApp callback for this missed contact" },
+        {
+          "role": "assistant",
+          "content": "<p>Created a WhatsApp callback for this missed contact.</p>",
+          "tools": ["get_contact_callback_channels", "create_callback_task"]
+        }
+      ]
+    },
+    {
+      "id": "monitoring-route-historical-report",
+      "title": "Route a historical performance report",
+      "turns": [
+        { "role": "user", "content": "Chart the last 30 days of queue SLA" },
+        {
+          "role": "assistant",
+          "content": "",
+          "tools": ["route_to_agent"]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Worktual — Get updates</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="top">
+      <span class="mark">Worktual</span>
+      <a class="live" href="https://worktual.in/" target="_blank" rel="noreferrer"
+        >worktual.in</a
+      >
+    </header>
+
+    <p id="setup" class="banner" hidden></p>
+
+    <section class="hero">
+      <p class="kicker">Sample customer site</p>
+      <h1>When your AI is bespoke, your advantage is permanent.</h1>
+      <p class="lede">
+        Worktual builds unified intelligence for service, process, and growth.
+        This local page stands in for a customer website. Join with
+        <strong>email or phone</strong> (either one), then allow notifications.
+        You are not logging into Campaign.
+      </p>
+    </section>
+
+    <section class="grid">
+      <article>
+        <h2>AI for Service</h2>
+        <p>
+          Human-like self-service, agent assist, and proactive engagement
+          across every channel.
+        </p>
+      </article>
+      <article>
+        <h2>AI for Growth</h2>
+        <p>
+          Multichannel campaigns, personalisation, and audience-focused
+          results that compound over time.
+        </p>
+      </article>
+      <article>
+        <h2>Campaign Management</h2>
+        <p>
+          Create and send across email, WhatsApp, SMS, and browser
+          notifications from one workspace.
+        </p>
+      </article>
+    </section>
+
+    <section class="optin" id="notify">
+      <div class="card">
+        <p class="kicker">Browser notifications</p>
+        <h2>Stay in the loop</h2>
+        <p class="lede">
+          Enter an email or a phone number, then allow notifications.
+          If that person is already in Audience, Web push is saved on their
+          customer record too.
+        </p>
+        <form id="form">
+          <label>
+            Email
+            <input
+              name="email"
+              type="email"
+              autocomplete="email"
+              placeholder="you@example.com"
+            />
+          </label>
+          <label>
+            Phone
+            <input
+              name="phone"
+              type="tel"
+              autocomplete="tel"
+              placeholder="919500401679"
+            />
+          </label>
+          <button id="btn" type="submit">Allow notifications</button>
+        </form>
+        <p id="status" class="status" role="status"></p>
+      </div>
+    </section>
+    <script type="module" src="./app.js?v=10"></script>
+  </body>
+</html>

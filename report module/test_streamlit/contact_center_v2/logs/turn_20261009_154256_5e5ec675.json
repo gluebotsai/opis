@@ -1,0 +1,62 @@
+{
+  "turn_id": "5e5ec675",
+  "timestamp": "2026-10-09T10:12:56.346080+00:00",
+  "question": "which agent have less csat score?",
+  "identity": {
+    "organization_id": 1012,
+    "user_id": 1016,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "json\n{\"kind\":\"plan\",\"understanding\":\"A list of agents with their CSAT scores, ordered from lowest to highest.\",\"tasks\":[{\"id\":\"t1\",\"executor\":\"sql\",\"path\":\"free_sql\",\"goal\":\"List agent names and their CSAT scores, ordered from lowest to highest.\",\"time\":\"all time\",\"scope\":\"org\",\"slice\":[\"agent\"],\"answer_type\":\"roster\"}]}",
+  "card": "card: none",
+  "facts": "result_id: r1\nwindow: all time\ntask_goal: List agent names and their CSAT scores, ordered from lowest to highest.\nanswer_type: roster\nEXECUTION_ERROR\nerror_type: REPLAN\nmessage: needs_free_sql is only valid on the certified_metric skill.",
+  "trace": {
+    "identity": {
+      "organization_id": 1012,
+      "user_id": 1016,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "which agent have less csat score?",
+    "plan": {
+      "kind": "plan",
+      "understanding": "A list of agents ranked by their CSAT scores to identify those with the lowest scores.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "free_sql",
+          "goal": "List agent names and their CSAT scores, ordered from lowest to highest.",
+          "time": "all time",
+          "scope": "org",
+          "slice": [
+            "agent"
+          ],
+          "answer_type": "roster"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "error",
+        "error_type": "REPLAN",
+        "certified": null,
+        "kpi_id": null,
+        "row_count": 0
+      }
+    ],
+    "facts": "result_id: r1\nwindow: all time\ntask_goal: List agent names and their CSAT scores, ordered from lowest to highest.\nanswer_type: roster\nEXECUTION_ERROR\nerror_type: REPLAN\nmessage: needs_free_sql is only valid on the certified_metric skill.",
+    "grounded": true,
+    "card": "card: none"
+  },
+  "error": null
+}

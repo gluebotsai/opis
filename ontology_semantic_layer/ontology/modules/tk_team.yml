@@ -1,0 +1,31 @@
+# Ticketing Teams specialist — mas-agents-guide.md A2.
+# Distinct from CC queue staffing (queue.yml). Shared Team class.
+module: tk_team
+layer: product
+depends_on: [core]
+owned_by_spoke: ticketing
+usecase: >
+  Create teams whose descriptions drive ticket routing. Add members from org roster.
+
+classes:
+  - id: Team
+    definition: Staff group that owns a class of tickets; description used by triage routing.
+    properties: [name, description]
+    relations:
+      members: Agent
+      handles: Ticket
+
+relations:
+  - { from: Team, type: has_member, to: Agent }
+  - { from: Ticket, type: owned_by_team, to: Team }
+
+actions:
+  - id: action.create_team
+    operates_on: [Team]
+    requires: [userConfirmed]
+    definition: Name, description (routing text), at least one member.
+
+  - id: action.add_team_members
+    operates_on: [Team]
+    requires: [userConfirmed]
+    definition: Add roster people not already on the team.

@@ -1,0 +1,82 @@
+{
+  "question": "which agent has attended the last conversation",
+  "answer": "The last conversation was **Unassigned**.",
+  "trace": {
+    "question": "which agent has attended the last conversation",
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1006,
+      "role": "admin",
+      "queue_ids": [
+        1003,
+        1023,
+        1027,
+        1028,
+        1030,
+        1031,
+        1032
+      ]
+    },
+    "model": "worktual-gemma",
+    "tasks": [
+      {
+        "status": "ok",
+        "store": "sql",
+        "sql": "WITH rpt_conversation_facts AS (\nSELECT src.conversation_id, src.channel, src.contact_id, src.queue_id, src.queue_name, src.team_id, src.team_name, src.assigned_agent_id, src.agent_name, src.status, src.priority, src.created_at, src.queued_at, src.assigned_at, src.first_agent_response_at, src.resolved_at, src.ended_at, src.end_reason, src.end_actor, src.disposition_code, src.disposition_category, src.disposition_label, src.resolution_code, src.subject, src.handoff_reason, src.previous_conversation_id, src.first_response_at, src.first_response_due_at, src.resolution_due_at, src.sla_status, src.speed_to_answer_seconds, src.first_response_seconds, src.resolution_duration_seconds, src.handle_time_seconds, src.is_active, src.is_resolved, src.is_closed, src.is_resolved_or_closed, src.is_bot_only, src.is_handed_off, src.is_reopened, src.is_high_priority, src.is_abandoned, src.first_response_sla_met, src.first_response_sla_missed, src.first_response_at_risk, src.resolution_sla_met, src.resolution_sla_missed, src.resolution_at_risk, src.sla_breached, src.has_sla FROM (\n-- Shared conversation grain for Contact Center.\n-- Inlined as the base_conversation CTE body.\nSELECT\n    c.id AS conversation_id,\n    c.organization_id,\n    c.channel,\n    c.contact_id,\n    c.queue_id,\n    COALESCE(q.name, 'Unassigned Queue') AS queue_name,\n    q.team_id,\n    t.name AS team_name,\n    c.assigned_agent_id,\n    c.assigned_user_id,\n    COALESCE(a.display_name, 'Unassigned') AS agent_name,\n    c.status,\n    c.priority,\n    c.subject,\n    c.handoff_reason,\n    c.bot_active,\n    c.previous_conversation_id,\n    c.created_at,\n    c.queued_at,\n    c.assigned_at,\n    c.first_response_at,\n    c.first_agent_response_at,\n    c.resolved_at,\n    c.ended_at,\n    c.closed_at,\n    c.end_reason,\n    c.end_actor,\n    c.disposition_code,\n    d.category AS disposition_category,\n    d.label AS disposition_label,\n    c.resolution_code,\n    c.first_response_due_at,\n    c.resolution_due_at,\n    c.sla_status,\n    COALESCE(rp.after_contact_work_seconds, 0) AS after_contact_work_seconds,\n    EXTRACT(EPOCH FROM (c.assigned_at - c.queued_at)) AS speed_to_answer_seconds,\n    EXTRACT(EPOCH FROM (c.assigned_at - c.queued_at)) / 60.0 AS speed_to_answer_minutes,\n    EXTRACT(EPOCH FROM (c.first_agent_response_at - c.queued_at)) AS first_response_seconds,\n    EXTRACT(EPOCH FROM (c.first_agent_response_at - c.queued_at)) / 60.0 AS first_response_minutes,\n    EXTRACT(EPOCH FROM (c.resolved_at - c.created_at)) AS resolution_duration_seconds,\n    EXTRACT(EPOCH FROM (c.resolved_at - c.created_at)) / 60.0 AS resolution_duration_minutes,\n    EXTRACT(EPOCH FROM (c.ended_at - c.assigned_at)) + COALESCE(rp.after_contact_work_seconds, 0) AS handle_time_seconds,\n    (EXTRACT(EPOCH FROM (c.ended_at - c.assigned_at)) + COALESCE(rp.after_contact_work_seconds, 0)) / 60.0 AS handle_time_minutes,\n    EXTRACT(EPOCH FROM (COALESCE(c.assigned_at, c.ended_at) - c.queued_at)) AS wait_time_seconds,\n    EXTRACT(EPOCH FROM (COALESCE(c.assigned_at, c.ended_at) - c.queued_at)) / 60.0 AS wait_time_minutes,\n    (c.status IN ('bot_active', 'queued', 'assigned', 'active')) AS is_active,\n    (c.status = 'resolved') AS is_resolved,\n    (c.status = 'closed') AS is_closed,\n    (c.status IN ('resolved', 'closed')) AS is_resolved_or_closed,\n    (c.assigned_agent_id IS NULL) AS is_bot_only,\n    (c.assigned_agent_id IS NOT NULL) AS is_handed_off,\n    (c.previous_conversation_id IS NOT NULL) AS is_reopened,\n    (c.priority >= 1) AS is_high_priority,\n    (c.end_reason = 'bot_resolved_inactivity') AS is_bot_resolved_inactivity,\n    (c.assigned_at IS NULL AND c.queued_at IS NOT NULL AND c.ended_at IS NOT NULL\n        AND COALESCE(c.end_reason, '') NOT IN ('superseded_by_new_voice_call', 'test_cleanup', 'bot_resolved_inactivity')\n        AND COALESCE(c.end_actor, '') <> 'agent') AS is_abandoned,\n    (c.first_agent_response_at IS NOT NULL AND c.first_response_due_at IS NOT NULL AND c.first_agent_response_at <= c.first_response_due_at) AS first_response_sla_met,\n    (c.first_response_due_at IS NOT NULL AND ((c.first_agent_response_at IS NOT NULL AND c.first_agent_response_at > c.first_response_due_at) OR (c.first_agent_response_at IS NULL AND NOW() > c.first_response_due_at))) AS first_response_sla_missed,\n    (c.sla_status = 'warning' AND c.first_agent_response_at IS NULL AND c.first_response_due_at IS NOT NULL AND NOW() <= c.first_response_due_at) AS first_response_at_risk,\n    (c.resolved_at IS NOT NULL AND c.resolution_due_at IS NOT NULL AND c.resolved_at <= c.resolution_due_at) AS resolution_sla_met,\n    (c.resolution_due_at IS NOT NULL AND ((c.resolved_at IS NOT NULL AND c.resolved_at > c.resolution_due_at) OR (c.status NOT IN ('resolved', 'closed') AND NOW() > c.resolution_due_at))) AS resolution_sla_missed,\n    (c.sla_status = 'warning' AND c.status NOT IN ('resolved', 'closed') AND c.resolution_due_at IS NOT NULL AND NOW() <= c.resolution_due_at) AS resolution_at_risk,\n    (c.sla_status = 'breached') AS sla_breached,\n    (c.sla_status IS NOT NULL AND c.sla_status != 'not_started') AS has_sla\nFROM ccass.conversations c\nLEFT JOIN ccass.agents a ON a.id = c.assigned_agent_id\nLEFT JOIN ccass.queues q ON q.id = c.queue_id\nLEFT JOIN accounts.setup_teams t ON t.id = q.team_id\nLEFT JOIN ccass.dispositions d ON d.code = c.disposition_code AND d.organization_id = c.organization_id\nLEFT JOIN ccass.routing_policies rp ON rp.queue_id = c.queue_id AND rp.organization_id = c.organization_id\nWHERE c.organization_id = %(_org_id)s\n\n) src WHERE TRUE\n)\nSELECT agent_name FROM rpt_conversation_facts AS conversation_facts ORDER BY created_at DESC LIMIT 1",
+        "views": [
+          "conversation_facts"
+        ],
+        "guard_notes": [],
+        "rows": [
+          {
+            "agent_name": "Unassigned"
+          }
+        ],
+        "attempts": [
+          {
+            "raw": "```json\n{\n  \"tool\": \"run_sql\",\n  \"sql\": \"SELECT agent_name FROM rpt.conversation_facts ORDER BY created_at DESC LIMIT 1\"\n}\n```",
+            "call": {
+              "kind": "run_sql",
+              "sql": "SELECT agent_name FROM rpt.conversation_facts ORDER BY created_at DESC LIMIT 1"
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "time_status": "all_time",
+        "tool": "run_sql",
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": null,
+          "dimension": null,
+          "goal": "Find the agent_name of the most recent conversation from rpt.conversation_facts",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "list",
+          "depends_on": []
+        }
+      }
+    ],
+    "domain_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"quick\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": null,\n      \"dimension\": null,\n      \"goal\": \"Find the agent_name of the most recent conversation from rpt.conversation_facts\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"answer_type\": \"list\",\n      \"depends_on\": []\n    }\n  ]\n}\n```",
+    "plan": {
+      "kind": "plan",
+      "depth": "quick",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": null,
+          "dimension": null,
+          "goal": "Find the agent_name of the most recent conversation from rpt.conversation_facts",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "list",
+          "depends_on": []
+        }
+      ]
+    },
+    "facts": "RESULT: agent_name = Unassigned",
+    "grounded": true,
+    "briefing_raw": "The last conversation was **Unassigned**."
+  }
+}

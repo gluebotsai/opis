@@ -1,0 +1,127 @@
+{
+  "question": "list me what are the products are ther",
+  "answer": "There are 6 active products in the catalog:\n\n| Product Name | SKU | Billing Type |\n| :--- | :--- | :--- |\n| AI Native Campaign Management | WT-CAMPAIGN | recurring |\n| AI Native Contact Centre (CCaaS) | WT-CCAAS | recurring |\n| AI Native CRM | WT-CRM | recurring |\n| AI Native Customer Value Management | WT-CVM | recurring |\n| AI Native Ticketing System | WT-TICKETING | recurring |\n| Cognitive Customer Data Platform | WT-CDP | one_time |",
+  "trace": {
+    "question": "list me what are the products are ther",
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1015,
+      "role": "admin"
+    },
+    "model": "worktual-gemma",
+    "tasks": [
+      {
+        "status": "ok",
+        "store": "sql",
+        "sql": "WITH rpt_products AS (\nSELECT src.id, src.name, src.sku, src.billing_type, src.is_active, src.created_at FROM (\nSELECT \n  p.id,\n  p.name,\n  p.sku,\n  p.billing_type,\n  (p.status = 'active') AS is_active,\n  p.created_at\nFROM inventory.products p\nWHERE p.organization_id = %(_org_id)s\n) src WHERE TRUE\n)\nSELECT id, name, sku, billing_type, is_active, created_at FROM rpt_products AS products WHERE is_active = TRUE ORDER BY name LIMIT 50",
+        "views": [
+          "products"
+        ],
+        "guard_notes": [],
+        "bound_params": {
+          "_org_id": 1003,
+          "_user_id": 1015,
+          "user_id": 1015,
+          "organization_id": 1003,
+          "org_id": 1003,
+          "tenant_id": 1003,
+          "current_user_id": 1015
+        },
+        "rows": [
+          {
+            "id": "wt-product-campaign",
+            "name": "AI Native Campaign Management",
+            "sku": "WT-CAMPAIGN",
+            "billing_type": "recurring",
+            "is_active": true,
+            "created_at": "2026-09-03 08:56:47.681000"
+          },
+          {
+            "id": "wt-product-ccaas",
+            "name": "AI Native Contact Centre (CCaaS)",
+            "sku": "WT-CCAAS",
+            "billing_type": "recurring",
+            "is_active": true,
+            "created_at": "2026-09-03 08:56:36.778000"
+          },
+          {
+            "id": "wt-product-crm",
+            "name": "AI Native CRM",
+            "sku": "WT-CRM",
+            "billing_type": "recurring",
+            "is_active": true,
+            "created_at": "2026-09-03 08:56:43.068000"
+          },
+          {
+            "id": "wt-product-cvm",
+            "name": "AI Native Customer Value Management",
+            "sku": "WT-CVM",
+            "billing_type": "recurring",
+            "is_active": true,
+            "created_at": "2026-09-03 08:56:46.214000"
+          },
+          {
+            "id": "wt-product-ticketing",
+            "name": "AI Native Ticketing System",
+            "sku": "WT-TICKETING",
+            "billing_type": "recurring",
+            "is_active": true,
+            "created_at": "2026-09-03 08:56:40.772000"
+          },
+          {
+            "id": "wt-product-cdp",
+            "name": "Cognitive Customer Data Platform",
+            "sku": "WT-CDP",
+            "billing_type": "one_time",
+            "is_active": true,
+            "created_at": "2026-09-03 08:56:45.064000"
+          }
+        ],
+        "attempts": [
+          {
+            "raw": "```sql\nSELECT id, name, sku, billing_type, is_active, created_at\nFROM rpt.products\nWHERE is_active = TRUE\nORDER BY name\nLIMIT 50;\n```",
+            "call": {
+              "kind": "run_sql",
+              "sql": "SELECT id, name, sku, billing_type, is_active, created_at\nFROM rpt.products\nWHERE is_active = TRUE\nORDER BY name\nLIMIT 50"
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "time_status": "all_time",
+        "tool": "run_sql",
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": null,
+          "goal": "List active products from rpt.products",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "list",
+          "depends_on": []
+        }
+      }
+    ],
+    "domain_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"quick\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": null,\n      \"goal\": \"List active products from rpt.products\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"dimension\": null,\n      \"answer_type\": \"list\",\n      \"depends_on\": []\n    }\n  ]\n}\n```",
+    "plan": {
+      "kind": "plan",
+      "depth": "quick",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": null,
+          "goal": "List active products from rpt.products",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "list",
+          "depends_on": []
+        }
+      ]
+    },
+    "facts": "time_requested: all time\nperiod_applied: overall (no date filter, UTC)\ntime_status: all_time\nRESULT: 6 group(s)\ngroup_by: group\n  id=wt-product-campaign | name=AI Native Campaign Management | sku=WT-CAMPAIGN | billing_type=recurring | is_active=True | created_at=2026-09-03 08:56:47.681000\n  id=wt-product-ccaas | name=AI Native Contact Centre (CCaaS) | sku=WT-CCAAS | billing_type=recurring | is_active=True | created_at=2026-09-03 08:56:36.778000\n  id=wt-product-crm | name=AI Native CRM | sku=WT-CRM | billing_type=recurring | is_active=True | created_at=2026-09-03 08:56:43.068000\n  id=wt-product-cvm | name=AI Native Customer Value Management | sku=WT-CVM | billing_type=recurring | is_active=True | created_at=2026-09-03 08:56:46.214000\n  id=wt-product-ticketing | name=AI Native Ticketing System | sku=WT-TICKETING | billing_type=recurring | is_active=True | created_at=2026-09-03 08:56:40.772000\n  id=wt-product-cdp | name=Cognitive Customer Data Platform | sku=WT-CDP | billing_type=one_time | is_active=True | created_at=2026-09-03 08:56:45.064000",
+    "grounded": true,
+    "briefing_raw": "There are 6 active products in the catalog:\n\n| Product Name | SKU | Billing Type |\n| :--- | :--- | :--- |\n| AI Native Campaign Management | WT-CAMPAIGN | recurring |\n| AI Native Contact Centre (CCaaS) | WT-CCAAS | recurring |\n| AI Native CRM | WT-CRM | recurring |\n| AI Native Customer Value Management | WT-CVM | recurring |\n| AI Native Ticketing System | WT-TICKETING | recurring |\n| Cognitive Customer Data Platform | WT-CDP | one_time |"
+  }
+}

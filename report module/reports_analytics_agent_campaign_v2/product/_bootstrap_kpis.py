@@ -1,0 +1,1281 @@
+#!/usr/bin/env python3
+"""Write access.yml, kpis.yml, and certified SQL templates."""
+from pathlib import Path
+import yaml
+
+ROOT = Path(__file__).resolve().parent
+schema = yaml.safe_load((ROOT / "schema.yml").read_text())
+all_views = list((schema.get("views") or {}).keys())
+
+ADMIN_ONLY = {
+    "channel_sending_profiles",
+    "organization_api_keys",
+    "push_channel_settings",
+    "email_org_profiles",
+    "email_senders",
+    "email_domains",
+    "email_return_paths",
+    "email_sending_caps",
+    "sms_channel_settings",
+    "setup_channel_configs",
+    "setup_email_configs",
+    "mail_oauth_connections",
+    "a2a_spoke_clients",
+    "email_suppressions",
+    "regulated_templates",
+    "auth_sessions",
+    "organization_products",
+}
+
+OWN_DRAFT = {"agent_sessions", "audience_refs", "session_temp_contacts", "channel_templates", "template_messages"}
+CAMPAIGN_CHILD = {
+    "campaigns",
+    "send_batches",
+    "send_recipients",
+}
+    CAMPAIGN_VIA_ID = {"campaign_channels", "campaign_audience", "audience_people"}
+
+def scope_for(role: str, view: str) -> str:
+    if view in OWN_DRAFT:
+        if view == "agent_sessions":
+            return "created_by_user_id = {user_id}"
+        if view == "session_temp_contacts":
+            return "session_id IN (SELECT id FROM campaign.campaign_agent_sessions WHERE organization_id = {org_id} AND created_by_user_id = {user_id})"
+        if view == "audience_refs":
+            return "session_id IN (SELECT id FROM campaign.campaign_agent_sessions WHERE organization_id = {org_id} AND created_by_user_id = {user_id})"
+        if view == "channel_templates":
+            return "created_at IS NOT NULL AND session_id IN (SELECT id FROM campaign.campaign_agent_sessions WHERE organization_id = {org_id} AND created_by_user_id = {user_id})"
+        if view == "template_messages":
+            return "template_id IN (SELECT id FROM campaign.campaign_channel_templates t JOIN campaign.campaign_agent_sessions s ON s.id = t.session_id WHERE s.organization_id = {org_id} AND s.created_by_user_id = {user_id})"
+    if view in CAMPAIGN_VIA_ID:
+        extra = "" if role == "admin" else " AND created_by_user_id = {user_id}"
+        return (
+            "campaign_id IN (SELECT id FROM campaign.campaigns WHERE organization_id = {org_id} "
+            "AND branch_id = {branch_id}" + extra + ")"
+        )
+    if view in CAMPAIGN_CHILD:
+        if role == "admin":
+            return "branch_id = {branch_id}" if view == "campaigns" else "branch_id = {branch_id}"
+        if view == "campaigns":
+            return "branch_id = {branch_id} AND created_by_user_id = {user_id}"
+        return "branch_id = {branch_id} AND created_by_user_id = {user_id}"
+    if view == "app_notifications":
+        return "user_id IS NULL OR user_id = {user_id}" if role != "admin" else "TRUE"
+    if view in {"customers", "identity_keys", "opportunity_events", "form_submissions"}:
+        return "TRUE"
+    if view == "branches":
+        return "id = {branch_id}"
+    if view in {"organization_products"}:
+        return "branch_id = {branch_id}"
+    return "TRUE"
+
+
+# send_batches and send_recipients have branch_id
+# campaign_channels may NOT have branch_id - check schema
+
+access_views = {"admin": {}, "operator": {}}
+for v in all_views:
+    access_views["admin"][v] = {"scope": scope_for("admin", v)}
+    if v in ADMIN_ONLY:
+        continue
+    access_views["operator"][v] = {"scope": scope_for("operator", v)}
+
+access = {
+    "version": 1,
+    "roles": {
+        "admin": {"default_scope": "org", "created_by_me_column": "created_by_user_id"},
+        "operator": {"default_scope": "mine", "created_by_me_column": "created_by_user_id"},
+    },
+    "scope_levels": ["org", "mine", "own", "created_by_me"],
+    "matrix": {
+        "org": {"admin": "all", "operator": "deny"},
+        "mine": {"admin": "all", "operator": "all"},
+        "own": {"admin": "all", "operator": "all"},
+        "created_by_me": {"admin": "all", "operator": "all"},
+    },
+    "views": access_views,
+}
+
+(ROOT / "access.yml").write_text(yaml.safe_dump(access, sort_keys=False, width=120))
+print("access views admin", len(access_views["admin"]), "operator", len(access_views["operator"]))
+
+CAMP_DIMS = ["status", "channel", "source_channel", "created_by", "day", "week", "month", "campaign"]
+REC_DIMS = ["channel", "outcome", "campaign", "ab_variant", "day", "week", "month", "contact", "platform"]
+CONTACT_DIMS = ["contact"]
+CDP_DIMS = ["city", "country", "acquisition_channel"]
+
+def kpi(id_, **kwargs):
+    return id_, kwargs
+
+kpis = {}
+
+def add(kid, **card):
+    kpis[kid] = card
+
+add(
+    "campaigns_ran",
+    label="Campaigns ran",
+    family="volume",
+    aggregation="count",
+    grain="one saved campaign that actually ran",
+    dimension_grain="campaign",
+    unit="campaigns",
+    default_time_column="campaigns.launch_local_date",
+    time_kind="launch_date",
+    exclude_ppc_only=True,
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=CAMP_DIMS,
+    when_to_use="Count how many campaigns launched/ran in the period, not drafts.",
+    when_not="Do not use for total saved campaigns (including draft/scheduled) or message volume.",
+    not_confused_with=["campaigns_total", "campaigns_sent", "messages_delivered", "audience_selected"],
+    user_phrases=["campaigns ran", "how many campaigns ran", "campaigns launched"],
+    dimension_notes="status means campaign lifecycle (live/completed/cancelled), not send outcome.",
+    definition={
+        "numerator": "COUNT distinct campaigns with status in live, completed, cancelled",
+        "denominator": "none",
+        "includes": "ran campaigns in org+branch (operator: created by me); period on launch_local_date UTC",
+        "excludes": "draft, scheduled; PPC-only campaigns",
+    },
+    admin_only=False,
+)
+
+add(
+    "campaigns_total",
+    label="Total saved campaigns",
+    family="volume",
+    aggregation="count",
+    grain="one saved campaign row",
+    dimension_grain="campaign",
+    unit="campaigns",
+    default_time_column="campaigns.created_at",
+    time_kind="timestamptz",
+    exclude_ppc_only=False,
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=CAMP_DIMS,
+    when_to_use="How many campaigns exist in the workspace: every saved row, including draft and scheduled.",
+    when_not="Not campaigns that ran. Not campaigns with a delivery.",
+    not_confused_with=["campaigns_ran", "campaigns_sent"],
+    user_phrases=["how many campaigns are there", "total campaigns", "campaigns exist", "saved campaigns", "how many campaigns"],
+    dimension_notes="status means campaign lifecycle including draft/scheduled.",
+    definition={
+        "numerator": "COUNT all saved campaigns in org+branch",
+        "denominator": "none",
+        "includes": "draft, scheduled, live, completed, cancelled; PPC-only included",
+        "excludes": "not a ran/launched filter",
+    },
+    admin_only=False,
+)
+
+add(
+    "campaigns_sent",
+    label="Campaigns sent (headline)",
+    family="volume",
+    aggregation="count",
+    grain="one saved campaign with at least one delivered message",
+    dimension_grain="campaign",
+    unit="campaigns",
+    default_time_column="campaigns.launch_local_date",
+    time_kind="launch_date",
+    exclude_ppc_only=True,
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=CAMP_DIMS,
+    when_to_use="Dashboard Sent card: count of campaigns that delivered at least once, not message count.",
+    when_not="Do not use when they asked how many emails/messages were delivered.",
+    not_confused_with=["messages_delivered", "messages_sent", "campaigns_ran"],
+    user_phrases=["campaigns sent", "how many campaigns delivered", "sent headline"],
+    dimension_notes="Still a campaign count even when grouped by channel.",
+    definition={
+        "numerator": "COUNT distinct campaign ids with >=1 delivered recipient",
+        "denominator": "none",
+        "includes": "ran set intersect delivered outcome",
+        "excludes": "stubs, bounces, PPC-only",
+    },
+)
+
+add(
+    "campaigns_failed",
+    label="Campaigns failed (headline)",
+    family="volume",
+    aggregation="count",
+    grain="one saved campaign with at least one failed send",
+    dimension_grain="campaign",
+    unit="campaigns",
+    default_time_column="campaigns.launch_local_date",
+    time_kind="launch_date",
+    exclude_ppc_only=True,
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=CAMP_DIMS,
+    when_to_use="Dashboard Failed card: campaigns with >=1 failed/cancelled recipient.",
+    when_not="Not bounce counts and not failed message volume.",
+    not_confused_with=["messages_failed", "messages_bounced", "stub_sends"],
+    user_phrases=["campaigns failed", "failed campaigns"],
+    dimension_notes="Failed outcome, not bounce.",
+    definition={
+        "numerator": "COUNT distinct campaigns with >=1 failed outcome recipient",
+        "denominator": "none",
+        "includes": "status failed or cancelled",
+        "excludes": "skipped, bounce, stub",
+    },
+)
+
+add(
+    "email_open_rate",
+    label="Email unique open rate",
+    family="engagement",
+    aggregation="ratio",
+    grain="rate over delivered email recipients",
+    dimension_grain="recipient",
+    unit="rate",
+    default_time_column="campaigns.launch_local_date",
+    time_kind="launch_date",
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=["channel", "campaign", "ab_variant", "day", "week", "month"],
+    when_to_use="Unique email opens divided by email delivered. Dashboard open rate.",
+    when_not="Not lifetime contact opens. Not total open_count. Not click rate.",
+    not_confused_with=["contact_lifetime_opens", "total_opens", "click_rate", "ctor"],
+    user_phrases=["open rate", "unique opens percent", "email opens"],
+    dimension_notes="Opens are email only. Grouping by channel still email-filtered.",
+    definition={
+        "numerator": "COUNT delivered email recipients with opened_at not null",
+        "denominator": "COUNT delivered email recipients",
+        "includes": "channel=email, is_delivered",
+        "excludes": "open_count repeats; non-email; stubs",
+    },
+)
+
+add(
+    "click_rate",
+    label="Unique click rate",
+    family="engagement",
+    aggregation="ratio",
+    grain="rate over delivered click-tracked recipients",
+    dimension_grain="recipient",
+    unit="rate",
+    default_time_column="campaigns.launch_local_date",
+    time_kind="launch_date",
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=["channel", "campaign", "ab_variant", "day", "week", "month"],
+    when_to_use="Unique clicks on email, app push, web push over delivered on those channels.",
+    when_not="Do not mix WhatsApp/SMS. Not CTOR.",
+    not_confused_with=["ctor", "total_clicks", "contact_lifetime_clicks", "email_open_rate"],
+    user_phrases=["click rate", "unique clicks percent", "CTR messaging"],
+    dimension_notes="Click-tracked channels only: email, push, web.",
+    definition={
+        "numerator": "COUNT delivered email/push/web with clicked_at not null",
+        "denominator": "COUNT delivered email/push/web",
+        "includes": "unique clicked_at",
+        "excludes": "whatsapp, sms, PPC",
+    },
+)
+
+add(
+    "delivered_by_channel",
+    label="Delivered by channel",
+    family="volume",
+    aggregation="count",
+    grain="delivered recipient rows grouped by channel",
+    dimension_grain="recipient",
+    unit="messages",
+    default_time_column="campaigns.launch_local_date",
+    time_kind="launch_date",
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=["channel", "campaign", "day", "week", "month"],
+    when_to_use="Dashboard channel strip: delivered volume (and typically grouped by channel).",
+    when_not="Not campaign headline Sent.",
+    not_confused_with=["campaigns_sent", "messages_sent"],
+    user_phrases=["delivered by channel", "channel cards", "messages per channel"],
+    dimension_notes="If they did not name a slice, still return channel breakdown.",
+    definition={
+        "numerator": "COUNT delivered recipients",
+        "denominator": "none",
+        "includes": "is_delivered",
+        "excludes": "stubs, bounces",
+    },
+)
+
+add(
+    "delivery_trend",
+    label="Delivery trend by day",
+    family="volume",
+    aggregation="count",
+    grain="UTC launch day with delivered/open/click counts",
+    dimension_grain="recipient",
+    unit="messages",
+    default_time_column="campaigns.launch_local_date",
+    time_kind="launch_date",
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=["day", "week", "month", "channel"],
+    when_to_use="Daily series of delivered messages plus unique email opens/clicks.",
+    when_not="Not a single headline number without days.",
+    not_confused_with=["delivered_by_channel"],
+    user_phrases=["delivery trend", "daily delivered", "opens over time"],
+    dimension_notes="Default slice is day even if they only said trend.",
+    definition={
+        "numerator": "daily delivered count; optional unique email opens/clicks",
+        "denominator": "none",
+        "includes": "launch_local_date buckets UTC",
+        "excludes": "created_at buckets",
+    },
+)
+
+add(
+    "monitor_preview",
+    label="Campaign monitor preview",
+    family="volume",
+    aggregation="count",
+    grain="one campaign with targeted/delivered/opened/clicked",
+    dimension_grain="campaign",
+    unit="campaigns",
+    default_time_column="campaigns.launch_local_date",
+    time_kind="launch_date",
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=["campaign", "status"],
+    when_to_use="Per-campaign targeted (audience_count) vs delivered/opened/clicked.",
+    when_not="Not org headline open rate.",
+    not_confused_with=["email_open_rate", "audience_selected"],
+    user_phrases=["monitor preview", "campaign performance list", "targeted vs delivered"],
+    dimension_notes="One row per campaign.",
+    definition={
+        "numerator": "audience_count plus delivered/open/click counts per campaign",
+        "denominator": "none",
+        "includes": "ran campaigns",
+        "excludes": "scheduled drafts performance cells",
+    },
+)
+
+# T2 volumes
+for kid, label, outcome, when, phrases, confuse in [
+    ("messages_sent", "Messages sent volume", "sent", "Count recipient rows with sent outcome including those that later bounce? Use shared sent outcome before bounce subtract. Prefer messages_delivered for rate denominator.", ["messages sent", "send volume"], ["campaigns_sent", "messages_delivered"]),
+    ("messages_failed", "Messages failed volume", "failed", "Count failed/cancelled recipient rows.", ["failed messages", "failure volume"], ["campaigns_failed"]),
+    ("messages_bounced", "Messages bounced", "bounce", "Bounce outcomes, not Dashboard Failed.", ["bounces", "hard bounce"], ["messages_failed", "bounce_rate"]),
+    ("messages_delivered", "Messages delivered", "delivered", "Sent minus bounce minus stub. Rate denominator.", ["delivered messages", "delivered volume"], ["campaigns_sent", "messages_sent"]),
+    ("stub_sends", "Stub sends", "stub", "Demo deliveries that must not count as inbox success.", ["stubs", "stub sends"], ["messages_delivered"]),
+]:
+    add(
+        kid,
+        label=label,
+        family="volume",
+        aggregation="count",
+        grain="one send recipient row",
+        dimension_grain="recipient",
+        unit="messages",
+        default_time_column="campaigns.launch_local_date",
+        time_kind="launch_date",
+        allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+        allowed_dimensions=REC_DIMS,
+        when_to_use=when,
+        when_not="Not a campaign-count headline.",
+        not_confused_with=confuse,
+        user_phrases=phrases,
+        dimension_notes="outcome/status on this grain is delivery outcome.",
+        definition={
+            "numerator": f"COUNT recipients with outcome mapped as {outcome}",
+            "denominator": "none",
+            "includes": "org+branch campaign visibility",
+            "excludes": "wrong grain (campaigns)",
+        },
+        admin_only=kid in (),
+    )
+
+add(
+    "audience_selected",
+    label="Audience selected",
+    family="volume",
+    aggregation="count",
+    grain="frozen audience people on a campaign",
+    dimension_grain="campaign",
+    unit="people",
+    default_time_column="campaigns.launch_local_date",
+    time_kind="launch_date",
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=["campaign", "status", "day"],
+    when_to_use="How many people were planned/frozen. audience_count or campaign_audience rows.",
+    when_not="Not delivered. Not CDP directory size.",
+    not_confused_with=["cdp_contact_count", "messages_delivered", "audience_missed"],
+    user_phrases=["selected", "targeted", "audience size", "frozen audience"],
+    dimension_notes="This is Selected, not Delivered.",
+    definition={
+        "numerator": "SUM/COUNT frozen audience",
+        "denominator": "none",
+        "includes": "campaigns.audience_count or audience rows",
+        "excludes": "CDP full directory",
+    },
+)
+
+add(
+    "unique_opens",
+    label="Unique opens",
+    family="engagement",
+    aggregation="count",
+    grain="delivered email recipients who opened",
+    dimension_grain="recipient",
+    unit="recipients",
+    default_time_column="campaigns.launch_local_date",
+    time_kind="launch_date",
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=REC_DIMS,
+    when_to_use="Count unique email opens (opened_at), not a rate.",
+    when_not="Use email_open_rate for percent. Not open_count.",
+    not_confused_with=["email_open_rate", "total_opens", "contact_lifetime_opens"],
+    user_phrases=["unique opens", "how many opened"],
+    dimension_notes="Email only.",
+    definition={"numerator": "COUNT delivered email with opened_at", "denominator": "none", "includes": "email", "excludes": "repeat opens"},
+)
+
+add(
+    "unique_clicks",
+    label="Unique clicks",
+    family="engagement",
+    aggregation="count",
+    grain="delivered click-tracked recipients who clicked",
+    dimension_grain="recipient",
+    unit="recipients",
+    default_time_column="campaigns.launch_local_date",
+    time_kind="launch_date",
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=REC_DIMS,
+    when_to_use="Count unique clicks, not rate.",
+    when_not="Use click_rate for percent.",
+    not_confused_with=["click_rate", "total_clicks", "ctor"],
+    user_phrases=["unique clicks", "how many clicked"],
+    dimension_notes="email/push/web.",
+    definition={"numerator": "COUNT delivered click-tracked with clicked_at", "denominator": "none", "includes": "email push web", "excludes": "sms whatsapp"},
+)
+
+add(
+    "total_opens",
+    label="Total opens",
+    family="engagement",
+    aggregation="sum",
+    grain="sum of open_count on recipients",
+    dimension_grain="recipient",
+    unit="events",
+    default_time_column="campaigns.launch_local_date",
+    time_kind="launch_date",
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=REC_DIMS,
+    when_to_use="Repeat pixel opens SUM(open_count).",
+    when_not="Not unique open rate.",
+    not_confused_with=["unique_opens", "email_open_rate"],
+    user_phrases=["total opens", "all opens", "repeat opens"],
+    dimension_notes="",
+    definition={"numerator": "SUM(open_count)", "denominator": "none", "includes": "all recipient rows in scope", "excludes": "unique opened_at logic"},
+)
+
+add(
+    "total_clicks",
+    label="Total clicks",
+    family="engagement",
+    aggregation="sum",
+    grain="sum of click_count on recipients",
+    dimension_grain="recipient",
+    unit="events",
+    default_time_column="campaigns.launch_local_date",
+    time_kind="launch_date",
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=REC_DIMS,
+    when_to_use="Repeat tracked clicks SUM(click_count).",
+    when_not="Not unique click rate.",
+    not_confused_with=["unique_clicks", "click_rate"],
+    user_phrases=["total clicks", "all clicks"],
+    dimension_notes="",
+    definition={"numerator": "SUM(click_count)", "denominator": "none", "includes": "", "excludes": "unique clicked_at"},
+)
+
+add(
+    "ctor",
+    label="Click to open rate",
+    family="engagement",
+    aggregation="ratio",
+    grain="email unique clicks over unique opens",
+    dimension_grain="recipient",
+    unit="rate",
+    default_time_column="campaigns.launch_local_date",
+    time_kind="launch_date",
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=["campaign", "ab_variant", "day", "week", "month"],
+    when_to_use="CTOR = unique email clicks / unique email opens.",
+    when_not="Not click_rate (that uses delivered denominator).",
+    not_confused_with=["click_rate", "email_open_rate"],
+    user_phrases=["ctor", "click to open", "click-to-open"],
+    dimension_notes="Email only. Null if opens=0.",
+    definition={"numerator": "unique email clicks", "denominator": "unique email opens", "includes": "email delivered", "excludes": "click_rate denominator delivered"},
+)
+
+add(
+    "ab_variant_performance",
+    label="Email A/B variant performance",
+    family="engagement",
+    aggregation="ratio",
+    grain="delivered email recipients in an A/B variant",
+    dimension_grain="recipient",
+    unit="rate",
+    default_time_column="campaigns.launch_local_date",
+    time_kind="launch_date",
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=["ab_variant", "campaign", "day"],
+    when_to_use="Open and click rates split by ab_variant.",
+    when_not="If A/B is off, variants are null.",
+    not_confused_with=["email_open_rate"],
+    user_phrases=["a/b", "variant performance", "holdout"],
+    dimension_notes="Must group by ab_variant.",
+    definition={"numerator": "unique opens/clicks per variant", "denominator": "delivered per variant", "includes": "ab_variant values", "excludes": "non-email"},
+)
+
+add(
+    "audience_missed",
+    label="Audience missed",
+    family="volume",
+    aggregation="count",
+    grain="frozen audience people without a successful send",
+    dimension_grain="campaign",
+    unit="people",
+    default_time_column="campaigns.launch_local_date",
+    time_kind="launch_date",
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=["campaign"],
+    when_to_use="People in frozen audience who did not get outcome sent.",
+    when_not="Not failed volume on recipients only.",
+    not_confused_with=["messages_failed", "audience_selected"],
+    user_phrases=["audience missed", "not sent", "did not receive"],
+    dimension_notes="",
+    definition={"numerator": "audience contact_ids minus sent recipients", "denominator": "none", "includes": "campaign_audience", "excludes": "CDP directory"},
+)
+
+add(
+    "event_opens",
+    label="Event form opens",
+    family="events",
+    aggregation="sum",
+    grain="one opportunity event",
+    dimension_grain="event",
+    unit="opens",
+    default_time_column="created_at",
+    time_kind="timestamptz",
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=["event", "status"],
+    when_to_use="Public form open_count. Org-wide for both roles.",
+    when_not="Not email opens.",
+    not_confused_with=["unique_opens", "email_open_rate"],
+    user_phrases=["form opens", "event opens"],
+    dimension_notes="Events are org-wide, not my-campaigns.",
+    definition={"numerator": "SUM(open_count)", "denominator": "none", "includes": "opportunity_events", "excludes": "email opened_at"},
+)
+
+add(
+    "event_submissions",
+    label="Event form submissions",
+    family="events",
+    aggregation="count",
+    grain="one form reply or event submission_count",
+    dimension_grain="form_submission",
+    unit="submissions",
+    default_time_column="created_at",
+    time_kind="timestamptz",
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=["event"],
+    when_to_use="How many form replies.",
+    when_not="Not email clicks.",
+    not_confused_with=["event_opens", "event_conversion"],
+    user_phrases=["form submissions", "event replies"],
+    dimension_notes="Org-wide.",
+    definition={"numerator": "COUNT submissions or SUM submission_count", "denominator": "none", "includes": "form_submissions", "excludes": ""},
+)
+
+add(
+    "event_conversion",
+    label="Event conversion",
+    family="events",
+    aggregation="ratio",
+    grain="submissions over form opens",
+    dimension_grain="event",
+    unit="rate",
+    default_time_column="created_at",
+    time_kind="timestamptz",
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=["event"],
+    when_to_use="submissions / opens when opens > 0.",
+    when_not="Not email CTOR.",
+    not_confused_with=["ctor", "click_rate"],
+    user_phrases=["form conversion", "event conversion"],
+    dimension_notes="Org-wide.",
+    definition={"numerator": "submissions", "denominator": "opens", "includes": "", "excludes": ""},
+)
+
+for kid, label, phrase in [
+    ("ppc_impressions", "PPC impressions", "ad impressions"),
+    ("ppc_clicks", "PPC clicks", "ad clicks"),
+    ("ppc_spend", "PPC spend", "ad spend"),
+    ("ppc_conversions", "PPC conversions", "ad conversions"),
+]:
+    add(
+        kid,
+        label=label,
+        family="ads",
+        aggregation="sum",
+        grain="PPC JSON on campaigns.launch_plan, not recipient rows",
+        dimension_grain="campaign",
+        unit="ads",
+        default_time_column="campaigns.launch_local_date",
+        time_kind="launch_date",
+        allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+        allowed_dimensions=["campaign", "day"],
+        when_to_use=f"Read launch_plan ads JSON for {phrase}. There is no ads fact table.",
+        when_not="Not messaging recipient clicks.",
+        not_confused_with=["unique_clicks", "click_rate"],
+        user_phrases=[phrase, kid.replace("_", " ")],
+        dimension_notes="JSON channel_run.",
+        definition={"numerator": f"{phrase} from launch_plan", "denominator": "none", "includes": "PPC channel_run", "excludes": "send_recipients"},
+    )
+
+add(
+    "ppc_ctr",
+    label="PPC CTR",
+    family="ads",
+    aggregation="ratio",
+    grain="ad clicks over impressions from launch_plan JSON",
+    dimension_grain="campaign",
+    unit="rate",
+    default_time_column="campaigns.launch_local_date",
+    time_kind="launch_date",
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=["campaign"],
+    when_to_use="Ads CTR = clicks/impressions in launch_plan.",
+    when_not="Not messaging click_rate.",
+    not_confused_with=["click_rate"],
+    user_phrases=["ppc ctr", "ads ctr"],
+    dimension_notes="",
+    definition={"numerator": "ppc clicks", "denominator": "ppc impressions", "includes": "JSON", "excludes": "recipients"},
+)
+
+add(
+    "ppc_cpc",
+    label="PPC CPC",
+    family="ads",
+    aggregation="ratio",
+    grain="spend over ad clicks from launch_plan",
+    dimension_grain="campaign",
+    unit="money_per_click",
+    default_time_column="campaigns.launch_local_date",
+    time_kind="launch_date",
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=["campaign"],
+    when_to_use="spend/clicks from ads JSON.",
+    when_not="Not messaging.",
+    not_confused_with=["ppc_cpa"],
+    user_phrases=["cpc", "cost per click"],
+    dimension_notes="",
+    definition={"numerator": "spend", "denominator": "ppc clicks", "includes": "JSON", "excludes": ""},
+)
+
+add(
+    "ppc_cpa",
+    label="PPC CPA",
+    family="ads",
+    aggregation="ratio",
+    grain="spend over conversions from launch_plan",
+    dimension_grain="campaign",
+    unit="money_per_conversion",
+    default_time_column="campaigns.launch_local_date",
+    time_kind="launch_date",
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=["campaign"],
+    when_to_use="spend/conversions from ads JSON.",
+    when_not="",
+    not_confused_with=["ppc_cpc"],
+    user_phrases=["cpa", "cost per acquisition"],
+    dimension_notes="",
+    definition={"numerator": "spend", "denominator": "conversions", "includes": "JSON", "excludes": ""},
+)
+
+# contact KPIs
+add(
+    "cdp_contact_count",
+    label="CDP contact count",
+    family="contacts",
+    aggregation="count",
+    grain="one CDP person in the org directory",
+    dimension_grain="default",
+    unit="people",
+    default_time_column="created_at",
+    time_kind="timestamptz",
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=CDP_DIMS,
+    when_to_use="How many people in the Campaign audience directory (CDP), excluding campaign_deleted.",
+    when_not="Not frozen campaign audience_count. Not send recipients.",
+    not_confused_with=["audience_selected", "contacts_engaged"],
+    user_phrases=["how many contacts", "audience directory", "cdp people"],
+    dimension_notes="Org-wide for both roles. No join to sends.",
+    definition={"numerator": "COUNT cdp profiles", "denominator": "none", "includes": "not campaign_deleted", "excludes": "send facts"},
+)
+
+add(
+    "cdp_contacts_blocked",
+    label="Blocked CDP contacts",
+    family="contacts",
+    aggregation="count",
+    grain="one blocked CDP person",
+    dimension_grain="default",
+    unit="people",
+    default_time_column="created_at",
+    time_kind="timestamptz",
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=CDP_DIMS,
+    when_to_use="CDP blocked=true people.",
+    when_not="Not email suppressions.",
+    not_confused_with=["suppressions", "contact_unsubscribed"],
+    user_phrases=["blocked contacts"],
+    dimension_notes="Org-wide.",
+    definition={"numerator": "COUNT blocked profiles", "denominator": "none", "includes": "blocked", "excludes": ""},
+)
+
+add(
+    "contact_unsubscribed",
+    label="Email unsubscribed contacts",
+    family="contacts",
+    aggregation="count",
+    grain="one campaign_contact_engagement row with unsub",
+    dimension_grain="default",
+    unit="people",
+    default_time_column="email_unsubscribed_at",
+    time_kind="timestamptz",
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=["contact"],
+    when_to_use="Org-level Campaign email opt-outs on engagement table.",
+    when_not="Not suppression list addresses (that is suppressions KPI).",
+    not_confused_with=["suppressions", "cdp_contacts_blocked"],
+    user_phrases=["unsubscribed", "opt out", "unsub"],
+    dimension_notes="Not per-campaign.",
+    definition={"numerator": "COUNT email_unsubscribed true", "denominator": "none", "includes": "contact_engagement", "excludes": "email_suppressions table"},
+)
+
+add(
+    "contact_lifetime_opens",
+    label="Contact lifetime opens",
+    family="contacts",
+    aggregation="sum",
+    grain="engagement.email_open_count per person",
+    dimension_grain="default",
+    unit="events",
+    default_time_column="updated_at",
+    time_kind="timestamptz",
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=["contact"],
+    when_to_use="Lifetime stored opens on the person, not Dashboard unique open rate.",
+    when_not="Not email_open_rate.",
+    not_confused_with=["email_open_rate", "unique_opens", "total_opens"],
+    user_phrases=["lifetime opens", "contact opens"],
+    dimension_notes="",
+    definition={"numerator": "SUM(email_open_count)", "denominator": "none", "includes": "engagement table", "excludes": "recipient opened_at unique rate"},
+)
+
+add(
+    "contact_lifetime_clicks",
+    label="Contact lifetime clicks",
+    family="contacts",
+    aggregation="sum",
+    grain="engagement.email_click_count per person",
+    dimension_grain="default",
+    unit="events",
+    default_time_column="updated_at",
+    time_kind="timestamptz",
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=["contact"],
+    when_to_use="Lifetime stored clicks on the person.",
+    when_not="Not click_rate.",
+    not_confused_with=["click_rate", "unique_clicks"],
+    user_phrases=["lifetime clicks", "contact clicks"],
+    dimension_notes="",
+    definition={"numerator": "SUM(email_click_count)", "denominator": "none", "includes": "engagement", "excludes": "recipient unique clicks"},
+)
+
+add(
+    "contact_delivery_rates",
+    label="Per-contact delivery and engagement rates",
+    family="contacts",
+    aggregation="ratio",
+    grain="one contact_id on send_recipients",
+    dimension_grain="recipient",
+    unit="rate",
+    default_time_column="campaigns.launch_local_date",
+    time_kind="launch_date",
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=["contact", "channel", "campaign"],
+    when_to_use="For a person (or each contact): delivered, unique open rate, unique click rate from send facts. Do not join CDP.",
+    when_not="Not org Dashboard open rate.",
+    not_confused_with=["email_open_rate", "contact_lifetime_opens"],
+    user_phrases=["this contact open rate", "person performance"],
+    dimension_notes="Use contact_id. Campaign history follows visibility.",
+    definition={"numerator": "unique opens/clicks for contact", "denominator": "delivered for contact", "includes": "send_recipients", "excludes": "CDP join"},
+)
+
+add(
+    "contact_campaigns_received",
+    label="Campaigns a contact received",
+    family="contacts",
+    aggregation="count",
+    grain="distinct campaigns sent to a contact_id",
+    dimension_grain="recipient",
+    unit="campaigns",
+    default_time_column="campaigns.launch_local_date",
+    time_kind="launch_date",
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=["contact", "channel", "campaign"],
+    when_to_use="History of campaigns this person was sent on.",
+    when_not="Not CDP directory.",
+    not_confused_with=["campaigns_ran", "cdp_contact_count"],
+    user_phrases=["campaigns received", "what campaigns did this contact get"],
+    dimension_notes="contact_id on recipients.",
+    definition={"numerator": "COUNT distinct campaign_id per contact", "denominator": "none", "includes": "send facts", "excludes": "CDP"},
+)
+
+add(
+    "contacts_engaged",
+    label="Contacts who opened or clicked",
+    family="contacts",
+    aggregation="count",
+    grain="distinct contact_id with open or click",
+    dimension_grain="recipient",
+    unit="people",
+    default_time_column="campaigns.launch_local_date",
+    time_kind="launch_date",
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=["channel", "campaign", "day"],
+    when_to_use="How many distinct people engaged (open or click) in the window.",
+    when_not="Not unique_opens which counts recipient rows.",
+    not_confused_with=["unique_opens", "cdp_contact_count"],
+    user_phrases=["engaged contacts", "people who opened"],
+    dimension_notes="",
+    definition={"numerator": "COUNT distinct contact_id with opened_at or clicked_at", "denominator": "none", "includes": "visible campaigns", "excludes": ""},
+)
+
+add(
+    "contacts_never_opened",
+    label="Delivered contacts who never opened",
+    family="contacts",
+    aggregation="count",
+    grain="delivered email recipients with opened_at null",
+    dimension_grain="recipient",
+    unit="people",
+    default_time_column="campaigns.launch_local_date",
+    time_kind="launch_date",
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=["campaign", "channel", "day"],
+    when_to_use="Delivered email that never opened.",
+    when_not="Not unsubscribes.",
+    not_confused_with=["contact_unsubscribed", "audience_missed"],
+    user_phrases=["never opened", "no opens"],
+    dimension_notes="Email delivered.",
+    definition={"numerator": "COUNT delivered email opened_at is null", "denominator": "none", "includes": "is_delivered email", "excludes": ""},
+)
+
+add(
+    "contact_push_reachability",
+    label="Contacts with active push endpoints",
+    family="contacts",
+    aggregation="count",
+    grain="active push_endpoints",
+    dimension_grain="default",
+    unit="endpoints",
+    default_time_column="created_at",
+    time_kind="timestamptz",
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=["platform", "channel", "contact"],
+    when_to_use="How many active devices/browsers can be reached.",
+    when_not="Not messages delivered.",
+    not_confused_with=["push_endpoint_inventory", "messages_delivered"],
+    user_phrases=["push reachability", "who can get push"],
+    dimension_notes="",
+    definition={"numerator": "COUNT active endpoints", "denominator": "none", "includes": "active true", "excludes": ""},
+)
+
+add(
+    "website_visitor_count",
+    label="Website visitors",
+    family="contacts",
+    aggregation="count",
+    grain="one website_contacts row",
+    dimension_grain="default",
+    unit="visitors",
+    default_time_column="first_seen_at",
+    time_kind="timestamptz",
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=["contact"],
+    when_to_use="Anonymous or matched site people.",
+    when_not="Not CDP count.",
+    not_confused_with=["cdp_contact_count", "web_push_subscribers"],
+    user_phrases=["website visitors", "site contacts"],
+    dimension_notes="",
+    definition={"numerator": "COUNT website_contacts", "denominator": "none", "includes": "org", "excludes": ""},
+)
+
+add(
+    "web_push_subscribers",
+    label="Web push subscribers",
+    family="contacts",
+    aggregation="count",
+    grain="website_contacts.subscribed true",
+    dimension_grain="default",
+    unit="people",
+    default_time_column="first_seen_at",
+    time_kind="timestamptz",
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=["contact"],
+    when_to_use="website_contacts.subscribed = true.",
+    when_not="Not app push_endpoints.",
+    not_confused_with=["push_endpoint_inventory", "website_visitor_count"],
+    user_phrases=["web push subscribers"],
+    dimension_notes="",
+    definition={"numerator": "COUNT subscribed", "denominator": "none", "includes": "", "excludes": ""},
+)
+
+add(
+    "identity_keys_count",
+    label="CDP identity keys",
+    family="contacts",
+    aggregation="count",
+    grain="one identity_keys row",
+    dimension_grain="default",
+    unit="keys",
+    default_time_column="created_at",
+    time_kind="timestamptz",
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=["key_type", "verified"],
+    when_to_use="Count emails/phones stored in CDP identity_keys.",
+    when_not="Not suppression list.",
+    not_confused_with=["suppressions", "cdp_contact_count"],
+    user_phrases=["identity keys", "how many emails in cdp"],
+    dimension_notes="Org-wide. No send join.",
+    definition={"numerator": "COUNT identity keys", "denominator": "none", "includes": "cdp.identity_keys", "excludes": "send_recipients.email"},
+)
+
+# T3 remaining
+add(
+    "bounce_rate",
+    label="Email bounce rate",
+    family="ops",
+    aggregation="ratio",
+    grain="bounce over sent+bounce email recipients",
+    dimension_grain="recipient",
+    unit="rate",
+    default_time_column="campaigns.launch_local_date",
+    time_kind="launch_date",
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=["campaign", "day", "channel"],
+    when_to_use="Email bounce / (delivered + bounce) style. Not Dashboard Failed.",
+    when_not="Not campaigns_failed.",
+    not_confused_with=["campaigns_failed", "messages_failed"],
+    user_phrases=["bounce rate"],
+    dimension_notes="Email channel.",
+    definition={"numerator": "bounces", "denominator": "sent volume + bounces on email", "includes": "email", "excludes": "dashboard failed headline"},
+)
+
+add(
+    "suppressions",
+    label="Email suppressions",
+    family="ops",
+    aggregation="count",
+    grain="one email_suppressions row",
+    dimension_grain="default",
+    unit="addresses",
+    default_time_column="created_at",
+    time_kind="timestamptz",
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=["reason"],
+    when_to_use="Do-not-email list counts by reason.",
+    when_not="Not contact_unsubscribed engagement flag (related but different table).",
+    not_confused_with=["contact_unsubscribed"],
+    user_phrases=["suppressions", "do not email"],
+    dimension_notes="Group by reason.",
+    definition={"numerator": "COUNT suppressions", "denominator": "none", "includes": "email_suppressions", "excludes": ""},
+    admin_only=True,
+)
+
+add(
+    "unsubscribes",
+    label="Unsubscribes (engagement + skip)",
+    family="ops",
+    aggregation="count",
+    grain="unsub flags",
+    dimension_grain="default",
+    unit="people",
+    default_time_column="email_unsubscribed_at",
+    time_kind="timestamptz",
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=["contact"],
+    when_to_use="Same family as contact_unsubscribed; alias for wording.",
+    when_not="",
+    not_confused_with=["suppressions"],
+    user_phrases=["unsubscribe count"],
+    dimension_notes="",
+    definition={"numerator": "COUNT unsubscribed", "denominator": "none", "includes": "engagement", "excludes": ""},
+)
+
+add(
+    "email_cap_health",
+    label="Email sending cap health",
+    family="ops",
+    aggregation="scalar",
+    grain="one email_sending_caps row",
+    dimension_grain="default",
+    unit="caps",
+    default_time_column="updated_at",
+    time_kind="timestamptz",
+    allowed_scope_levels=["org"],
+    allowed_dimensions=[],
+    when_to_use="Hourly/daily caps and health_status. Admin.",
+    when_not="Not delivered volume.",
+    not_confused_with=["messages_delivered"],
+    user_phrases=["sending caps", "warmup", "email health"],
+    dimension_notes="",
+    definition={"numerator": "caps and health fields", "denominator": "none", "includes": "email_sending_caps", "excludes": ""},
+    admin_only=True,
+)
+
+add(
+    "domain_auth",
+    label="Domain authentication",
+    family="ops",
+    aggregation="count",
+    grain="one email_domains row",
+    dimension_grain="default",
+    unit="domains",
+    default_time_column="updated_at",
+    time_kind="timestamptz",
+    allowed_scope_levels=["org"],
+    allowed_dimensions=["status"],
+    when_to_use="SPF/DKIM/DMARC readiness. Admin.",
+    when_not="",
+    not_confused_with=["email_cap_health"],
+    user_phrases=["spf", "dkim", "dmarc", "domain auth"],
+    dimension_notes="",
+    definition={"numerator": "COUNT domains", "denominator": "none", "includes": "spf_ok dkim_ok dmarc_ok", "excludes": ""},
+    admin_only=True,
+)
+
+add(
+    "channel_readiness",
+    label="Channel configuration readiness",
+    family="ops",
+    aggregation="count",
+    grain="one channel_sending_profiles row",
+    dimension_grain="default",
+    unit="channels",
+    default_time_column="updated_at",
+    time_kind="timestamptz",
+    allowed_scope_levels=["org"],
+    allowed_dimensions=["channel", "status"],
+    when_to_use="Can this org send on a channel yet. Admin.",
+    when_not="Not delivered by channel.",
+    not_confused_with=["delivered_by_channel"],
+    user_phrases=["channel ready", "sending profile"],
+    dimension_notes="",
+    definition={"numerator": "COUNT profiles", "denominator": "none", "includes": "ChannelConfigStatus", "excludes": ""},
+    admin_only=True,
+)
+
+add(
+    "mailbox_send_ready",
+    label="Mailbox send-ready",
+    family="ops",
+    aggregation="count",
+    grain="one mail oauth/config row",
+    dimension_grain="default",
+    unit="mailboxes",
+    default_time_column="updated_at",
+    time_kind="timestamptz",
+    allowed_scope_levels=["org"],
+    allowed_dimensions=[],
+    when_to_use="Connected inbox usable for test send. Admin. Tokens stripped.",
+    when_not="Not bulk ESP delivered volume.",
+    not_confused_with=["messages_delivered"],
+    user_phrases=["mailbox ready", "needs reauth"],
+    dimension_notes="",
+    definition={"numerator": "COUNT connections", "denominator": "none", "includes": "needs_reauth flag", "excludes": "tokens"},
+    admin_only=True,
+)
+
+add(
+    "regulated_template_status",
+    label="Regulated template approval",
+    family="ops",
+    aggregation="count",
+    grain="one regulated template",
+    dimension_grain="default",
+    unit="templates",
+    default_time_column="created_at",
+    time_kind="timestamptz",
+    allowed_scope_levels=["org"],
+    allowed_dimensions=["status", "channel"],
+    when_to_use="SMS/WhatsApp template approval counts. Admin.",
+    when_not="Not WhatsApp sent volume.",
+    not_confused_with=["messages_delivered"],
+    user_phrases=["whatsapp template", "dlt", "pending approval"],
+    dimension_notes="status is approval, not campaign lifecycle.",
+    definition={"numerator": "COUNT templates", "denominator": "none", "includes": "regulated_channel_templates", "excludes": "send volume"},
+    admin_only=True,
+)
+
+add(
+    "push_endpoint_inventory",
+    label="Push endpoint inventory",
+    family="ops",
+    aggregation="count",
+    grain="one push_endpoints row",
+    dimension_grain="default",
+    unit="endpoints",
+    default_time_column="created_at",
+    time_kind="timestamptz",
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=["channel", "platform"],
+    when_to_use="Active devices/browsers inventory.",
+    when_not="Not delivered push messages.",
+    not_confused_with=["contact_push_reachability", "messages_delivered"],
+    user_phrases=["push endpoints", "device count"],
+    dimension_notes="",
+    definition={"numerator": "COUNT endpoints", "denominator": "none", "includes": "optional active filter", "excludes": ""},
+)
+
+add(
+    "gallery_ops",
+    label="Gallery job health",
+    family="ops",
+    aggregation="count",
+    grain="gallery jobs/ideas",
+    dimension_grain="default",
+    unit="jobs",
+    default_time_column="created_at",
+    time_kind="timestamptz",
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=["status"],
+    when_to_use="Creative pipeline status counts.",
+    when_not="Not send KPIs.",
+    not_confused_with=["messages_delivered"],
+    user_phrases=["gallery jobs", "idea cards"],
+    dimension_notes="",
+    definition={"numerator": "COUNT jobs", "denominator": "none", "includes": "gallery_jobs", "excludes": ""},
+)
+
+add(
+    "library_ops",
+    label="Library template reuse",
+    family="ops",
+    aggregation="sum",
+    grain="library_templates.used_count",
+    dimension_grain="library",
+    unit="uses",
+    default_time_column="updated_at",
+    time_kind="timestamptz",
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=["channel"],
+    when_to_use="Library used_count, not send volume.",
+    when_not="Not messages_delivered.",
+    not_confused_with=["messages_delivered"],
+    user_phrases=["library usage"],
+    dimension_notes="channel maps to primary_channel.",
+    definition={"numerator": "SUM(used_count)", "denominator": "none", "includes": "library", "excludes": "sends"},
+)
+
+add(
+    "daily_report_email_log",
+    label="Daily report email log",
+    family="ops",
+    aggregation="count",
+    grain="one daily_report_email_deliveries row",
+    dimension_grain="default",
+    unit="emails",
+    default_time_column="sent_at",
+    time_kind="timestamptz",
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=["status"],
+    when_to_use="Whether the morning KPI email went out.",
+    when_not="Not Dashboard metrics.",
+    not_confused_with=["campaigns_ran"],
+    user_phrases=["daily report email", "kpi email log"],
+    dimension_notes="",
+    definition={"numerator": "COUNT deliveries", "denominator": "none", "includes": "log table", "excludes": ""},
+)
+
+add(
+    "notifications_unread",
+    label="Unread in-app notifications",
+    family="ops",
+    aggregation="count",
+    grain="one unread app_notifications row",
+    dimension_grain="default",
+    unit="notifications",
+    default_time_column="created_at",
+    time_kind="timestamptz",
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=[],
+    when_to_use="Bell backlog read_at is null.",
+    when_not="",
+    not_confused_with=[],
+    user_phrases=["unread notifications", "bell"],
+    dimension_notes="Own user unless admin asks org-wide.",
+    definition={"numerator": "COUNT unread", "denominator": "none", "includes": "read_at null", "excludes": ""},
+)
+
+add(
+    "pending_recipients",
+    label="Pending recipients",
+    family="ops",
+    aggregation="count",
+    grain="recipient rows still pending",
+    dimension_grain="recipient",
+    unit="messages",
+    default_time_column="r.created_at",
+    time_kind="timestamptz",
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=REC_DIMS,
+    when_to_use="Queue still to send (pending outcome).",
+    when_not="Not delivered.",
+    not_confused_with=["messages_delivered", "live_send_pressure"],
+    user_phrases=["pending sends", "queued recipients"],
+    dimension_notes="outcome pending.",
+    definition={"numerator": "COUNT pending outcomes", "denominator": "none", "includes": "pending", "excludes": "sent"},
+)
+
+add(
+    "live_send_pressure",
+    label="Live send pressure",
+    family="ops",
+    aggregation="count",
+    grain="batches queued or sending",
+    dimension_grain="batch",
+    unit="batches",
+    default_time_column="b.scheduled_for",
+    time_kind="timestamptz",
+    allowed_scope_levels=["org", "mine", "own", "created_by_me"],
+    allowed_dimensions=["channel", "batch_status"],
+    when_to_use="Batches status in queued/sending.",
+    when_not="Not recipient pending count.",
+    not_confused_with=["pending_recipients"],
+    user_phrases=["live sends", "batches sending"],
+    dimension_notes="batch status not campaign status.",
+    definition={"numerator": "COUNT batches queued/sending", "denominator": "none", "includes": "send_batches", "excludes": ""},
+)
+
+add(
+    "entitlement_health",
+    label="Campaign product entitlement",
+    family="ops",
+    aggregation="count",
+    grain="organization_products campaign row",
+    dimension_grain="default",
+    unit="entitlements",
+    default_time_column="updated_at",
+    time_kind="timestamptz",
+    allowed_scope_levels=["org"],
+    allowed_dimensions=["status"],
+    when_to_use="Active Campaign entitlement on the branch. Not A2A or API keys.",
+    when_not="Not a2a or api key health (those have no certified KPI).",
+    not_confused_with=[],
+    user_phrases=["entitlement", "product access", "is campaign active"],
+    dimension_notes="Admin. product_code=campaign.",
+    definition={"numerator": "COUNT campaign product rows", "denominator": "none", "includes": "organization_products", "excludes": "A2A, API keys"},
+    admin_only=True,
+)
+
+(ROOT / "kpis.yml").write_text(yaml.safe_dump({"version": 1, "kpis": kpis}, sort_keys=False, width=120))
+print("kpis", len(kpis))

@@ -1,0 +1,229 @@
+version: 1
+# Runtime enforces this file. Identity comes only from trusted context.
+
+roles:
+  admin:
+    default_scope: org
+    my_tickets_column: assignee_id
+    created_by_me_column: created_by_id
+    can_create_tickets: true
+  agent:
+    default_scope: own
+    my_tickets_column: assignee_id
+    created_by_me_column: created_by_id
+    can_create_tickets: true
+  resolver:
+    default_scope: own
+    my_tickets_column: resolver_id
+    created_by_me_column: null
+    can_create_tickets: false
+
+scope_levels:
+  - org
+  - own
+  - created_by_me
+  - queue
+  - agent
+  - resolver
+
+# metric_set: all = every KPI this role may see at that target.
+# ticket_count_only = only the ticket_count KPI.
+matrix:
+  org:
+    admin: all
+    agent: deny
+    resolver: deny
+  own:
+    admin: all
+    agent: all
+    resolver: all
+  created_by_me:
+    admin: all
+    agent: all
+    resolver: deny
+  agent:
+    admin: all
+    agent: deny
+    resolver: deny
+  resolver:
+    admin: all
+    agent: all_in_my_queues
+    resolver: deny
+  queue:
+    admin: all
+    agent: all_in_my_queues
+    resolver: ticket_count_only
+
+resolver_notes:
+  own_tickets: all metrics on resolver_id = user only
+  queue_tickets: ticket counts only (queue_ticket_counts) in their queues; cannot see other queue metrics
+
+queue_membership:
+  table: ticketing.agent_queue_members
+  queue_column: queue_id
+  user_column: user_id
+
+column_masking:
+  personal_data_roles:
+    admin: show
+    agent: show_own_scope
+    resolver: show_own_scope
+
+# ---------------------------------------------------------------------------
+# Virtual views for LLM-written SQL (sql_guard). One entry per role.
+# A view that is not listed for a role does not exist for that role.
+#
+#   scope:  SQL predicate on the view's source columns (applied inside the CTE)
+#   mask:   column -> SQL expression that replaces the value for this role
+#   hide:   columns removed for this role
+#
+# Macros filled by Python with bound parameters (never pasted values):
+#   {org_id} {user_id} {queue_ids}
+#   {visible_tickets_where}  = the role's `tickets` scope as a WHERE on ticketing.tickets
+# Masked staff ids become -1 so "IS NULL" (unassigned) stays correct.
+# ---------------------------------------------------------------------------
+views:
+
+  admin:
+    tickets:             { scope: "TRUE" }
+    ticket_facts:        { scope: "TRUE" }
+    queue_ticket_counts: { scope: "TRUE" }
+    agents:              { scope: "TRUE" }
+    queues:              { scope: "TRUE" }
+    queue_members:       { scope: "TRUE" }
+    notes:               { scope: "TRUE" }
+    audit_events:        { scope: "TRUE" }
+    customers:           { scope: "TRUE" }
+    accounts:            { scope: "TRUE" }
+    sla_policies:        { scope: "TRUE" }
+    notifications:       { scope: "TRUE" }
+    kb_articles:         { scope: "TRUE" }
+    recommendations:     { scope: "TRUE" }
+    approvals:           { scope: "TRUE" }
+    ticket_statuses:     { scope: "TRUE" }
+    macros:              { scope: "TRUE" }
+    outbound_emails:     { scope: "TRUE" }
+    inbound_emails:      { scope: "TRUE" }
+    reassignment_requests: { scope: "TRUE" }
+    automation_rules:    { scope: "TRUE" }
+    critical_alerts:     { scope: "TRUE" }
+    user_sessions:       { scope: "TRUE" }
+    activity_logs:       { scope: "TRUE" }
+
+  # Agent (L1): own tickets, tickets he created, and his queues' tickets — all metrics.
+  # His queues' resolvers are visible. Other agents are masked. No other queues.
+  agent:
+    tickets:
+      scope: "(assignee_id = {user_id} OR created_by_id = {user_id} OR queue_id = ANY({queue_ids}))"
+      mask:
+        assignee_id: "CASE WHEN assignee_id IS NULL OR assignee_id = {user_id} THEN assignee_id ELSE -1 END"
+        assignee_name: "CASE WHEN assignee_id IS NULL OR assignee_id = {user_id} THEN assignee_name ELSE 'Another agent' END"
+        created_by_id: "CASE WHEN created_by_id IS NULL OR created_by_id = {user_id} THEN created_by_id ELSE -1 END"
+        created_by_name: "CASE WHEN created_by_id IS NULL OR created_by_id = {user_id} THEN created_by_name ELSE 'Another staff member' END"
+    ticket_facts:
+      scope: "(assignee_id = {user_id} OR created_by_id = {user_id} OR queue_id = ANY({queue_ids}))"
+    agents:
+      scope: >-
+        (id = {user_id} OR (role = 'resolver' AND id IN (
+          SELECT user_id FROM ticketing.agent_queue_members
+          WHERE organization_id = {org_id} AND queue_id = ANY({queue_ids}))))
+    queues:
+      scope: "id = ANY({queue_ids})"
+    queue_members:
+      scope: >-
+        (queue_id = ANY({queue_ids}) AND (user_id = {user_id} OR user_id IN (
+          SELECT id FROM ticketing.agents WHERE organization_id = {org_id} AND role = 'resolver')))
+    notes:
+      scope: "ticket_id IN (SELECT id FROM ticketing.tickets WHERE {visible_tickets_where})"
+      mask:
+        author_id: >-
+          CASE WHEN author_id = {user_id} OR author_id IN (
+            SELECT id FROM ticketing.agents WHERE organization_id = {org_id} AND role = 'resolver')
+          THEN author_id ELSE -1 END
+        author_name: >-
+          CASE WHEN author_id = {user_id} OR author_id IN (
+            SELECT id FROM ticketing.agents WHERE organization_id = {org_id} AND role = 'resolver')
+          THEN author_name ELSE 'Another staff member' END
+    audit_events:
+      scope: "ticket_id IN (SELECT id FROM ticketing.tickets WHERE {visible_tickets_where})"
+      hide: [meta]
+      mask:
+        actor_id: >-
+          CASE WHEN actor_id = {user_id} OR actor_id IN (
+            SELECT id FROM ticketing.agents WHERE organization_id = {org_id} AND role = 'resolver')
+          THEN actor_id ELSE -1 END
+        actor_name: >-
+          CASE WHEN actor_id = {user_id} OR actor_id IN (
+            SELECT id FROM ticketing.agents WHERE organization_id = {org_id} AND role = 'resolver')
+          THEN actor_name ELSE 'Another staff member' END
+    customers:
+      scope: "id IN (SELECT customer_id FROM ticketing.tickets WHERE {visible_tickets_where})"
+    accounts:
+      scope: >-
+        id IN (SELECT account_id FROM ticketing.contact_profile
+               WHERE organization_id = {org_id}
+                 AND id IN (SELECT customer_id FROM ticketing.tickets WHERE {visible_tickets_where}))
+    sla_policies:        { scope: "TRUE" }
+    notifications:       { scope: "user_id = {user_id}" }
+    kb_articles:         { scope: "TRUE" }
+    recommendations:
+      scope: "ticket_id IN (SELECT CAST(id AS text) FROM ticketing.tickets WHERE {visible_tickets_where})"
+    approvals:
+      scope: "ticket_id IN (SELECT CAST(id AS text) FROM ticketing.tickets WHERE {visible_tickets_where})"
+    ticket_statuses:     { scope: "TRUE" }
+    macros:              { scope: "TRUE" }
+    outbound_emails:
+      scope: "ticket_id IN (SELECT id FROM ticketing.tickets WHERE {visible_tickets_where})"
+    inbound_emails:
+      scope: "ticket_id IN (SELECT id FROM ticketing.tickets WHERE {visible_tickets_where})"
+    reassignment_requests:
+      scope: "ticket_id IN (SELECT id FROM ticketing.tickets WHERE {visible_tickets_where})"
+    automation_rules:    { scope: "TRUE" }
+    critical_alerts:     { scope: "user_id = {user_id}" }
+    user_sessions:       { scope: "user_id = {user_id}" }
+    activity_logs:
+      scope: "ticket_id IN (SELECT id FROM ticketing.tickets WHERE {visible_tickets_where})"
+
+  # Resolver (L2): all metrics on his own tickets only.
+  # His queue and its resolvers: ticket counts only (queue_ticket_counts) and his own queues.
+  resolver:
+    tickets:
+      scope: "resolver_id = {user_id}"
+      mask:
+        assignee_id: "CASE WHEN assignee_id IS NULL THEN NULL ELSE -1 END"
+        assignee_name: "CASE WHEN assignee_id IS NULL THEN NULL ELSE 'An agent' END"
+        created_by_id: "CASE WHEN created_by_id = {user_id} THEN created_by_id ELSE -1 END"
+        created_by_name: "CASE WHEN created_by_id = {user_id} THEN created_by_name ELSE 'A staff member' END"
+    ticket_facts:
+      scope: "resolver_id = {user_id}"
+    queue_ticket_counts:
+      scope: "queue_id IN (SELECT queue_id FROM ticketing.agent_queue_members WHERE organization_id = {org_id} AND user_id = {user_id})"
+    queues:
+      scope: "id IN (SELECT queue_id FROM ticketing.agent_queue_members WHERE organization_id = {org_id} AND user_id = {user_id})"
+    queue_members:
+      scope: "user_id = {user_id}"
+    notes:
+      scope: "ticket_id IN (SELECT id FROM ticketing.tickets WHERE {visible_tickets_where})"
+      mask:
+        author_id: "CASE WHEN author_id = {user_id} THEN author_id ELSE -1 END"
+        author_name: "CASE WHEN author_id = {user_id} THEN author_name ELSE 'Another staff member' END"
+    audit_events:
+      scope: "ticket_id IN (SELECT id FROM ticketing.tickets WHERE {visible_tickets_where})"
+      hide: [meta]
+      mask:
+        actor_id: "CASE WHEN actor_id = {user_id} THEN actor_id ELSE -1 END"
+        actor_name: "CASE WHEN actor_id = {user_id} THEN actor_name ELSE 'Another staff member' END"
+    sla_policies:        { scope: "TRUE" }
+    notifications:       { scope: "user_id = {user_id}" }
+    ticket_statuses:     { scope: "TRUE" }
+    macros:              { scope: "TRUE" }
+    outbound_emails:
+      scope: "ticket_id IN (SELECT id FROM ticketing.tickets WHERE {visible_tickets_where})"
+    inbound_emails:
+      scope: "ticket_id IN (SELECT id FROM ticketing.tickets WHERE {visible_tickets_where})"
+    reassignment_requests:
+      scope: "ticket_id IN (SELECT id FROM ticketing.tickets WHERE {visible_tickets_where})"
+    activity_logs:
+      scope: "ticket_id IN (SELECT id FROM ticketing.tickets WHERE {visible_tickets_where})"
+    critical_alerts:     { scope: "user_id = {user_id}" }
+    user_sessions:       { scope: "user_id = {user_id}" }

@@ -1,0 +1,65 @@
+[
+  {
+    "id": "graph_ticket_neighborhood",
+    "measure": "ticket_neighborhood",
+    "name": "Ticket neighborhood",
+    "when": "User asks who or what is connected to tickets (queue, assignee, resolver, SLA, notes).",
+    "not_when": "User wants a certified KPI number. That is sql ticket_count or another KPI.",
+    "paths": [
+      "(Ticket)-[:ROUTED_TO]->(SupportQueue)",
+      "(Ticket)-[:ASSIGNED_TO]->(SupportAgent)",
+      "(Ticket)-[:RESOLVED_BY]->(SupportAgent)",
+      "(Ticket)-[:GOVERNED_BY]->(SupportSLA)",
+      "(Ticket)-[:HAS]->(Note)"
+    ]
+  },
+  {
+    "id": "graph_why_breakdown",
+    "measure": "why_breakdown",
+    "name": "Why breakdown",
+    "when": "User asks why volume moved, what drove a set, or split along queue/agent/category/priority/channel/status.",
+    "not_when": "User only wants a single certified rate or count with no driver split.",
+    "paths": [
+      "(Ticket)-[:ROUTED_TO]->(SupportQueue)",
+      "(Ticket)-[:ASSIGNED_TO]->(SupportAgent)"
+    ]
+  },
+  {
+    "id": "graph_assignment_path",
+    "measure": "assignment_path",
+    "name": "Assignment path",
+    "when": "User asks how tickets sit on queues and assignees as a path.",
+    "paths": [
+      "(Ticket)-[:ROUTED_TO]->(SupportQueue)",
+      "(Ticket)-[:ASSIGNED_TO]->(SupportAgent)"
+    ]
+  },
+  {
+    "id": "graph_staffing_path",
+    "measure": "staffing_path",
+    "name": "Queue staffing",
+    "when": "User asks which agents staff a queue, or who staffs the queues with no queue named.",
+    "paths": [
+      "(SupportAgent)-[:MEMBER_OF]->(SupportQueue)"
+    ]
+  },
+  {
+    "id": "graph_note_path",
+    "measure": "note_path",
+    "name": "Note path",
+    "when": "User asks notes on tickets and who wrote them as a graph path. Note volume as a KPI is sql note_count.",
+    "paths": [
+      "(Ticket)-[:HAS]->(Note)-[:WRITTEN_BY]->(SupportAgent)"
+    ]
+  },
+  {
+    "id": "graph_customer_path",
+    "measure": "customer_path",
+    "name": "Customer path",
+    "when": "User asks which contact raised tickets or Contact HAS TicketHistory.",
+    "paths": [
+      "(Ticket)-[:raised_by]->(Contact)",
+      "(Contact)-[:HAS]->(TicketHistory)"
+    ]
+  }
+]

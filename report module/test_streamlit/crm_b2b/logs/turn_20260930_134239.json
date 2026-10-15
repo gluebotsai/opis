@@ -1,0 +1,68 @@
+{
+  "question": "what is our time in stage",
+  "answer": "I cannot provide the time in stage because this metric is currently unavailable; the CRM does not store stage duration history.",
+  "trace": {
+    "question": "what is our time in stage",
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1015,
+      "role": "admin"
+    },
+    "model": "worktual-gemma",
+    "tasks": [
+      {
+        "status": "error",
+        "store": "sql",
+        "kpi_id": "time_in_stage",
+        "error_type": "UNAVAILABLE_KPI",
+        "error": "KPI 'time_in_stage' is unavailable: CRM does not store stage duration history.",
+        "missing_input": "CRM does not store stage duration history.",
+        "rows": [],
+        "attempts": [
+          {
+            "raw": "{\"tool\":\"run_kpi\",\"kpi_id\":\"time_in_stage\",\"dimension\":null}",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "time_in_stage"
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "time_status": "all_time",
+        "tool": "run_kpi",
+        "requested_kpi": "time_in_stage",
+        "requested_dimension": null,
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "time_in_stage",
+          "goal": "Calculate time spent in each deal stage",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "kpi",
+          "depends_on": []
+        }
+      }
+    ],
+    "domain_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"standard\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"time_in_stage\",\n      \"goal\": \"Calculate time spent in each deal stage\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"answer_type\": \"kpi\",\n      \"depends_on\": []\n    }\n  ]\n}\n```",
+    "plan": {
+      "kind": "plan",
+      "depth": "standard",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "time_in_stage",
+          "goal": "Calculate time spent in each deal stage",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "kpi",
+          "depends_on": []
+        }
+      ]
+    },
+    "facts": "EXECUTION_ERROR\ntime_requested: all time\nperiod_applied: overall (no date filter, UTC)\ntime_status: all_time\ncatalog_kpi: time_in_stage\nerror_type: UNAVAILABLE_KPI\nmessage: KPI 'time_in_stage' is unavailable: CRM does not store stage duration history.\ntask_goal: Calculate time spent in each deal stage",
+    "grounded": true,
+    "briefing_raw": "I cannot provide the time in stage because this metric is currently unavailable; the CRM does not store stage duration history."
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "turn_id": "c05850a7",
+  "timestamp": "2026-10-09T05:16:52.362600+00:00",
+  "question": "what is the abandonment rate last 30 days?",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1016,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Abandonment rate for the past 30 days</strong></p>\n<p>The abandonment rate for the past 30 days (UTC) was <strong>0%</strong>.</p>\n<p>Would you like to see this rate broken down by queue?</p>",
+  "card": "card: kpi r1",
+  "facts": "result_id: r1\nwindow: past 30 days (UTC)\nkpi: abandonment_rate\ncertified: true\ntask_goal: Calculate the abandonment rate for the last 30 days.\nanswer_type: percentage\nrow_count: 1\nrow 1: abandoned_n=0; queued_finished_n=37; rate_pct=0",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1016,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "what is the abandonment rate last 30 days?",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The abandonment rate for the last 30 days.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Calculate the abandonment rate for the last 30 days.",
+          "time": "last 30 days",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "percentage"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "abandonment_rate",
+        "row_count": 1
+      }
+    ],
+    "facts": "result_id: r1\nwindow: past 30 days (UTC)\nkpi: abandonment_rate\ncertified: true\ntask_goal: Calculate the abandonment rate for the last 30 days.\nanswer_type: percentage\nrow_count: 1\nrow 1: abandoned_n=0; queued_finished_n=37; rate_pct=0",
+    "grounded": true,
+    "card": "card: kpi r1"
+  },
+  "error": null
+}

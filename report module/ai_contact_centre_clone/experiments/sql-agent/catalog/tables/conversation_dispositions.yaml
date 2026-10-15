@@ -1,0 +1,18 @@
+name: ccass.conversation_dispositions
+alias: cd
+schema: ccass
+grain: disposition_event
+purpose: Disposition applied to a conversation. Analytics uses the latest applied_at per conversation.
+time_columns: [applied_at]
+columns:
+  - { name: id, type: bigint, pk: true, description: Event id }
+  - { name: organization_id, type: bigint, description: Tenant id }
+  - { name: conversation_id, type: bigint, fk: ccass.conversations.id, description: Conversation }
+  - { name: disposition_id, type: bigint, fk: ccass.dispositions.id, description: Catalog row }
+  - { name: agent_id, type: bigint, fk: ccass.agents.id, description: Applying agent }
+  - { name: applied_at, type: timestamptz, description: When applied }
+  - { name: is_final, type: boolean, description: Final close disposition }
+  - { name: source, type: text, values: [agent, system], description: Who applied it }
+sample_rows:
+  - { id: 501, conversation_id: 101, disposition_id: 3, applied_at: "2026-09-07T10:11:39Z", is_final: true }
+  - { id: 502, conversation_id: 102, disposition_id: 4, applied_at: "2026-09-07T11:19:50Z", is_final: true }

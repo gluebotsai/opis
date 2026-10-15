@@ -1,0 +1,535 @@
+ontology:
+  id: cc
+  name: Worktual Contact Center + Ticketing Ontology
+  version: 2026.09.3
+  products:
+  - contact_centre
+  - ticketing
+  - hub
+  - crm
+  - campaign
+  - cdp
+  layer_model:
+  - foundation
+  - business
+  - domain
+  - product
+  - action
+  slice_rule: union(selected_modules + depends_on) ; core is always included
+  note: 'Agents select modules via ontology/agents.yml or catalog presets (compact
+    allowlist). One Contact and one Ticket across all spokes. Tenant folder
+    = org{organization_id}.
+
+    '
+modules:
+  core:
+    file: modules/core.yml
+    layer: foundation
+    always: true
+    usecase: 'Shared spine for every CC agent. Party, Customer, Organization, Consent,
+      Channel, Agent. Industry-neutral so Patient/Client/Buyer are labels only.
+
+      '
+    depends_on: []
+    select_when: Always. Do not omit for customer-facing, coworker, or Hub agents.
+  identity:
+    file: modules/identity.yml
+    layer: domain
+    usecase: 'Match a conversation to a person, enrich profile fields, and (approval-gated)
+      merge duplicates. Used by AI Support, Lola, inbox coworker, and contact specialist.
+
+      '
+    depends_on:
+    - core
+    select_when: Agent identifies, creates, updates, or merges contacts.
+  interaction:
+    file: modules/interaction.yml
+    layer: domain
+    usecase: 'Live or historical customer touch — conversation, intent, disposition,
+      wrap-up. Needed by support bot, inbox assist, closure, channel adaptation, Hub
+      spoke-query.
+
+      '
+    depends_on:
+    - core
+    select_when: Agent reads or acts on a conversation / call / chat.
+  knowledge:
+    file: modules/knowledge.yml
+    layer: domain
+    usecase: 'Grounded org / product / support FAQ. Prevents invented answers.
+
+      '
+    depends_on:
+    - core
+    select_when: Agent answers FAQ or org directory questions.
+  ticket:
+    file: modules/ticket.yml
+    layer: domain
+    owned_by_spoke: ticketing
+    readable_by:
+    - contact_centre
+    - hub
+    usecase: 'Customer issue work item (owned by Ticketing spoke; CC may create, status-check,
+      or relate a conversation to a ticket). One Ticket type — not a CC-only Case
+      fork.
+
+      '
+    depends_on:
+    - core
+    - identity
+    select_when: Agent creates, tracks, or escalates tickets (Lola Service, Hub, inbox,
+      TK specialist).
+  tk_team:
+    file: modules/tk_team.yml
+    layer: product
+    owned_by_spoke: ticketing
+    usecase: Create teams and add members; team descriptions drive ticket routing.
+    depends_on:
+    - core
+    select_when: Ticketing Teams specialist or TK Super.
+  tk_kb:
+    file: modules/tk_kb.yml
+    layer: product
+    owned_by_spoke: ticketing
+    usecase: Help articles and categories; DSSA deflection searches published KB.
+    depends_on:
+    - core
+    - knowledge
+    select_when: Ticketing KB specialist, portal, or proactive deflection.
+  tk_macro:
+    file: modules/tk_macro.yml
+    layer: product
+    owned_by_spoke: ticketing
+    usecase: Canned replies staff paste into ticket notes.
+    depends_on:
+    - core
+    select_when: Ticketing Macros specialist.
+  tk_admin:
+    file: modules/tk_admin.yml
+    layer: product
+    owned_by_spoke: ticketing
+    usecase: Org-configurable ticket priorities (SLA hours) and statuses.
+    depends_on:
+    - core
+    - ticket
+    select_when: Ticketing Admin specialist.
+  tk_proactive:
+    file: modules/tk_proactive.yml
+    layer: product
+    owned_by_spoke: ticketing
+    usecase: Background intake, routing, SLA risk; ASGA gates autonomy.
+    depends_on:
+    - core
+    - ticket
+    - tk_kb
+    select_when: Ticketing proactive / ASGA agents.
+  followup:
+    file: modules/followup.yml
+    layer: domain
+    usecase: 'Promised callbacks, coworker tasks, recovery due times. Interaction
+      Recovery and Follow-Up Management live here.
+
+      '
+    depends_on:
+    - core
+    - interaction
+    select_when: Agent lists/opens tasks or creates callbacks.
+  queue:
+    file: modules/queue.yml
+    layer: product
+    usecase: 'Queue definition, team, shifts, staffing, skills. Queue Management Agent
+      only mutates; others may read queue as routing context.
+
+      '
+    depends_on:
+    - core
+    - workforce
+    select_when: Agent creates or configures queues / staffing.
+  workforce:
+    file: modules/workforce.yml
+    layer: product
+    requires_sku: contact-center
+    requires_feature: wfm
+    usecase: 'Human live agents — presence, attendance, capacity, force-logout, monitoring
+      snapshot. Distinct from LLM agents. Used by monitoring, queue staffing, recovery
+      assignment.
+
+      '
+    depends_on:
+    - core
+    select_when: Agent reasons about who is available or supervisor live-ops.
+  quality:
+    file: modules/quality.yml
+    layer: domain
+    usecase: 'Sentiment and interaction quality scores. Interaction Quality Agent
+      (sentiment).
+
+      '
+    depends_on:
+    - core
+    - interaction
+    select_when: Agent scores or summarizes interaction quality.
+  performance:
+    file: modules/performance.yml
+    layer: domain
+    usecase: 'Ops KPIs, reports, anomalies (abandonment, SLA, queue depth). Scheduled
+      Reporting and Operational Anomaly. Metric *ids* only — formulas live in semantic
+      layer.
+
+      '
+    depends_on:
+    - core
+    select_when: Agent answers why/how/KPI or handles metric-breach anomalies.
+  compliance:
+    file: modules/compliance.yml
+    layer: product
+    usecase: 'Recording consent, disclosures, prohibited language, high-risk mutations.
+      Super Agent and Real-Time Compliance.
+
+      '
+    depends_on:
+    - core
+    select_when: Agent may speak to customers or approve risky workforce actions.
+  booking:
+    file: modules/booking.yml
+    layer: domain
+    requires_sku: contact-center
+    requires_feature: booking
+    usecase: 'Appointments / demos (Lola Booking). Extends core Event — industry packs
+      may relabel to Patient Appointment without forking.
+
+      '
+    depends_on:
+    - core
+    - identity
+    select_when: Agent books or reschedules appointments.
+  hub:
+    file: modules/hub.yml
+    layer: product
+    usecase: 'Cross-spoke orchestration — HubRequest, Strategy, DispatchAction, spoke-query.
+      Super Agent and any executor that escalates beyond local CC skills.
+
+      '
+    depends_on:
+    - core
+    select_when: Agent calls Hub or executes Hub dispatch (callback, escalate, bot_popup).
+  cdp:
+    file: modules/cdp.yml
+    layer: foundation
+    owned_by_spoke: cdp
+    readable_by:
+    - contact_centre
+    - ticketing
+    - crm
+    - campaign
+    - hub
+    usecase: Customer spine — profile, identity keys, events (incl. webtracking via
+      CDP).
+    depends_on:
+    - core
+    select_when: Agent resolves cdp_id or reads customer events / segments.
+  crm_account:
+    file: modules/crm_account.yml
+    layer: domain
+    owned_by_spoke: crm
+    usecase: CRM company / account and locations.
+    depends_on:
+    - core
+    - cdp
+    select_when: Company, franchise, or account specialist agents.
+  crm_deal:
+    file: modules/crm_deal.yml
+    layer: domain
+    owned_by_spoke: crm
+    usecase: Pipeline, deals, contracts, ARR.
+    depends_on:
+    - core
+    - cdp
+    - crm_account
+    select_when: Deal, forecast, or pipeline agents.
+  crm_quote:
+    file: modules/crm_quote.yml
+    layer: domain
+    owned_by_spoke: crm
+    usecase: Quotes and proposals.
+    depends_on:
+    - core
+    - crm_deal
+    select_when: Proposal or quote agents.
+  crm_order:
+    file: modules/crm_order.yml
+    layer: domain
+    owned_by_spoke: crm
+    usecase: Orders, invoices, catalog products.
+    depends_on:
+    - core
+    - crm_deal
+    - crm_quote
+    select_when: Order, invoice, or product agents.
+  crm_activity:
+    file: modules/crm_activity.yml
+    layer: domain
+    owned_by_spoke: crm
+    usecase: Logged CRM activities and tasks on contacts/deals.
+    depends_on:
+    - core
+    - cdp
+    - crm_deal
+    select_when: Activity logging or task agents.
+  crm_lead:
+    file: modules/crm_lead.yml
+    layer: domain
+    owned_by_spoke: crm
+    usecase: Lead enrich, score, assign, nurture job agents.
+    depends_on:
+    - core
+    - cdp
+    select_when: Lead pipeline HTTP jobs.
+  crm_meeting:
+    file: modules/crm_meeting.yml
+    layer: domain
+    owned_by_spoke: crm
+    usecase: Meeting brief, MoM, transcript analysis.
+    depends_on:
+    - core
+    - cdp
+    - crm_deal
+    select_when: Meeting-related job agents.
+  campaign_core:
+    file: modules/campaign_core.yml
+    layer: domain
+    owned_by_spoke: campaign
+    readable_by:
+    - crm
+    - hub
+    usecase: Campaign planning, audience, sends.
+    depends_on:
+    - core
+    - cdp
+    - crm_account
+    select_when: Create, launch, or monitor campaigns.
+  campaign_template:
+    file: modules/campaign_template.yml
+    layer: product
+    owned_by_spoke: campaign
+    usecase: Message templates and WhatsApp approval workflow.
+    depends_on:
+    - core
+    - campaign_core
+    select_when: Template library or WA approved/rejected agents.
+  campaign_ops:
+    file: modules/campaign_ops.yml
+    layer: product
+    owned_by_spoke: campaign
+    usecase: Monitoring, suppression, recommendations.
+    depends_on:
+    - core
+    - campaign_core
+    - cdp
+    select_when: Monitoring, events report, recommendations agents.
+  metrics_ccass:
+    file: modules/metrics_ccass.yml
+    layer: domain
+    usecase: Certified MetricFlow ids for contact centre (reporting only).
+    depends_on:
+    - core
+    select_when: CC reporting / anomaly agents needing full CC metric allowlist.
+  metrics_ticketing:
+    file: modules/metrics_ticketing.yml
+    layer: domain
+    usecase: Certified MetricFlow ids for ticketing.
+    depends_on:
+    - core
+    select_when: TK admin / reporting agents.
+  metrics_crm:
+    file: modules/metrics_crm.yml
+    layer: domain
+    usecase: Certified MetricFlow ids for CRM.
+    depends_on:
+    - core
+    select_when: CRM reports-analytics agent.
+  metrics_campaign:
+    file: modules/metrics_campaign.yml
+    layer: domain
+    usecase: Certified MetricFlow ids for campaign.
+    depends_on:
+    - core
+    select_when: Campaign reports / monitoring agents.
+  metrics_webtracking:
+    file: modules/metrics_webtracking.yml
+    layer: domain
+    usecase: Certified MetricFlow ids for web/CDP analytics (ClickHouse-backed).
+    depends_on:
+    - core
+    - cdp
+    select_when: Campaign events report or engagement anomaly agents.
+  metrics_cdp:
+    file: modules/metrics_cdp.yml
+    layer: domain
+    usecase: Customer-spine metric ids from entitled product engines (no CDP warehouse).
+    depends_on:
+    - core
+    - cdp
+    select_when: CDP profile / identity agents.
+industry_packs:
+  generic:
+    file: industry/generic.yml
+  saas_b2b:
+    file: industry/saas_b2b.yml
+  healthcare:
+    file: industry/healthcare.yml
+  bfsi:
+    file: industry/bfsi.yml
+  ecommerce:
+    file: industry/ecommerce.yml
+products:
+  contact_centre:
+    owned_by_spoke: contact_centre
+    preset_prefix: cc.
+    modules:
+    - identity
+    - interaction
+    - knowledge
+    - ticket
+    - followup
+    - queue
+    - workforce
+    - quality
+    - performance
+    - compliance
+    - booking
+    - hub
+  ticketing:
+    owned_by_spoke: ticketing
+    preset_prefix: tk.
+    modules:
+    - identity
+    - ticket
+    - tk_team
+    - tk_kb
+    - tk_macro
+    - tk_admin
+    - tk_proactive
+    - knowledge
+    - hub
+  hub:
+    owned_by_spoke: hub
+    presets:
+    - hub.orchestrator
+  crm:
+    owned_by_spoke: crm
+    preset_prefix: crm.
+    modules:
+    - cdp
+    - identity
+    - crm_account
+    - crm_deal
+    - crm_quote
+    - crm_order
+    - crm_activity
+    - crm_lead
+    - crm_meeting
+    - hub
+  campaign:
+    owned_by_spoke: campaign
+    preset_prefix: camp.
+    modules:
+    - cdp
+    - identity
+    - crm_account
+    - campaign_core
+    - campaign_template
+    - campaign_ops
+  cdp:
+    owned_by_spoke: cdp
+    preset_prefix: cdp.
+    modules:
+    - cdp
+    - identity
+  webtracking:
+    owned_by_spoke: webtracking
+    preset_prefix: webtracking.
+    modules:
+    - cdp
+    - identity
+hub_entitlements:
+  spine_modules:
+  - hub
+  - core
+  - cdp
+  - identity
+  product_aliases:
+    ccaas: contact_centre
+    contact-center: contact_centre
+    contact_center: contact_centre
+  base_prompt:
+    classes:
+    - Contact
+    - Consent
+    - HubRequest
+    - Strategy
+    - DispatchAction
+    actions:
+    - spoke_query
+    - run_pipeline
+    - dispatch
+    - callback
+    taxonomy:
+    - hub.scenario
+    - channel
+    - anomaly.severity
+    metrics: []
+    relations_only_if_both_ends_in_classes: true
+    rules:
+    - Do not invent customer facts; CDP + payload only.
+    - Do not talk to end customers — suggestedAgentReply only.
+    - Dispatch only allowlisted actionType on enabled spokes.
+  products:
+    contact_centre:
+      hub_modules:
+      - interaction
+      - followup
+      - performance
+      - compliance
+      prompt:
+        classes:
+        - Conversation
+        - Callback
+        - Anomaly
+        actions:
+        - callback
+        metrics: []
+        taxonomy:
+        - ticket.priority
+    ticketing:
+      hub_modules:
+      - ticket
+      prompt:
+        classes:
+        - Ticket
+        actions:
+        - create_ticket
+        metrics: []
+        taxonomy:
+        - ticket.priority
+        - ticket.status
+    crm:
+      hub_modules:
+      - crm_account
+      - crm_deal
+      prompt:
+        classes:
+        - Account
+        - Deal
+        taxonomy:
+        - deal.stage
+    campaign:
+      hub_modules:
+      - campaign_core
+      prompt:
+        classes:
+        - Campaign
+        - AudienceSegment
+        taxonomy:
+        - campaign.goal
+        - campaign.status

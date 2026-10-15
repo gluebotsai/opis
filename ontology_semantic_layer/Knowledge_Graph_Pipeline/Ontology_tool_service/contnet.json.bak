@@ -1,0 +1,504 @@
+[
+  {
+    "id": "label_tenant",
+    "type": "node_label",
+    "name": "Tenant",
+    "description": "The root organization or business entity that owns and operates the contact center platform",
+    "category": "Organization"
+  },
+  {
+    "id": "label_role",
+    "type": "node_label",
+    "name": "Role",
+    "description": "A defined function or position within the organization that determines permissions and capabilities",
+    "category": "Access Control"
+  },
+  {
+    "id": "label_team",
+    "type": "node_label",
+    "name": "Team",
+    "description": "A group of agents who work together and share common goals or responsibilities",
+    "category": "Organization"
+  },
+  {
+    "id": "label_user",
+    "type": "node_label",
+    "name": "User",
+    "description": "A human user of the system, typically an employee or staff member",
+    "category": "User Management"
+  },
+  {
+    "id": "label_holidaycalendar",
+    "type": "node_label",
+    "name": "HolidayCalendar",
+    "description": "Defines holidays and non-working days that affect business hours and scheduling",
+    "category": "Scheduling"
+  },
+  {
+    "id": "label_businesshours",
+    "type": "node_label",
+    "name": "BusinessHours",
+    "description": "Specifies the operating hours and availability windows for service delivery",
+    "category": "Scheduling"
+  },
+  {
+    "id": "label_channel",
+    "type": "node_label",
+    "name": "Channel",
+    "description": "A communication medium or touchpoint through which customers interact (voice, chat, email, etc.)",
+    "category": "Communication"
+  },
+  {
+    "id": "label_agent",
+    "type": "node_label",
+    "name": "Agent",
+    "description": "A customer service representative who handles customer interactions and conversations",
+    "category": "Service Delivery"
+  },
+  {
+    "id": "label_skill",
+    "type": "node_label",
+    "name": "Skill",
+    "description": "A specific capability, expertise, or competency that an agent possesses for handling interactions",
+    "category": "Service Delivery"
+  },
+  {
+    "id": "label_queue",
+    "type": "node_label",
+    "name": "Queue",
+    "description": "A waiting area for interactions waiting to be assigned to an available agent",
+    "category": "Routing"
+  },
+  {
+    "id": "label_routingpolicy",
+    "type": "node_label",
+    "name": "RoutingPolicy",
+    "description": "Rules and logic that determine how interactions are distributed to agents",
+    "category": "Routing"
+  },
+  {
+    "id": "label_disposition",
+    "type": "node_label",
+    "name": "Disposition",
+    "description": "A categorization or outcome code assigned to completed interactions",
+    "category": "Analytics"
+  },
+  {
+    "id": "label_sla",
+    "type": "node_label",
+    "name": "SLA",
+    "description": "Service Level Agreement defining performance targets and response time commitments",
+    "category": "Compliance"
+  },
+  {
+    "id": "label_channelautomationpolicy",
+    "type": "node_label",
+    "name": "ChannelAutomationPolicy",
+    "description": "Automated rules and actions for handling interactions on specific channels",
+    "category": "Automation"
+  },
+  {
+    "id": "label_conversation",
+    "type": "node_label",
+    "name": "Conversation",
+    "description": "A single interaction or thread between a customer and the contact center",
+    "category": "Interaction"
+  },
+  {
+    "id": "label_conversationsummary",
+    "type": "node_label",
+    "name": "ConversationSummary",
+    "description": "An AI-generated or manual summary capturing the key points of a conversation",
+    "category": "Interaction"
+  },
+  {
+    "id": "label_slainstance",
+    "type": "node_label",
+    "name": "SLAInstance",
+    "description": "An active or completed service level commitment for a specific interaction",
+    "category": "Compliance"
+  },
+  {
+    "id": "label_attachment",
+    "type": "node_label",
+    "name": "Attachment",
+    "description": "A file or document associated with an interaction or record",
+    "category": "Content"
+  },
+  {
+    "id": "label_worknote",
+    "type": "node_label",
+    "name": "WorkNote",
+    "description": "Internal notes or annotations added by agents during interaction handling",
+    "category": "Content"
+  },
+  {
+    "id": "label_conversationparticipant",
+    "type": "node_label",
+    "name": "ConversationParticipant",
+    "description": "A person or system involved in a conversation",
+    "category": "Interaction"
+  },
+  {
+    "id": "label_assignment",
+    "type": "node_label",
+    "name": "Assignment",
+    "description": "The act of allocating an interaction or task to a specific agent or queue",
+    "category": "Routing"
+  },
+  {
+    "id": "label_transfer",
+    "type": "node_label",
+    "name": "Transfer",
+    "description": "The movement of an interaction from one agent, queue, or channel to another",
+    "category": "Routing"
+  },
+  {
+    "id": "label_routingattempt",
+    "type": "node_label",
+    "name": "RoutingAttempt",
+    "description": "A single attempt by the routing system to assign an interaction to an available resource",
+    "category": "Routing"
+  },
+  {
+    "id": "label_webchatsession",
+    "type": "node_label",
+    "name": "WebchatSession",
+    "description": "An active web-based chat session between a customer and an agent",
+    "category": "Channel"
+  },
+  {
+    "id": "label_task",
+    "type": "node_label",
+    "name": "Task",
+    "description": "A work item or action item that needs to be completed",
+    "category": "Work Management"
+  },
+  {
+    "id": "label_sharednote",
+    "type": "node_label",
+    "name": "SharedNote",
+    "description": "A collaborative note accessible to multiple users or teams",
+    "category": "Content"
+  },
+  {
+    "id": "label_contact",
+    "type": "node_label",
+    "name": "Contact",
+    "description": "A customer who has purchased any offering of the business [tenant]",
+    "category": "Customer"
+  },
+  {
+    "id": "label_contactpoint",
+    "type": "node_label",
+    "name": "ContactPoint",
+    "description": "A specific communication endpoint (phone, email, etc.) associated with a contact",
+    "category": "Customer"
+  },
+  {
+    "id": "label_customerscore",
+    "type": "node_label",
+    "name": "CustomerScore",
+    "description": "A numerical or categorical value representing customer value, satisfaction, or risk",
+    "category": "Analytics"
+  },
+  {
+    "id": "label_insight",
+    "type": "node_label",
+    "name": "Insight",
+    "description": "A derived observation or finding from data analysis",
+    "category": "Analytics"
+  },
+  {
+    "id": "label_recommendation",
+    "type": "node_label",
+    "name": "Recommendation",
+    "description": "A suggested action or next best offer based on analysis",
+    "category": "Analytics"
+  },
+  {
+    "id": "label_segment",
+    "type": "node_label",
+    "name": "Segment",
+    "description": "A grouping of contacts or customers based on common characteristics",
+    "category": "Marketing"
+  },
+  {
+    "id": "label_order",
+    "type": "node_label",
+    "name": "Order",
+    "description": "A customer order or purchase transaction",
+    "category": "Commerce"
+  },
+  {
+    "id": "label_offering",
+    "type": "node_label",
+    "name": "Offering",
+    "description": "A product, service, or solution available for purchase or subscription",
+    "category": "Commerce"
+  },
+  {
+    "id": "rel_defines_role",
+    "type": "relationship",
+    "name": "DEFINES_ROLE",
+    "description": "Tenant defines Role - assigns functional responsibilities within the organization",
+    "source": "Tenant",
+    "target": "Role"
+  },
+  {
+    "id": "rel_has_agent",
+    "type": "relationship",
+    "name": "HAS_AGENT",
+    "description": "Tenant or Queue has Agent - assigns an agent to work for tenant or queue",
+    "source": "Tenant/Queue",
+    "target": "Agent"
+  },
+  {
+    "id": "rel_has_skill",
+    "type": "relationship",
+    "name": "HAS_SKILL",
+    "description": "Agent has Skill - agent possesses a specific capability",
+    "source": "Agent",
+    "target": "Skill"
+  },
+  {
+    "id": "rel_supports_channel",
+    "type": "relationship",
+    "name": "SUPPORTS_CHANNEL",
+    "description": "Agent supports Channel - agent can handle interactions via this channel",
+    "source": "Agent",
+    "target": "Channel"
+  },
+  {
+    "id": "rel_part_of_team",
+    "type": "relationship",
+    "name": "PART_OF_TEAM",
+    "description": "Agent is part of Team - agent belongs to a team",
+    "source": "Agent",
+    "target": "Team"
+  },
+  {
+    "id": "rel_uses_policy",
+    "type": "relationship",
+    "name": "USES_POLICY",
+    "description": "Tenant uses Routing Policy - policy governs routing logic",
+    "source": "Tenant",
+    "target": "RoutingPolicy"
+  },
+  {
+    "id": "rel_applies_sla",
+    "type": "relationship",
+    "name": "APPLIES_SLA",
+    "description": "Tenant applies SLA - service level commitments",
+    "source": "Tenant",
+    "target": "SLA"
+  },
+  {
+    "id": "rel_operates_during",
+    "type": "relationship",
+    "name": "OPERATES_DURING",
+    "description": "Queue operates during BusinessHours - queue availability",
+    "source": "Queue",
+    "target": "BusinessHours"
+  },
+  {
+    "id": "rel_has_calendar",
+    "type": "relationship",
+    "name": "HAS_CALENDAR",
+    "description": "Tenant has HolidayCalendar - holiday schedule",
+    "source": "Tenant",
+    "target": "HolidayCalendar"
+  },
+  {
+    "id": "rel_enables_automation",
+    "type": "relationship",
+    "name": "ENABLES_AUTOMATION",
+    "description": "Channel enables ChannelAutomationPolicy - automation rules",
+    "source": "Channel",
+    "target": "ChannelAutomationPolicy"
+  },
+  {
+    "id": "rel_created_by",
+    "type": "relationship",
+    "name": "CREATED_BY",
+    "description": "Conversation created by Agent - agent initiated conversation",
+    "source": "Conversation",
+    "target": "Agent"
+  },
+  {
+    "id": "rel_has_participant",
+    "type": "relationship",
+    "name": "HAS_PARTICIPANT",
+    "description": "Conversation has Participant - person involved in conversation",
+    "source": "Conversation",
+    "target": "Contact"
+  },
+  {
+    "id": "rel_has_summary",
+    "type": "relationship",
+    "name": "HAS_SUMMARY",
+    "description": "Conversation has Summary - conversation summary",
+    "source": "Conversation",
+    "target": "ConversationSummary"
+  },
+  {
+    "id": "rel_contains_attachment",
+    "type": "relationship",
+    "name": "CONTAINS_ATTACHMENT",
+    "description": "Conversation contains Attachment - file shared in conversation",
+    "source": "Conversation",
+    "target": "Attachment"
+  },
+  {
+    "id": "rel_assigned_to",
+    "type": "relationship",
+    "name": "ASSIGNED_TO",
+    "description": "Conversation assigned to Agent - routing assignment",
+    "source": "Conversation",
+    "target": "Agent"
+  },
+  {
+    "id": "rel_transferred_to",
+    "type": "relationship",
+    "name": "TRANSFERRED_TO",
+    "description": "Conversation transferred to Agent/Queue - transfer action",
+    "source": "Conversation",
+    "target": "Agent/Queue"
+  },
+  {
+    "id": "rel_tracked_by_sla",
+    "type": "relationship",
+    "name": "TRACKED_BY_SLA",
+    "description": "Conversation tracked by SLAInstance - service level monitoring",
+    "source": "Conversation",
+    "target": "SLAInstance"
+  },
+  {
+    "id": "rel_dispositioned_as",
+    "type": "relationship",
+    "name": "DISPOSITIONED_AS",
+    "description": "Conversation dispositioned as Disposition - outcome categorization",
+    "source": "Conversation",
+    "target": "Disposition"
+  },
+  {
+    "id": "rel_has_note",
+    "type": "relationship",
+    "name": "HAS_NOTE",
+    "description": "Conversation has WorkNote/SharedNote - internal notes",
+    "source": "Conversation",
+    "target": "WorkNote/SharedNote"
+  },
+  {
+    "id": "rel_belongs_to_queue",
+    "type": "relationship",
+    "name": "BELONGS_TO_QUEUE",
+    "description": "Conversation belongs to Queue - queue assignment",
+    "source": "Conversation",
+    "target": "Queue"
+  },
+  {
+    "id": "rel_contact_has_point",
+    "type": "relationship",
+    "name": "HAS_CONTACT_POINT",
+    "description": "Contact has ContactPoint - communication endpoint",
+    "source": "Contact",
+    "target": "ContactPoint"
+  },
+  {
+    "id": "rel_contact_has_score",
+    "type": "relationship",
+    "name": "HAS_SCORE",
+    "description": "Contact has CustomerScore - value/risk assessment",
+    "source": "Contact",
+    "target": "CustomerScore"
+  },
+  {
+    "id": "rel_contact_in_segment",
+    "type": "relationship",
+    "name": "IN_SEGMENT",
+    "description": "Contact in Segment - segment membership",
+    "source": "Contact",
+    "target": "Segment"
+  },
+  {
+    "id": "rel_contact_generated_insight",
+    "type": "relationship",
+    "name": "GENERATED_INSIGHT",
+    "description": "Contact generated Insight - analytics findings",
+    "source": "Contact",
+    "target": "Insight"
+  },
+  {
+    "id": "rel_recommendation_for",
+    "type": "relationship",
+    "name": "RECOMMENDATION_FOR",
+    "description": "Recommendation for Contact - next best action",
+    "source": "Recommendation",
+    "target": "Contact"
+  },
+  {
+    "id": "rel_order_placed_by",
+    "type": "relationship",
+    "name": "PLACED_BY",
+    "description": "Order placed by Contact - purchase transaction",
+    "source": "Order",
+    "target": "Contact"
+  },
+  {
+    "id": "rel_order_contains",
+    "type": "relationship",
+    "name": "CONTAINS_OFFERING",
+    "description": "Order contains Offering - line items",
+    "source": "Order",
+    "target": "Offering"
+  },
+  {
+    "id": "concept_customer",
+    "type": "business_concept",
+    "name": "Customer",
+    "description": "A contact who has purchased any offering of the business [tenant]"
+  },
+  {
+    "id": "concept_first_contact_resolution",
+    "type": "business_concept",
+    "name": "First Contact Resolution (FCR)",
+    "description": "Metric measuring interactions resolved on first interaction without escalation"
+  },
+  {
+    "id": "concept_average_handle_time",
+    "type": "business_concept",
+    "name": "Average Handle Time (AHT)",
+    "description": "Average duration to handle an interaction including talk time and after-call work"
+  },
+  {
+    "id": "concept_service_level",
+    "type": "business_concept",
+    "name": "Service Level",
+    "description": "Percentage of interactions answered within defined threshold (e.g., 80% in 20 seconds)"
+  },
+  {
+    "id": "concept_occupancy",
+    "type": "business_concept",
+    "name": "Occupancy",
+    "description": "Percentage of time agents spend handling interactions vs available time"
+  },
+  {
+    "id": "concept_abandonment_rate",
+    "type": "business_concept",
+    "name": "Abandonment Rate",
+    "description": "Percentage of callers who disconnect before speaking to an agent"
+  },
+  {
+    "id": "concept_wrap_up_time",
+    "type": "business_concept",
+    "name": "Wrap-up Time",
+    "description": "Time after call ends for agents to complete documentation and notes"
+  },
+  {
+    "id": "concept_shrinkage",
+    "type": "business_concept",
+    "name": "Shrinkage",
+    "description": "Percentage of scheduled time unavailable for calls due to breaks, training, etc."
+  }
+]

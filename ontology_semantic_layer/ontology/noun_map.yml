@@ -1,0 +1,122 @@
+# Noun map — legacy product labels → plain ontology ids (reference + CI).
+# Source: ontology/modules + semantic/dbt MetricFlow semantic models.
+
+onto_core:
+  Customer: Contact
+  Contact: Contact
+  Account: Organization
+  ClientAccount: Organization
+  Conversation: Conversation
+  Interaction: Conversation
+  SupportCase: Ticket
+  Opportunity: Deal
+  Quote: Quote
+  Contract: Contract
+  Proposal: Proposal
+  Campaign: Campaign
+  MessageDelivery: MessageDelivery
+  AudienceSegment: AudienceSegment
+  KnowledgeArticle: KnowledgeArticle
+  CannedReply: Macro
+  Meeting: Appointment
+  WorkTask: Task
+  WorkAssignment: Ticket
+  ApprovalRequest: Approval
+  MetricSeries: PerformanceReport
+  User: User
+  Employee: User
+
+aiccaas_semantic_models:
+  conversations: Conversation
+  conversation_sla_state: SLA
+  agents: WorkforceAgent
+  agent_tasks: Task
+  conversation_dispositions: Disposition
+  setup_ccaas_queues: Queue
+  setup_teams: Team
+  agent_capacity: WorkforceAgent
+  agent_presence_history: AgentPresence
+
+ticketing_semantic_models:
+  ticket: Ticket
+  ticket_note: Note
+  customer: Contact
+  user: Agent
+  agent_queue: Queue
+  kb_article: KnowledgeArticle
+  macro: Macro
+  proactive_recommendation: Suggestion
+  proactive_approval: Approval
+
+never_fork:
+  - Contact
+  - Ticket
+
+# Agent-layer types with no single core.yaml business label (prompt-only extensions).
+agent_only_types:
+  - Party
+  - Person
+  - Preference
+  - Location
+  - Channel
+  - Event
+  - WorkItem
+  - Consent
+  - Identity
+  - ContactProfile
+  - ContactDraft
+  - ContactSkill
+  - IdentityKey
+  - ContactEvent
+  - Intent
+  - WrapUp
+  - SLA
+  - Note
+  - TicketDraft
+  - TicketPriorityDef
+  - TicketStatusDef
+  - KbCategory
+  - Team
+  - BusinessHours
+  - Shift
+  - QueueDraft
+  - RoutingSkill
+  - WorkforceAgent
+  - AgentPresence
+  - MonitoringSnapshot
+  - Attendance
+  - NotReadyEscalation
+  - Callback
+  - Task
+  - Sentiment
+  - QualityScore
+  - Anomaly
+  - PerformanceReport
+  - RecordingPolicy
+  - ComplianceViolation
+  - OrganizationDirectory
+  - ProactiveRecommendation
+  - AsgaDecision
+  - SendBatch
+  - MessageTemplate
+  - Suppression
+  - Account
+  - AccountSite
+  - Order
+  - Invoice
+  - Product
+  - QuoteLine
+  - CrmActivity
+  - LeadScore
+  - Meeting
+  - MeetingTranscript
+  - Spoke
+  - Skill
+  - HubRequest
+  - Strategy
+  - DispatchAction
+
+saas_yaml_not_modelled:
+  - usage_meters
+  - arr_waterfall
+  - end_customer_entitlement

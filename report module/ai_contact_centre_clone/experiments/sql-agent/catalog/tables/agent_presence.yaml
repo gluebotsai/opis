@@ -1,0 +1,14 @@
+name: ccass.agent_presence
+alias: ap
+schema: ccass
+grain: agent
+purpose: Current presence snapshot (not history).
+columns:
+  - { name: id, type: bigint, pk: true, description: Row id }
+  - { name: organization_id, type: bigint, description: Tenant id }
+  - { name: agent_id, type: bigint, fk: ccass.agents.id, description: Agent }
+  - { name: status, type: text, description: Legacy status }
+  - { name: presence_state, type: text, values: [offline, ready, busy, away, not_ready, acw], description: Current state }
+  - { name: updated_at, type: timestamptz, description: Last update }
+sample_rows:
+  - { id: 1, agent_id: 12, presence_state: ready, status: ready }

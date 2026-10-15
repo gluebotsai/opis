@@ -1,0 +1,311 @@
+# Human-readable entity definitions for all products.
+# Used by Ontology Steward / detection agents — NOT written to Neo4j nodes.
+version: 2026.09.1
+
+entities:
+  # --- Platform / CDP -------------------------------------------------------
+  Contact:
+    definition: A person the tenant interacts with; tickets and conversations resolve here via cdp_id.
+    postgres_table: cdp.customer_profile
+    graph_label: Contact
+    in_graph: true
+    product: cdp
+
+  Organization:
+    definition: Company or tenant org (Worktual customer business).
+    postgres_table: accounts.organizations
+    graph_label: Tenant
+    in_graph: true
+    product: platform
+
+  User:
+    definition: Staff login record in accounts (admin, supervisor, live agent). One person, one User node.
+    postgres_table: accounts.setup_users
+    graph_label: User
+    in_graph: true
+    product: platform
+    agent_visible: false
+    taxonomy_axis: user.kind
+    notes: Hidden from product agent slices; identity/admin presets only.
+
+  Agent:
+    definition: Product staff row (ticketing.agents / ccass.agents). Tickets assign to Agent, not User.
+    postgres_table: [ticketing.agents, ccass.agents]
+    graph_label: Agent
+    in_graph: true
+    product: platform
+    agent_visible: true
+    taxonomy_axis: staff.role
+    notes: role property distinguishes admin | agent | resolver; L1 assigned_to / L2 resolved_by on Ticket.
+
+  Team:
+    definition: Named group of agents assigned by skill or queue.
+    postgres_table: accounts.setup_teams
+    graph_label: Team
+    in_graph: true
+    product: platform
+
+  # --- Ticketing ------------------------------------------------------------
+  Ticket:
+    definition: A service request or issue raised by a customer that must be resolved.
+    postgres_table: ticketing.tickets
+    graph_label: Ticket
+    in_graph: true
+    product: ticketing
+
+  ContactAccount:
+    definition: B2B account details for a contact in ticketing.
+    postgres_table: ticketing.ticketing_accounts
+    graph_label: ContactAccount
+    in_graph: true
+    product: ticketing
+
+  Note:
+    definition: Something an admin, agent, or resolver writes on a ticket.
+    postgres_table: ticketing.ticket_notes
+    graph_label: Note
+    in_graph: true
+    product: ticketing
+
+  Queue:
+    definition: A queue specified by skill; tickets and agents are assigned accordingly.
+    postgres_table: [ticketing.agent_queues, ccass.queues]
+    graph_label: Queue
+    in_graph: true
+    product: platform
+    notes: Shared Queue label; product/kind property distinguishes ticketing vs CCaaS.
+
+  SLA:
+    definition: Service level agreement — time commitment by priority.
+    postgres_table: [ticketing.sla_policies, ccass.sla_policies]
+    graph_label: SLA
+    in_graph: true
+    product: platform
+
+  Macro:
+    definition: Canned reply / resolution steps for similar tickets.
+    postgres_table: ticketing.macros
+    graph_label: Macro
+    in_graph: true
+    product: ticketing
+
+  KnowledgeArticle:
+    definition: Organization knowledge base article for agents and resolvers.
+    postgres_table: ticketing.kb_articles
+    graph_label: KnowledgeArticle
+    in_graph: true
+    product: ticketing
+
+  InboundEmail:
+    definition: Inbound email thread reference linked to a ticket.
+    postgres_table: ticketing.email_message_refs
+    graph_label: InboundEmail
+    in_graph: true
+    product: ticketing
+
+  OutboundEmail:
+    definition: Outbound email dispatch record for a ticket.
+    postgres_table: ticketing.outbound_email_log
+    graph_label: OutboundEmail
+    in_graph: true
+    product: ticketing
+
+  AutomationRule:
+    definition: Workflow automation rule for ticketing events.
+    postgres_table: ticketing.automation_rules
+    graph_label: AutomationRule
+    in_graph: true
+    product: ticketing
+
+  AuditLog:
+    definition: Audit trail of actions on tickets or org settings.
+    postgres_table: ticketing.audit_events
+    graph_label: AuditLog
+    in_graph: true
+    product: ticketing
+
+  Suggestion:
+    definition: Proactive AI suggestion for a ticket.
+    postgres_table: ticketing.proactive_recommendations
+    graph_label: Suggestion
+    in_graph: true
+    product: ticketing
+
+  Approval:
+    definition: High-risk proactive action awaiting human approval.
+    postgres_table: ticketing.proactive_approvals
+    graph_label: Approval
+    in_graph: true
+    product: ticketing
+
+  Notification:
+    definition: User notification, often about a ticket.
+    postgres_table: ticketing.notifications
+    graph_label: Notification
+    in_graph: true
+    product: platform
+
+  ChatSession:
+    definition: Ticketing workspace assistant's chat session with the user.
+    postgres_table: ticketing.conversation_contexts
+    graph_label: ChatSession
+    in_graph: false
+    product: ticketing
+
+  TicketStatus:
+    definition: Whether a ticket is open, pending, in progress, resolved, or closed.
+    postgres_table: ticketing.ticket_statuses
+    in_graph: false
+    taxonomy_axis: ticket.status
+
+  Priority:
+    definition: How urgent a ticket is.
+    in_graph: false
+    taxonomy_axis: ticket.priority
+
+  Channel:
+    definition: Platform customers use to contact support (email, chat, phone, etc.).
+    in_graph: false
+    taxonomy_axis: channel
+
+  ContactProfileBridge:
+    definition: Ticketing portal bridge from tickets.customer_id to CDP cdp_id; not a graph node.
+    postgres_table: ticketing.contact_profile
+    in_graph: false
+
+  # --- CCaaS ----------------------------------------------------------------
+  Conversation:
+    definition: A bounded exchange between customer and agent across channels.
+    postgres_table: ccass.conversations
+    graph_label: Conversation
+    in_graph: true
+    product: ccaas
+
+  Task:
+    definition: Assigned work item for an agent in the contact center.
+    postgres_table: ccass.agent_tasks
+    graph_label: Task
+    in_graph: true
+    product: ccaas
+
+  # --- CRM ------------------------------------------------------------------
+  Deal:
+    definition: Sales opportunity / deal in the pipeline.
+    postgres_table: crm.deals
+    graph_label: Deal
+    in_graph: true
+    product: crm
+
+  Account:
+    definition: B2B company account in CRM.
+    postgres_table: crm.companies
+    graph_label: Account
+    in_graph: true
+    product: crm
+
+  Quote:
+    definition: Sales quote for a deal.
+    postgres_table: crm.quotes
+    graph_label: Quote
+    in_graph: true
+    product: crm
+
+  # --- Campaign / CDP analytics ---------------------------------------------
+  Campaign:
+    definition: Planned outreach effort to a segment.
+    postgres_table: campaign.campaigns
+    graph_label: Campaign
+    in_graph: true
+    product: campaign
+
+  Segment:
+    definition: Audience segment for campaigns or analytics.
+    postgres_table: cdp.segments
+    graph_label: Segment
+    in_graph: true
+    product: cdp
+
+  Visitor:
+    definition: Anonymous or identified web visitor before CDP resolution.
+    postgres_table: campaign.website_contacts
+    graph_label: Visitor
+    in_graph: true
+    product: campaign
+
+  Website:
+    definition: Tracked website for web analytics.
+    postgres_table: cdp.tracked_sites
+    graph_label: Website
+    in_graph: true
+    product: webtracking
+
+  Event:
+    definition: Observed customer behaviour event (page view, click, etc.).
+    postgres_table: cdp.customer_events
+    graph_label: Event
+    in_graph: true
+    product: cdp
+
+  Message:
+    definition: Outbound message delivery record (email, SMS, push).
+    postgres_table: campaign.campaign_send_recipients
+    graph_label: Message
+    in_graph: true
+    product: campaign
+
+  Offering:
+    definition: Product or service the organization sells.
+    postgres_table: inventory.products
+    graph_label: Offering
+    in_graph: true
+    product: platform
+
+taxonomies:
+  ticket.status:
+    terms: [open, pending, escalated, resolved, closed, reopened]
+    attached_to: Ticket
+  ticket.priority:
+    terms: [urgent, high, medium, low]
+    attached_to: Ticket
+  ticket.category:
+    terms: [billing, onboarding, integration, bug, feature_request, service]
+    attached_to: Ticket
+  ticket.assignee_role:
+    terms: [agent, resolver]
+    attached_to: Ticket
+  staff.role:
+    terms: [admin, agent, resolver]
+    attached_to: Agent
+  user.kind:
+    terms: [employee]
+    attached_to: User
+  channel:
+    terms: [email, chat, phone, whatsapp, web, portal, social]
+    attached_to: Ticket
+
+relations:
+  - { from: Contact, verb: raised_by, to: Ticket, in_agent_slice: true, product: ticketing }
+  - { from: Ticket, verb: has_note, to: Note, in_agent_slice: true, product: ticketing }
+  - { from: Contact, verb: belongs_to, to: ContactAccount, in_agent_slice: true, product: ticketing }
+  - { from: Ticket, verb: assigned_to, to: Agent, in_agent_slice: true, product: ticketing, neo4j_was: ASSIGNED_TO }
+  - { from: Ticket, verb: resolved_by, to: Agent, in_agent_slice: true, product: ticketing, neo4j_was: RESOLVED_BY }
+  - { from: Ticket, verb: in_queue, to: Queue, in_agent_slice: true, product: ticketing }
+  - { from: Ticket, verb: has_sla, to: SLA, in_agent_slice: true, product: ticketing }
+  - { from: Agent, verb: member_of, to: Team, in_agent_slice: true, product: platform }
+  - { from: Agent, verb: role_of, to: User, in_agent_slice: false, product: platform, neo4j_was: ROLE_OF }
+  - { from: ConfigurationHub, verb: has_user, to: User, in_agent_slice: false, product: platform, neo4j_was: HAS_EMPLOYEE }
+  - { from: Contact, verb: has, to: Conversation, in_agent_slice: true, product: ccaas }
+  - { from: Deal, verb: primary_contact, to: Contact, in_agent_slice: true, product: crm }
+
+tables_excluded_from_graph:
+  - { table: ticketing.ticket_statuses, reason: "status is a property + taxonomy, not a node" }
+  - { table: ticketing.proactive_embeddings, reason: "vector store" }
+  - { table: ticketing.dashboard_metrics, reason: "aggregated snapshot, not entity" }
+  - { table: ticketing.ticket_event_outbox, reason: "outbox infra" }
+  - { table: ticketing.proactive_routing_weights, reason: "model weights, not entity" }
+  - { table: ticketing.proactive_outbox, reason: "outbox infra" }
+  - { table: ticketing.proactive_audit, reason: "optional trim; audit via AuditLog" }
+  - { table: ticketing.ticket_presence, reason: "ephemeral UI state" }
+  - { table: ticketing.user_sessions, reason: "staff session infra" }
+  - { table: ticketing.user_login_events, reason: "staff session infra" }
+  - { table: ticketing.contact_profile, reason: "bridge table; portal fields on Contact via edge_policy" }

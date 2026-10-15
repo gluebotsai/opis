@@ -1,0 +1,66 @@
+name: Deploy Preproduction
+
+# Manual-only deploy to the preproduction self-hosted runner.
+# Does NOT run on push — use Actions → Deploy Preproduction → Run workflow.
+# Does not deploy QA. QA stays on deploy-manual and
+# /home/worktual/REBUILD/POC/worktual-accounts.
+#
+# Runner requirement (GitHub → Settings → Actions → Runners → Labels):
+#   The preproduction machine must have labels: self-hosted, preprod-server
+#
+# First run on an empty /home/worktual/QA needs shared/.env on that machine
+# (DATABASE_URL and the rest of the preproduction env). deploy.sh creates
+# releases/, shared/, logs/, and current. It will not start if Postgres is
+# unreachable.
+#
+# Build, migrate, release, and health checks live in scripts/deploy.sh.
+on:
+  workflow_dispatch:
+
+env:
+  DEPLOY_ROOT: /home/worktual/QA
+  # DATABASE_URL / POSTGRES_* come from ${DEPLOY_ROOT}/shared/.env on the runner.
+  MAIL_API_PORT: "3002"
+  SYSTEMD_SCOPE: system
+  SERVE_FRONTEND_ON_MAIL_API: "true"
+
+jobs:
+  deploy:
+    name: Deploy to preproduction
+    runs-on: [self-hosted, preprod-server]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.9.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+          cache-dependency-path: |
+            frontend/pnpm-lock.yaml
+            backend/pnpm-lock.yaml
+
+      - name: Install system packages (optional)
+        continue-on-error: true
+        run: |
+          if sudo -n true 2>/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y rsync curl lsof ca-certificates
+          else
+            echo "No passwordless sudo — skipping apt install."
+            echo "If deploy fails, run once on the server:"
+            echo "  sudo apt-get install -y rsync curl lsof"
+          fi
+
+      - name: Ensure system prerequisites
+        run: ./scripts/ensure-prerequisites.sh
+
+      - name: Install systemd units
+        run: ./scripts/install-systemd.sh
+
+      - name: Run deployment script
+        run: ./scripts/deploy.sh

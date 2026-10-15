@@ -1,0 +1,35 @@
+slice_id: cc.coworker.general
+agent: Support Agent Coworker (general)
+modules:
+- core
+- knowledge
+classes:
+- Party
+- Person
+- Organization
+- Contact
+- Agent
+- Consent
+- Preference
+- Channel
+- Event
+- WorkItem
+- Location
+- KnowledgeArticle
+- OrganizationDirectory
+relations:
+- Person works_for Organization
+- Contact has_consent Consent
+- Contact has_preference Preference
+- Contact belongs_to Organization
+- Agent works_for Organization
+- KnowledgeArticle owned_by Organization
+- OrganizationDirectory of Organization
+actions:
+- action.identify
+- action.route_to_specialist
+- action.get_organization_details
+- action.get_organization_knowledge
+- action.navigate
+metric_ids: []
+note: Legal slice (tools/policy). Inject pack.as_prompt() compact, not this file.

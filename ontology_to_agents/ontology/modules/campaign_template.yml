@@ -1,0 +1,27 @@
+# Campaign templates — WhatsApp approved/rejected, template library
+module: campaign_template
+layer: product
+depends_on: [core, campaign_core]
+owned_by_spoke: campaign
+usecase: Channel templates and Meta approval workflow.
+
+classes:
+  - id: MessageTemplate
+    definition: Regulated or approved message template.
+    properties: [title, body, approvalStatus]
+    relations:
+      of: Campaign
+
+actions:
+  - id: action.submit_template
+    operates_on: [MessageTemplate]
+    requires: [userConfirmed]
+  - id: action.send_approved_template
+    operates_on: [MessageTemplate, AudienceSegment]
+    requires: [userConfirmed]
+
+metric_ids:
+  - template_count
+  - approved_template_count
+  - template_approval_rate
+  - rejected_template_count

@@ -1,0 +1,95 @@
+version: 1
+examples:
+  - id: campaigns_total
+    goal: How many campaigns are there?
+    answer_type: kpi
+    kpi: campaigns_total
+    tags: [campaign, inventory]
+    note: Saved rows including draft. Not campaigns_ran.
+  - id: audience_names
+    goal: Names and emails on a campaign
+    answer_type: list
+    tags: [list, audience, email]
+    sql: |
+      SELECT first_name, last_name, email, campaign_name
+      FROM rpt.audience_people
+      WHERE campaign_name ILIKE '%Intro%'
+  - id: campaigns_ran_7d
+    goal: How many campaigns ran last 7 days?
+    answer_type: kpi
+    kpi: campaigns_ran
+    tags: [campaign, count]
+    note: Use certified campaigns_ran via run_kpi.
+  - id: open_rate_month
+    goal: Open rate this month
+    answer_type: kpi
+    kpi: email_open_rate
+    tags: [email, rate]
+    note: Use certified email_open_rate via run_kpi.
+  - id: delivered_by_channel
+    goal: Breakdown delivered messages by channel
+    answer_type: breakdown
+    tags: [channel, delivered]
+    sql: |
+      SELECT channel, COUNT(*) AS n
+      FROM rpt.send_recipients
+      WHERE is_delivered
+      GROUP BY channel
+      ORDER BY n DESC
+  - id: campaigns_by_status
+    goal: Breakdown campaigns by status
+    answer_type: breakdown
+    tags: [status, campaign]
+    sql: |
+      SELECT status, COUNT(*) AS n
+      FROM rpt.campaigns
+      GROUP BY status
+      ORDER BY n DESC
+  - id: list_live
+    goal: List my live campaigns
+    answer_type: list
+    tags: [list, live]
+    sql: |
+      SELECT name, status, launch_local_date, audience_count
+      FROM rpt.campaigns
+      WHERE status = 'live'
+      ORDER BY launch_local_date DESC
+  - id: unique_opens_email
+    goal: Unique opens vs delivered for email
+    answer_type: kpi
+    tags: [open, email]
+    sql: |
+      SELECT COUNT(*) FILTER (WHERE is_delivered AND channel = 'email') AS delivered,
+             COUNT(*) FILTER (WHERE is_delivered AND channel = 'email' AND opened_at IS NOT NULL) AS unique_opens
+      FROM rpt.send_recipients
+  - id: never_opened
+    goal: Who never opened
+    answer_type: list
+    tags: [contact, open]
+    sql: |
+      SELECT contact_id, campaign_name, channel
+      FROM rpt.send_recipients
+      WHERE is_delivered AND channel = 'email' AND opened_at IS NULL
+  - id: cdp_count
+    goal: How many CDP contacts
+    answer_type: kpi
+    kpi: cdp_contact_count
+    tags: [cdp, contact]
+    sql: |
+      SELECT COUNT(*) FROM rpt.customers
+  - id: form_conversion
+    goal: Form conversion
+    answer_type: list
+    tags: [event, form]
+    sql: |
+      SELECT public_id, open_count, submission_count
+      FROM rpt.opportunity_events
+  - id: pending_sends
+    goal: Pending sends
+    answer_type: breakdown
+    tags: [pending, outcome]
+    sql: |
+      SELECT channel, COUNT(*) AS n
+      FROM rpt.send_recipients
+      WHERE outcome = 'pending'
+      GROUP BY channel

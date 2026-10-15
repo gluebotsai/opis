@@ -1,0 +1,61 @@
+{
+  "turn_id": "b7ffee2e",
+  "timestamp": "2026-10-12T12:23:59.527765+00:00",
+  "question": "i wnat to see the total number counts",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1017,
+    "role": "agent",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Total conversation count</strong></p><p>There were <strong>0</strong> conversations for all time.</p><p>Would you like to see a breakdown of these conversations by channel?</p>",
+  "card": "card: none",
+  "facts": "result_id: r1\nwindow: all time\ncertified: false\ntask_goal: Count the total number of conversations.\nanswer_type: number\nrow_count: 1\nrow 1: count=0",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1017,
+      "role": "agent",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "i wnat to see the total number counts",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants to see the total count of all conversations, including those that are still open.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Count the total number of conversations.",
+          "time": "all time",
+          "scope": "agent",
+          "slice": [],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "free_sql_fallback": true,
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": false,
+        "kpi_id": null,
+        "row_count": 1
+      }
+    ],
+    "facts": "result_id: r1\nwindow: all time\ncertified: false\ntask_goal: Count the total number of conversations.\nanswer_type: number\nrow_count: 1\nrow 1: count=0",
+    "grounded": true,
+    "card": "card: none"
+  },
+  "error": null
+}

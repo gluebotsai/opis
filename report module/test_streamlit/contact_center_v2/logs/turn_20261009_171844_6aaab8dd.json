@@ -1,0 +1,60 @@
+{
+  "turn_id": "6aaab8dd",
+  "timestamp": "2026-10-09T11:48:44.096178+00:00",
+  "question": "How many outbound interactions were made?",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1018,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Outbound interactions</strong></p><p>There were <strong>24</strong> outbound conversations in all time.</p><p>Would you like to see these outbound interactions broken down by channel?</p>",
+  "card": "card: kpi r1",
+  "facts": "result_id: r1\nwindow: all time\nkpi: total\ncertified: true\nunit: conversations\ntask_goal: Count the number of conversations where the direction is outbound.\nanswer_type: number\nrow_count: 1\nrow 1: total=24",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1018,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "How many outbound interactions were made?",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants to know the total number of outbound interactions.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Count the number of conversations where the direction is outbound.",
+          "time": "all time",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "total",
+        "row_count": 1
+      }
+    ],
+    "facts": "result_id: r1\nwindow: all time\nkpi: total\ncertified: true\nunit: conversations\ntask_goal: Count the number of conversations where the direction is outbound.\nanswer_type: number\nrow_count: 1\nrow 1: total=24",
+    "grounded": true,
+    "card": "card: kpi r1"
+  },
+  "error": null
+}

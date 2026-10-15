@@ -1,0 +1,60 @@
+{
+  "turn_id": "e12b7be9",
+  "timestamp": "2026-10-09T05:15:53.828780+00:00",
+  "question": "how many were handled in the last 7 days?",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1016,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Handled conversations</strong></p><p>There were <strong>336</strong> handled conversations in the past 7 days (UTC).</p><p>Would you like to see how this compares to the previous 7-day period?</p>",
+  "card": "card: kpi r1",
+  "facts": "result_id: r1\nwindow: past 7 days (UTC)\nkpi: handled\ncertified: true\ntask_goal: Count the number of handled conversations.\nanswer_type: number\nrow_count: 1\nrow 1: handled=336",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1016,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "how many were handled in the last 7 days?",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants to know the total number of handled conversations over the last 7 days.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Count the number of handled conversations.",
+          "time": "last 7 days",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "handled",
+        "row_count": 1
+      }
+    ],
+    "facts": "result_id: r1\nwindow: past 7 days (UTC)\nkpi: handled\ncertified: true\ntask_goal: Count the number of handled conversations.\nanswer_type: number\nrow_count: 1\nrow 1: handled=336",
+    "grounded": true,
+    "card": "card: kpi r1"
+  },
+  "error": null
+}

@@ -1,0 +1,77 @@
+# Module: workforce
+module: workforce
+layer: product
+depends_on: [core]
+usecase: >
+  Human live agents — not LLM agents. Presence monitoring, recovery assignment,
+  queue staffing eligibility.
+
+classes:
+  - id: Agent
+    extends: Agent
+    definition: Human contact-center agent. Identifiers - setup_user_id vs agentId must not be mixed.
+    properties: [setupUserId, agentId, skillScore, openCallbackCount]
+    relations:
+      hasPresence: AgentPresence
+      memberOf: Queue
+      worksShift: Shift
+
+  - id: AgentPresence
+    definition: Current readiness state.
+    classified_by: [presence]
+    properties: [state, since]
+    relations:
+      of: Agent
+
+  - id: MonitoringSnapshot
+    definition: Point-in-time wait / missed / callback / SLA / presence rows.
+    properties: [snapshotId, capturedAt]
+    relations:
+      includesAgent: Agent
+      includesQueue: Queue
+
+  - id: Attendance
+    definition: Agent attendance for a date range (beyond today uses get_agent_attendance).
+    relations:
+      of: Agent
+
+  - id: NotReadyEscalation
+    definition: Supervisor alert when an agent stays not-ready.
+    relations:
+      of: Agent
+
+relations:
+  - { from: Agent, type: has_presence, to: AgentPresence }
+  - { from: MonitoringSnapshot, type: includes, to: Agent }
+  - { from: NotReadyEscalation, type: of, to: Agent }
+
+actions:
+  - id: action.get_monitoring_snapshot
+    operates_on: [MonitoringSnapshot]
+    mutates: false
+    maps_to_tools: [get_monitoring_snapshot]
+
+  - id: action.get_agent_attendance
+    operates_on: [Attendance]
+    mutates: false
+    maps_to_tools: [get_agent_attendance]
+
+  - id: action.set_presence
+    operates_on: [AgentPresence]
+    requires: [supervisorAuthorized]
+    maps_to_tools: [set_agent_presence]
+
+  - id: action.force_logout
+    operates_on: [Agent]
+    requires: [supervisorAuthorized, hubOrPolicy]
+    definition: High-impact — Hub approval path when policy requires.
+    maps_to_tools: [force_agent_logout]
+
+  - id: action.acknowledge_escalation
+    operates_on: [NotReadyEscalation]
+    maps_to_tools: [acknowledge_not_ready_escalation, acknowledge_proactive_callback]
+
+  - id: action.list_presence
+    operates_on: [AgentPresence]
+    mutates: false
+    maps_to_tools: [list_presence, list_agents, list_eligible_agents]

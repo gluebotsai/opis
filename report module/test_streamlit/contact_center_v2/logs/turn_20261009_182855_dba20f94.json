@@ -1,0 +1,62 @@
+{
+  "turn_id": "dba20f94",
+  "timestamp": "2026-10-09T12:58:55.489112+00:00",
+  "question": "Which agents have the lowest average handling time?",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1018,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Agents with lowest average handling time</strong></p>\n<p>The following agents had the lowest average handling time for all time:</p>\n<ul>\n<li>Bharathi Sivakumar: 10.83 minutes</li>\n<li>Lokesh B: 18.35 minutes</li>\n<li>Raghuram M: 23.58 minutes</li>\n<li>Santhosh S: 134.87 minutes</li>\n</ul>\n<p>Would you like to see how these handling times compare across different channels?</p>",
+  "card": "card: table r1",
+  "facts": "result_id: r1\nwindow: all time\ncertified: false\ntask_goal: List the agents with their average handling time.\nanswer_type: roster\nrow_count: 4\nrow 1: display_name=Bharathi Sivakumar; avg_handling_time_minutes=10.82989309398907103607\nrow 2: display_name=Lokesh B; avg_handling_time_minutes=18.35368297435897437179\nrow 3: display_name=Raghuram M; avg_handling_time_minutes=23.5789609138888889\nrow 4: display_name=Santhosh S; avg_handling_time_minutes=134.87438998166666666833",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1018,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "Which agents have the lowest average handling time?",
+    "plan": {
+      "kind": "plan",
+      "understanding": "A roster of agents ranked by their average handling time.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "free_sql",
+          "goal": "List the agents with their average handling time.",
+          "time": "all time",
+          "scope": "org",
+          "slice": [
+            "agent"
+          ],
+          "answer_type": "roster"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": false,
+        "kpi_id": null,
+        "row_count": 4
+      }
+    ],
+    "facts": "result_id: r1\nwindow: all time\ncertified: false\ntask_goal: List the agents with their average handling time.\nanswer_type: roster\nrow_count: 4\nrow 1: display_name=Bharathi Sivakumar; avg_handling_time_minutes=10.82989309398907103607\nrow 2: display_name=Lokesh B; avg_handling_time_minutes=18.35368297435897437179\nrow 3: display_name=Raghuram M; avg_handling_time_minutes=23.5789609138888889\nrow 4: display_name=Santhosh S; avg_handling_time_minutes=134.87438998166666666833",
+    "grounded": true,
+    "card": "card: table r1"
+  },
+  "error": null
+}

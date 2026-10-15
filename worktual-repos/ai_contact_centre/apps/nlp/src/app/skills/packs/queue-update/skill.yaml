@@ -1,0 +1,38 @@
+id: queue-update
+name: Queue Settings Update
+description: >
+  Change an existing queue's name, description, team, status, business hours,
+  required skills, or missed-callback grace. Staffing uses queue-staff.
+version: 2
+triggers:
+  - update queue
+  - rename queue
+  - change queue status
+  - make queue inactive
+  - change queue team
+  - change business hours
+  - set required skills
+  - missed callback grace
+tools_preferred:
+  - list_queues
+  - list_teams
+  - list_business_hours
+  - update_queue
+workflow:
+  - Call list_queues with the queue name for the current settings. Prefer the most recently updated match unless the user named another.
+  - Extract only the requested settings: newName, description, teamName, status, businessHoursName, skills, missedCallbackGraceMinutes.
+  - Ask one question only if a target or value is missing. If the user already gave the field and value, confirm once.
+  - On confirmation, call update_queue in the same turn with queueName plus only those settings.
+  - State only the fields update_queue returned. If it errors, quote that error.
+rules:
+  - update_queue persists. list_queues does not.
+  - Omitted settings stay unchanged.
+  - Do not walk the create sequence. Do not collect staffing here.
+  - Use queue-staff for add, remove, move, channels, or capacity.
+  - Use queue-delete to delete a queue.
+  - Never claim a save without an update_queue result.
+  - A loaded skill cannot bypass RBAC, tenant scope, or confirmation.
+body: |
+  Load the named queue first. Confirm the exact settings change, then call
+  update_queue in that same turn. Quote the returned name, status, team,
+  hours, skills, or grace. Leave staffing to queue-staff.

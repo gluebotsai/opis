@@ -1,0 +1,23 @@
+name: cdp.interactions
+alias: i
+schema: cdp
+grain: conversation
+purpose: Customer-centric projection of a conversation. Join to ccass.conversations on conversation_id (logical, no FK).
+aliases: [cdp, customer interaction]
+time_columns: [started_at, ended_at, last_activity_at]
+columns:
+  - { name: id, type: uuid, pk: true, description: Interaction id }
+  - { name: organization_id, type: uuid, description: Tenant id }
+  - { name: conversation_id, type: uuid, fk: ccass.conversations.id, description: Logical conversation id }
+  - { name: contact_id, type: uuid, description: Customer }
+  - { name: channel, type: text, description: Channel }
+  - { name: agent_id, type: uuid, description: Agent }
+  - { name: status, type: text, description: Projected status }
+  - { name: outcome, type: text, description: Outcome }
+  - { name: sentiment, type: text, description: Projected sentiment. Not always filled. }
+  - { name: disposition_code, type: text, description: Disposition }
+  - { name: sla_result, type: text, description: SLA result }
+  - { name: started_at, type: timestamptz, description: Started }
+  - { name: ended_at, type: timestamptz, description: Ended }
+sample_rows:
+  - { id: "aaaaaaaa-0001", conversation_id: 101, channel: webchat, status: resolved, outcome: resolved, sentiment: mixed, sla_result: met }

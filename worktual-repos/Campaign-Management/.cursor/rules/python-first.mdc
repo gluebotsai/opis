@@ -1,0 +1,35 @@
+---
+description: Prefer Python for Campaign work; TypeScript only when unavoidable (~10% max)
+alwaysApply: true
+---
+
+# Python-first (Campaign rebuild)
+
+**Important standing instruction from the team:**
+
+- Prefer **Python** for as much new and changed backend/agent logic as possible.
+- TypeScript is allowed only in **worst cases**, roughly **≤10%** of ongoing work.
+- Org context: other Worktual microservices (CRM, ticketing, etc.) are mostly Python; the Campaign TS backend is an outlier being reduced over time.
+
+## Do this
+
+- Put new business logic, workers, gallery/rules, render helpers, reports, and AI flows in **`agents/` (Python)** or new Python services.
+- Keep TypeScript as a **thin shell**: routes, auth/session, Prisma apply-mutations, env wiring — when the FE contract requires it.
+- Prefer the pattern: **FE → thin TS API → Python (decisions + side effects) → TS persists if needed**.
+- When fixing or extending gallery, send, reports, templates, images: **change Python first**.
+
+## Avoid this
+
+- Do **not** add large new TypeScript modules/services/helpers for product logic when a Python path exists or can be added.
+- Do **not** “just fix it in TS” by default for worker/orchestration/rules that will change often.
+- Do **not** rewrite the frontend to Python; FE stays React/TSX. This rule targets **backend / agents / workers**.
+
+## When TypeScript is OK (~10%)
+
+- Unavoidable Fastify route / auth / Prisma persistence glue.
+- Tiny adapters that call Python and apply returned mutations.
+- Frontend-only changes (UI), which stay TypeScript/React.
+
+## Conflict with older habits
+
+If a prior pattern put logic in `backend/src/services/*.ts` or `helpers/*.ts`, **migrate or extend in Python** instead of growing that TS surface, unless the user explicitly asks for a TS-only change.

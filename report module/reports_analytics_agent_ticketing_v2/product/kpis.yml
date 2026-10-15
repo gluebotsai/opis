@@ -1,0 +1,812 @@
+version: 1
+# Certified KPIs. SQL lives in sql/<id>.sql. Role visibility lives in access.yml.
+
+kpis:
+  ticket_count:
+    label: Ticket count
+    answers: How many tickets (volume) in scope
+    not: avg_tickets_per_day, avg_open_ticket_age, list of tickets
+    grain: one counted ticket row
+    family: volume
+    aggregation: count
+    unit: tickets
+    direction: none
+    default_time_column: created_at
+    allowed_date_columns: [created_at, resolved_at, updated_at, due_at]
+    allowed_scope_levels: [org, own, created_by_me, queue, agent, resolver]
+    allowed_dimensions: [status, priority, channel, category, skill, queue, agent, resolver, customer, created_by, day, week, month]
+    synonyms: [how many tickets, ticket volume, number of tickets]
+    definition:
+      numerator: COUNT of tickets in scope
+      denominator: none
+      includes: every ticket row that matches tenant, scope, time, segment, filters
+      excludes: none
+    segments:
+      all: no extra status filter
+      open: "status = 'Open'"
+      pending_generic: "status NOT IN ('Closed', 'Resolved')"
+      pending_literal: "status = 'Pending'"
+      reopened: "status = 'Reopened'"
+      resolved: "status = 'Resolved'"
+      overdue: "status = 'Overdue'"
+      unassigned: "assignee_id IS NULL"
+      high_priority: "priority = 'high'"
+
+  avg_tickets_per_day:
+    label: Average tickets per day
+    answers: Tickets created per UTC day (rate)
+    not: ticket_count, ticket_count grouped by day
+    grain: average tickets per day
+    family: volume
+    aggregation: ratio
+    unit: tickets_per_day
+    direction: none
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, created_by_me, queue, agent, resolver]
+    allowed_dimensions: [status, priority, channel, category, skill, queue, agent, resolver, customer, created_by, day, week, month]
+    definition:
+      numerator: COUNT of tickets created in the window (or all history if no window)
+      denominator: number of UTC calendar days in the window; if no window, days from min(created_at) to now UTC inclusive
+      includes: tickets in scope
+      excludes: none
+
+  avg_open_ticket_age:
+    label: Average open ticket age
+    answers: Average age of tickets currently status Open
+    not: ticket_count, days_since_last_ticket, avg_resolution_time
+    grain: mean hours Open tickets have been open
+    family: volume
+    aggregation: avg
+    unit: hours
+    direction: lower_is_better
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, queue, agent, resolver]
+    allowed_dimensions: [status, priority, channel, category, skill, queue, agent, resolver, customer, created_by, day, week, month]
+    definition:
+      numerator: SUM of (now UTC - created_at) in hours
+      denominator: "COUNT of tickets with status = 'Open' only"
+      includes: status Open
+      excludes: Overdue, Pending, Reopened, Resolved, Closed
+
+  days_since_last_ticket:
+    label: Days since last ticket
+    answers: How many days since the most recent ticket was created
+    not: avg_open_ticket_age, ticket_count
+    grain: one scalar days value
+    family: volume
+    aggregation: scalar
+    unit: days
+    direction: none
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, created_by_me, queue, agent, resolver]
+    allowed_dimensions: []
+    definition:
+      numerator: EXTRACT days from (now UTC - MAX(created_at))
+      denominator: none
+      includes: tickets in scope
+      excludes: none
+
+  resolution_rate:
+    label: Resolution rate
+    answers: Share of created tickets that are Resolved or Closed
+    not: ticket_count, resolution_sla_compliance
+    grain: resolved_or_closed / created
+    family: flow
+    aggregation: rate
+    unit: ratio
+    direction: higher_is_better
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, created_by_me, queue, agent, resolver]
+    allowed_dimensions: [status, priority, channel, category, skill, queue, agent, resolver, customer, created_by, day, week, month]
+    definition:
+      numerator: tickets created in window whose status is Resolved or Closed
+      denominator: tickets created in window
+      includes: created-in-window base
+      excludes: none
+
+  assignment_rate:
+    label: Assignment rate
+    answers: Share of created tickets that were assigned at least once
+    not: ticket_count, reassignment_rate
+    grain: assigned / created
+    family: flow
+    aggregation: rate
+    unit: ratio
+    direction: higher_is_better
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, queue]
+    allowed_dimensions: [status, priority, channel, category, skill, queue, agent, resolver, customer, created_by, day, week, month]
+    definition:
+      numerator: tickets created in window with at least one audit action ticket.assigned
+      denominator: tickets created in window
+      includes: EXISTS ticket.assigned
+      excludes: none
+
+  reopen_count:
+    label: Reopen count
+    answers: How many tickets currently have status Reopened
+    not: reopen_rate, ticket_count with segment reopened
+    grain: count of Reopened rows
+    family: flow
+    aggregation: count
+    unit: tickets
+    direction: none
+    default_time_column: created_at
+    allowed_date_columns: [created_at, updated_at]
+    allowed_scope_levels: [org, own, queue, agent, resolver]
+    allowed_dimensions: [status, priority, channel, category, skill, queue, agent, resolver, customer, created_by, day, week, month]
+    definition:
+      numerator: COUNT of tickets whose current status is Reopened
+      includes: "literal tickets.status = 'Reopened'"
+      excludes: audit-only history that is no longer Reopened
+
+  reopen_rate:
+    label: Reopen rate
+    answers: Reopened among Resolved/Closed/Reopened
+    not: reopen_count
+    grain: reopened / finished_or_reopened
+    family: flow
+    aggregation: rate
+    unit: ratio
+    direction: lower_is_better
+    default_time_column: created_at
+    allowed_date_columns: [created_at, updated_at, resolved_at]
+    allowed_scope_levels: [org, own, queue, agent, resolver]
+    allowed_dimensions: [status, priority, channel, category, skill, queue, agent, resolver, customer, created_by, day, week, month]
+    definition:
+      numerator: "COUNT status = 'Reopened'"
+      denominator: "COUNT status IN ('Resolved', 'Closed', 'Reopened')"
+      includes: current status only, same as Open
+      excludes: audit prev_status without status Reopened
+
+  escalation_rate:
+    label: Escalation rate
+    answers: Share of created tickets that were escalated
+    not: escalation_count
+    grain: escalated tickets / created
+    family: flow
+    aggregation: rate
+    unit: ratio
+    direction: none
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, queue]
+    allowed_dimensions: [status, priority, channel, category, skill, queue, agent, resolver, customer, created_by, day, week, month]
+    definition:
+      numerator: DISTINCT tickets created in window with at least one ticket.escalated
+      denominator: tickets created in window
+
+  reassignment_rate:
+    label: Reassignment rate
+    answers: Share of assigned tickets that were assigned more than once
+    not: reassignment_count, assignment_rate
+    grain: reassigned / assigned
+    family: flow
+    aggregation: rate
+    unit: ratio
+    direction: none
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, queue]
+    allowed_dimensions: [status, priority, channel, category, skill, queue, agent, resolver, customer, created_by, day, week, month]
+    definition:
+      numerator: tickets created in window with more than one ticket.assigned event
+      denominator: tickets created in window with at least one ticket.assigned
+      includes: assigned at least once as the base
+      excludes: never-assigned tickets from the denominator; no from/to keys in meta
+
+  avg_first_response_time:
+    label: Average first response time
+    answers: Average hours to first response
+    not: first_response_sla_compliance, avg_resolution_time
+    grain: mean first_response_hours
+    family: speed
+    aggregation: avg
+    unit: hours
+    direction: lower_is_better
+    default_time_column: created_at
+    allowed_date_columns: [created_at, first_response_at]
+    allowed_scope_levels: [org, own, queue, agent, resolver]
+    allowed_dimensions: [status, priority, channel, category, skill, queue, agent, resolver, customer, created_by, day, week, month]
+    definition:
+      numerator: SUM of hours(first_response_at - created_at)
+      denominator: COUNT of tickets with first_response_at not null
+      includes: stored first_response_at
+      excludes: tickets with no first_response_at
+
+  avg_resolution_time:
+    label: Average resolution time
+    answers: Average hours from created to resolved
+    not: avg_open_ticket_age, avg_resolution_variance_vs_sla
+    grain: mean resolution_hours on resolved tickets
+    family: speed
+    aggregation: avg
+    unit: hours
+    direction: lower_is_better
+    default_time_column: resolved_at
+    allowed_date_columns: [resolved_at, created_at]
+    allowed_scope_levels: [org, own, queue, agent, resolver]
+    allowed_dimensions: [status, priority, channel, category, skill, queue, agent, resolver, customer, created_by, day, week, month]
+    definition:
+      numerator: SUM of hours(resolved_at - created_at)
+      denominator: COUNT of tickets with resolved_at not null
+
+  avg_resolution_variance_vs_sla:
+    label: Average resolution variance vs SLA
+    answers: Average hours resolved minus due (negative = early)
+    not: resolution_sla_compliance, average_overdue_hours
+    grain: mean variance hours
+    family: speed
+    aggregation: avg
+    unit: hours
+    direction: none
+    default_time_column: resolved_at
+    allowed_date_columns: [resolved_at]
+    allowed_scope_levels: [org, own, queue, agent, resolver]
+    allowed_dimensions: [status, priority, channel, category, skill, queue, agent, resolver, customer, created_by, day, week, month]
+    definition:
+      population: tickets with resolved_at IS NOT NULL AND due_at IS NOT NULL (current due_at)
+      per_ticket: EXTRACT(EPOCH FROM (resolved_at - due_at)) / 3600.0
+      metric: AVG of per_ticket
+      sign: negative means resolved before due_at; positive means late
+      excludes: unresolved tickets; tickets without due_at
+
+  first_response_sla_compliance:
+    label: First-response SLA compliance
+    answers: Share of decided first-response SLAs that met policy
+    not: avg_first_response_time, first_response_at_risk_count
+    grain: met / decided FR SLA
+    family: sla
+    aggregation: rate
+    unit: ratio
+    direction: higher_is_better
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, queue, agent, resolver]
+    allowed_dimensions: [status, priority, channel, category, skill, queue, agent, resolver, customer, created_by, day, week, month]
+    definition:
+      met: first_response_at <= created_at + sla_policies.first_response_hours
+      missed: "reply after that instant, or no reply yet and now UTC > that instant"
+      decided: met or missed
+      numerator: decided tickets that met
+      denominator: decided tickets
+      excludes: no first_response_hours policy (those are no_sla_count)
+
+  resolution_sla_compliance:
+    label: Resolution SLA compliance
+    answers: Share of decided resolution SLAs that met due_at
+    not: sla_breach_rate, avg_resolution_time
+    grain: met / decided resolution SLA
+    family: sla
+    aggregation: rate
+    unit: ratio
+    direction: higher_is_better
+    default_time_column: created_at
+    allowed_date_columns: [created_at, resolved_at]
+    allowed_scope_levels: [org, own, queue, agent, resolver]
+    allowed_dimensions: [status, priority, channel, category, skill, queue, agent, resolver, customer, created_by, day, week, month]
+    definition:
+      met: resolved_at IS NOT NULL AND resolved_at <= due_at
+      missed: "resolved_at > due_at, OR still not Resolved/Closed AND now UTC > due_at"
+      decided: met or missed
+      numerator: decided tickets that met
+      denominator: decided tickets
+      excludes: no due_at (no_sla_count)
+
+  sla_breach_rate:
+    label: SLA breach rate
+    answers: Share of decided resolution SLAs that missed due
+    not: resolution_sla_compliance, average_overdue_hours
+    grain: missed / decided resolution SLA
+    family: sla
+    aggregation: rate
+    unit: ratio
+    direction: lower_is_better
+    default_time_column: created_at
+    allowed_date_columns: [created_at, resolved_at]
+    allowed_scope_levels: [org, own, queue, agent, resolver]
+    allowed_dimensions: [status, priority, channel, category, skill, queue, agent, resolver, customer, created_by, day, week, month]
+    definition:
+      numerator: decided tickets that missed resolution SLA
+      denominator: decided tickets (met + missed)
+      note: compliance + breach = 1 on the same decided set
+
+  first_response_at_risk_count:
+    label: First-response at-risk count
+    answers: Open tickets close to missing first-response SLA (not yet missed)
+    not: first_response_sla_compliance, no_sla_count
+    grain: count of at-risk FR tickets
+    family: sla
+    aggregation: count
+    unit: tickets
+    direction: lower_is_better
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, queue]
+    allowed_dimensions: [status, priority, channel, category, skill, queue, agent, resolver, customer, created_by, day, week, month]
+    definition:
+      includes: "no first_response_at yet; has first_response_hours; not Closed/Resolved; remaining\
+  \ time to FR due <= 20% of first_response_hours; still not past due (past due is\
+  \ missed, not at-risk)"
+
+  resolution_at_risk_count:
+    label: Resolution at-risk count
+    answers: Open tickets close to missing resolution due (not yet overdue)
+    not: queues_at_risk, sla_breach_rate
+    grain: count of at-risk resolution tickets
+    family: sla
+    aggregation: count
+    unit: tickets
+    direction: lower_is_better
+    default_time_column: created_at
+    allowed_date_columns: [created_at, due_at]
+    allowed_scope_levels: [org, own, queue]
+    allowed_dimensions: [status, priority, channel, category, skill, queue, agent, resolver, customer, created_by, day, week, month]
+    definition:
+      includes: "not Closed/Resolved; due_at present; now UTC <= due_at; remaining (due_at - now)\
+  \ <= 20% of (due_at - created_at)"
+
+  no_sla_count:
+    label: Tickets with no SLA
+    answers: Tickets with no resolution due_at
+    not: sla_breach_rate
+    grain: count of tickets without resolution SLA
+    family: sla
+    aggregation: count
+    unit: tickets
+    direction: none
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, queue]
+    allowed_dimensions: [status, priority, channel, category, skill, queue, agent, resolver, customer, created_by, day, week, month]
+    definition:
+      includes: no due_at (resolution SLA rate excludes these). First-response with no policy is excluded from FR rates only, not this count.
+
+  queues_at_risk:
+    label: Queues at risk
+    answers: Which queues have resolution-at-risk tickets (one row per queue)
+    not: resolution_at_risk_count, queue_count
+    grain: one row per queue_name with at-risk ticket count
+    family: sla
+    aggregation: count_distinct
+    unit: queues
+    direction: lower_is_better
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, queue]
+    allowed_dimensions: [queue]
+    definition:
+      numerator: per-queue COUNT of tickets with resolution_at_risk
+      excludes: stored agent_queues.sla_status
+      grain: "one row per queue_name (use this for both \"how many queues\" and \"which queues\"\
+  )"
+
+  average_overdue_hours:
+    label: Average overdue hours
+    answers: Average hours past due on missed resolution SLA
+    not: sla_breach_rate, avg_open_ticket_age
+    grain: mean overdue hours
+    family: sla
+    aggregation: avg
+    unit: hours
+    direction: lower_is_better
+    default_time_column: due_at
+    allowed_date_columns: [due_at, resolved_at]
+    allowed_scope_levels: [org, own, queue, agent, resolver]
+    allowed_dimensions: [status, priority, channel, category, skill, queue, agent, resolver, customer, created_by, day, week, month]
+    definition:
+      population: missed resolution SLA (late resolved or still open past due_at)
+      per_ticket: hours(COALESCE(resolved_at, now UTC) - due_at)
+      metric: AVG of per_ticket
+      echo: open tickets are overdue so far (the number still grows)
+
+  avg_csat:
+    label: Average CSAT
+    answers: Average CSAT score 1-5 among rated tickets
+    not: csat_response_rate, csat_distribution_rate
+    grain: mean csat_score
+    family: csat
+    aggregation: avg
+    unit: score
+    direction: higher_is_better
+    default_time_column: csat_rated_at
+    allowed_date_columns: [csat_rated_at, resolved_at, created_at]
+    allowed_scope_levels: [org, own, queue, agent, resolver]
+    allowed_dimensions: [status, priority, channel, category, skill, queue, agent, resolver, customer, created_by, day, week, month]
+    definition:
+      numerator: SUM(csat_score)
+      denominator: COUNT of tickets with csat_score IS NOT NULL
+      promoter: "score >= 4"
+      neutral: score = 3
+      detractor: score <= 2
+
+  csat_response_rate:
+    label: CSAT response rate
+    answers: Share of completed tickets that have a CSAT score
+    not: avg_csat, ticket_count
+    grain: rated / completed
+    family: csat
+    aggregation: rate
+    unit: ratio
+    direction: higher_is_better
+    default_time_column: resolved_at
+    allowed_date_columns: [resolved_at]
+    allowed_scope_levels: [org, own, queue]
+    allowed_dimensions: [status, priority, channel, category, skill, queue, agent, resolver, customer, created_by, day, week, month]
+    definition:
+      numerator: completed tickets with csat_score IS NOT NULL
+      denominator: completed tickets (status Resolved or Closed, or resolved_at set)
+      note: warehouse often stores finished work as Closed, not only Resolved
+
+  csat_distribution_rate:
+    label: CSAT distribution rate
+    answers: Promoter / neutral / detractor mix among rated tickets
+    not: avg_csat
+    grain: one row with three rates unless grouped
+    family: csat
+    aggregation: rate
+    unit: ratio
+    direction: none
+    default_time_column: csat_rated_at
+    allowed_date_columns: [csat_rated_at]
+    allowed_scope_levels: [org, own, queue]
+    allowed_dimensions: [status, priority, channel, category, skill, queue, agent, resolver, customer, created_by, day, week, month]
+    definition:
+      promoter_rate: "rated tickets with csat_score >= 4 / rated tickets"
+      neutral_rate: csat_score = 3 / rated tickets
+      detractor_rate: csat_score <= 2 / rated tickets
+      grain: one row with promoter_rate, neutral_rate, detractor_rate, rated_tickets
+    segments:
+      promoter: "csat_score >= 4"
+      neutral: csat_score = 3
+      detractor: csat_score <= 2
+
+  customers_served:
+    label: Customers served
+    answers: How many distinct customers had tickets
+    not: accounts_served, total_customers, active_customers
+    grain: distinct customer_id on tickets
+    family: customers
+    aggregation: count_distinct
+    unit: customers
+    direction: none
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, queue]
+    allowed_dimensions: [status, priority, channel, category, skill, queue, agent, resolver, customer, created_by, day, week, month]
+    definition:
+      numerator: COUNT DISTINCT tickets.customer_id in the window
+      includes: people who have tickets
+      excludes: CDP-only people with no tickets
+
+  accounts_served:
+    label: Accounts served
+    answers: How many distinct contact profiles had tickets
+    not: customers_served
+    grain: distinct contact_profile.id
+    family: customers
+    aggregation: count_distinct
+    unit: accounts
+    direction: none
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, queue]
+    allowed_dimensions: [status, priority, channel, category, skill, queue, agent, resolver, customer, created_by, day, week, month]
+    definition:
+      numerator: COUNT DISTINCT ticketing.contact_profile.id joined on tickets.customer_id
+      grain: contact profile rows, not CRM account_id
+      excludes: tickets with no matching contact_profile
+
+  active_customers:
+    label: Active customers
+    answers: Distinct customers whose contact_profile.status is Active
+    not: customers_served, total_customers
+    grain: distinct active-profile customers
+    family: customers
+    aggregation: count_distinct
+    unit: customers
+    direction: none
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org]
+    allowed_dimensions: []
+    definition:
+      numerator: "COUNT DISTINCT customer_id among tickets whose contact_profile.status = 'Active'"
+
+  total_customers:
+    label: Total customers
+    answers: CDP people with ticketing product, not ticket volume
+    not: customers_served
+    grain: count of CDP profiles
+    family: customers
+    aggregation: count
+    unit: people
+    direction: none
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org]
+    allowed_dimensions: []
+    definition:
+      numerator: COUNT of cdp.customer_profile rows with contact_type in (lead, customer) for the org
+      requires: "accounts.active_products.product_id = 'ticketing' for that org"
+      hold: CDP active/blocked flag not applied yet
+      if_no_purchase: 0
+
+  active_agents:
+    label: Active agents
+    answers: How many staff with role agent and status Active
+    not: total_users, distinct_agents_in_queues
+    grain: count of active L1 agents
+    family: workforce
+    aggregation: count
+    unit: people
+    direction: none
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org]
+    allowed_dimensions: []
+    definition:
+      numerator: "COUNT agents where status = 'Active' AND role = 'agent'"
+
+  total_users:
+    label: Total users
+    answers: How many staff rows (all roles)
+    not: active_agents
+    grain: count of agents table
+    family: workforce
+    aggregation: count
+    unit: people
+    direction: none
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org]
+    allowed_dimensions: []
+    definition:
+      numerator: COUNT all ticketing.agents rows (agent, admin, resolver)
+
+  queue_count:
+    label: Queue count
+    answers: How many queues exist
+    not: queues_at_risk, distinct_queues_covered
+    grain: count of agent_queues
+    family: workforce
+    aggregation: count
+    unit: queues
+    direction: none
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org]
+    allowed_dimensions: []
+    definition:
+      numerator: COUNT all agent_queues for the org
+
+  queue_coverage:
+    label: Queue coverage
+    answers: How many queue membership rows (not a percent)
+    not: distinct_agents_in_queues, queue_count
+    grain: count of memberships
+    family: workforce
+    aggregation: count
+    unit: memberships
+    direction: none
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org]
+    allowed_dimensions: []
+    definition:
+      numerator: COUNT rows in agent_queue_members
+
+  distinct_agents_in_queues:
+    label: Distinct agents in queues
+    answers: How many distinct people sit on at least one queue
+    not: queue_coverage, active_agents
+    grain: distinct member user_id
+    family: workforce
+    aggregation: count_distinct
+    unit: people
+    direction: none
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org]
+    allowed_dimensions: []
+    definition:
+      numerator: COUNT DISTINCT user_id on agent_queue_members
+
+  distinct_queues_covered:
+    label: Distinct queues covered
+    answers: How many distinct queues have at least one member
+    not: queue_count, queue_coverage
+    grain: distinct member queue_id
+    family: workforce
+    aggregation: count_distinct
+    unit: queues
+    direction: none
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org]
+    allowed_dimensions: []
+    definition:
+      numerator: COUNT DISTINCT queue_id on agent_queue_members
+
+  note_count:
+    label: Note count
+    answers: How many notes were written
+    not: ticket_count; who wrote notes is KG
+    grain: count of ticket_notes
+    family: collaboration
+    aggregation: count
+    unit: notes
+    direction: none
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, queue]
+    allowed_dimensions: [queue, agent, resolver, day, week, month]
+    definition:
+      numerator: COUNT all ticket_notes in scope
+      excludes: no split by visibility
+
+  escalation_count:
+    label: Escalation count
+    answers: How many ticket.escalated audit events
+    not: escalation_rate
+    grain: count of escalate events
+    family: activity
+    aggregation: count
+    unit: events
+    direction: none
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, queue]
+    allowed_dimensions: [queue, agent, resolver, day, week, month]
+    definition:
+      numerator: "COUNT audit_events where action = 'ticket.escalated'"
+
+  reassignment_count:
+    label: Reassignment count
+    answers: How many second-or-later assign events
+    not: reassignment_rate
+    grain: count of reassignment events
+    family: activity
+    aggregation: count
+    unit: events
+    direction: none
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, queue]
+    allowed_dimensions: [queue, agent, resolver, day, week, month]
+    definition:
+      numerator: COUNT of ticket.assigned events that are the second or later assign on that ticket
+
+  kb_article_count:
+    label: Published KB articles
+    answers: How many published KB articles
+    not: kb_views
+    grain: count of Published articles
+    family: kb
+    aggregation: count
+    unit: articles
+    direction: none
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org]
+    allowed_dimensions: [category]
+    definition:
+      numerator: "COUNT kb_articles where status = 'Published'"
+
+  kb_views:
+    label: KB views
+    answers: Sum of KB article view counters
+    not: kb_article_count
+    grain: sum of views
+    family: kb
+    aggregation: sum
+    unit: views
+    direction: none
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org]
+    allowed_dimensions: []
+    definition:
+      numerator: SUM(views) on kb_articles
+
+  recommendation_count:
+    label: Recommendation count
+    answers: How many AI recommendations
+    not: recommendation_acceptance_rate
+    grain: count of recommendations
+    family: ai
+    aggregation: count
+    unit: recommendations
+    direction: none
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org]
+    allowed_dimensions: []
+    definition:
+      numerator: COUNT proactive_recommendations
+    segments:
+      all: no extra filter
+      open: "status = 'open'"
+      accepted: "status = 'accepted'"
+      dismissed: "status = 'dismissed'"
+
+  recommendation_acceptance_rate:
+    label: Recommendation acceptance rate
+    answers: Share of recommendations with status accepted
+    not: recommendation_count
+    grain: accepted / all recommendations
+    family: ai
+    aggregation: rate
+    unit: ratio
+    direction: higher_is_better
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org]
+    allowed_dimensions: []
+    definition:
+      numerator: COUNT status = accepted
+      denominator: COUNT of all recommendations in scope
+      includes: open and dismissed in the denominator so the rate is never null
+
+  approval_count:
+    label: Approval count
+    answers: How many AI approvals (pending included)
+    not: approval_rate
+    grain: count of approval rows
+    family: ai
+    aggregation: count
+    unit: approvals
+    direction: none
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org]
+    allowed_dimensions: []
+    definition:
+      numerator: COUNT proactive_approvals
+    segments:
+      all: no extra filter
+      pending: "status = 'pending'"
+      approved: "status = 'approved'"
+      rejected: "status = 'rejected'"
+
+  approval_rate:
+    label: Approval rate
+    answers: Share of decided approvals that were approved
+    not: approval_count
+    grain: approved / decided; null if all pending
+    family: ai
+    aggregation: rate
+    unit: ratio
+    direction: higher_is_better
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org]
+    allowed_dimensions: []
+    definition:
+      numerator: COUNT status in (approved, accepted)
+      denominator: COUNT status in (approved, accepted, rejected, declined, denied)
+      pending: exposed as pending_count; total_approvals is all rows including pending
+      note: if every row is pending, approval_rate is null and pending_count is the usable figure
+
+  unread_notifications:
+    label: Unread notifications
+    answers: How many unread in-app notifications
+    not: ticket_count
+    grain: count of is_read=false; default own inbox
+    family: notifications
+    aggregation: count
+    unit: notifications
+    direction: none
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own]
+    allowed_dimensions: []
+    definition:
+      numerator: COUNT notifications where is_read is false
+      default_scope: own (this user_id) unless the task sets audience all_users / org-wide
+      admin_org_wide: only when the question asks for everyone in the org

@@ -1,0 +1,62 @@
+{
+  "turn_id": "72f7d7df",
+  "timestamp": "2026-10-12T12:06:46.696831+00:00",
+  "question": "which queue having more sla rate?",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1054,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Queue first-reply SLA rates</strong></p>\n<p>For all time, the <strong>Testing</strong> queue has the highest first-reply SLA rate at <strong>100%</strong>, followed by the <strong>Support Queue</strong> at <strong>66.7%</strong>.</p>\n<p>Would you like to see the average first response time for these queues?</p>",
+  "card": "card: table r1",
+  "facts": "result_id: r1\nwindow: all time\nkpi: first_reply_sla\ncertified: true\nunit: percent\ntask_goal: Rank queues by first-reply SLA rate.\nanswer_type: number\nrow_count: 2\nrow 1: queue=Support Queue; sla_n=30; replies_n=45; rate_pct=66.7\nrow 2: queue=Testing; sla_n=3; replies_n=3; rate_pct=100",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1054,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "which queue having more sla rate?",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants to know which queue has the highest first-reply SLA rate.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Rank queues by first-reply SLA rate.",
+          "time": "all time",
+          "scope": "org",
+          "slice": [
+            "queue"
+          ],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "first_reply_sla",
+        "row_count": 2
+      }
+    ],
+    "facts": "result_id: r1\nwindow: all time\nkpi: first_reply_sla\ncertified: true\nunit: percent\ntask_goal: Rank queues by first-reply SLA rate.\nanswer_type: number\nrow_count: 2\nrow 1: queue=Support Queue; sla_n=30; replies_n=45; rate_pct=66.7\nrow 2: queue=Testing; sla_n=3; replies_n=3; rate_pct=100",
+    "grounded": true,
+    "card": "card: table r1"
+  },
+  "error": null
+}

@@ -1,0 +1,150 @@
+{
+  "turn_id": "ccbcf326",
+  "timestamp": "2026-09-30T14:54:10.072071+00:00",
+  "question": "how many open deals are there?",
+  "context": {
+    "product": "crm",
+    "org_id": 1003,
+    "user_id": 1017,
+    "role": "admin",
+    "queue_ids": [
+      1018,
+      1019,
+      1020,
+      1021,
+      1022,
+      1024,
+      1026,
+      1027,
+      1028,
+      1029,
+      1031,
+      1059,
+      1068
+    ],
+    "llm_model": "worktual-gemma"
+  },
+  "events": [
+    {
+      "timestamp": "2026-09-30T14:54:10.122476+00:00",
+      "type": "message",
+      "role": "system",
+      "agent": "domain_agent",
+      "content": "# reports_analytics_domain \u2014 B2B CRM\n\n## runtime metadata\n- version: 2.3.0\n- layer: domain\n- execution_mode: llm\n\n## role\nYou are the lead revenue-operations analyst for B2B CRM. You plan tasks and write the executive briefing. You do not write SQL or Cypher. Executors return facts; you answer from those facts only.\n\n## goal\nTurn the user question into 1\u20134 tasks, then brief from facts. Pick the object first (deal, lead/contact, quote, invoice, activity), then SQL (`run_kpi` / free SQL) or KG (account 360, commercial path, why-lost, forecast stall, BANT).\n\n## instructions\n1. Read identity and the question. Decide the **business object** before any KPI id.\n2. Warehouse metric (how many, how much, aging bands, owner mix, quote/invoice/lead KPIs): `executor: sql` and the certified `kpi` id when one matches.\n3. Graph 360 / why / path: `executor: kg`, `\"kpi\": null`. That means a named company/account neighborhood, walk Deal\u2192Quote\u2192Invoice\u2192Contract, why deals were lost (empirical reasons), forecast stall/omitted, or BANT/contact timeline.\n4. Roster of a named company with **no** 360 ask, or a count with no certified KPI (how many quotes, how many leads): SQL with `\"kpi\": null`. **Top / largest / biggest open opportunities** is SQL `top_open_opportunities`.\n5. Count vs money: count KPIs for \u201chow many\u201d; revenue KPIs for amounts.\n6. `time`: copy the user\u2019s period (month name is enough). No period \u2192 `all time`. KG tasks may still set time from the user; Python does not bind KG dates.\n7. Briefing: name a month only if `period_applied` does. If `population` is open deals, say **open deals**, not \u201call deals\u201d. Mixed SQL+KG facts: use both.\n\n## context\n### Objects (do not mix)\n- **Deal / opportunity**: `rpt.deals`. Stages qualification, discover, propose, negotiate, closed_won, closed_lost. Open = `is_open`. High probability = open and `stage_weight >= 0.75` (negotiate).\n- **Lead / contact**: `rpt.contacts`. `lead_status`, `lead_source`. Not a deal. \u201cHow many leads\u201d is not `total_opportunities`.\n- **Quote**: `rpt.quotes`. Status draft, sent, accepted, rejected, void. Not a deal. Quote acceptance is accepted vs rejected quotes, not deal win rate.\n- **Invoice / contract / activity / appointment**: their own views.\n\n### Certified KPI ids (exact strings)\n\nDeals \u2014 volume: `total_opportunities`, `active_opportunities`, `won_deal_count`, `lost_deal_count`, `high_probability_deals`\nDeals \u2014 money / health: `total_pipeline`, `weighted_pipeline`, `won_revenue`, `lost_revenue`, `average_deal_size`, `average_probability`, `average_aging`, `new_pipeline_month`, `expected_close_value`, `sales_velocity`, `avg_sales_cycle`\nDeals \u2014 breakdowns: `pipeline_by_stage`, `pipeline_by_owner`, `win_loss_split`, `aging_bands`, `deal_size_bands`, `lost_reasons`, `won_revenue_trend`, `top_open_opportunities`, `win_rate`\nQuotes: `quote_acceptance_rate`, `open_quote_value`, `average_discount`\nLeads: `lead_status_mix`, `unassigned_leads`, `lead_source_conversion`\nTouch / tasks: `activity_volume`, `days_since_last_touch`, `open_task_count`, `meeting_completion`, `agent_operations`\nFinance: `invoice_outstanding`, `overdue_amount`, `collected_revenue`, `approval_queue`, `contract_arr`, `renewal_book`, `product_revenue`, `attach_rate`, `customer_retention`, `territory_performance`, `forecast_vs_target`\nUnavailable (still emit the id): `quota_attainment`, `stage_conversion`, `won_reason_mix`, `time_in_stage`, `campaign_attribution`, `email_open_rate`, `sequence_compliance`\n\n`win_rate` is **deal win rate** (won vs lost deals). `quote_acceptance_rate` is **quotes**.\n`aging_bands` is buckets for **open** deals. `average_aging` is one average of days for **open** deals.\n\n`scope`: `org` for admin, sales_manager, finance, marketing, viewer. `own` for sales_rep and presales.\n\nTime phrases Python binds: `all time`, `today`, `yesterday`, `this week`, `last week`, `this month`, `last month`, `this quarter`, `this year`, `last year`, `last 7 days`, `last 30 days`, `August`, `August 2026`, ISO dates.\n\n## skills\n- b2b_crm_analytics\n\n## guardrails\n- Do not write SQL.\n- Do not invent numbers or periods.\n- Do not treat leads or quotes as opportunities.\n- Do not replace `quote_acceptance_rate` with `win_rate`.\n- Do not replace `average_aging` with `aging_bands`.\n- Do not replace `high_probability_deals` with `active_opportunities`.\n- Do not set `\"kpi\": null` for top / largest / biggest open opportunities; use `top_open_opportunities`.\n- Unavailable KPIs: still send that catalog id; do not swap a neighbour metric.\n- Do not send warehouse KPIs (pipeline by stage, aging bands, invoice outstanding, lead mix, won/open counts) to `executor: kg`.\n- Graph 360 is the commercial neighborhood of a named account/deal/contact, not every CRM metric.\n- Named-company 360 / \u201ctell me about company X\u201d: **only** `executor: kg`. Do not add org-wide SQL KPIs (`total_opportunities`, pipeline, etc.) on the same plan.\n\n## input/output contract\n### input\nIdentity, question, later fact blocks (`period_applied`, `population`, `RESULT`).\n\n### output\nOne plan JSON:\n\n```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"quick|standard|deep\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"total_opportunities\",\n      \"goal\": \"Count deals in the requested window\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"answer_type\": \"kpi\",\n      \"depends_on\": []\n    }\n  ]\n}\n```\n\nKPI plan examples (question \u2192 executor and kpi):\n\n1. how many deals / opportunities \u2192 sql `total_opportunities`\n2. how many open deals \u2192 sql `active_opportunities`\n3. how many high probability / hot / negotiate deals \u2192 sql `high_probability_deals`\n4. average aging / aging bands \u2192 sql `average_aging` / `aging_bands`\n5. how many lost deals \u2192 sql `lost_deal_count` ; lost revenue \u2192 sql `lost_revenue`\n6. deal win rate \u2192 sql `win_rate` ; quote acceptance \u2192 sql `quote_acceptance_rate`\n7. lead status mix / invoice outstanding / top open opportunities \u2192 sql those kpi ids\n8. why did we lose deals / why deals failed \u2192 kg, kpi null, goal = empirical lost reasons\n9. which deals are stalling / forecast omitted / at risk \u2192 kg, kpi null\n10. tell me about company Orange / account 360 / commercial overview of named company \u2192 **only** kg, kpi null (no extra sql tasks)\n11. walk the commercial path for deal X \u2192 kg, kpi null\n12. BANT / contact qualification timeline for a person \u2192 kg, kpi null\n\nKG task shape:\n\n```json\n{\n  \"id\": \"t1\",\n  \"executor\": \"kg\",\n  \"kpi\": null,\n  \"goal\": \"360 commercial neighborhood for company Orange: deals, quotes, invoices\",\n  \"time\": \"all time\",\n  \"scope\": \"org\",\n  \"answer_type\": \"why_breakdown\",\n  \"depends_on\": []\n}\n```\n\nFree-SQL tasks (no KPI): set `\"kpi\": null` and `executor: sql`. Put the object in `goal` (count contacts, count quotes, list quotes). Do not use free SQL for top open opportunities.\n\n## allowed MCP servers\n- none (SQL: `run_kpi`, `run_sql`; KG: Cypher templates inside kg_executor)\n\n## handoff targets\n- sql_executor\n- kg_executor\n\n## memory policy\n### working\nQuestion, identity, plan, facts. Clear after briefing.\n### short-term\nThis chat session.\n### long-term\nNone.\n### preferences\nNone.\n\n## approval policy\nNone. Runtime applies SQL guard and role scope.\n\n## evaluation criteria\n- Object matches the question (lead \u2260 deal \u2260 quote).\n- Average aging is one number of days; bands are buckets.\n- High probability is not all open deals.\n- Briefing period matches `period_applied`. Open-only facts say open deals.\n",
+      "metadata": {}
+    },
+    {
+      "timestamp": "2026-09-30T14:54:10.122502+00:00",
+      "type": "message",
+      "role": "user",
+      "agent": "domain_agent",
+      "content": "Identity: role=admin, org_id=1003, user_id=1017, queues=[1018, 1019, 1020, 1021, 1022, 1024, 1026, 1027, 1028, 1029, 1031, 1059, 1068]\n\nQuestion: how many open deals are there?",
+      "metadata": {}
+    },
+    {
+      "timestamp": "2026-09-30T14:54:11.275572+00:00",
+      "type": "message",
+      "role": "assistant",
+      "agent": "domain_agent",
+      "content": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"quick\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"active_opportunities\",\n      \"goal\": \"Count the number of open deals\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"answer_type\": \"kpi\",\n      \"depends_on\": []\n    }\n  ]\n}\n```",
+      "metadata": {}
+    },
+    {
+      "timestamp": "2026-09-30T14:54:11.275636+00:00",
+      "type": "tool_call",
+      "agent": "domain_agent",
+      "tool_name": "plan_tasks",
+      "arguments": {
+        "kind": "plan",
+        "depth": "quick",
+        "tasks": [
+          {
+            "id": "t1",
+            "executor": "sql",
+            "kpi": "active_opportunities",
+            "goal": "Count the number of open deals",
+            "time": "all time",
+            "scope": "org",
+            "answer_type": "kpi",
+            "depends_on": []
+          }
+        ]
+      },
+      "result": null
+    },
+    {
+      "timestamp": "2026-09-30T14:54:11.276529+00:00",
+      "type": "tool_call",
+      "agent": "certified_kpi_executor",
+      "tool_name": "run_kpi",
+      "arguments": {
+        "kpi_id": "active_opportunities",
+        "scope": "org",
+        "time": "overall (no date filter, UTC)",
+        "dimension": null,
+        "filter": null
+      },
+      "result": null
+    },
+    {
+      "timestamp": "2026-09-30T14:54:12.927215+00:00",
+      "type": "guard",
+      "guard_type": "KPI_Template_Slots",
+      "input_query": "active_opportunities",
+      "output_query": "WITH rpt_deals AS (\nSELECT src.id, src.organization_id, src.title, src.stage, src.amount, src.currency_code, src.stage_weight, src.weighted_amount, src.company_id, src.company_name, src.company_industry, src.location_id, src.contact_id, src.contact_name, src.contact_email, src.owner_user_id, src.owner_name, src.created_at, src.closed_at, src.close_ts, src.updated_at, src.expected_close_date, src.lost_reason, src.is_open, src.is_won, src.is_lost, src.aging_days, src.forecast_category, src.forecast_reason, src.forecast_flagged FROM (\nSELECT \n  d.id,\n  d.organization_id,\n  d.title,\n  d.stage,\n  COALESCE(d.amount, 0) AS amount,\n  CASE\n    WHEN pq.currency IS NOT NULL AND pq.currency <> 'USD' THEN pq.currency\n    WHEN o.country IS NOT NULL AND o.country <> 'US' AND cc.curr IS NOT NULL THEN cc.curr\n    WHEN pq.currency = 'USD' THEN 'USD'\n    WHEN o.country = 'US' THEN 'USD'\n    ELSE 'USD'\n  END AS currency_code,\n  CASE d.stage\n    WHEN 'qualification' THEN 0.10\n    WHEN 'discover' THEN 0.25\n    WHEN 'propose' THEN 0.50\n    WHEN 'negotiate' THEN 0.75\n    WHEN 'closed_won' THEN 1.00\n    WHEN 'closed_lost' THEN 0.00\n    ELSE 0.00\n  END AS stage_weight,\n  ROUND(COALESCE(d.amount, 0) * (\n    CASE d.stage\n      WHEN 'qualification' THEN 0.10\n      WHEN 'discover' THEN 0.25\n      WHEN 'propose' THEN 0.50\n      WHEN 'negotiate' THEN 0.75\n      WHEN 'closed_won' THEN 1.00\n      WHEN 'closed_lost' THEN 0.00\n      ELSE 0.00\n    END\n  ), 2) AS weighted_amount,\n  d.company_id,\n  c.name AS company_name,\n  c.industry AS company_industry,\n  d.location_id,\n  d.contact_id,\n  COALESCE(d.contact_name, cdp.first_name || ' ' || COALESCE(cdp.last_name, '')) AS contact_name,\n  COALESCE(d.contact_email, id_k.key_value) AS contact_email,\n  d.owner_user_id,\n  su.first_name || ' ' || COALESCE(su.last_name, '') AS owner_name,\n  d.created_at,\n  d.closed_at,\n  COALESCE(d.closed_at, d.created_at) AS close_ts,\n  d.updated_at,\n  d.expected_close_date,\n  d.lost_reason,\n  (d.stage IN ('qualification', 'discover', 'propose', 'negotiate')) AS is_open,\n  (d.stage = 'closed_won') AS is_won,\n  (d.stage = 'closed_lost') AS is_lost,\n  FLOOR(EXTRACT(EPOCH FROM (NOW() - d.created_at))/86400)::integer AS aging_days,\n  d.forecast_category,\n  d.forecast_reason,\n  d.forecast_flagged\nFROM crm.deals d\nLEFT JOIN crm.companies c ON c.id = d.company_id AND c.organization_id = d.organization_id\nLEFT JOIN accounts.setup_users su ON su.id = d.owner_user_id\nLEFT JOIN accounts.organizations o ON o.id = d.organization_id\nLEFT JOIN cdp.customer_profile cdp ON cdp.cdp_id = d.contact_id\nLEFT JOIN LATERAL (\n  SELECT ik.key_value \n  FROM cdp.identity_keys ik \n  WHERE ik.cdp_id = d.contact_id AND ik.key_type = 'email' AND ik.organization_id = d.organization_id \n  ORDER BY ik.created_at ASC \n  LIMIT 1\n) id_k ON TRUE\nLEFT JOIN LATERAL (\n  SELECT q.currency \n  FROM crm.quotes q \n  WHERE q.deal_id = d.id AND q.organization_id = d.organization_id \n  ORDER BY CASE WHEN q.status = 'accepted' THEN 1 WHEN q.status = 'sent' THEN 2 ELSE 3 END, q.updated_at DESC \n  LIMIT 1\n) pq ON TRUE\nLEFT JOIN LATERAL (\n  SELECT CASE o.country \n    WHEN 'India' THEN 'INR' \n    WHEN 'United Kingdom' THEN 'GBP' \n    WHEN 'Germany' THEN 'EUR' \n    WHEN 'Canada' THEN 'CAD' \n    WHEN 'Australia' THEN 'AUD' \n    ELSE 'USD' \n  END AS curr\n) cc ON TRUE\nWHERE d.organization_id = %(_org_id)s\n) src WHERE TRUE\n)\nSELECT CAST(COUNT(*) AS BIGINT) AS active_opportunities FROM rpt_deals AS deals WHERE is_open = TRUE AND TRUE AND TRUE AND TRUE LIMIT 500",
+      "params": {
+        "org_id": 1003,
+        "scope": "org",
+        "dimension": null,
+        "filter": null
+      },
+      "notes": [],
+      "error": null
+    },
+    {
+      "timestamp": "2026-09-30T14:54:12.927320+00:00",
+      "type": "message",
+      "role": "fact_assembly",
+      "agent": "facts_module",
+      "content": "RESULT: active_opportunities = 12",
+      "metadata": {}
+    },
+    {
+      "timestamp": "2026-09-30T14:54:12.927373+00:00",
+      "type": "message",
+      "role": "system",
+      "agent": "domain_synthesis",
+      "content": "Executive analyst briefing.",
+      "metadata": {}
+    },
+    {
+      "timestamp": "2026-09-30T14:54:12.927398+00:00",
+      "type": "message",
+      "role": "user",
+      "agent": "domain_synthesis",
+      "content": "You are the Lead Analyst briefing Sales & Revenue Leadership.\n\nActive Context: Organization ID: 1003, User ID: 1017, Role: ADMIN, Time: overall across all time in Organization 1003.\nOriginal Question: how many open deals are there?\nFacts gathered:\nRESULT: active_opportunities = 12\n\nInstructions:\n- Write a clear, executive-level answer directly addressing the user's question.\n- Lead with the exact primary number or finding in the very first sentence, explicitly stating the active organization and timeframe (e.g., 'Across all time in Organization 1003, there are **14 total deals**...').\n- Use bold markdown for key metrics and figures.\n- Explain business/operational context concisely. If there are top groups, stages, or owners, summarize them in a clean Markdown table.\n- If the primary number is 0 or no records exist, clearly state: 'There are currently 0 records found in Organization 1003 for this scope. (Note: To query another tenant such as Org 1003 or 1000, update the Organization ID in the sidebar).' \n- Do NOT mention internal errors, REPLAN, system architecture, or pipeline tools. State business facts clearly.\n- Do NOT use headings like 'Analysis' or 'Narrative'. Just clean, natural prose.",
+      "metadata": {}
+    },
+    {
+      "timestamp": "2026-09-30T14:54:14.047835+00:00",
+      "type": "message",
+      "role": "assistant",
+      "agent": "domain_synthesis",
+      "content": "Across all time in Organization 1003, there are **12 active opportunities** currently in the pipeline.\n\nThis figure represents the total volume of open deals currently being managed within the organization. Maintaining this pipeline velocity is critical for ensuring predictable revenue forecasting and identifying potential gaps in the sales cycle before they impact quarterly targets.\n\n| Metric | Value |\n| :--- | :--- |\n| **Total Open Deals** | **12** |\n| **Scope** | All Time |\n| **Organization** | 1003 |",
+      "metadata": {}
+    },
+    {
+      "timestamp": "2026-09-30T14:54:14.857762+00:00",
+      "type": "grounding",
+      "grounded": false,
+      "ungrounded": [
+        "1"
+      ],
+      "answer_numbers": [
+        "12",
+        "1"
+      ],
+      "was_regenerated": true
+    }
+  ]
+}

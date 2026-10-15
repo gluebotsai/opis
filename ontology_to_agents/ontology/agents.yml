@@ -1,0 +1,261 @@
+# Agent index — each agent declares owned_product (origin SKU).
+# Spokes: POST with agent + product (string). Hub: agent + products (list).
+
+agents:
+  cc.super:
+    owned_product: contact_centre
+    preset: cc.super
+  cc.ai_support:
+    owned_product: contact_centre
+    preset: cc.ai_support
+  cc.coworker:
+    owned_product: contact_centre
+    preset: cc.coworker
+  cc.reporting:
+    owned_product: contact_centre
+    preset: cc.reporting
+  cc.reporting_mas:
+    owned_product: contact_centre
+    preset: cc.reporting_mas
+  cc.anomaly:
+    owned_product: contact_centre
+    preset: cc.anomaly
+  cc.presence:
+    owned_product: contact_centre
+    preset: cc.presence
+  cc.forecast:
+    owned_product: contact_centre
+    preset: cc.forecast
+  cc.wfm:
+    owned_product: contact_centre
+    preset: cc.wfm
+  cc.performance:
+    owned_product: contact_centre
+    preset: cc.performance
+  cc.interaction_ops:
+    owned_product: contact_centre
+    preset: cc.interaction_ops
+  cc.agent_assist:
+    owned_product: contact_centre
+    preset: cc.agent_assist
+  cc.closure:
+    owned_product: contact_centre
+    preset: cc.closure
+  cc.followup:
+    owned_product: contact_centre
+    preset: cc.followup
+  cc.omnichannel:
+    owned_product: contact_centre
+    preset: cc.omnichannel
+  cc.queue:
+    owned_product: contact_centre
+    preset: cc.queue
+  cc.recovery:
+    owned_product: contact_centre
+    preset: cc.recovery
+
+  tk.super:
+    owned_product: ticketing
+    preset: tk.super
+  tk.reporting:
+    owned_product: ticketing
+    preset: tk.analytics_audit_query_executor
+  tk.reporting_mas:
+    owned_product: ticketing
+    preset: tk.reporting_mas
+  tk.portal:
+    owned_product: ticketing
+    preset: tk.portal
+
+  ticketing_super_agent:
+    owned_product: ticketing
+    preset: tk.super
+  intake_deflection_domain:
+    owned_product: ticketing
+    preset: tk.intake_deflection_domain
+  triage_routing_domain:
+    owned_product: ticketing
+    preset: tk.triage_routing_domain
+  resolution_lifecycle_domain:
+    owned_product: ticketing
+    preset: tk.resolution_lifecycle_domain
+  knowledge_domain:
+    owned_product: ticketing
+    preset: tk.knowledge_domain
+  catalog_administration_domain:
+    owned_product: ticketing
+    preset: tk.catalog_administration_domain
+
+  ai_resolution_executor:
+    owned_product: ticketing
+    preset: tk.ai_resolution_executor
+  ticket_creation_executor:
+    owned_product: ticketing
+    preset: tk.ticket_creation_executor
+  classification_priority_executor:
+    owned_product: ticketing
+    preset: tk.classification_priority_executor
+  intelligent_assignment_executor:
+    owned_product: ticketing
+    preset: tk.intelligent_assignment_executor
+  workload_optimization_executor:
+    owned_product: ticketing
+    preset: tk.workload_optimization_executor
+  root_cause_learning_executor:
+    owned_product: ticketing
+    preset: tk.root_cause_learning_executor
+  ticket_lifecycle_executor:
+    owned_product: ticketing
+    preset: tk.ticket_lifecycle_executor
+  sla_escalation_executor:
+    owned_product: ticketing
+    preset: tk.sla_escalation_executor
+  investigation_summary_executor:
+    owned_product: ticketing
+    preset: tk.investigation_summary_executor
+  customer_reply_drafting_executor:
+    owned_product: ticketing
+    preset: tk.customer_reply_drafting_executor
+  autonomous_resolution_executor:
+    owned_product: ticketing
+    preset: tk.autonomous_resolution_executor
+  resolution_quality_executor:
+    owned_product: ticketing
+    preset: tk.resolution_quality_executor
+  personalized_notification_executor:
+    owned_product: ticketing
+    preset: tk.personalized_notification_executor
+  insights_analytics_executor:
+    owned_product: ticketing
+    preset: tk.insights_analytics_executor
+  resolution_knowledge_executor:
+    owned_product: ticketing
+    preset: tk.resolution_knowledge_executor
+  similar_ticket_detection_executor:
+    owned_product: ticketing
+    preset: tk.similar_ticket_detection_executor
+  team_queue_crud_executor:
+    owned_product: ticketing
+    preset: tk.team_queue_crud_executor
+  kb_quality_crud_executor:
+    owned_product: ticketing
+    preset: tk.kb_quality_crud_executor
+  macro_crud_executor:
+    owned_product: ticketing
+    preset: tk.macro_crud_executor
+  customer_directory_crud_executor:
+    owned_product: ticketing
+    preset: tk.customer_directory_crud_executor
+  priority_status_crud_executor:
+    owned_product: ticketing
+    preset: tk.priority_status_crud_executor
+  org_settings_integrations_executor:
+    owned_product: ticketing
+    preset: tk.org_settings_integrations_executor
+  notification_inbox_executor:
+    owned_product: ticketing
+    preset: tk.notification_inbox_executor
+  analytics_audit_query_executor:
+    owned_product: ticketing
+    preset: tk.analytics_audit_query_executor
+  automation_rule_crud_executor:
+    owned_product: ticketing
+    preset: tk.automation_rule_crud_executor
+
+  hub.orchestrator:
+    owned_product: hub
+    preset: hub.orchestrator
+
+  crm-agent:
+    owned_product: crm
+    preset: crm.super
+  crm.contacts:
+    owned_product: crm
+    modules: [cdp, identity, crm_account]
+  crm.companies:
+    owned_product: crm
+    modules: [cdp, crm_account]
+  crm.deals:
+    owned_product: crm
+    preset: crm.deals
+  crm.proposals:
+    owned_product: crm
+    modules: [cdp, crm_deal, crm_quote]
+  crm.products:
+    owned_product: crm
+    modules: [cdp, crm_order]
+  crm.reports:
+    owned_product: crm
+    preset: crm.reports
+  crm.reporting_mas:
+    owned_product: crm
+    preset: crm.reporting_mas
+  crm.link:
+    owned_product: crm
+    modules: [cdp, identity, crm_account, crm_deal]
+
+  enrich-lead:
+    owned_product: crm
+    modules: [cdp, identity, crm_lead]
+  score-lead:
+    owned_product: crm
+    modules: [cdp, crm_lead]
+  assign-sales:
+    owned_product: crm
+    modules: [cdp, identity, crm_lead, crm_deal]
+  meeting-brief-email:
+    owned_product: crm
+    modules: [cdp, crm_meeting, crm_deal]
+  analyze-transcript:
+    owned_product: crm
+    modules: [cdp, crm_meeting, crm_deal]
+  audit-forecast:
+    owned_product: crm
+    modules: [cdp, crm_deal]
+
+  camp.super:
+    owned_product: campaign
+    preset: camp.super
+  camp.create:
+    owned_product: campaign
+    modules: [cdp, campaign_core, campaign_template]
+  camp.contacts:
+    owned_product: campaign
+    modules: [cdp, identity, crm_account]
+  camp.monitoring:
+    owned_product: campaign
+    modules: [campaign_core, campaign_ops]
+  camp.reports:
+    owned_product: campaign
+    preset: camp.reports
+  camp.reporting_mas:
+    owned_product: campaign
+    preset: camp.reporting_mas
+  camp.templates:
+    owned_product: campaign
+    modules: [campaign_core, campaign_template]
+  camp.wa_approved:
+    owned_product: campaign
+    modules: [campaign_template]
+  camp.wa_rejected:
+    owned_product: campaign
+    modules: [campaign_template]
+
+  cdp.profile:
+    owned_product: cdp
+    modules: [cdp, identity]
+  cdp.reporting_mas:
+    owned_product: cdp
+    preset: cdp.reporting_mas
+  webtracking.analytics:
+    owned_product: webtracking
+    preset: webtracking.analytics
+  webtracking.insights:
+    owned_product: webtracking
+    preset: webtracking.insights
+  webtracking.reporting_mas:
+    owned_product: webtracking
+    preset: webtracking.analytics
+  wt.reporting_mas:
+    owned_product: webtracking
+    preset: webtracking.analytics

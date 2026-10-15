@@ -1,0 +1,62 @@
+{
+  "turn_id": "8a739ff3",
+  "timestamp": "2026-10-09T12:56:26.220205+00:00",
+  "question": "Which agents have the highest resolution rate?",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1018,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Agent resolution rates</strong></p><p>The following agents and their resolution rates for all time are:</p><ul><li>Lokesh B: <strong>0.1538</strong></li><li>Santhosh S: <strong>0.1</strong></li><li>Raghuram M: <strong>0</strong></li><li>Bharathi Sivakumar: <strong>0.0984</strong></li></ul><p>Would you like to see these rates broken down by channel?</p>",
+  "card": "card: table r1",
+  "facts": "result_id: r1\nwindow: all time\ncertified: false\ntask_goal: List the names of agents and their resolution rate.\nanswer_type: roster\nrow_count: 5\nrow 1: agent_name=Lokesh B; resolution_rate=0.1538\nrow 2: agent_name=Santhosh S; resolution_rate=0.1\nrow 3: agent_name=Raghuram M; resolution_rate=0\nrow 4: agent_name=None; resolution_rate=0\nrow 5: agent_name=Bharathi Sivakumar; resolution_rate=0.0984",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1018,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "Which agents have the highest resolution rate?",
+    "plan": {
+      "kind": "plan",
+      "understanding": "A list of agents ranked by their resolution rate.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "free_sql",
+          "goal": "List the names of agents and their resolution rate.",
+          "time": "all time",
+          "scope": "org",
+          "slice": [
+            "agent"
+          ],
+          "answer_type": "roster"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": false,
+        "kpi_id": null,
+        "row_count": 5
+      }
+    ],
+    "facts": "result_id: r1\nwindow: all time\ncertified: false\ntask_goal: List the names of agents and their resolution rate.\nanswer_type: roster\nrow_count: 5\nrow 1: agent_name=Lokesh B; resolution_rate=0.1538\nrow 2: agent_name=Santhosh S; resolution_rate=0.1\nrow 3: agent_name=Raghuram M; resolution_rate=0\nrow 4: agent_name=None; resolution_rate=0\nrow 5: agent_name=Bharathi Sivakumar; resolution_rate=0.0984",
+    "grounded": true,
+    "card": "card: table r1"
+  },
+  "error": null
+}

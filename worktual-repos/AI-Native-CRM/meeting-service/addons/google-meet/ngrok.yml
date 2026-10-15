@@ -1,0 +1,20 @@
+# Local Meet add-on HTTPS tunnel (ngrok account: use your authtoken in global config).
+#
+# Vite :5173 proxies /addons/meet, /v1/assist, /v1/meetings → meeting-service :8030
+# (see frontend/vite.config.ts and MEETING_SERVICE_URL=http://127.0.0.1:8030).
+#
+# Do NOT run this if you already have `ngrok http 4000` (or similar) using your reserved
+# domain — ngrok allows only one online tunnel per domain (ERR_NGROK_334). For Meet Assist,
+# keep the :4000 tunnel and use https://<that-host>/addons/meet/ (CRM proxies to :8050).
+#
+# Only when no other ngrok is running:
+#   cd meeting-service
+#   ngrok start meet-addon --config "$HOME/Library/Application Support/ngrok/ngrok.yml" --config addons/google-meet/ngrok.yml
+#
+# Stable URL: copy ngrok.local.yml.example → ngrok.local.yml, set your reserved domain, then:
+#   ngrok start meet-addon --config ... --config addons/google-meet/ngrok.yml --config addons/google-meet/ngrok.local.yml
+version: "3"
+endpoints:
+  - name: meet-addon
+    upstream:
+      url: 5173

@@ -1,0 +1,84 @@
+version: 2
+
+models:
+  - name: stg_conversations
+    columns:
+      - name: conversation_id
+        tests: [unique, not_null]
+
+  - name: stg_conversation_assignments
+    columns:
+      - name: assignment_id
+        tests: [unique, not_null]
+
+  - name: stg_conversation_transfers
+    columns:
+      - name: transfer_id
+        tests: [unique, not_null]
+
+  - name: stg_conversation_sla_state
+    columns:
+      - name: sla_state_id
+        tests: [unique, not_null]
+
+  - name: stg_conversation_dispositions
+    columns:
+      - name: disposition_entry_id
+        tests: [unique, not_null]
+
+  - name: stg_dispositions
+    columns:
+      - name: disposition_id
+        tests: [unique, not_null]
+
+  - name: stg_agents
+    columns:
+      - name: agent_id
+        tests: [unique, not_null]
+
+  - name: stg_agent_tasks
+    columns:
+      - name: task_id
+        tests: [unique, not_null]
+
+  - name: stg_agent_capacity
+    columns:
+      - name: capacity_id
+        tests: [unique, not_null]
+
+  - name: stg_agent_presence_history
+    columns:
+      - name: presence_event_id
+        tests: [unique, not_null]
+
+  - name: stg_copilot_turns
+    description: "Agent-assist suggestion proxy — disposition inferred, not natively tracked."
+    columns:
+      - name: suggestion_id
+        tests: [unique, not_null]
+
+  - name: stg_copilot_skill_executions
+    description: "Tool execution proxy — confirm execution_status distinct values before trusting tool_success_rate."
+    columns:
+      - name: execution_id
+        tests: [unique, not_null]
+
+  - name: stg_ccaas_setup_users
+    columns:
+      - name: user_id
+        tests: [unique, not_null]
+
+  - name: stg_setup_ccaas_queues
+    columns:
+      - name: queue_id
+        tests: [unique, not_null]
+
+  - name: stg_setup_ccaas_queue_agents
+    columns:
+      - name: queue_agent_id
+        tests: [unique, not_null]
+
+  - name: stg_ccaas_setup_teams
+    columns:
+      - name: team_id
+        tests: [unique, not_null]

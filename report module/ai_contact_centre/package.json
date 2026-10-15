@@ -1,0 +1,52 @@
+{
+  "name": "ai_contact_center_2",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo dev --concurrency=16",
+    "build": "turbo build",
+    "check-types": "turbo check-types",
+    "lint": "turbo lint",
+    "test": "turbo test",
+    "test:integration": "npm run test:email-enterprise -w cc-core && npx tsx apps/cc-core/scripts/test-contact-identity-integration.ts && npx tsx apps/cc-core/scripts/test-omni-phone-memory-integration.ts && npx tsx apps/cc-core/scripts/test-webchat-memory-integration.ts",
+    "test:e2e:api": "npx tsx scripts/e2e/run-all.ts",
+    "test:e2e:preflight": "npx tsx scripts/e2e/preflight.ts",
+    "dev:gateway-proxy": "node scripts/dev-gateway-proxy.mjs",
+    "dev:stack": "bash scripts/dev-stack.sh",
+    "dev:stack:start": "bash scripts/dev-stack.sh start",
+    "dev:stack:stop": "bash scripts/dev-stack.sh stop",
+    "dev:stack:restart": "bash scripts/dev-stack.sh restart",
+    "dev:stack:status": "bash scripts/dev-stack.sh status",
+    "ngrok:gateway": "bash scripts/start-ngrok-gateway.sh",
+    "ngrok:chat": "ngrok http 3002",
+    "ngrok:social": "ngrok http 3004",
+    "dev:web": "turbo -F web dev",
+    "dev:cc-core": "turbo -F cc-core dev",
+    "dev:platform-service": "turbo -F platform-service dev",
+    "dev:chat-service": "turbo -F chat-service dev",
+    "dev:call-service": "turbo -F call-service dev",
+    "dev:social-service": "turbo -F social-service dev",
+    "dev:nlp": "turbo -F nlp dev",
+    "dev:a2a": "turbo -F a2a-server dev",
+    "a2a:sync": "npm run sync -w a2a-server",
+    "nlp:sync": "npm run sync -w nlp",
+    "db:generate": "turbo -F @ai-contact-center/db-cc -F @ai-contact-center/db-platform db:generate",
+    "db:push": "npm run db:push -w @ai-contact-center/db-cc && npm run db:push -w @ai-contact-center/db-platform",
+    "db:migrate": "npm run db:migrate -w @ai-contact-center/db-cc",
+    "db:migrate:status": "npm run db:migrate:status -w @ai-contact-center/db-cc",
+    "test:e2e": "npm run test:e2e -w web",
+    "docker:up": "bash scripts/docker-up.sh"
+  },
+  "devDependencies": {
+    "@ai-contact-center/config": "*",
+    "@ai-contact-center/test-harness": "*",
+    "@types/node": "^22.15.0",
+    "turbo": "^2.10.0",
+    "typescript": "^5.8.3"
+  },
+  "packageManager": "npm@10.9.2"
+}

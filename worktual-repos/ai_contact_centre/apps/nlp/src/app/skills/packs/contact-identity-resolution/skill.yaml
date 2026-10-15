@@ -1,0 +1,19 @@
+id: contact-identity-resolution
+name: Contact Identity Resolution
+description: >
+  Canonical identity matching, cross-channel linking, enrichment, conflict handling,
+  safe merges, idempotency, and realtime contact.enriched outcomes.
+version: 1
+triggers:
+  - identity
+  - resolution
+  - merge
+  - enrich
+  - unify contact
+workflow:
+  - Use contact_enrich tool when customer contact entities are identified.
+  - Rely on server-side CDP identity keys for matching and safe merging.
+  - Emit contact.enriched socket events for real-time workspace UI updates.
+rules:
+  - Never allow LLMs to directly select tenant IDs or force unverified merges.
+  - Always handle enrichment idempotently with sourceMessageId.

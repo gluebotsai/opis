@@ -1,0 +1,24 @@
+table_name,prisma_model,description,primary_key,notes
+branches,Branch,Org branch/workspace under a tenant,id,Tenant-scoped; campaigns and agent sessions hang off branch
+organization_products,OrganizationProduct,Which products (campaign/crm) are enabled per branch,id,Unique tenant+branch+product_code
+campaigns,Campaign,Stored campaign after create/save/launch,id,Core campaign management entity; launch_plan JSON holds schedule/channel_run
+campaign_channels,CampaignChannel,One row per channel on a saved campaign,id,Unique campaign_id+channel; links optional template_id
+campaign_audience,CampaignAudience,Frozen contact UUID refs at save/launch,campaign_id+contact_id,contact_id refs CDP/account DB - not stored locally
+campaign_agent_sessions,CampaignAgentSession,Create-campaign agent chat draft session,id,payload JSON holds messages/plans; module default create_campaign
+campaign_audience_refs,CampaignAudienceRef,Contact UUID refs attached to agent session,session_id+contact_id,Draft audience before campaign persist
+campaign_channel_templates,CampaignChannelTemplate,Channel template draft keyed by template id,id,fields JSON for FE shells; generation_batch_id groups AI gens
+campaign_template_messages,CampaignTemplateMessage,Edit-space chat for one template,id,Ordered by seq; kind text|template
+channel_sending_profiles,ChannelSendingProfile,Per-tenant channel readiness checklist,id,Unique tenant+channel; Ready gate for email etc.
+push_channel_settings,PushChannelSettings,Web/app push provider credentials,id,settings JSON VAPID/FCM/APNs; channel web_push|app_push
+email_org_profiles,EmailOrgProfile,Company postal/legal address for compliance,id,One per tenant
+email_senders,EmailSender,From addresses for campaign email,id,is_active marks worker From; unique tenant+from_email
+email_domains,EmailDomain,Sending domain auth SPF/DKIM/DMARC,id,provider_domain_id = ESP/Worktual domain id; dns_records JSON
+email_return_paths,EmailReturnPath,Bounce/return-path domain,id,One per tenant
+email_sending_caps,EmailSendingCaps,Batch size hourly/daily caps warmup health,id,One per tenant; health_stats JSON
+email_suppressions,EmailSuppression,Unsub/hard-bounce/complaint suppression,id,Unique tenant+email
+campaign_send_batches,CampaignSendBatch,Queued send slices per campaign channel,id,Unique campaign+channel+seq; email|push|web
+campaign_send_recipients,CampaignSendRecipient,Per-recipient send attempt/status,id,email or destination/token; provider_message_id
+push_endpoints,PushEndpoint,Device tokens / web-push subscriptions,id,Unique tenant+channel+endpoint
+campaign_contact_engagement,CampaignContactEngagement,Campaign-only open/click/unsub for a contact,id,Unique tenant+contact_id; contact is external ref
+regulated_channel_templates,RegulatedChannelTemplate,SMS DLT / WhatsApp Meta approval templates,id,channel sms|whatsapp; channel_config_id internal only
+sms_channel_settings,SmsChannelSettings,Per-tenant SMS/DLT provider settings,id,One per tenant; settings JSON

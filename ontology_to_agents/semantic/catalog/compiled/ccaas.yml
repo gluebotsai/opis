@@ -1,0 +1,517 @@
+version: 1
+product: ccaas
+engine: postgres
+default_schema: ccass_marts_aiccaas
+tenant_column: organization_id
+tables:
+- name: mart_agent_capacity
+  schema: ccass_marts_aiccaas
+  grain: agent_channel_capacity
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: null
+  tenant_column: organization_id
+  columns:
+  - active_count
+  - agent_id
+  - capacity_id
+  - channel
+  - max_concurrency
+  - organization_id
+  - reserved_count
+  - updated_at
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - updated_at
+  - channel
+  description: null
+- name: mart_agent_presence_history
+  schema: ccass_marts_aiccaas
+  grain: presence_interval
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: agent_id
+  tenant_column: organization_id
+  columns:
+  - agent_id
+  - agent_name
+  - ended_at
+  - interval_seconds
+  - is_handling_or_wrap
+  - is_logged_in_eligible
+  - new_state
+  - organization_id
+  - presence_event_id
+  - previous_state
+  - reason_code
+  - started_at
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - started_at
+  - new_state
+  - is_handling_or_wrap
+  - is_logged_in_eligible
+  description: null
+- name: mart_agent_tasks
+  schema: ccass_marts_aiccaas
+  grain: agent_task
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: assigned_user_id
+  tenant_column: organization_id
+  columns:
+  - assigned_user_id
+  - assignee_name
+  - channel
+  - completed_at
+  - created_at
+  - dismissed_at
+  - due_at
+  - organization_id
+  - priority
+  - status
+  - task_id
+  - task_type
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - task_type
+  - status
+  - priority
+  - channel
+  description: null
+- name: mart_agents
+  schema: ccass_marts_aiccaas
+  grain: agent
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: null
+  tenant_column: organization_id
+  columns:
+  - agent_id
+  - agent_name
+  - created_at
+  - email
+  - organization_id
+  - status
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - status
+  - agent_name
+  description: null
+- name: mart_conversation_assignments
+  schema: ccass_marts_aiccaas
+  grain: assignment
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: agent_id
+  tenant_column: organization_id
+  columns:
+  - accepted_at
+  - agent_id
+  - agent_name
+  - assignment_id
+  - channel
+  - conversation_id
+  - direction
+  - ended_at
+  - expired_at
+  - human_handle_seconds
+  - is_completed_leg
+  - offered_at
+  - organization_id
+  - queue_id
+  - queue_name
+  - reason
+  - rejected_at
+  - state
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - offered_at
+  - channel
+  - direction
+  - queue_name
+  - agent_name
+  - state
+  - reason
+  - is_completed_leg
+  description: Assignment offer/accept events; canonical AHT source.
+- name: mart_conversation_dispositions
+  schema: ccass_marts_aiccaas
+  grain: disposition_event
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: null
+  tenant_column: organization_id
+  columns:
+  - agent_id
+  - applied_at
+  - channel
+  - conversation_id
+  - direction
+  - disposition_entry_id
+  - disposition_id
+  - disposition_label
+  - is_final
+  - organization_id
+  - resolution_code
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - applied_at
+  - resolution_code
+  - is_final
+  description: null
+- name: mart_conversation_sla_state
+  schema: ccass_marts_aiccaas
+  grain: conversation_sla
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: null
+  tenant_column: organization_id
+  columns:
+  - breached_at
+  - channel
+  - conversation_id
+  - direction
+  - first_response_due_at
+  - organization_id
+  - priority
+  - queue_id
+  - queue_name
+  - resolution_due_at
+  - sla_policy_id
+  - sla_state_id
+  - updated_at
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - updated_at
+  - channel
+  - direction
+  - queue_name
+  - priority
+  description: Per-conversation SLA breach state.
+- name: mart_conversation_transfers
+  schema: ccass_marts_aiccaas
+  grain: transfer
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: null
+  tenant_column: organization_id
+  columns:
+  - cancelled_at
+  - completed_at
+  - conversation_id
+  - disposition_code
+  - from_queue_id
+  - organization_id
+  - requested_at
+  - resolution_code
+  - state
+  - to_queue_id
+  - transfer_id
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - requested_at
+  - state
+  - resolution_code
+  description: null
+- name: mart_conversations
+  schema: ccass_marts_aiccaas
+  grain: conversation
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: assigned_agent_id
+  tenant_column: organization_id
+  columns:
+  - assigned_agent_id
+  - assigned_agent_name
+  - assigned_at
+  - channel
+  - closed_at
+  - contact_id
+  - conversation_id
+  - created_at
+  - direction
+  - disposition_code
+  - ended_at
+  - first_response_at
+  - first_response_seconds
+  - had_handoff
+  - handoff_reason
+  - is_ai_only_completed
+  - is_handled
+  - is_open
+  - is_resolved
+  - lifecycle_state
+  - organization_id
+  - priority
+  - profile_id
+  - queue_id
+  - queue_name
+  - queued_at
+  - resolution_code
+  - resolved_at
+  - sla_status
+  - speed_of_answer_seconds
+  - status
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - channel
+  - direction
+  - queue_name
+  - assigned_agent_name
+  - status
+  - lifecycle_state
+  - sla_status
+  - disposition_code
+  - resolution_code
+  - priority
+  - had_handoff
+  - is_ai_only_completed
+  - is_handled
+  - is_resolved
+  - resolved_at
+  - closed_at
+  description: One row per CCaaS conversation with queue/agent names denormalized.
+- name: mart_copilot_skill_executions
+  schema: ccass_marts_aiccaas
+  grain: skill_execution
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: null
+  tenant_column: organization_id
+  columns:
+  - conversation_id
+  - created_at
+  - error_message
+  - execution_id
+  - execution_status
+  - latency_ms
+  - organization_id
+  - session_id
+  - skill_key
+  - tool_key
+  - turn_id
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - execution_status
+  - tool_key
+  description: null
+- name: mart_copilot_turns
+  schema: ccass_marts_aiccaas
+  grain: copilot_turn
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: null
+  tenant_column: organization_id
+  columns:
+  - accepted
+  - conversation_id
+  - created_at
+  - final_text
+  - organization_id
+  - session_id
+  - skill_key
+  - status
+  - suggestion_disposition
+  - suggestion_id
+  - suggestion_text
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - suggestion_disposition
+  - skill_key
+  description: null
+- name: mart_dispositions
+  schema: ccass_marts_aiccaas
+  grain: disposition_catalog
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: null
+  tenant_column: organization_id
+  columns:
+  - category
+  - code
+  - disposition_id
+  - is_active
+  - label
+  - organization_id
+  - outcome
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - label
+  - category
+  - outcome
+  - is_active
+  description: null
+- name: mart_setup_ccaas_queue_agents
+  schema: ccass_marts_aiccaas
+  grain: queue_membership
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: null
+  tenant_column: organization_id
+  columns:
+  - call_type
+  - created_at
+  - handles_calls
+  - handles_chat
+  - handles_email
+  - handles_social
+  - handles_whatsapp
+  - organization_id
+  - queue_agent_id
+  - queue_id
+  - shift_type
+  - user_id
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - shift_type
+  - call_type
+  - handles_calls
+  - handles_email
+  - handles_chat
+  - handles_whatsapp
+  description: null
+- name: mart_setup_ccaas_queues
+  schema: ccass_marts_aiccaas
+  grain: queue
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: null
+  tenant_column: organization_id
+  columns:
+  - business_hours_id
+  - created_at
+  - organization_id
+  - queue_id
+  - queue_name
+  - status
+  - team_id
+  - updated_at
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - status
+  - queue_name
+  description: null
+- name: mart_setup_teams
+  schema: ccass_marts_aiccaas
+  grain: team
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: null
+  tenant_column: organization_id
+  columns:
+  - created_at
+  - organization_id
+  - status
+  - team_id
+  - team_name
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - status
+  - team_name
+  description: null
+- name: mart_setup_users
+  schema: ccass_marts_aiccaas
+  grain: user
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: null
+  tenant_column: organization_id
+  columns:
+  - created_at
+  - employee_id
+  - location_id
+  - organization_id
+  - primary_language
+  - status
+  - team_id
+  - user_id
+  - user_name
+  - work_email
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - status
+  - primary_language
+  - user_name
+  description: null
+joins:
+- from: mart_conversations
+  to: mart_setup_ccaas_queues
+  keys:
+  - left: queue_id
+    right: queue_id
+  - left: organization_id
+    right: organization_id
+  cardinality: many_to_one
+  purpose: Queue name on conversation
+- from: mart_conversations
+  to: mart_agents
+  keys:
+  - left: assigned_agent_id
+    right: agent_id
+  - left: organization_id
+    right: organization_id
+  cardinality: many_to_one
+  purpose: Assigned agent display name
+- from: mart_conversation_assignments
+  to: mart_conversations
+  keys:
+  - left: conversation_id
+    right: conversation_id
+  - left: organization_id
+    right: organization_id
+  cardinality: many_to_one
+  purpose: Assignment to conversation header
+- from: mart_conversation_sla_state
+  to: mart_conversations
+  keys:
+  - left: conversation_id
+    right: conversation_id
+  - left: organization_id
+    right: organization_id
+  cardinality: many_to_one
+  purpose: SLA state on conversation
+synonyms:
+  team: queue_name
+  agent: assigned_agent_name

@@ -1,0 +1,16 @@
+name: ccass.conversation_sla_state
+alias: s
+schema: ccass
+grain: conversation
+purpose: Per-conversation SLA due times and breach timestamp.
+time_columns: [first_response_due_at, resolution_due_at, breached_at]
+columns:
+  - { name: id, type: bigint, pk: true, description: Row id }
+  - { name: organization_id, type: bigint, description: Tenant id }
+  - { name: conversation_id, type: bigint, fk: ccass.conversations.id, description: Conversation }
+  - { name: sla_policy_id, type: bigint, fk: ccass.sla_policies.id, description: Policy }
+  - { name: first_response_due_at, type: timestamptz, description: FRT due }
+  - { name: resolution_due_at, type: timestamptz, description: Resolution due }
+  - { name: breached_at, type: timestamptz, description: When breached }
+sample_rows:
+  - { id: 1, conversation_id: 102, sla_policy_id: 1, first_response_due_at: "2026-09-07T11:01:00Z", breached_at: null }

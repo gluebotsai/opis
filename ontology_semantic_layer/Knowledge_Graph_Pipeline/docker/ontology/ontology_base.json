@@ -1,0 +1,4735 @@
+[
+  {
+    "id": "label_addon",
+    "type": "node_label",
+    "name": "Addon",
+    "description": "Graph node label Addon",
+    "category": "Graph",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "product_id",
+      "name",
+      "unit_label",
+      "meter_key",
+      "is_overage",
+      "pricing_model",
+      "flat_price",
+      "unit_price",
+      "step_size",
+      "step_price",
+      "sort_order",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [
+      {
+        "type": "FOR_PRODUCT",
+        "to": "Product"
+      }
+    ],
+    "relationships_in": [
+      {
+        "type": "HAS_ADDON",
+        "from": "Tenant"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "Addon node. Graph node label Addon. Outgoing: [:FOR_PRODUCT]->Product",
+    "domain": "core"
+  },
+  {
+    "id": "label_addontier",
+    "type": "node_label",
+    "name": "AddonTier",
+    "description": "Graph node label AddonTier",
+    "category": "Graph",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "addon_id",
+      "min_qty",
+      "max_qty",
+      "unit_price",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [],
+    "relationships_in": [
+      {
+        "type": "HAS_TIER",
+        "from": "Addon"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "AddonTier node. Graph node label AddonTier",
+    "domain": "core"
+  },
+  {
+    "id": "label_agent",
+    "type": "node_label",
+    "name": "Agent",
+    "description": "Customer service rep identity linked to User via IS_AGENT_FOR",
+    "category": "Service Delivery",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "display_name",
+      "email",
+      "status",
+      "setup_user_id",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [
+      {
+        "type": "IS_AGENT_FOR",
+        "to": "User"
+      }
+    ],
+    "relationships_in": [
+      {
+        "type": "HAS_AGENT",
+        "from": "Tenant"
+      }
+    ],
+    "synonyms": [
+      "support agent",
+      "CSR"
+    ],
+    "search_text": "Agent node. Customer service rep identity linked to User via IS_AGENT_FOR. Outgoing: [:IS_AGENT_FOR]->User",
+    "domain": "core"
+  },
+  {
+    "id": "label_agentmemory",
+    "type": "node_label",
+    "name": "AgentMemory",
+    "description": "Graph node label AgentMemory",
+    "category": "Graph",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "scope_type",
+      "scope_id",
+      "slot_key",
+      "slot_value",
+      "source",
+      "expires_at",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [],
+    "relationships_in": [
+      {
+        "type": "HAS_AGENT_MEMORY",
+        "from": "Tenant"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "AgentMemory node. Graph node label AgentMemory",
+    "domain": "core"
+  },
+  {
+    "id": "label_assignment",
+    "type": "node_label",
+    "name": "Assignment",
+    "description": "Offer of conversation to agent; tracks offered_at, accepted_at, rejected_at, expired_at",
+    "category": "Routing",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "conversation_id",
+      "queue_id",
+      "agent_id",
+      "routing_attempt_id",
+      "state",
+      "reason",
+      "offered_at",
+      "accepted_at",
+      "rejected_at",
+      "expired_at",
+      "ended_at",
+      "expires_at"
+    ],
+    "relationships_out": [
+      {
+        "type": "OFFERED_TO",
+        "to": "Agent"
+      },
+      {
+        "type": "FROM_QUEUE",
+        "to": "Queue"
+      }
+    ],
+    "relationships_in": [
+      {
+        "type": "HAS_ASSIGNMENT",
+        "from": "Conversation"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "Assignment node. Offer of conversation to agent; tracks offered_at, accepted_at, rejected_at, expired_at. Outgoing: [:OFFERED_TO]->Agent, [:FROM_QUEUE]->Queue",
+    "domain": "core"
+  },
+  {
+    "id": "label_assignmentprofile",
+    "type": "node_label",
+    "name": "AssignmentProfile",
+    "description": "Graph node label AssignmentProfile",
+    "category": "Graph",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "user_id",
+      "accepting_leads",
+      "max_open_deals",
+      "seniority_tier",
+      "on_pto_until",
+      "country",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [
+      {
+        "type": "FOR_USER",
+        "to": "User"
+      }
+    ],
+    "relationships_in": [
+      {
+        "type": "HAS_ASSIGNMENT_PROFILE",
+        "from": "Tenant"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "AssignmentProfile node. Graph node label AssignmentProfile. Outgoing: [:FOR_USER]->User",
+    "domain": "core"
+  },
+  {
+    "id": "label_assignmentsettings",
+    "type": "node_label",
+    "name": "AssignmentSettings",
+    "description": "Graph node label AssignmentSettings; primary key property: organization_id",
+    "category": "Graph",
+    "key_property": "organization_id",
+    "properties": [
+      "id",
+      "organization_id",
+      "senior_amount_threshold",
+      "updated_by_user_id",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [
+      {
+        "type": "UPDATED_BY",
+        "to": "User"
+      }
+    ],
+    "relationships_in": [
+      {
+        "type": "HAS_ASSIGNMENT_SETTINGS",
+        "from": "Tenant"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "AssignmentSettings node. Graph node label AssignmentSettings; primary key property: organization_id. Outgoing: [:UPDATED_BY]->User",
+    "domain": "core"
+  },
+  {
+    "id": "label_attachment",
+    "type": "node_label",
+    "name": "Attachment",
+    "description": "File attached to a conversation",
+    "category": "Content",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "conversation_id",
+      "message_id",
+      "external_id",
+      "storage_key",
+      "file_name",
+      "content_type",
+      "byte_size",
+      "checksum_sha256",
+      "download_url",
+      "status",
+      "created_at"
+    ],
+    "relationships_out": [],
+    "relationships_in": [
+      {
+        "type": "HAS_ATTACHMENT",
+        "from": "Conversation"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "Attachment node. File attached to a conversation",
+    "domain": "core"
+  },
+  {
+    "id": "label_businesshours",
+    "type": "node_label",
+    "name": "BusinessHours",
+    "description": "Operating hours for queues and teams",
+    "category": "Scheduling",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "name",
+      "description",
+      "timezone",
+      "status",
+      "open_time",
+      "close_time",
+      "timing_mode",
+      "holiday_calendar_id",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [
+      {
+        "type": "USES_HOLIDAY_CALENDAR",
+        "to": "HolidayCalendar"
+      }
+    ],
+    "relationships_in": [
+      {
+        "type": "HAS_BUSINESS_HOURS",
+        "from": "Tenant"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "BusinessHours node. Operating hours for queues and teams. Outgoing: [:USES_HOLIDAY_CALENDAR]->HolidayCalendar",
+    "domain": "core"
+  },
+  {
+    "id": "label_channel",
+    "type": "node_label",
+    "name": "Channel",
+    "description": "Communication medium (voice, chat, email, etc.)",
+    "category": "Communication",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "channel_type",
+      "name",
+      "status",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [],
+    "relationships_in": [
+      {
+        "type": "SUPPORTS_CHANNEL",
+        "from": "Tenant"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "Channel node. Communication medium (voice, chat, email, etc.)",
+    "domain": "core"
+  },
+  {
+    "id": "label_channelautomationpolicy",
+    "type": "node_label",
+    "name": "ChannelAutomationPolicy",
+    "description": "Bot/automation rules per channel",
+    "category": "Automation",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "channel_config_id",
+      "channel",
+      "bot_enabled",
+      "live_agent_enabled",
+      "automation_mode",
+      "confidence_threshold",
+      "default_queue_id",
+      "handoff_message",
+      "no_agent_behavior",
+      "inactivity_close_seconds",
+      "shadow_mode",
+      "policy_version",
+      "status",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [
+      {
+        "type": "DEFAULT_QUEUE",
+        "to": "Queue"
+      }
+    ],
+    "relationships_in": [
+      {
+        "type": "HAS_AUTOMATION_POLICY",
+        "from": "Channel"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "ChannelAutomationPolicy node. Bot/automation rules per channel. Outgoing: [:DEFAULT_QUEUE]->Queue",
+    "domain": "core"
+  },
+  {
+    "id": "label_coachinginsight",
+    "type": "node_label",
+    "name": "CoachingInsight",
+    "description": "Graph node label CoachingInsight",
+    "category": "Graph",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "activity_id",
+      "contact_id",
+      "deal_id",
+      "rep_user_id",
+      "interaction_type",
+      "overall_impression",
+      "discovery_quality",
+      "objection_handling",
+      "methodology_note",
+      "talk_balance_note",
+      "strengths",
+      "growth_areas",
+      "highlighted_moment",
+      "coaching_note",
+      "analyzed_at",
+      "created_at"
+    ],
+    "relationships_out": [
+      {
+        "type": "FOR_ACTIVITY",
+        "to": "ContactActivity"
+      },
+      {
+        "type": "FOR_CONTACT",
+        "to": "Contact"
+      },
+      {
+        "type": "FOR_DEAL",
+        "to": "Deal"
+      },
+      {
+        "type": "FOR_USER",
+        "to": "User"
+      }
+    ],
+    "relationships_in": [],
+    "synonyms": [],
+    "search_text": "CoachingInsight node. Graph node label CoachingInsight. Outgoing: [:FOR_ACTIVITY]->ContactActivity, [:FOR_CONTACT]->Contact, [:FOR_DEAL]->Deal, [:FOR_USER]->User",
+    "domain": "core"
+  },
+  {
+    "id": "label_company",
+    "type": "node_label",
+    "name": "Company",
+    "description": "B2B account organization; maps to Account in CRM speak",
+    "category": "Sales",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "name",
+      "domain",
+      "industry",
+      "employee_count",
+      "linkedin_url",
+      "logo_url",
+      "owner_user_id",
+      "channel_role",
+      "parent_company_id",
+      "expansion_signal",
+      "expansion_reason",
+      "expansion_draft",
+      "expansion_last_run_at",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [
+      {
+        "type": "OWNED_BY",
+        "to": "User"
+      },
+      {
+        "type": "PARENT_COMPANY",
+        "to": "Company"
+      }
+    ],
+    "relationships_in": [
+      {
+        "type": "HAS_COMPANY",
+        "from": "Tenant"
+      }
+    ],
+    "synonyms": [
+      "account",
+      "organization",
+      "firm"
+    ],
+    "search_text": "Company node. B2B account organization; maps to Account in CRM speak. Outgoing: [:OWNED_BY]->User, [:PARENT_COMPANY]->Company",
+    "domain": "core"
+  },
+  {
+    "id": "label_companysite",
+    "type": "node_label",
+    "name": "CompanySite",
+    "description": "Branch or location of a company",
+    "category": "Sales",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "company_id",
+      "name",
+      "type",
+      "address",
+      "city",
+      "industry",
+      "employee_count",
+      "owner_user_id",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [
+      {
+        "type": "OWNED_BY",
+        "to": "User"
+      }
+    ],
+    "relationships_in": [
+      {
+        "type": "HAS_COMPANY_SITE",
+        "from": "Tenant"
+      },
+      {
+        "type": "HAS_SITE",
+        "from": "Company"
+      }
+    ],
+    "synonyms": [
+      "office",
+      "branch"
+    ],
+    "search_text": "CompanySite node. Branch or location of a company. Outgoing: [:OWNED_BY]->User",
+    "domain": "core"
+  },
+  {
+    "id": "label_contact",
+    "type": "node_label",
+    "name": "Contact",
+    "description": "Customer/prospect person; primary key is cdp_id (NOT id); primary key property: cdp_id",
+    "category": "Customer",
+    "key_property": "cdp_id",
+    "properties": [
+      "cdp_id",
+      "organization_id",
+      "first_name",
+      "last_name",
+      "gender",
+      "date_of_birth",
+      "company",
+      "city",
+      "region",
+      "country",
+      "language",
+      "timezone",
+      "acquisition_channel",
+      "acquisition_date",
+      "first_referrer",
+      "first_seen_at",
+      "last_seen_at",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [],
+    "relationships_in": [
+      {
+        "type": "HAS_CONTACT",
+        "from": "Tenant"
+      }
+    ],
+    "synonyms": [
+      "customer",
+      "prospect",
+      "lead",
+      "client"
+    ],
+    "search_text": "Contact node. Customer/prospect person; primary key is cdp_id (NOT id); primary key property: cdp_id",
+    "domain": "core"
+  },
+  {
+    "id": "label_contactactivity",
+    "type": "node_label",
+    "name": "ContactActivity",
+    "description": "Email, call, meeting activity for a contact",
+    "category": "Activity",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "contact_id",
+      "type",
+      "folder",
+      "thread_id",
+      "provider_message_id",
+      "provider_thread_id",
+      "mail_provider",
+      "rfc_message_id",
+      "email_direction",
+      "needs_manual_response",
+      "subject",
+      "body",
+      "due_at",
+      "assignee_user_id",
+      "task_status",
+      "reminder_sent_at",
+      "reminder_24h_sent_at",
+      "reminder_1h_sent_at"
+    ],
+    "relationships_out": [
+      {
+        "type": "FOR_CONTACT",
+        "to": "Contact"
+      },
+      {
+        "type": "ASSIGNED_TO",
+        "to": "User"
+      },
+      {
+        "type": "CREATED_BY",
+        "to": "User"
+      }
+    ],
+    "relationships_in": [
+      {
+        "type": "HAS_CONTACT_ACTIVITY",
+        "from": "Tenant"
+      }
+    ],
+    "synonyms": [
+      "engagement",
+      "touchpoint"
+    ],
+    "search_text": "ContactActivity node. Email, call, meeting activity for a contact. Outgoing: [:FOR_CONTACT]->Contact, [:ASSIGNED_TO]->User, [:CREATED_BY]->User",
+    "domain": "core"
+  },
+  {
+    "id": "label_contactpoint",
+    "type": "node_label",
+    "name": "ContactPoint",
+    "description": "Communication endpoint (email, phone) for a contact; primary key property: identity_id",
+    "category": "Customer",
+    "key_property": "identity_id",
+    "properties": [
+      "identity_id",
+      "cdp_id",
+      "organization_id",
+      "key_type",
+      "key_value",
+      "source_system",
+      "confidence_score",
+      "verified",
+      "created_at"
+    ],
+    "relationships_out": [],
+    "relationships_in": [
+      {
+        "type": "HAS_CONTACT_POINT",
+        "from": "Contact"
+      }
+    ],
+    "synonyms": [
+      "email address",
+      "phone number"
+    ],
+    "search_text": "ContactPoint node. Communication endpoint (email, phone) for a contact; primary key property: identity_id",
+    "domain": "core"
+  },
+  {
+    "id": "label_contactprofile",
+    "type": "node_label",
+    "name": "ContactProfile",
+    "description": "CRM overlay on Contact with lead_status, pipeline fields",
+    "category": "Sales",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "account_contact_id",
+      "company_id",
+      "location_id",
+      "owner_user_id",
+      "created_by_user_id",
+      "lead_source",
+      "lead_status",
+      "disqualify_reason",
+      "crm_status",
+      "notes",
+      "tags",
+      "is_pinned",
+      "assignment_reason",
+      "sla_deadline",
+      "assigned_at",
+      "assignment_escalated",
+      "nurture_status",
+      "nurture_sequence_step"
+    ],
+    "relationships_out": [
+      {
+        "type": "OVERLAY_OF",
+        "to": "Contact"
+      },
+      {
+        "type": "WORKS_AT",
+        "to": "Company"
+      },
+      {
+        "type": "AT_SITE",
+        "to": "CompanySite"
+      },
+      {
+        "type": "ASSIGNED_TO",
+        "to": "User"
+      },
+      {
+        "type": "CREATED_BY",
+        "to": "User"
+      },
+      {
+        "type": "CONVERTED_TO",
+        "to": "Deal"
+      }
+    ],
+    "relationships_in": [
+      {
+        "type": "HAS_CONTACT_PROFILE",
+        "from": "Tenant"
+      }
+    ],
+    "synonyms": [
+      "lead profile",
+      "CRM contact"
+    ],
+    "search_text": "ContactProfile node. CRM overlay on Contact with lead_status, pipeline fields. Outgoing: [:OVERLAY_OF]->Contact, [:WORKS_AT]->Company, [:AT_SITE]->CompanySite, [:ASSIGNED_TO]->User, [:CREATED_BY]->User, [:CONVERTED_TO]->Deal",
+    "domain": "core"
+  },
+  {
+    "id": "label_contract",
+    "type": "node_label",
+    "name": "Contract",
+    "description": "Commercial contract with company",
+    "category": "Finance",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "company_id",
+      "deal_id",
+      "title",
+      "starts_at",
+      "ends_at",
+      "arr",
+      "renew_deal_id",
+      "renewal_reminded_at",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [
+      {
+        "type": "FOR_COMPANY",
+        "to": "Company"
+      },
+      {
+        "type": "FROM_DEAL",
+        "to": "Deal"
+      },
+      {
+        "type": "RENEWED_BY",
+        "to": "Deal"
+      }
+    ],
+    "relationships_in": [
+      {
+        "type": "HAS_CONTRACT",
+        "from": "Tenant"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "Contract node. Commercial contract with company. Outgoing: [:FOR_COMPANY]->Company, [:FROM_DEAL]->Deal, [:RENEWED_BY]->Deal",
+    "domain": "core"
+  },
+  {
+    "id": "label_conversation",
+    "type": "node_label",
+    "name": "Conversation",
+    "description": "Single customer interaction thread; key node key is id",
+    "category": "Interaction",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "channel",
+      "external_thread_id",
+      "provider_thread_id",
+      "webchat_id",
+      "visitor_id",
+      "status",
+      "lifecycle_state",
+      "lifecycle_version",
+      "priority",
+      "subject",
+      "handoff_reason",
+      "bot_active",
+      "nlp_enabled",
+      "live_agent_enabled",
+      "automation_policy_version",
+      "disposition_code",
+      "disposition_note",
+      "resolution_code"
+    ],
+    "relationships_out": [
+      {
+        "type": "IN_QUEUE",
+        "to": "Queue"
+      },
+      {
+        "type": "THROUGH",
+        "to": "Channel"
+      },
+      {
+        "type": "HANDLED_BY",
+        "to": "Agent"
+      },
+      {
+        "type": "ASSIGNED_USER",
+        "to": "User"
+      },
+      {
+        "type": "CONTINUES_FROM",
+        "to": "Conversation"
+      }
+    ],
+    "relationships_in": [
+      {
+        "type": "HAS_CONVERSATION",
+        "from": "Tenant"
+      },
+      {
+        "type": "PARTICIPATED_IN",
+        "from": "Contact"
+      }
+    ],
+    "synonyms": [
+      "interaction",
+      "ticket",
+      "case"
+    ],
+    "search_text": "Conversation node. Single customer interaction thread; key node key is id. Outgoing: [:IN_QUEUE]->Queue, [:THROUGH]->Channel, [:HANDLED_BY]->Agent, [:ASSIGNED_USER]->User, [:CONTINUES_FROM]->Conversation",
+    "domain": "core"
+  },
+  {
+    "id": "label_conversationparticipant",
+    "type": "node_label",
+    "name": "ConversationParticipant",
+    "description": "Person involved in a conversation",
+    "category": "Interaction",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "conversation_id",
+      "participant_type",
+      "identity_ref",
+      "joined_at",
+      "left_at"
+    ],
+    "relationships_out": [],
+    "relationships_in": [
+      {
+        "type": "HAS_PARTICIPANT",
+        "from": "Conversation"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "ConversationParticipant node. Person involved in a conversation",
+    "domain": "core"
+  },
+  {
+    "id": "label_conversationsummary",
+    "type": "node_label",
+    "name": "ConversationSummary",
+    "description": "AI or manual summary of a conversation",
+    "category": "Interaction",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "conversation_id",
+      "rolling_summary",
+      "latest_summarized_message_id",
+      "model_name",
+      "token_estimate",
+      "version",
+      "updated_at"
+    ],
+    "relationships_out": [],
+    "relationships_in": [
+      {
+        "type": "HAS_SUMMARY",
+        "from": "Conversation"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "ConversationSummary node. AI or manual summary of a conversation",
+    "domain": "core"
+  },
+  {
+    "id": "label_customerscore",
+    "type": "node_label",
+    "name": "CustomerScore",
+    "description": "Engagement, churn, loyalty scores for a contact; primary key property: cdp_id",
+    "category": "Analytics",
+    "key_property": "cdp_id",
+    "properties": [
+      "cdp_id",
+      "organization_id",
+      "engagement_score",
+      "value_score",
+      "loyalty_score",
+      "churn_score",
+      "purchase_probability",
+      "retention_score",
+      "advocacy_score",
+      "web_engagement_score",
+      "intent_score",
+      "digital_activity_score",
+      "updated_at"
+    ],
+    "relationships_out": [],
+    "relationships_in": [
+      {
+        "type": "HAS_SCORES",
+        "from": "Contact"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "CustomerScore node. Engagement, churn, loyalty scores for a contact; primary key property: cdp_id",
+    "domain": "core"
+  },
+  {
+    "id": "label_deal",
+    "type": "node_label",
+    "name": "Deal",
+    "description": "Sales opportunity with stage and amount",
+    "category": "Sales",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "title",
+      "stage",
+      "amount",
+      "company_id",
+      "location_id",
+      "contact_id",
+      "contact_name",
+      "contact_email",
+      "owner_user_id",
+      "notes",
+      "lost_reason",
+      "expected_close_date",
+      "closed_at",
+      "forecast_category",
+      "forecast_confidence_percent",
+      "forecast_flagged",
+      "forecast_reason",
+      "forecast_last_run_at"
+    ],
+    "relationships_out": [
+      {
+        "type": "WITH_COMPANY",
+        "to": "Company"
+      },
+      {
+        "type": "AT_SITE",
+        "to": "CompanySite"
+      },
+      {
+        "type": "PRIMARY_CONTACT",
+        "to": "Contact"
+      },
+      {
+        "type": "OWNED_BY",
+        "to": "User"
+      }
+    ],
+    "relationships_in": [
+      {
+        "type": "HAS_DEAL",
+        "from": "Tenant"
+      }
+    ],
+    "synonyms": [
+      "opportunity",
+      "pipeline deal"
+    ],
+    "search_text": "Deal node. Sales opportunity with stage and amount. Outgoing: [:WITH_COMPANY]->Company, [:AT_SITE]->CompanySite, [:PRIMARY_CONTACT]->Contact, [:OWNED_BY]->User",
+    "domain": "core"
+  },
+  {
+    "id": "label_dealactivity",
+    "type": "node_label",
+    "name": "DealActivity",
+    "description": "Activity logged against a deal",
+    "category": "Sales",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "deal_id",
+      "type",
+      "subject",
+      "body",
+      "due_at",
+      "completed_at",
+      "created_by_user_id",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [
+      {
+        "type": "CREATED_BY",
+        "to": "User"
+      }
+    ],
+    "relationships_in": [
+      {
+        "type": "HAS_DEAL_ACTIVITY",
+        "from": "Tenant"
+      },
+      {
+        "type": "HAS_ACTIVITY",
+        "from": "Deal"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "DealActivity node. Activity logged against a deal. Outgoing: [:CREATED_BY]->User",
+    "domain": "core"
+  },
+  {
+    "id": "label_disposition",
+    "type": "node_label",
+    "name": "Disposition",
+    "description": "Outcome code for completed interactions",
+    "category": "Analytics",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "code",
+      "label",
+      "description",
+      "category",
+      "outcome",
+      "requires_note",
+      "requires_resolution",
+      "is_active",
+      "sort_order",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [],
+    "relationships_in": [
+      {
+        "type": "DEFINES_DISPOSITION",
+        "from": "Tenant"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "Disposition node. Outcome code for completed interactions",
+    "domain": "core"
+  },
+  {
+    "id": "label_holidaycalendar",
+    "type": "node_label",
+    "name": "HolidayCalendar",
+    "description": "Holidays and non-working days",
+    "category": "Scheduling",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "name",
+      "country",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [],
+    "relationships_in": [
+      {
+        "type": "HAS_HOLIDAY_CALENDAR",
+        "from": "Tenant"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "HolidayCalendar node. Holidays and non-working days",
+    "domain": "core"
+  },
+  {
+    "id": "label_insight",
+    "type": "node_label",
+    "name": "Insight",
+    "description": "AI-derived insight for a contact; primary key property: insight_id",
+    "category": "Analytics",
+    "key_property": "insight_id",
+    "properties": [
+      "insight_id",
+      "cdp_id",
+      "organization_id",
+      "insight_type",
+      "score",
+      "summary",
+      "explanation",
+      "generated_at"
+    ],
+    "relationships_out": [],
+    "relationships_in": [
+      {
+        "type": "HAS_INSIGHT",
+        "from": "Contact"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "Insight node. AI-derived insight for a contact; primary key property: insight_id",
+    "domain": "core"
+  },
+  {
+    "id": "label_invoice",
+    "type": "node_label",
+    "name": "Invoice",
+    "description": "Billing invoice issued to company",
+    "category": "Finance",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "order_id",
+      "deal_id",
+      "company_id",
+      "template_id",
+      "number",
+      "status",
+      "currency",
+      "total",
+      "discount_amount",
+      "tax_amount",
+      "issue_date",
+      "payment_terms",
+      "notes",
+      "billing_address",
+      "lead_email",
+      "lead_phone",
+      "tax_id",
+      "due_at"
+    ],
+    "relationships_out": [
+      {
+        "type": "FOR_ORDER",
+        "to": "SalesOrder"
+      },
+      {
+        "type": "FOR_DEAL",
+        "to": "Deal"
+      },
+      {
+        "type": "ISSUED_TO",
+        "to": "Company"
+      },
+      {
+        "type": "USES_TEMPLATE",
+        "to": "InvoiceTemplate"
+      },
+      {
+        "type": "CREATED_BY",
+        "to": "User"
+      },
+      {
+        "type": "APPROVED_BY",
+        "to": "User"
+      }
+    ],
+    "relationships_in": [
+      {
+        "type": "HAS_INVOICE",
+        "from": "Tenant"
+      }
+    ],
+    "synonyms": [
+      "bill"
+    ],
+    "search_text": "Invoice node. Billing invoice issued to company. Outgoing: [:FOR_ORDER]->SalesOrder, [:FOR_DEAL]->Deal, [:ISSUED_TO]->Company, [:USES_TEMPLATE]->InvoiceTemplate, [:CREATED_BY]->User, [:APPROVED_BY]->User",
+    "domain": "core"
+  },
+  {
+    "id": "label_invoiceline",
+    "type": "node_label",
+    "name": "InvoiceLine",
+    "description": "Graph node label InvoiceLine",
+    "category": "Graph",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "invoice_id",
+      "kind",
+      "product_id",
+      "addon_id",
+      "name",
+      "description",
+      "quantity",
+      "unit_price",
+      "tax_percent",
+      "amount",
+      "sort_order",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [
+      {
+        "type": "FOR_PRODUCT",
+        "to": "Product"
+      },
+      {
+        "type": "FOR_ADDON",
+        "to": "Addon"
+      }
+    ],
+    "relationships_in": [
+      {
+        "type": "HAS_LINE",
+        "from": "Invoice"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "InvoiceLine node. Graph node label InvoiceLine. Outgoing: [:FOR_PRODUCT]->Product, [:FOR_ADDON]->Addon",
+    "domain": "core"
+  },
+  {
+    "id": "label_invoicetemplate",
+    "type": "node_label",
+    "name": "InvoiceTemplate",
+    "description": "Graph node label InvoiceTemplate",
+    "category": "Graph",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "name",
+      "code",
+      "kind",
+      "blueprint",
+      "assets",
+      "is_default",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [],
+    "relationships_in": [
+      {
+        "type": "HAS_INVOICE_TEMPLATE",
+        "from": "Tenant"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "InvoiceTemplate node. Graph node label InvoiceTemplate",
+    "domain": "core"
+  },
+  {
+    "id": "label_leadenrichmentsnapshot",
+    "type": "node_label",
+    "name": "LeadEnrichmentSnapshot",
+    "description": "Enrichment data snapshot for a lead",
+    "category": "Sales",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "contact_id",
+      "company_name",
+      "company_size",
+      "industry",
+      "company_description",
+      "products",
+      "revenue_band",
+      "seniority_tier",
+      "geography",
+      "email_domain_type",
+      "enrichment_confidence",
+      "enrichment_source",
+      "conflict_flags",
+      "enrichment_timestamp",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [],
+    "relationships_in": [
+      {
+        "type": "HAS_ENRICHMENT",
+        "from": "Contact"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "LeadEnrichmentSnapshot node. Enrichment data snapshot for a lead",
+    "domain": "core"
+  },
+  {
+    "id": "label_leadsummary",
+    "type": "node_label",
+    "name": "LeadSummary",
+    "description": "AI summary for a lead contact",
+    "category": "Sales",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "contact_id",
+      "summary",
+      "headline",
+      "intent",
+      "recommended_action",
+      "flags",
+      "signature",
+      "source",
+      "model",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [],
+    "relationships_in": [
+      {
+        "type": "HAS_LEAD_SUMMARY",
+        "from": "Contact"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "LeadSummary node. AI summary for a lead contact",
+    "domain": "core"
+  },
+  {
+    "id": "label_meetinganalysis",
+    "type": "node_label",
+    "name": "MeetingAnalysis",
+    "description": "Graph node label MeetingAnalysis",
+    "category": "Graph",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "activity_id",
+      "contact_id",
+      "deal_id",
+      "outcome",
+      "bant_budget",
+      "bant_authority",
+      "bant_need",
+      "bant_timeline_text",
+      "next_step_agreed",
+      "objections_raised",
+      "confidence",
+      "analyzed_at",
+      "created_at"
+    ],
+    "relationships_out": [
+      {
+        "type": "FOR_ACTIVITY",
+        "to": "ContactActivity"
+      },
+      {
+        "type": "FOR_CONTACT",
+        "to": "Contact"
+      },
+      {
+        "type": "FOR_DEAL",
+        "to": "Deal"
+      }
+    ],
+    "relationships_in": [],
+    "synonyms": [],
+    "search_text": "MeetingAnalysis node. Graph node label MeetingAnalysis. Outgoing: [:FOR_ACTIVITY]->ContactActivity, [:FOR_CONTACT]->Contact, [:FOR_DEAL]->Deal",
+    "domain": "core"
+  },
+  {
+    "id": "label_meetingassistsession",
+    "type": "node_label",
+    "name": "MeetingAssistSession",
+    "description": "Graph node label MeetingAssistSession",
+    "category": "Graph",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "contact_id",
+      "activity_id",
+      "provider",
+      "external_meeting_id",
+      "join_url",
+      "host_user_id",
+      "status",
+      "started_at",
+      "ended_at",
+      "last_assist_at",
+      "meta",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [
+      {
+        "type": "FOR_ACTIVITY",
+        "to": "ContactActivity"
+      },
+      {
+        "type": "FOR_CONTACT",
+        "to": "Contact"
+      },
+      {
+        "type": "HOSTED_BY",
+        "to": "User"
+      }
+    ],
+    "relationships_in": [],
+    "synonyms": [],
+    "search_text": "MeetingAssistSession node. Graph node label MeetingAssistSession. Outgoing: [:FOR_ACTIVITY]->ContactActivity, [:FOR_CONTACT]->Contact, [:HOSTED_BY]->User",
+    "domain": "core"
+  },
+  {
+    "id": "label_meetingtranscriptchunk",
+    "type": "node_label",
+    "name": "MeetingTranscriptChunk",
+    "description": "Graph node label MeetingTranscriptChunk",
+    "category": "Graph",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "session_id",
+      "seq",
+      "speaker",
+      "speaker_email",
+      "text",
+      "spoken_at",
+      "source",
+      "created_at"
+    ],
+    "relationships_out": [],
+    "relationships_in": [
+      {
+        "type": "HAS_CHUNK",
+        "from": "MeetingAssistSession"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "MeetingTranscriptChunk node. Graph node label MeetingTranscriptChunk",
+    "domain": "core"
+  },
+  {
+    "id": "label_notification",
+    "type": "node_label",
+    "name": "Notification",
+    "description": "Graph node label Notification",
+    "category": "Graph",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "recipient_user_id",
+      "actor_user_id",
+      "kind",
+      "title",
+      "body",
+      "href",
+      "entity_type",
+      "entity_id",
+      "contact_id",
+      "read_at",
+      "created_at"
+    ],
+    "relationships_out": [
+      {
+        "type": "NOTIFIES",
+        "to": "User"
+      },
+      {
+        "type": "ACTED_BY",
+        "to": "User"
+      },
+      {
+        "type": "ABOUT_CONTACT",
+        "to": "Contact"
+      }
+    ],
+    "relationships_in": [
+      {
+        "type": "HAS_NOTIFICATION",
+        "from": "Tenant"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "Notification node. Graph node label Notification. Outgoing: [:NOTIFIES]->User, [:ACTED_BY]->User, [:ABOUT_CONTACT]->Contact",
+    "domain": "core"
+  },
+  {
+    "id": "label_offering",
+    "type": "node_label",
+    "name": "Offering",
+    "description": "Product/service catalog item (same as CRM Product label)",
+    "category": "Commerce",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "name",
+      "tagline",
+      "description",
+      "specifications",
+      "image_url",
+      "product_url",
+      "sku",
+      "brand",
+      "category",
+      "subcategory",
+      "tags",
+      "stock_on_hand",
+      "price",
+      "currency",
+      "max_discount_percent",
+      "status",
+      "product_type",
+      "billing_type"
+    ],
+    "relationships_out": [],
+    "relationships_in": [
+      {
+        "type": "OFFERS",
+        "from": "Tenant"
+      }
+    ],
+    "synonyms": [
+      "product",
+      "SKU"
+    ],
+    "search_text": "Offering node. Product/service catalog item (same as CRM Product label)",
+    "domain": "core"
+  },
+  {
+    "id": "label_order",
+    "type": "node_label",
+    "name": "Order",
+    "description": "CDP commerce order; Contact-[:PLACED]->Order; primary key property: order_id",
+    "category": "Commerce",
+    "key_property": "order_id",
+    "properties": [
+      "order_id",
+      "cdp_id",
+      "organization_id",
+      "order_number",
+      "status",
+      "total_amount",
+      "currency",
+      "payment_status",
+      "fulfillment_status",
+      "shipping_country",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [],
+    "relationships_in": [
+      {
+        "type": "PLACED",
+        "from": "Contact"
+      }
+    ],
+    "synonyms": [
+      "purchase",
+      "transaction"
+    ],
+    "search_text": "Order node. CDP commerce order; Contact-[:PLACED]->Order; primary key property: order_id",
+    "domain": "core"
+  },
+  {
+    "id": "label_orderline",
+    "type": "node_label",
+    "name": "OrderLine",
+    "description": "Graph node label OrderLine",
+    "category": "Graph",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "order_id",
+      "product_id",
+      "name",
+      "quantity",
+      "unit_price",
+      "amount",
+      "sort_order",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [
+      {
+        "type": "FOR_PRODUCT",
+        "to": "Product"
+      }
+    ],
+    "relationships_in": [
+      {
+        "type": "HAS_LINE",
+        "from": "SalesOrder"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "OrderLine node. Graph node label OrderLine. Outgoing: [:FOR_PRODUCT]->Product",
+    "domain": "core"
+  },
+  {
+    "id": "label_orgprofile",
+    "type": "node_label",
+    "name": "OrgProfile",
+    "description": "Tenant vertical configuration profile; primary key property: organization_id",
+    "category": "Organization",
+    "key_property": "organization_id",
+    "properties": [
+      "organization_id",
+      "vertical",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [],
+    "relationships_in": [
+      {
+        "type": "HAS_ORG_PROFILE",
+        "from": "Tenant"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "OrgProfile node. Tenant vertical configuration profile; primary key property: organization_id",
+    "domain": "core"
+  },
+  {
+    "id": "label_pricebook",
+    "type": "node_label",
+    "name": "PriceBook",
+    "description": "Graph node label PriceBook",
+    "category": "Graph",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "name",
+      "code",
+      "currency",
+      "is_default",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [],
+    "relationships_in": [
+      {
+        "type": "HAS_PRICE_BOOK",
+        "from": "Tenant"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "PriceBook node. Graph node label PriceBook",
+    "domain": "core"
+  },
+  {
+    "id": "label_pricebookentry",
+    "type": "node_label",
+    "name": "PriceBookEntry",
+    "description": "Graph node label PriceBookEntry",
+    "category": "Graph",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "price_book_id",
+      "product_id",
+      "offer_id",
+      "addon_id",
+      "amount",
+      "billing_frequency",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [
+      {
+        "type": "FOR_PRODUCT",
+        "to": "Product"
+      },
+      {
+        "type": "FOR_OFFER",
+        "to": "ProductOffer"
+      },
+      {
+        "type": "FOR_ADDON",
+        "to": "Addon"
+      }
+    ],
+    "relationships_in": [
+      {
+        "type": "LISTS",
+        "from": "PriceBook"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "PriceBookEntry node. Graph node label PriceBookEntry. Outgoing: [:FOR_PRODUCT]->Product, [:FOR_OFFER]->ProductOffer, [:FOR_ADDON]->Addon",
+    "domain": "core"
+  },
+  {
+    "id": "label_privacyrequest",
+    "type": "node_label",
+    "name": "PrivacyRequest",
+    "description": "Graph node label PrivacyRequest",
+    "category": "Graph",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "activity_id",
+      "contact_id",
+      "request_type",
+      "confidence",
+      "status",
+      "reason",
+      "draft_confirmation",
+      "reviewed_by_user_id",
+      "reviewed_at",
+      "executed_at",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [
+      {
+        "type": "FOR_ACTIVITY",
+        "to": "ContactActivity"
+      },
+      {
+        "type": "FOR_CONTACT",
+        "to": "Contact"
+      },
+      {
+        "type": "REVIEWED_BY",
+        "to": "User"
+      }
+    ],
+    "relationships_in": [],
+    "synonyms": [],
+    "search_text": "PrivacyRequest node. Graph node label PrivacyRequest. Outgoing: [:FOR_ACTIVITY]->ContactActivity, [:FOR_CONTACT]->Contact, [:REVIEWED_BY]->User",
+    "domain": "core"
+  },
+  {
+    "id": "label_processconfirmation",
+    "type": "node_label",
+    "name": "ProcessConfirmation",
+    "description": "Graph node label ProcessConfirmation",
+    "category": "Graph",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "contact_id",
+      "owner_user_id",
+      "activity_id",
+      "deal_id",
+      "action_kind",
+      "title",
+      "summary",
+      "status",
+      "decided_at",
+      "decided_by_user_id",
+      "result_note",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [
+      {
+        "type": "FOR_CONTACT",
+        "to": "Contact"
+      },
+      {
+        "type": "FOR_ACTIVITY",
+        "to": "ContactActivity"
+      },
+      {
+        "type": "FOR_DEAL",
+        "to": "Deal"
+      },
+      {
+        "type": "OWNED_BY",
+        "to": "User"
+      },
+      {
+        "type": "DECIDED_BY",
+        "to": "User"
+      }
+    ],
+    "relationships_in": [],
+    "synonyms": [],
+    "search_text": "ProcessConfirmation node. Graph node label ProcessConfirmation. Outgoing: [:FOR_CONTACT]->Contact, [:FOR_ACTIVITY]->ContactActivity, [:FOR_DEAL]->Deal, [:OWNED_BY]->User, [:DECIDED_BY]->User",
+    "domain": "core"
+  },
+  {
+    "id": "label_productoffer",
+    "type": "node_label",
+    "name": "ProductOffer",
+    "description": "Graph node label ProductOffer",
+    "category": "Graph",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "product_id",
+      "name",
+      "code",
+      "billing_type",
+      "billing_frequency",
+      "included_qty",
+      "meter_key",
+      "sort_order",
+      "status",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [
+      {
+        "type": "FOR_PRODUCT",
+        "to": "Product"
+      }
+    ],
+    "relationships_in": [
+      {
+        "type": "HAS_PRODUCT_OFFER",
+        "from": "Tenant"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "ProductOffer node. Graph node label ProductOffer. Outgoing: [:FOR_PRODUCT]->Product",
+    "domain": "core"
+  },
+  {
+    "id": "label_proposal",
+    "type": "node_label",
+    "name": "Proposal",
+    "description": "Formal proposal document for a deal",
+    "category": "Sales",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "deal_id",
+      "template_id",
+      "number",
+      "title",
+      "summary",
+      "blueprint",
+      "assets",
+      "customer_name",
+      "version",
+      "status",
+      "attachment_url",
+      "shared_at",
+      "approval_status",
+      "approved_at",
+      "approved_by_user_id",
+      "created_by_user_id",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [
+      {
+        "type": "FOR_DEAL",
+        "to": "Deal"
+      },
+      {
+        "type": "USES_TEMPLATE",
+        "to": "ProposalTemplate"
+      },
+      {
+        "type": "CREATED_BY",
+        "to": "User"
+      },
+      {
+        "type": "APPROVED_BY",
+        "to": "User"
+      }
+    ],
+    "relationships_in": [
+      {
+        "type": "HAS_PROPOSAL",
+        "from": "Tenant"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "Proposal node. Formal proposal document for a deal. Outgoing: [:FOR_DEAL]->Deal, [:USES_TEMPLATE]->ProposalTemplate, [:CREATED_BY]->User, [:APPROVED_BY]->User",
+    "domain": "core"
+  },
+  {
+    "id": "label_proposaltemplate",
+    "type": "node_label",
+    "name": "ProposalTemplate",
+    "description": "Graph node label ProposalTemplate",
+    "category": "Graph",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "name",
+      "code",
+      "kind",
+      "blueprint",
+      "assets",
+      "is_default",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [],
+    "relationships_in": [
+      {
+        "type": "HAS_PROPOSAL_TEMPLATE",
+        "from": "Tenant"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "ProposalTemplate node. Graph node label ProposalTemplate",
+    "domain": "core"
+  },
+  {
+    "id": "label_queue",
+    "type": "node_label",
+    "name": "Queue",
+    "description": "Waiting area for interactions before agent assignment",
+    "category": "Routing",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "setup_queue_id",
+      "name",
+      "team_id",
+      "business_hours_id",
+      "status",
+      "published_at",
+      "updated_at"
+    ],
+    "relationships_out": [
+      {
+        "type": "OWNED_BY_TEAM",
+        "to": "Team"
+      },
+      {
+        "type": "FOLLOWS_HOURS",
+        "to": "BusinessHours"
+      }
+    ],
+    "relationships_in": [
+      {
+        "type": "HAS_QUEUE_OWNER",
+        "from": "Tenant"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "Queue node. Waiting area for interactions before agent assignment. Outgoing: [:OWNED_BY_TEAM]->Team, [:FOLLOWS_HOURS]->BusinessHours",
+    "domain": "core"
+  },
+  {
+    "id": "label_quote",
+    "type": "node_label",
+    "name": "Quote",
+    "description": "Price quotation for a deal",
+    "category": "Sales",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "deal_id",
+      "proposal_id",
+      "template_id",
+      "number",
+      "version",
+      "status",
+      "currency",
+      "subtotal",
+      "discount_pct",
+      "total",
+      "valid_until",
+      "notes",
+      "blueprint",
+      "assets",
+      "customer_name",
+      "company_name",
+      "vendor_name",
+      "sent_at"
+    ],
+    "relationships_out": [
+      {
+        "type": "FOR_DEAL",
+        "to": "Deal"
+      },
+      {
+        "type": "FROM_PROPOSAL",
+        "to": "Proposal"
+      },
+      {
+        "type": "USES_TEMPLATE",
+        "to": "QuoteTemplate"
+      },
+      {
+        "type": "CREATED_BY",
+        "to": "User"
+      },
+      {
+        "type": "APPROVED_BY",
+        "to": "User"
+      }
+    ],
+    "relationships_in": [
+      {
+        "type": "HAS_QUOTE",
+        "from": "Tenant"
+      }
+    ],
+    "synonyms": [
+      "quotation",
+      "estimate"
+    ],
+    "search_text": "Quote node. Price quotation for a deal. Outgoing: [:FOR_DEAL]->Deal, [:FROM_PROPOSAL]->Proposal, [:USES_TEMPLATE]->QuoteTemplate, [:CREATED_BY]->User, [:APPROVED_BY]->User",
+    "domain": "core"
+  },
+  {
+    "id": "label_quoteline",
+    "type": "node_label",
+    "name": "QuoteLine",
+    "description": "Graph node label QuoteLine",
+    "category": "Graph",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "quote_id",
+      "product_id",
+      "name",
+      "quantity",
+      "unit_price",
+      "amount",
+      "sort_order",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [
+      {
+        "type": "FOR_PRODUCT",
+        "to": "Product"
+      }
+    ],
+    "relationships_in": [
+      {
+        "type": "HAS_LINE",
+        "from": "Quote"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "QuoteLine node. Graph node label QuoteLine. Outgoing: [:FOR_PRODUCT]->Product",
+    "domain": "core"
+  },
+  {
+    "id": "label_quotetemplate",
+    "type": "node_label",
+    "name": "QuoteTemplate",
+    "description": "Graph node label QuoteTemplate",
+    "category": "Graph",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "name",
+      "code",
+      "kind",
+      "blueprint",
+      "assets",
+      "is_default",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [],
+    "relationships_in": [
+      {
+        "type": "HAS_QUOTE_TEMPLATE",
+        "from": "Tenant"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "QuoteTemplate node. Graph node label QuoteTemplate",
+    "domain": "core"
+  },
+  {
+    "id": "label_recommendation",
+    "type": "node_label",
+    "name": "Recommendation",
+    "description": "Next-best-action recommendation for contact; primary key property: recommendation_id",
+    "category": "Analytics",
+    "key_property": "recommendation_id",
+    "properties": [
+      "recommendation_id",
+      "cdp_id",
+      "organization_id",
+      "recommendation_type",
+      "recommendation",
+      "confidence",
+      "generated_at"
+    ],
+    "relationships_out": [],
+    "relationships_in": [
+      {
+        "type": "HAS_RECOMMENDATION",
+        "from": "Contact"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "Recommendation node. Next-best-action recommendation for contact; primary key property: recommendation_id",
+    "domain": "core"
+  },
+  {
+    "id": "label_role",
+    "type": "node_label",
+    "name": "Role",
+    "description": "Defined function determining user permissions",
+    "category": "Access Control",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "name",
+      "description",
+      "product_id",
+      "can_view",
+      "can_create",
+      "can_edit",
+      "can_delete",
+      "can_export",
+      "can_approve",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [],
+    "relationships_in": [
+      {
+        "type": "DEFINES_ROLE",
+        "from": "Tenant"
+      }
+    ],
+    "synonyms": [
+      "user role",
+      "permission set"
+    ],
+    "search_text": "Role node. Defined function determining user permissions",
+    "domain": "core"
+  },
+  {
+    "id": "label_routingattempt",
+    "type": "node_label",
+    "name": "RoutingAttempt",
+    "description": "Single routing attempt; use outcome and created_at for missed-contact metrics",
+    "category": "Routing",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "conversation_id",
+      "queue_id",
+      "agent_id",
+      "attempt_number",
+      "outcome",
+      "created_at",
+      "completed_at"
+    ],
+    "relationships_out": [
+      {
+        "type": "TARGETED_QUEUE",
+        "to": "Queue"
+      },
+      {
+        "type": "OFFERED_AGENT",
+        "to": "Agent"
+      }
+    ],
+    "relationships_in": [
+      {
+        "type": "HAS_ROUTING_ATTEMPT",
+        "from": "Conversation"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "RoutingAttempt node. Single routing attempt; use outcome and created_at for missed-contact metrics. Outgoing: [:TARGETED_QUEUE]->Queue, [:OFFERED_AGENT]->Agent",
+    "domain": "core"
+  },
+  {
+    "id": "label_routingpolicy",
+    "type": "node_label",
+    "name": "RoutingPolicy",
+    "description": "Rules for distributing interactions to agents",
+    "category": "Routing",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "queue_id",
+      "strategy",
+      "priority",
+      "offer_timeout_seconds",
+      "max_attempts",
+      "after_contact_work_seconds",
+      "email_offer_timeout_seconds",
+      "email_first_response_sla_seconds",
+      "email_resolution_sla_seconds",
+      "email_after_contact_work_seconds",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [
+      {
+        "type": "OVERFLOWS_TO",
+        "to": "Queue"
+      }
+    ],
+    "relationships_in": [
+      {
+        "type": "HAS_ROUTING_POLICY",
+        "from": "Queue"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "RoutingPolicy node. Rules for distributing interactions to agents. Outgoing: [:OVERFLOWS_TO]->Queue",
+    "domain": "core"
+  },
+  {
+    "id": "label_sla",
+    "type": "node_label",
+    "name": "SLA",
+    "description": "Service level agreement policy",
+    "category": "Compliance",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "name",
+      "first_response_seconds",
+      "resolution_seconds",
+      "warning_threshold_pct",
+      "business_hours_mode",
+      "is_active",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [],
+    "relationships_in": [
+      {
+        "type": "DEFINES_SLA",
+        "from": "Tenant"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "SLA node. Service level agreement policy",
+    "domain": "core"
+  },
+  {
+    "id": "label_slainstance",
+    "type": "node_label",
+    "name": "SLAInstance",
+    "description": "Active SLA tracking for a conversation; use breached_at for breaches",
+    "category": "Compliance",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "conversation_id",
+      "sla_policy_id",
+      "first_response_due_at",
+      "resolution_due_at",
+      "first_response_warning_at",
+      "resolution_warning_at",
+      "breached_at",
+      "updated_at"
+    ],
+    "relationships_out": [
+      {
+        "type": "BASED_ON",
+        "to": "SLA"
+      }
+    ],
+    "relationships_in": [
+      {
+        "type": "HAS_SLA",
+        "from": "Conversation"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "SLAInstance node. Active SLA tracking for a conversation; use breached_at for breaches. Outgoing: [:BASED_ON]->SLA",
+    "domain": "core"
+  },
+  {
+    "id": "label_salesorder",
+    "type": "node_label",
+    "name": "SalesOrder",
+    "description": "CRM commercial order; SalesOrder-[:PLACED_BY]->Contact",
+    "category": "Sales",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "deal_id",
+      "quote_id",
+      "company_id",
+      "contact_id",
+      "number",
+      "status",
+      "currency",
+      "total",
+      "confirmed_at",
+      "created_by_user_id",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [
+      {
+        "type": "FOR_DEAL",
+        "to": "Deal"
+      },
+      {
+        "type": "FROM_QUOTE",
+        "to": "Quote"
+      },
+      {
+        "type": "FOR_COMPANY",
+        "to": "Company"
+      },
+      {
+        "type": "PLACED_BY",
+        "to": "Contact"
+      },
+      {
+        "type": "CREATED_BY",
+        "to": "User"
+      }
+    ],
+    "relationships_in": [
+      {
+        "type": "HAS_SALES_ORDER",
+        "from": "Tenant"
+      }
+    ],
+    "synonyms": [
+      "sales order",
+      "SO"
+    ],
+    "search_text": "SalesOrder node. CRM commercial order; SalesOrder-[:PLACED_BY]->Contact. Outgoing: [:FOR_DEAL]->Deal, [:FROM_QUOTE]->Quote, [:FOR_COMPANY]->Company, [:PLACED_BY]->Contact, [:CREATED_BY]->User",
+    "domain": "core"
+  },
+  {
+    "id": "label_segment",
+    "type": "node_label",
+    "name": "Segment",
+    "description": "Customer segment grouping; primary key property: segment_id",
+    "category": "Marketing",
+    "key_property": "segment_id",
+    "properties": [
+      "segment_id",
+      "organization_id",
+      "segment_name",
+      "description",
+      "created_at"
+    ],
+    "relationships_out": [],
+    "relationships_in": [
+      {
+        "type": "DEFINES_SEGMENT",
+        "from": "Tenant"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "Segment node. Customer segment grouping; primary key property: segment_id",
+    "domain": "core"
+  },
+  {
+    "id": "label_sharednote",
+    "type": "node_label",
+    "name": "SharedNote",
+    "description": "Collaborative note for workspace",
+    "category": "Content",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "author_user_id",
+      "body",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [],
+    "relationships_in": [
+      {
+        "type": "HAS_SHARED_NOTE",
+        "from": "Tenant"
+      },
+      {
+        "type": "WROTE_SHARED_NOTE",
+        "from": "User"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "SharedNote node. Collaborative note for workspace",
+    "domain": "core"
+  },
+  {
+    "id": "label_skill",
+    "type": "node_label",
+    "name": "Skill",
+    "description": "Agent capability for routing",
+    "category": "Service Delivery",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "key",
+      "name",
+      "description",
+      "is_active",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [],
+    "relationships_in": [
+      {
+        "type": "DEFINES_SKILL",
+        "from": "Tenant"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "Skill node. Agent capability for routing",
+    "domain": "core"
+  },
+  {
+    "id": "label_task",
+    "type": "node_label",
+    "name": "Task",
+    "description": "Work item assigned to user",
+    "category": "Work Management",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "assigned_user_id",
+      "created_by_user_id",
+      "assigned_by_user_id",
+      "assigned_by_label",
+      "contact_id",
+      "conversation_id",
+      "task_type",
+      "status",
+      "priority",
+      "source",
+      "title",
+      "summary",
+      "notes",
+      "channel",
+      "due_at",
+      "completed_at",
+      "dismissed_at",
+      "created_at"
+    ],
+    "relationships_out": [
+      {
+        "type": "FROM_CONVERSATION",
+        "to": "Conversation"
+      },
+      {
+        "type": "FOR_CONTACT",
+        "to": "Contact"
+      },
+      {
+        "type": "CREATED_BY",
+        "to": "User"
+      }
+    ],
+    "relationships_in": [
+      {
+        "type": "HAS_TASK",
+        "from": "User"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "Task node. Work item assigned to user. Outgoing: [:FROM_CONVERSATION]->Conversation, [:FOR_CONTACT]->Contact, [:CREATED_BY]->User",
+    "domain": "core"
+  },
+  {
+    "id": "label_team",
+    "type": "node_label",
+    "name": "Team",
+    "description": "Group of agents sharing responsibilities",
+    "category": "Organization",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "name",
+      "description",
+      "business_hours_id",
+      "status",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [
+      {
+        "type": "FOLLOWS_HOURS",
+        "to": "BusinessHours"
+      }
+    ],
+    "relationships_in": [
+      {
+        "type": "HAS_TEAM",
+        "from": "Tenant"
+      }
+    ],
+    "synonyms": [
+      "department",
+      "work group"
+    ],
+    "search_text": "Team node. Group of agents sharing responsibilities. Outgoing: [:FOLLOWS_HOURS]->BusinessHours",
+    "domain": "core"
+  },
+  {
+    "id": "label_tenant",
+    "type": "node_label",
+    "name": "Tenant",
+    "description": "Root organization that owns the contact center and CRM platform",
+    "category": "Organization",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "tenant_id",
+      "company_name",
+      "industry_type",
+      "business_type",
+      "contact_name",
+      "designation",
+      "work_email",
+      "admin_email",
+      "tax_number",
+      "billing_address",
+      "website_url",
+      "country",
+      "company_size",
+      "mobile_country_code",
+      "mobile_number",
+      "lifecycle_status",
+      "converted_at",
+      "reseller_id",
+      "source_lead_id"
+    ],
+    "relationships_out": [],
+    "relationships_in": [],
+    "synonyms": [
+      "organization",
+      "company",
+      "enterprise"
+    ],
+    "search_text": "Tenant node. Root organization that owns the contact center and CRM platform",
+    "domain": "core"
+  },
+  {
+    "id": "label_transfer",
+    "type": "node_label",
+    "name": "Transfer",
+    "description": "Movement of conversation between queues/agents",
+    "category": "Routing",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "conversation_id",
+      "from_queue_id",
+      "from_agent_id",
+      "to_queue_id",
+      "requested_agent_id",
+      "offered_agent_id",
+      "state",
+      "notes",
+      "disposition_code",
+      "resolution_code",
+      "requested_at",
+      "offered_at",
+      "accepted_at",
+      "completed_at",
+      "cancelled_at",
+      "updated_at"
+    ],
+    "relationships_out": [
+      {
+        "type": "TRANSFERRED_TO",
+        "to": "Queue"
+      }
+    ],
+    "relationships_in": [
+      {
+        "type": "HAS_TRANSFER",
+        "from": "Conversation"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "Transfer node. Movement of conversation between queues/agents. Outgoing: [:TRANSFERRED_TO]->Queue",
+    "domain": "core"
+  },
+  {
+    "id": "label_user",
+    "type": "node_label",
+    "name": "User",
+    "description": "Internal employee of a Tenant (distinct from Contact/customer)",
+    "category": "User Management",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "employee_id",
+      "first_name",
+      "last_name",
+      "work_email",
+      "mobile_number",
+      "primary_language",
+      "secondary_language",
+      "city",
+      "state",
+      "country",
+      "location_id",
+      "status",
+      "team_id",
+      "business_hours_id",
+      "invite_status",
+      "password_set_at",
+      "invited_at",
+      "created_at"
+    ],
+    "relationships_out": [
+      {
+        "type": "MEMBER_OF",
+        "to": "Team"
+      },
+      {
+        "type": "FOLLOWS_HOURS",
+        "to": "BusinessHours"
+      }
+    ],
+    "relationships_in": [
+      {
+        "type": "EMPLOYS",
+        "from": "Tenant"
+      }
+    ],
+    "synonyms": [
+      "employee",
+      "staff member"
+    ],
+    "search_text": "User node. Internal employee of a Tenant (distinct from Contact/customer). Outgoing: [:MEMBER_OF]->Team, [:FOLLOWS_HOURS]->BusinessHours",
+    "domain": "core"
+  },
+  {
+    "id": "label_webchatsession",
+    "type": "node_label",
+    "name": "WebchatSession",
+    "description": "Web chat session linked to conversation",
+    "category": "Channel",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "conversation_id",
+      "webchat_id",
+      "visitor_id",
+      "page_origin",
+      "page_url",
+      "created_at",
+      "updated_at",
+      "ended_at",
+      "end_reason",
+      "ended_by"
+    ],
+    "relationships_out": [],
+    "relationships_in": [
+      {
+        "type": "HAS_WEBCHAT_SESSION",
+        "from": "Conversation"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "WebchatSession node. Web chat session linked to conversation",
+    "domain": "core"
+  },
+  {
+    "id": "label_worknote",
+    "type": "node_label",
+    "name": "WorkNote",
+    "description": "Internal agent note on a conversation",
+    "category": "Content",
+    "key_property": "id",
+    "properties": [
+      "id",
+      "organization_id",
+      "conversation_id",
+      "author_user_id",
+      "body",
+      "created_at",
+      "updated_at"
+    ],
+    "relationships_out": [],
+    "relationships_in": [
+      {
+        "type": "HAS_WORK_NOTE",
+        "from": "Conversation"
+      },
+      {
+        "type": "AUTHORED",
+        "from": "User"
+      }
+    ],
+    "synonyms": [],
+    "search_text": "WorkNote node. Internal agent note on a conversation",
+    "domain": "core"
+  },
+  {
+    "id": "rel_about_contact_notification_contact",
+    "type": "relationship",
+    "name": "ABOUT_CONTACT",
+    "description": "Notification connected to Contact via ABOUT_CONTACT",
+    "from_label": "Notification",
+    "to_label": "Contact",
+    "pattern": "(Notification)-[:ABOUT_CONTACT]->(Contact)",
+    "synonyms": [],
+    "search_text": "ABOUT_CONTACT relationship (Notification)-[:ABOUT_CONTACT]->(Contact). Notification connected to Contact via ABOUT_CONTACT",
+    "domain": "core"
+  },
+  {
+    "id": "rel_acted_by_notification_user",
+    "type": "relationship",
+    "name": "ACTED_BY",
+    "description": "Notification connected to User via ACTED_BY",
+    "from_label": "Notification",
+    "to_label": "User",
+    "pattern": "(Notification)-[:ACTED_BY]->(User)",
+    "synonyms": [],
+    "search_text": "ACTED_BY relationship (Notification)-[:ACTED_BY]->(User). Notification connected to User via ACTED_BY",
+    "domain": "core"
+  },
+  {
+    "id": "rel_approved_by_invoice_user",
+    "type": "relationship",
+    "name": "APPROVED_BY",
+    "description": "Invoice connected to User via APPROVED_BY",
+    "from_label": "Invoice",
+    "to_label": "User",
+    "pattern": "(Invoice)-[:APPROVED_BY]->(User)",
+    "synonyms": [],
+    "search_text": "APPROVED_BY relationship (Invoice)-[:APPROVED_BY]->(User). Invoice connected to User via APPROVED_BY",
+    "domain": "core"
+  },
+  {
+    "id": "rel_approved_by_proposal_user",
+    "type": "relationship",
+    "name": "APPROVED_BY",
+    "description": "Proposal connected to User via APPROVED_BY",
+    "from_label": "Proposal",
+    "to_label": "User",
+    "pattern": "(Proposal)-[:APPROVED_BY]->(User)",
+    "synonyms": [],
+    "search_text": "APPROVED_BY relationship (Proposal)-[:APPROVED_BY]->(User). Proposal connected to User via APPROVED_BY",
+    "domain": "core"
+  },
+  {
+    "id": "rel_approved_by_quote_user",
+    "type": "relationship",
+    "name": "APPROVED_BY",
+    "description": "Quote connected to User via APPROVED_BY",
+    "from_label": "Quote",
+    "to_label": "User",
+    "pattern": "(Quote)-[:APPROVED_BY]->(User)",
+    "synonyms": [],
+    "search_text": "APPROVED_BY relationship (Quote)-[:APPROVED_BY]->(User). Quote connected to User via APPROVED_BY",
+    "domain": "core"
+  },
+  {
+    "id": "rel_assigned_to_contactactivity_user",
+    "type": "relationship",
+    "name": "ASSIGNED_TO",
+    "description": "ContactActivity connected to User via ASSIGNED_TO",
+    "from_label": "ContactActivity",
+    "to_label": "User",
+    "pattern": "(ContactActivity)-[:ASSIGNED_TO]->(User)",
+    "synonyms": [],
+    "search_text": "ASSIGNED_TO relationship (ContactActivity)-[:ASSIGNED_TO]->(User). ContactActivity connected to User via ASSIGNED_TO",
+    "domain": "core"
+  },
+  {
+    "id": "rel_assigned_to_contactprofile_user",
+    "type": "relationship",
+    "name": "ASSIGNED_TO",
+    "description": "ContactProfile connected to User via ASSIGNED_TO",
+    "from_label": "ContactProfile",
+    "to_label": "User",
+    "pattern": "(ContactProfile)-[:ASSIGNED_TO]->(User)",
+    "synonyms": [],
+    "search_text": "ASSIGNED_TO relationship (ContactProfile)-[:ASSIGNED_TO]->(User). ContactProfile connected to User via ASSIGNED_TO",
+    "domain": "core"
+  },
+  {
+    "id": "rel_assigned_user_conversation_user",
+    "type": "relationship",
+    "name": "ASSIGNED_USER",
+    "description": "Conversation connected to User via ASSIGNED_USER",
+    "from_label": "Conversation",
+    "to_label": "User",
+    "pattern": "(Conversation)-[:ASSIGNED_USER]->(User)",
+    "synonyms": [],
+    "search_text": "ASSIGNED_USER relationship (Conversation)-[:ASSIGNED_USER]->(User). Conversation connected to User via ASSIGNED_USER",
+    "domain": "core"
+  },
+  {
+    "id": "rel_at_site_contactprofile_companysite",
+    "type": "relationship",
+    "name": "AT_SITE",
+    "description": "ContactProfile connected to CompanySite via AT_SITE",
+    "from_label": "ContactProfile",
+    "to_label": "CompanySite",
+    "pattern": "(ContactProfile)-[:AT_SITE]->(CompanySite)",
+    "synonyms": [],
+    "search_text": "AT_SITE relationship (ContactProfile)-[:AT_SITE]->(CompanySite). ContactProfile connected to CompanySite via AT_SITE",
+    "domain": "core"
+  },
+  {
+    "id": "rel_at_site_deal_companysite",
+    "type": "relationship",
+    "name": "AT_SITE",
+    "description": "Deal connected to CompanySite via AT_SITE",
+    "from_label": "Deal",
+    "to_label": "CompanySite",
+    "pattern": "(Deal)-[:AT_SITE]->(CompanySite)",
+    "synonyms": [],
+    "search_text": "AT_SITE relationship (Deal)-[:AT_SITE]->(CompanySite). Deal connected to CompanySite via AT_SITE",
+    "domain": "core"
+  },
+  {
+    "id": "rel_authored_user_worknote",
+    "type": "relationship",
+    "name": "AUTHORED",
+    "description": "User connected to WorkNote via AUTHORED",
+    "from_label": "User",
+    "to_label": "WorkNote",
+    "pattern": "(User)-[:AUTHORED]->(WorkNote)",
+    "synonyms": [],
+    "search_text": "AUTHORED relationship (User)-[:AUTHORED]->(WorkNote). User connected to WorkNote via AUTHORED",
+    "domain": "core"
+  },
+  {
+    "id": "rel_based_on_slainstance_sla",
+    "type": "relationship",
+    "name": "BASED_ON",
+    "description": "SLAInstance connected to SLA via BASED_ON",
+    "from_label": "SLAInstance",
+    "to_label": "SLA",
+    "pattern": "(SLAInstance)-[:BASED_ON]->(SLA)",
+    "synonyms": [],
+    "search_text": "BASED_ON relationship (SLAInstance)-[:BASED_ON]->(SLA). SLAInstance connected to SLA via BASED_ON",
+    "domain": "core"
+  },
+  {
+    "id": "rel_belongs_to_segment_contact_segment",
+    "type": "relationship",
+    "name": "BELONGS_TO_SEGMENT",
+    "description": "Contact connected to Segment via BELONGS_TO_SEGMENT",
+    "from_label": "Contact",
+    "to_label": "Segment",
+    "pattern": "(Contact)-[:BELONGS_TO_SEGMENT]->(Segment)",
+    "synonyms": [],
+    "search_text": "BELONGS_TO_SEGMENT relationship (Contact)-[:BELONGS_TO_SEGMENT]->(Segment). Contact connected to Segment via BELONGS_TO_SEGMENT",
+    "domain": "core"
+  },
+  {
+    "id": "rel_contains_order_product",
+    "type": "relationship",
+    "name": "CONTAINS",
+    "description": "Order connected to Product via CONTAINS",
+    "from_label": "Order",
+    "to_label": "Product",
+    "pattern": "(Order)-[:CONTAINS]->(Product)",
+    "synonyms": [],
+    "search_text": "CONTAINS relationship (Order)-[:CONTAINS]->(Product). Order connected to Product via CONTAINS",
+    "domain": "core"
+  },
+  {
+    "id": "rel_continues_from_conversation_conversation",
+    "type": "relationship",
+    "name": "CONTINUES_FROM",
+    "description": "Conversation connected to Conversation via CONTINUES_FROM",
+    "from_label": "Conversation",
+    "to_label": "Conversation",
+    "pattern": "(Conversation)-[:CONTINUES_FROM]->(Conversation)",
+    "synonyms": [],
+    "search_text": "CONTINUES_FROM relationship (Conversation)-[:CONTINUES_FROM]->(Conversation). Conversation connected to Conversation via CONTINUES_FROM",
+    "domain": "core"
+  },
+  {
+    "id": "rel_converted_to_contactprofile_deal",
+    "type": "relationship",
+    "name": "CONVERTED_TO",
+    "description": "ContactProfile connected to Deal via CONVERTED_TO",
+    "from_label": "ContactProfile",
+    "to_label": "Deal",
+    "pattern": "(ContactProfile)-[:CONVERTED_TO]->(Deal)",
+    "synonyms": [],
+    "search_text": "CONVERTED_TO relationship (ContactProfile)-[:CONVERTED_TO]->(Deal). ContactProfile connected to Deal via CONVERTED_TO",
+    "domain": "core"
+  },
+  {
+    "id": "rel_created_by_contactactivity_user",
+    "type": "relationship",
+    "name": "CREATED_BY",
+    "description": "ContactActivity connected to User via CREATED_BY",
+    "from_label": "ContactActivity",
+    "to_label": "User",
+    "pattern": "(ContactActivity)-[:CREATED_BY]->(User)",
+    "synonyms": [],
+    "search_text": "CREATED_BY relationship (ContactActivity)-[:CREATED_BY]->(User). ContactActivity connected to User via CREATED_BY",
+    "domain": "core"
+  },
+  {
+    "id": "rel_created_by_contactprofile_user",
+    "type": "relationship",
+    "name": "CREATED_BY",
+    "description": "ContactProfile connected to User via CREATED_BY",
+    "from_label": "ContactProfile",
+    "to_label": "User",
+    "pattern": "(ContactProfile)-[:CREATED_BY]->(User)",
+    "synonyms": [],
+    "search_text": "CREATED_BY relationship (ContactProfile)-[:CREATED_BY]->(User). ContactProfile connected to User via CREATED_BY",
+    "domain": "core"
+  },
+  {
+    "id": "rel_created_by_dealactivity_user",
+    "type": "relationship",
+    "name": "CREATED_BY",
+    "description": "DealActivity connected to User via CREATED_BY",
+    "from_label": "DealActivity",
+    "to_label": "User",
+    "pattern": "(DealActivity)-[:CREATED_BY]->(User)",
+    "synonyms": [],
+    "search_text": "CREATED_BY relationship (DealActivity)-[:CREATED_BY]->(User). DealActivity connected to User via CREATED_BY",
+    "domain": "core"
+  },
+  {
+    "id": "rel_created_by_invoice_user",
+    "type": "relationship",
+    "name": "CREATED_BY",
+    "description": "Invoice connected to User via CREATED_BY",
+    "from_label": "Invoice",
+    "to_label": "User",
+    "pattern": "(Invoice)-[:CREATED_BY]->(User)",
+    "synonyms": [],
+    "search_text": "CREATED_BY relationship (Invoice)-[:CREATED_BY]->(User). Invoice connected to User via CREATED_BY",
+    "domain": "core"
+  },
+  {
+    "id": "rel_created_by_proposal_user",
+    "type": "relationship",
+    "name": "CREATED_BY",
+    "description": "Proposal connected to User via CREATED_BY",
+    "from_label": "Proposal",
+    "to_label": "User",
+    "pattern": "(Proposal)-[:CREATED_BY]->(User)",
+    "synonyms": [],
+    "search_text": "CREATED_BY relationship (Proposal)-[:CREATED_BY]->(User). Proposal connected to User via CREATED_BY",
+    "domain": "core"
+  },
+  {
+    "id": "rel_created_by_quote_user",
+    "type": "relationship",
+    "name": "CREATED_BY",
+    "description": "Quote connected to User via CREATED_BY",
+    "from_label": "Quote",
+    "to_label": "User",
+    "pattern": "(Quote)-[:CREATED_BY]->(User)",
+    "synonyms": [],
+    "search_text": "CREATED_BY relationship (Quote)-[:CREATED_BY]->(User). Quote connected to User via CREATED_BY",
+    "domain": "core"
+  },
+  {
+    "id": "rel_created_by_salesorder_user",
+    "type": "relationship",
+    "name": "CREATED_BY",
+    "description": "SalesOrder connected to User via CREATED_BY",
+    "from_label": "SalesOrder",
+    "to_label": "User",
+    "pattern": "(SalesOrder)-[:CREATED_BY]->(User)",
+    "synonyms": [],
+    "search_text": "CREATED_BY relationship (SalesOrder)-[:CREATED_BY]->(User). SalesOrder connected to User via CREATED_BY",
+    "domain": "core"
+  },
+  {
+    "id": "rel_created_by_task_user",
+    "type": "relationship",
+    "name": "CREATED_BY",
+    "description": "Task connected to User via CREATED_BY",
+    "from_label": "Task",
+    "to_label": "User",
+    "pattern": "(Task)-[:CREATED_BY]->(User)",
+    "synonyms": [],
+    "search_text": "CREATED_BY relationship (Task)-[:CREATED_BY]->(User). Task connected to User via CREATED_BY",
+    "domain": "core"
+  },
+  {
+    "id": "rel_decided_by_processconfirmation_user",
+    "type": "relationship",
+    "name": "DECIDED_BY",
+    "description": "ProcessConfirmation connected to User via DECIDED_BY",
+    "from_label": "ProcessConfirmation",
+    "to_label": "User",
+    "pattern": "(ProcessConfirmation)-[:DECIDED_BY]->(User)",
+    "synonyms": [],
+    "search_text": "DECIDED_BY relationship (ProcessConfirmation)-[:DECIDED_BY]->(User). ProcessConfirmation connected to User via DECIDED_BY",
+    "domain": "core"
+  },
+  {
+    "id": "rel_default_queue_channelautomationpolicy_queue",
+    "type": "relationship",
+    "name": "DEFAULT_QUEUE",
+    "description": "ChannelAutomationPolicy connected to Queue via DEFAULT_QUEUE",
+    "from_label": "ChannelAutomationPolicy",
+    "to_label": "Queue",
+    "pattern": "(ChannelAutomationPolicy)-[:DEFAULT_QUEUE]->(Queue)",
+    "synonyms": [],
+    "search_text": "DEFAULT_QUEUE relationship (ChannelAutomationPolicy)-[:DEFAULT_QUEUE]->(Queue). ChannelAutomationPolicy connected to Queue via DEFAULT_QUEUE",
+    "domain": "core"
+  },
+  {
+    "id": "rel_defines_disposition_tenant_disposition",
+    "type": "relationship",
+    "name": "DEFINES_DISPOSITION",
+    "description": "Tenant connected to Disposition via DEFINES_DISPOSITION",
+    "from_label": "Tenant",
+    "to_label": "Disposition",
+    "pattern": "(Tenant)-[:DEFINES_DISPOSITION]->(Disposition)",
+    "synonyms": [],
+    "search_text": "DEFINES_DISPOSITION relationship (Tenant)-[:DEFINES_DISPOSITION]->(Disposition). Tenant connected to Disposition via DEFINES_DISPOSITION",
+    "domain": "core"
+  },
+  {
+    "id": "rel_defines_role_tenant_role",
+    "type": "relationship",
+    "name": "DEFINES_ROLE",
+    "description": "Tenant connected to Role via DEFINES_ROLE",
+    "from_label": "Tenant",
+    "to_label": "Role",
+    "pattern": "(Tenant)-[:DEFINES_ROLE]->(Role)",
+    "synonyms": [],
+    "search_text": "DEFINES_ROLE relationship (Tenant)-[:DEFINES_ROLE]->(Role). Tenant connected to Role via DEFINES_ROLE",
+    "domain": "core"
+  },
+  {
+    "id": "rel_defines_segment_tenant_segment",
+    "type": "relationship",
+    "name": "DEFINES_SEGMENT",
+    "description": "Tenant connected to Segment via DEFINES_SEGMENT",
+    "from_label": "Tenant",
+    "to_label": "Segment",
+    "pattern": "(Tenant)-[:DEFINES_SEGMENT]->(Segment)",
+    "synonyms": [],
+    "search_text": "DEFINES_SEGMENT relationship (Tenant)-[:DEFINES_SEGMENT]->(Segment). Tenant connected to Segment via DEFINES_SEGMENT",
+    "domain": "core"
+  },
+  {
+    "id": "rel_defines_skill_tenant_skill",
+    "type": "relationship",
+    "name": "DEFINES_SKILL",
+    "description": "Tenant connected to Skill via DEFINES_SKILL",
+    "from_label": "Tenant",
+    "to_label": "Skill",
+    "pattern": "(Tenant)-[:DEFINES_SKILL]->(Skill)",
+    "synonyms": [],
+    "search_text": "DEFINES_SKILL relationship (Tenant)-[:DEFINES_SKILL]->(Skill). Tenant connected to Skill via DEFINES_SKILL",
+    "domain": "core"
+  },
+  {
+    "id": "rel_defines_sla_tenant_sla",
+    "type": "relationship",
+    "name": "DEFINES_SLA",
+    "description": "Tenant connected to SLA via DEFINES_SLA",
+    "from_label": "Tenant",
+    "to_label": "SLA",
+    "pattern": "(Tenant)-[:DEFINES_SLA]->(SLA)",
+    "synonyms": [],
+    "search_text": "DEFINES_SLA relationship (Tenant)-[:DEFINES_SLA]->(SLA). Tenant connected to SLA via DEFINES_SLA",
+    "domain": "core"
+  },
+  {
+    "id": "rel_employs_tenant_user",
+    "type": "relationship",
+    "name": "EMPLOYS",
+    "description": "Tenant connected to User via EMPLOYS",
+    "from_label": "Tenant",
+    "to_label": "User",
+    "pattern": "(Tenant)-[:EMPLOYS]->(User)",
+    "synonyms": [],
+    "search_text": "EMPLOYS relationship (Tenant)-[:EMPLOYS]->(User). Tenant connected to User via EMPLOYS",
+    "domain": "core"
+  },
+  {
+    "id": "rel_follows_hours_queue_businesshours",
+    "type": "relationship",
+    "name": "FOLLOWS_HOURS",
+    "description": "Queue connected to BusinessHours via FOLLOWS_HOURS",
+    "from_label": "Queue",
+    "to_label": "BusinessHours",
+    "pattern": "(Queue)-[:FOLLOWS_HOURS]->(BusinessHours)",
+    "synonyms": [],
+    "search_text": "FOLLOWS_HOURS relationship (Queue)-[:FOLLOWS_HOURS]->(BusinessHours). Queue connected to BusinessHours via FOLLOWS_HOURS",
+    "domain": "core"
+  },
+  {
+    "id": "rel_follows_hours_team_businesshours",
+    "type": "relationship",
+    "name": "FOLLOWS_HOURS",
+    "description": "Team connected to BusinessHours via FOLLOWS_HOURS",
+    "from_label": "Team",
+    "to_label": "BusinessHours",
+    "pattern": "(Team)-[:FOLLOWS_HOURS]->(BusinessHours)",
+    "synonyms": [],
+    "search_text": "FOLLOWS_HOURS relationship (Team)-[:FOLLOWS_HOURS]->(BusinessHours). Team connected to BusinessHours via FOLLOWS_HOURS",
+    "domain": "core"
+  },
+  {
+    "id": "rel_follows_hours_user_businesshours",
+    "type": "relationship",
+    "name": "FOLLOWS_HOURS",
+    "description": "User connected to BusinessHours via FOLLOWS_HOURS",
+    "from_label": "User",
+    "to_label": "BusinessHours",
+    "pattern": "(User)-[:FOLLOWS_HOURS]->(BusinessHours)",
+    "synonyms": [],
+    "search_text": "FOLLOWS_HOURS relationship (User)-[:FOLLOWS_HOURS]->(BusinessHours). User connected to BusinessHours via FOLLOWS_HOURS",
+    "domain": "core"
+  },
+  {
+    "id": "rel_for_activity_coachinginsight_contactactivity",
+    "type": "relationship",
+    "name": "FOR_ACTIVITY",
+    "description": "CoachingInsight connected to ContactActivity via FOR_ACTIVITY",
+    "from_label": "CoachingInsight",
+    "to_label": "ContactActivity",
+    "pattern": "(CoachingInsight)-[:FOR_ACTIVITY]->(ContactActivity)",
+    "synonyms": [],
+    "search_text": "FOR_ACTIVITY relationship (CoachingInsight)-[:FOR_ACTIVITY]->(ContactActivity). CoachingInsight connected to ContactActivity via FOR_ACTIVITY",
+    "domain": "core"
+  },
+  {
+    "id": "rel_for_activity_meetinganalysis_contactactivity",
+    "type": "relationship",
+    "name": "FOR_ACTIVITY",
+    "description": "MeetingAnalysis connected to ContactActivity via FOR_ACTIVITY",
+    "from_label": "MeetingAnalysis",
+    "to_label": "ContactActivity",
+    "pattern": "(MeetingAnalysis)-[:FOR_ACTIVITY]->(ContactActivity)",
+    "synonyms": [],
+    "search_text": "FOR_ACTIVITY relationship (MeetingAnalysis)-[:FOR_ACTIVITY]->(ContactActivity). MeetingAnalysis connected to ContactActivity via FOR_ACTIVITY",
+    "domain": "core"
+  },
+  {
+    "id": "rel_for_activity_meetingassistsession_contactactivity",
+    "type": "relationship",
+    "name": "FOR_ACTIVITY",
+    "description": "MeetingAssistSession connected to ContactActivity via FOR_ACTIVITY",
+    "from_label": "MeetingAssistSession",
+    "to_label": "ContactActivity",
+    "pattern": "(MeetingAssistSession)-[:FOR_ACTIVITY]->(ContactActivity)",
+    "synonyms": [],
+    "search_text": "FOR_ACTIVITY relationship (MeetingAssistSession)-[:FOR_ACTIVITY]->(ContactActivity). MeetingAssistSession connected to ContactActivity via FOR_ACTIVITY",
+    "domain": "core"
+  },
+  {
+    "id": "rel_for_activity_privacyrequest_contactactivity",
+    "type": "relationship",
+    "name": "FOR_ACTIVITY",
+    "description": "PrivacyRequest connected to ContactActivity via FOR_ACTIVITY",
+    "from_label": "PrivacyRequest",
+    "to_label": "ContactActivity",
+    "pattern": "(PrivacyRequest)-[:FOR_ACTIVITY]->(ContactActivity)",
+    "synonyms": [],
+    "search_text": "FOR_ACTIVITY relationship (PrivacyRequest)-[:FOR_ACTIVITY]->(ContactActivity). PrivacyRequest connected to ContactActivity via FOR_ACTIVITY",
+    "domain": "core"
+  },
+  {
+    "id": "rel_for_activity_processconfirmation_contactactivity",
+    "type": "relationship",
+    "name": "FOR_ACTIVITY",
+    "description": "ProcessConfirmation connected to ContactActivity via FOR_ACTIVITY",
+    "from_label": "ProcessConfirmation",
+    "to_label": "ContactActivity",
+    "pattern": "(ProcessConfirmation)-[:FOR_ACTIVITY]->(ContactActivity)",
+    "synonyms": [],
+    "search_text": "FOR_ACTIVITY relationship (ProcessConfirmation)-[:FOR_ACTIVITY]->(ContactActivity). ProcessConfirmation connected to ContactActivity via FOR_ACTIVITY",
+    "domain": "core"
+  },
+  {
+    "id": "rel_for_addon_invoiceline_addon",
+    "type": "relationship",
+    "name": "FOR_ADDON",
+    "description": "InvoiceLine connected to Addon via FOR_ADDON",
+    "from_label": "InvoiceLine",
+    "to_label": "Addon",
+    "pattern": "(InvoiceLine)-[:FOR_ADDON]->(Addon)",
+    "synonyms": [],
+    "search_text": "FOR_ADDON relationship (InvoiceLine)-[:FOR_ADDON]->(Addon). InvoiceLine connected to Addon via FOR_ADDON",
+    "domain": "core"
+  },
+  {
+    "id": "rel_for_addon_pricebookentry_addon",
+    "type": "relationship",
+    "name": "FOR_ADDON",
+    "description": "PriceBookEntry connected to Addon via FOR_ADDON",
+    "from_label": "PriceBookEntry",
+    "to_label": "Addon",
+    "pattern": "(PriceBookEntry)-[:FOR_ADDON]->(Addon)",
+    "synonyms": [],
+    "search_text": "FOR_ADDON relationship (PriceBookEntry)-[:FOR_ADDON]->(Addon). PriceBookEntry connected to Addon via FOR_ADDON",
+    "domain": "core"
+  },
+  {
+    "id": "rel_for_company_contract_company",
+    "type": "relationship",
+    "name": "FOR_COMPANY",
+    "description": "Contract connected to Company via FOR_COMPANY",
+    "from_label": "Contract",
+    "to_label": "Company",
+    "pattern": "(Contract)-[:FOR_COMPANY]->(Company)",
+    "synonyms": [],
+    "search_text": "FOR_COMPANY relationship (Contract)-[:FOR_COMPANY]->(Company). Contract connected to Company via FOR_COMPANY",
+    "domain": "core"
+  },
+  {
+    "id": "rel_for_company_salesorder_company",
+    "type": "relationship",
+    "name": "FOR_COMPANY",
+    "description": "SalesOrder connected to Company via FOR_COMPANY",
+    "from_label": "SalesOrder",
+    "to_label": "Company",
+    "pattern": "(SalesOrder)-[:FOR_COMPANY]->(Company)",
+    "synonyms": [],
+    "search_text": "FOR_COMPANY relationship (SalesOrder)-[:FOR_COMPANY]->(Company). SalesOrder connected to Company via FOR_COMPANY",
+    "domain": "core"
+  },
+  {
+    "id": "rel_for_contact_coachinginsight_contact",
+    "type": "relationship",
+    "name": "FOR_CONTACT",
+    "description": "CoachingInsight connected to Contact via FOR_CONTACT",
+    "from_label": "CoachingInsight",
+    "to_label": "Contact",
+    "pattern": "(CoachingInsight)-[:FOR_CONTACT]->(Contact)",
+    "synonyms": [],
+    "search_text": "FOR_CONTACT relationship (CoachingInsight)-[:FOR_CONTACT]->(Contact). CoachingInsight connected to Contact via FOR_CONTACT",
+    "domain": "core"
+  },
+  {
+    "id": "rel_for_contact_contactactivity_contact",
+    "type": "relationship",
+    "name": "FOR_CONTACT",
+    "description": "ContactActivity connected to Contact via FOR_CONTACT",
+    "from_label": "ContactActivity",
+    "to_label": "Contact",
+    "pattern": "(ContactActivity)-[:FOR_CONTACT]->(Contact)",
+    "synonyms": [],
+    "search_text": "FOR_CONTACT relationship (ContactActivity)-[:FOR_CONTACT]->(Contact). ContactActivity connected to Contact via FOR_CONTACT",
+    "domain": "core"
+  },
+  {
+    "id": "rel_for_contact_meetinganalysis_contact",
+    "type": "relationship",
+    "name": "FOR_CONTACT",
+    "description": "MeetingAnalysis connected to Contact via FOR_CONTACT",
+    "from_label": "MeetingAnalysis",
+    "to_label": "Contact",
+    "pattern": "(MeetingAnalysis)-[:FOR_CONTACT]->(Contact)",
+    "synonyms": [],
+    "search_text": "FOR_CONTACT relationship (MeetingAnalysis)-[:FOR_CONTACT]->(Contact). MeetingAnalysis connected to Contact via FOR_CONTACT",
+    "domain": "core"
+  },
+  {
+    "id": "rel_for_contact_meetingassistsession_contact",
+    "type": "relationship",
+    "name": "FOR_CONTACT",
+    "description": "MeetingAssistSession connected to Contact via FOR_CONTACT",
+    "from_label": "MeetingAssistSession",
+    "to_label": "Contact",
+    "pattern": "(MeetingAssistSession)-[:FOR_CONTACT]->(Contact)",
+    "synonyms": [],
+    "search_text": "FOR_CONTACT relationship (MeetingAssistSession)-[:FOR_CONTACT]->(Contact). MeetingAssistSession connected to Contact via FOR_CONTACT",
+    "domain": "core"
+  },
+  {
+    "id": "rel_for_contact_privacyrequest_contact",
+    "type": "relationship",
+    "name": "FOR_CONTACT",
+    "description": "PrivacyRequest connected to Contact via FOR_CONTACT",
+    "from_label": "PrivacyRequest",
+    "to_label": "Contact",
+    "pattern": "(PrivacyRequest)-[:FOR_CONTACT]->(Contact)",
+    "synonyms": [],
+    "search_text": "FOR_CONTACT relationship (PrivacyRequest)-[:FOR_CONTACT]->(Contact). PrivacyRequest connected to Contact via FOR_CONTACT",
+    "domain": "core"
+  },
+  {
+    "id": "rel_for_contact_processconfirmation_contact",
+    "type": "relationship",
+    "name": "FOR_CONTACT",
+    "description": "ProcessConfirmation connected to Contact via FOR_CONTACT",
+    "from_label": "ProcessConfirmation",
+    "to_label": "Contact",
+    "pattern": "(ProcessConfirmation)-[:FOR_CONTACT]->(Contact)",
+    "synonyms": [],
+    "search_text": "FOR_CONTACT relationship (ProcessConfirmation)-[:FOR_CONTACT]->(Contact). ProcessConfirmation connected to Contact via FOR_CONTACT",
+    "domain": "core"
+  },
+  {
+    "id": "rel_for_contact_task_contact",
+    "type": "relationship",
+    "name": "FOR_CONTACT",
+    "description": "Task connected to Contact via FOR_CONTACT",
+    "from_label": "Task",
+    "to_label": "Contact",
+    "pattern": "(Task)-[:FOR_CONTACT]->(Contact)",
+    "synonyms": [],
+    "search_text": "FOR_CONTACT relationship (Task)-[:FOR_CONTACT]->(Contact). Task connected to Contact via FOR_CONTACT",
+    "domain": "core"
+  },
+  {
+    "id": "rel_for_deal_coachinginsight_deal",
+    "type": "relationship",
+    "name": "FOR_DEAL",
+    "description": "CoachingInsight connected to Deal via FOR_DEAL",
+    "from_label": "CoachingInsight",
+    "to_label": "Deal",
+    "pattern": "(CoachingInsight)-[:FOR_DEAL]->(Deal)",
+    "synonyms": [],
+    "search_text": "FOR_DEAL relationship (CoachingInsight)-[:FOR_DEAL]->(Deal). CoachingInsight connected to Deal via FOR_DEAL",
+    "domain": "core"
+  },
+  {
+    "id": "rel_for_deal_invoice_deal",
+    "type": "relationship",
+    "name": "FOR_DEAL",
+    "description": "Invoice connected to Deal via FOR_DEAL",
+    "from_label": "Invoice",
+    "to_label": "Deal",
+    "pattern": "(Invoice)-[:FOR_DEAL]->(Deal)",
+    "synonyms": [],
+    "search_text": "FOR_DEAL relationship (Invoice)-[:FOR_DEAL]->(Deal). Invoice connected to Deal via FOR_DEAL",
+    "domain": "core"
+  },
+  {
+    "id": "rel_for_deal_meetinganalysis_deal",
+    "type": "relationship",
+    "name": "FOR_DEAL",
+    "description": "MeetingAnalysis connected to Deal via FOR_DEAL",
+    "from_label": "MeetingAnalysis",
+    "to_label": "Deal",
+    "pattern": "(MeetingAnalysis)-[:FOR_DEAL]->(Deal)",
+    "synonyms": [],
+    "search_text": "FOR_DEAL relationship (MeetingAnalysis)-[:FOR_DEAL]->(Deal). MeetingAnalysis connected to Deal via FOR_DEAL",
+    "domain": "core"
+  },
+  {
+    "id": "rel_for_deal_processconfirmation_deal",
+    "type": "relationship",
+    "name": "FOR_DEAL",
+    "description": "ProcessConfirmation connected to Deal via FOR_DEAL",
+    "from_label": "ProcessConfirmation",
+    "to_label": "Deal",
+    "pattern": "(ProcessConfirmation)-[:FOR_DEAL]->(Deal)",
+    "synonyms": [],
+    "search_text": "FOR_DEAL relationship (ProcessConfirmation)-[:FOR_DEAL]->(Deal). ProcessConfirmation connected to Deal via FOR_DEAL",
+    "domain": "core"
+  },
+  {
+    "id": "rel_for_deal_proposal_deal",
+    "type": "relationship",
+    "name": "FOR_DEAL",
+    "description": "Proposal connected to Deal via FOR_DEAL",
+    "from_label": "Proposal",
+    "to_label": "Deal",
+    "pattern": "(Proposal)-[:FOR_DEAL]->(Deal)",
+    "synonyms": [],
+    "search_text": "FOR_DEAL relationship (Proposal)-[:FOR_DEAL]->(Deal). Proposal connected to Deal via FOR_DEAL",
+    "domain": "core"
+  },
+  {
+    "id": "rel_for_deal_quote_deal",
+    "type": "relationship",
+    "name": "FOR_DEAL",
+    "description": "Quote connected to Deal via FOR_DEAL",
+    "from_label": "Quote",
+    "to_label": "Deal",
+    "pattern": "(Quote)-[:FOR_DEAL]->(Deal)",
+    "synonyms": [],
+    "search_text": "FOR_DEAL relationship (Quote)-[:FOR_DEAL]->(Deal). Quote connected to Deal via FOR_DEAL",
+    "domain": "core"
+  },
+  {
+    "id": "rel_for_deal_salesorder_deal",
+    "type": "relationship",
+    "name": "FOR_DEAL",
+    "description": "SalesOrder connected to Deal via FOR_DEAL",
+    "from_label": "SalesOrder",
+    "to_label": "Deal",
+    "pattern": "(SalesOrder)-[:FOR_DEAL]->(Deal)",
+    "synonyms": [],
+    "search_text": "FOR_DEAL relationship (SalesOrder)-[:FOR_DEAL]->(Deal). SalesOrder connected to Deal via FOR_DEAL",
+    "domain": "core"
+  },
+  {
+    "id": "rel_for_offer_pricebookentry_productoffer",
+    "type": "relationship",
+    "name": "FOR_OFFER",
+    "description": "PriceBookEntry connected to ProductOffer via FOR_OFFER",
+    "from_label": "PriceBookEntry",
+    "to_label": "ProductOffer",
+    "pattern": "(PriceBookEntry)-[:FOR_OFFER]->(ProductOffer)",
+    "synonyms": [],
+    "search_text": "FOR_OFFER relationship (PriceBookEntry)-[:FOR_OFFER]->(ProductOffer). PriceBookEntry connected to ProductOffer via FOR_OFFER",
+    "domain": "core"
+  },
+  {
+    "id": "rel_for_order_invoice_salesorder",
+    "type": "relationship",
+    "name": "FOR_ORDER",
+    "description": "Invoice connected to SalesOrder via FOR_ORDER",
+    "from_label": "Invoice",
+    "to_label": "SalesOrder",
+    "pattern": "(Invoice)-[:FOR_ORDER]->(SalesOrder)",
+    "synonyms": [],
+    "search_text": "FOR_ORDER relationship (Invoice)-[:FOR_ORDER]->(SalesOrder). Invoice connected to SalesOrder via FOR_ORDER",
+    "domain": "core"
+  },
+  {
+    "id": "rel_for_product_addon_product",
+    "type": "relationship",
+    "name": "FOR_PRODUCT",
+    "description": "Addon connected to Product via FOR_PRODUCT",
+    "from_label": "Addon",
+    "to_label": "Product",
+    "pattern": "(Addon)-[:FOR_PRODUCT]->(Product)",
+    "synonyms": [],
+    "search_text": "FOR_PRODUCT relationship (Addon)-[:FOR_PRODUCT]->(Product). Addon connected to Product via FOR_PRODUCT",
+    "domain": "core"
+  },
+  {
+    "id": "rel_for_product_invoiceline_product",
+    "type": "relationship",
+    "name": "FOR_PRODUCT",
+    "description": "InvoiceLine connected to Product via FOR_PRODUCT",
+    "from_label": "InvoiceLine",
+    "to_label": "Product",
+    "pattern": "(InvoiceLine)-[:FOR_PRODUCT]->(Product)",
+    "synonyms": [],
+    "search_text": "FOR_PRODUCT relationship (InvoiceLine)-[:FOR_PRODUCT]->(Product). InvoiceLine connected to Product via FOR_PRODUCT",
+    "domain": "core"
+  },
+  {
+    "id": "rel_for_product_orderline_product",
+    "type": "relationship",
+    "name": "FOR_PRODUCT",
+    "description": "OrderLine connected to Product via FOR_PRODUCT",
+    "from_label": "OrderLine",
+    "to_label": "Product",
+    "pattern": "(OrderLine)-[:FOR_PRODUCT]->(Product)",
+    "synonyms": [],
+    "search_text": "FOR_PRODUCT relationship (OrderLine)-[:FOR_PRODUCT]->(Product). OrderLine connected to Product via FOR_PRODUCT",
+    "domain": "core"
+  },
+  {
+    "id": "rel_for_product_pricebookentry_product",
+    "type": "relationship",
+    "name": "FOR_PRODUCT",
+    "description": "PriceBookEntry connected to Product via FOR_PRODUCT",
+    "from_label": "PriceBookEntry",
+    "to_label": "Product",
+    "pattern": "(PriceBookEntry)-[:FOR_PRODUCT]->(Product)",
+    "synonyms": [],
+    "search_text": "FOR_PRODUCT relationship (PriceBookEntry)-[:FOR_PRODUCT]->(Product). PriceBookEntry connected to Product via FOR_PRODUCT",
+    "domain": "core"
+  },
+  {
+    "id": "rel_for_product_productoffer_product",
+    "type": "relationship",
+    "name": "FOR_PRODUCT",
+    "description": "ProductOffer connected to Product via FOR_PRODUCT",
+    "from_label": "ProductOffer",
+    "to_label": "Product",
+    "pattern": "(ProductOffer)-[:FOR_PRODUCT]->(Product)",
+    "synonyms": [],
+    "search_text": "FOR_PRODUCT relationship (ProductOffer)-[:FOR_PRODUCT]->(Product). ProductOffer connected to Product via FOR_PRODUCT",
+    "domain": "core"
+  },
+  {
+    "id": "rel_for_product_quoteline_product",
+    "type": "relationship",
+    "name": "FOR_PRODUCT",
+    "description": "QuoteLine connected to Product via FOR_PRODUCT",
+    "from_label": "QuoteLine",
+    "to_label": "Product",
+    "pattern": "(QuoteLine)-[:FOR_PRODUCT]->(Product)",
+    "synonyms": [],
+    "search_text": "FOR_PRODUCT relationship (QuoteLine)-[:FOR_PRODUCT]->(Product). QuoteLine connected to Product via FOR_PRODUCT",
+    "domain": "core"
+  },
+  {
+    "id": "rel_for_user_assignmentprofile_user",
+    "type": "relationship",
+    "name": "FOR_USER",
+    "description": "AssignmentProfile connected to User via FOR_USER",
+    "from_label": "AssignmentProfile",
+    "to_label": "User",
+    "pattern": "(AssignmentProfile)-[:FOR_USER]->(User)",
+    "synonyms": [],
+    "search_text": "FOR_USER relationship (AssignmentProfile)-[:FOR_USER]->(User). AssignmentProfile connected to User via FOR_USER",
+    "domain": "core"
+  },
+  {
+    "id": "rel_for_user_coachinginsight_user",
+    "type": "relationship",
+    "name": "FOR_USER",
+    "description": "CoachingInsight connected to User via FOR_USER",
+    "from_label": "CoachingInsight",
+    "to_label": "User",
+    "pattern": "(CoachingInsight)-[:FOR_USER]->(User)",
+    "synonyms": [],
+    "search_text": "FOR_USER relationship (CoachingInsight)-[:FOR_USER]->(User). CoachingInsight connected to User via FOR_USER",
+    "domain": "core"
+  },
+  {
+    "id": "rel_from_conversation_task_conversation",
+    "type": "relationship",
+    "name": "FROM_CONVERSATION",
+    "description": "Task connected to Conversation via FROM_CONVERSATION",
+    "from_label": "Task",
+    "to_label": "Conversation",
+    "pattern": "(Task)-[:FROM_CONVERSATION]->(Conversation)",
+    "synonyms": [],
+    "search_text": "FROM_CONVERSATION relationship (Task)-[:FROM_CONVERSATION]->(Conversation). Task connected to Conversation via FROM_CONVERSATION",
+    "domain": "core"
+  },
+  {
+    "id": "rel_from_deal_contract_deal",
+    "type": "relationship",
+    "name": "FROM_DEAL",
+    "description": "Contract connected to Deal via FROM_DEAL",
+    "from_label": "Contract",
+    "to_label": "Deal",
+    "pattern": "(Contract)-[:FROM_DEAL]->(Deal)",
+    "synonyms": [],
+    "search_text": "FROM_DEAL relationship (Contract)-[:FROM_DEAL]->(Deal). Contract connected to Deal via FROM_DEAL",
+    "domain": "core"
+  },
+  {
+    "id": "rel_from_proposal_quote_proposal",
+    "type": "relationship",
+    "name": "FROM_PROPOSAL",
+    "description": "Quote connected to Proposal via FROM_PROPOSAL",
+    "from_label": "Quote",
+    "to_label": "Proposal",
+    "pattern": "(Quote)-[:FROM_PROPOSAL]->(Proposal)",
+    "synonyms": [],
+    "search_text": "FROM_PROPOSAL relationship (Quote)-[:FROM_PROPOSAL]->(Proposal). Quote connected to Proposal via FROM_PROPOSAL",
+    "domain": "core"
+  },
+  {
+    "id": "rel_from_queue_assignment_queue",
+    "type": "relationship",
+    "name": "FROM_QUEUE",
+    "description": "Assignment connected to Queue via FROM_QUEUE",
+    "from_label": "Assignment",
+    "to_label": "Queue",
+    "pattern": "(Assignment)-[:FROM_QUEUE]->(Queue)",
+    "synonyms": [],
+    "search_text": "FROM_QUEUE relationship (Assignment)-[:FROM_QUEUE]->(Queue). Assignment connected to Queue via FROM_QUEUE",
+    "domain": "core"
+  },
+  {
+    "id": "rel_from_quote_salesorder_quote",
+    "type": "relationship",
+    "name": "FROM_QUOTE",
+    "description": "SalesOrder connected to Quote via FROM_QUOTE",
+    "from_label": "SalesOrder",
+    "to_label": "Quote",
+    "pattern": "(SalesOrder)-[:FROM_QUOTE]->(Quote)",
+    "synonyms": [],
+    "search_text": "FROM_QUOTE relationship (SalesOrder)-[:FROM_QUOTE]->(Quote). SalesOrder connected to Quote via FROM_QUOTE",
+    "domain": "core"
+  },
+  {
+    "id": "rel_handled_by_conversation_agent",
+    "type": "relationship",
+    "name": "HANDLED_BY",
+    "description": "Conversation connected to Agent via HANDLED_BY",
+    "from_label": "Conversation",
+    "to_label": "Agent",
+    "pattern": "(Conversation)-[:HANDLED_BY]->(Agent)",
+    "synonyms": [],
+    "search_text": "HANDLED_BY relationship (Conversation)-[:HANDLED_BY]->(Agent). Conversation connected to Agent via HANDLED_BY",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_activity_deal_dealactivity",
+    "type": "relationship",
+    "name": "HAS_ACTIVITY",
+    "description": "Deal connected to DealActivity via HAS_ACTIVITY",
+    "from_label": "Deal",
+    "to_label": "DealActivity",
+    "pattern": "(Deal)-[:HAS_ACTIVITY]->(DealActivity)",
+    "synonyms": [],
+    "search_text": "HAS_ACTIVITY relationship (Deal)-[:HAS_ACTIVITY]->(DealActivity). Deal connected to DealActivity via HAS_ACTIVITY",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_addon_tenant_addon",
+    "type": "relationship",
+    "name": "HAS_ADDON",
+    "description": "Tenant connected to Addon via HAS_ADDON",
+    "from_label": "Tenant",
+    "to_label": "Addon",
+    "pattern": "(Tenant)-[:HAS_ADDON]->(Addon)",
+    "synonyms": [],
+    "search_text": "HAS_ADDON relationship (Tenant)-[:HAS_ADDON]->(Addon). Tenant connected to Addon via HAS_ADDON",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_agent_tenant_agent",
+    "type": "relationship",
+    "name": "HAS_AGENT",
+    "description": "Tenant connected to Agent via HAS_AGENT",
+    "from_label": "Tenant",
+    "to_label": "Agent",
+    "pattern": "(Tenant)-[:HAS_AGENT]->(Agent)",
+    "synonyms": [],
+    "search_text": "HAS_AGENT relationship (Tenant)-[:HAS_AGENT]->(Agent). Tenant connected to Agent via HAS_AGENT",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_agent_memory_tenant_agentmemory",
+    "type": "relationship",
+    "name": "HAS_AGENT_MEMORY",
+    "description": "Tenant connected to AgentMemory via HAS_AGENT_MEMORY",
+    "from_label": "Tenant",
+    "to_label": "AgentMemory",
+    "pattern": "(Tenant)-[:HAS_AGENT_MEMORY]->(AgentMemory)",
+    "synonyms": [],
+    "search_text": "HAS_AGENT_MEMORY relationship (Tenant)-[:HAS_AGENT_MEMORY]->(AgentMemory). Tenant connected to AgentMemory via HAS_AGENT_MEMORY",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_assignment_conversation_assignment",
+    "type": "relationship",
+    "name": "HAS_ASSIGNMENT",
+    "description": "Conversation connected to Assignment via HAS_ASSIGNMENT",
+    "from_label": "Conversation",
+    "to_label": "Assignment",
+    "pattern": "(Conversation)-[:HAS_ASSIGNMENT]->(Assignment)",
+    "synonyms": [],
+    "search_text": "HAS_ASSIGNMENT relationship (Conversation)-[:HAS_ASSIGNMENT]->(Assignment). Conversation connected to Assignment via HAS_ASSIGNMENT",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_assignment_profile_tenant_assignmentprofile",
+    "type": "relationship",
+    "name": "HAS_ASSIGNMENT_PROFILE",
+    "description": "Tenant connected to AssignmentProfile via HAS_ASSIGNMENT_PROFILE",
+    "from_label": "Tenant",
+    "to_label": "AssignmentProfile",
+    "pattern": "(Tenant)-[:HAS_ASSIGNMENT_PROFILE]->(AssignmentProfile)",
+    "synonyms": [],
+    "search_text": "HAS_ASSIGNMENT_PROFILE relationship (Tenant)-[:HAS_ASSIGNMENT_PROFILE]->(AssignmentProfile). Tenant connected to AssignmentProfile via HAS_ASSIGNMENT_PROFILE",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_assignment_settings_tenant_assignmentsettings",
+    "type": "relationship",
+    "name": "HAS_ASSIGNMENT_SETTINGS",
+    "description": "Tenant connected to AssignmentSettings via HAS_ASSIGNMENT_SETTINGS",
+    "from_label": "Tenant",
+    "to_label": "AssignmentSettings",
+    "pattern": "(Tenant)-[:HAS_ASSIGNMENT_SETTINGS]->(AssignmentSettings)",
+    "synonyms": [],
+    "search_text": "HAS_ASSIGNMENT_SETTINGS relationship (Tenant)-[:HAS_ASSIGNMENT_SETTINGS]->(AssignmentSettings). Tenant connected to AssignmentSettings via HAS_ASSIGNMENT_SETTINGS",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_attachment_conversation_attachment",
+    "type": "relationship",
+    "name": "HAS_ATTACHMENT",
+    "description": "Conversation connected to Attachment via HAS_ATTACHMENT",
+    "from_label": "Conversation",
+    "to_label": "Attachment",
+    "pattern": "(Conversation)-[:HAS_ATTACHMENT]->(Attachment)",
+    "synonyms": [],
+    "search_text": "HAS_ATTACHMENT relationship (Conversation)-[:HAS_ATTACHMENT]->(Attachment). Conversation connected to Attachment via HAS_ATTACHMENT",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_automation_policy_channel_channelautomationpolicy",
+    "type": "relationship",
+    "name": "HAS_AUTOMATION_POLICY",
+    "description": "Channel connected to ChannelAutomationPolicy via HAS_AUTOMATION_POLICY",
+    "from_label": "Channel",
+    "to_label": "ChannelAutomationPolicy",
+    "pattern": "(Channel)-[:HAS_AUTOMATION_POLICY]->(ChannelAutomationPolicy)",
+    "synonyms": [],
+    "search_text": "HAS_AUTOMATION_POLICY relationship (Channel)-[:HAS_AUTOMATION_POLICY]->(ChannelAutomationPolicy). Channel connected to ChannelAutomationPolicy via HAS_AUTOMATION_POLICY",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_business_hours_tenant_businesshours",
+    "type": "relationship",
+    "name": "HAS_BUSINESS_HOURS",
+    "description": "Tenant connected to BusinessHours via HAS_BUSINESS_HOURS",
+    "from_label": "Tenant",
+    "to_label": "BusinessHours",
+    "pattern": "(Tenant)-[:HAS_BUSINESS_HOURS]->(BusinessHours)",
+    "synonyms": [],
+    "search_text": "HAS_BUSINESS_HOURS relationship (Tenant)-[:HAS_BUSINESS_HOURS]->(BusinessHours). Tenant connected to BusinessHours via HAS_BUSINESS_HOURS",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_chunk_meetingassistsession_meetingtranscriptchunk",
+    "type": "relationship",
+    "name": "HAS_CHUNK",
+    "description": "MeetingAssistSession connected to MeetingTranscriptChunk via HAS_CHUNK",
+    "from_label": "MeetingAssistSession",
+    "to_label": "MeetingTranscriptChunk",
+    "pattern": "(MeetingAssistSession)-[:HAS_CHUNK]->(MeetingTranscriptChunk)",
+    "synonyms": [],
+    "search_text": "HAS_CHUNK relationship (MeetingAssistSession)-[:HAS_CHUNK]->(MeetingTranscriptChunk). MeetingAssistSession connected to MeetingTranscriptChunk via HAS_CHUNK",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_company_tenant_company",
+    "type": "relationship",
+    "name": "HAS_COMPANY",
+    "description": "Tenant connected to Company via HAS_COMPANY",
+    "from_label": "Tenant",
+    "to_label": "Company",
+    "pattern": "(Tenant)-[:HAS_COMPANY]->(Company)",
+    "synonyms": [],
+    "search_text": "HAS_COMPANY relationship (Tenant)-[:HAS_COMPANY]->(Company). Tenant connected to Company via HAS_COMPANY",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_company_site_tenant_companysite",
+    "type": "relationship",
+    "name": "HAS_COMPANY_SITE",
+    "description": "Tenant connected to CompanySite via HAS_COMPANY_SITE",
+    "from_label": "Tenant",
+    "to_label": "CompanySite",
+    "pattern": "(Tenant)-[:HAS_COMPANY_SITE]->(CompanySite)",
+    "synonyms": [],
+    "search_text": "HAS_COMPANY_SITE relationship (Tenant)-[:HAS_COMPANY_SITE]->(CompanySite). Tenant connected to CompanySite via HAS_COMPANY_SITE",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_contact_tenant_contact",
+    "type": "relationship",
+    "name": "HAS_CONTACT",
+    "description": "Tenant connected to Contact via HAS_CONTACT",
+    "from_label": "Tenant",
+    "to_label": "Contact",
+    "pattern": "(Tenant)-[:HAS_CONTACT]->(Contact)",
+    "synonyms": [],
+    "search_text": "HAS_CONTACT relationship (Tenant)-[:HAS_CONTACT]->(Contact). Tenant connected to Contact via HAS_CONTACT",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_contact_activity_tenant_contactactivity",
+    "type": "relationship",
+    "name": "HAS_CONTACT_ACTIVITY",
+    "description": "Tenant connected to ContactActivity via HAS_CONTACT_ACTIVITY",
+    "from_label": "Tenant",
+    "to_label": "ContactActivity",
+    "pattern": "(Tenant)-[:HAS_CONTACT_ACTIVITY]->(ContactActivity)",
+    "synonyms": [],
+    "search_text": "HAS_CONTACT_ACTIVITY relationship (Tenant)-[:HAS_CONTACT_ACTIVITY]->(ContactActivity). Tenant connected to ContactActivity via HAS_CONTACT_ACTIVITY",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_contact_point_contact_contactpoint",
+    "type": "relationship",
+    "name": "HAS_CONTACT_POINT",
+    "description": "Contact connected to ContactPoint via HAS_CONTACT_POINT",
+    "from_label": "Contact",
+    "to_label": "ContactPoint",
+    "pattern": "(Contact)-[:HAS_CONTACT_POINT]->(ContactPoint)",
+    "synonyms": [],
+    "search_text": "HAS_CONTACT_POINT relationship (Contact)-[:HAS_CONTACT_POINT]->(ContactPoint). Contact connected to ContactPoint via HAS_CONTACT_POINT",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_contact_profile_tenant_contactprofile",
+    "type": "relationship",
+    "name": "HAS_CONTACT_PROFILE",
+    "description": "Tenant connected to ContactProfile via HAS_CONTACT_PROFILE",
+    "from_label": "Tenant",
+    "to_label": "ContactProfile",
+    "pattern": "(Tenant)-[:HAS_CONTACT_PROFILE]->(ContactProfile)",
+    "synonyms": [],
+    "search_text": "HAS_CONTACT_PROFILE relationship (Tenant)-[:HAS_CONTACT_PROFILE]->(ContactProfile). Tenant connected to ContactProfile via HAS_CONTACT_PROFILE",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_contract_tenant_contract",
+    "type": "relationship",
+    "name": "HAS_CONTRACT",
+    "description": "Tenant connected to Contract via HAS_CONTRACT",
+    "from_label": "Tenant",
+    "to_label": "Contract",
+    "pattern": "(Tenant)-[:HAS_CONTRACT]->(Contract)",
+    "synonyms": [],
+    "search_text": "HAS_CONTRACT relationship (Tenant)-[:HAS_CONTRACT]->(Contract). Tenant connected to Contract via HAS_CONTRACT",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_conversation_tenant_conversation",
+    "type": "relationship",
+    "name": "HAS_CONVERSATION",
+    "description": "Tenant connected to Conversation via HAS_CONVERSATION",
+    "from_label": "Tenant",
+    "to_label": "Conversation",
+    "pattern": "(Tenant)-[:HAS_CONVERSATION]->(Conversation)",
+    "synonyms": [],
+    "search_text": "HAS_CONVERSATION relationship (Tenant)-[:HAS_CONVERSATION]->(Conversation). Tenant connected to Conversation via HAS_CONVERSATION",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_deal_tenant_deal",
+    "type": "relationship",
+    "name": "HAS_DEAL",
+    "description": "Tenant connected to Deal via HAS_DEAL",
+    "from_label": "Tenant",
+    "to_label": "Deal",
+    "pattern": "(Tenant)-[:HAS_DEAL]->(Deal)",
+    "synonyms": [],
+    "search_text": "HAS_DEAL relationship (Tenant)-[:HAS_DEAL]->(Deal). Tenant connected to Deal via HAS_DEAL",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_deal_activity_tenant_dealactivity",
+    "type": "relationship",
+    "name": "HAS_DEAL_ACTIVITY",
+    "description": "Tenant connected to DealActivity via HAS_DEAL_ACTIVITY",
+    "from_label": "Tenant",
+    "to_label": "DealActivity",
+    "pattern": "(Tenant)-[:HAS_DEAL_ACTIVITY]->(DealActivity)",
+    "synonyms": [],
+    "search_text": "HAS_DEAL_ACTIVITY relationship (Tenant)-[:HAS_DEAL_ACTIVITY]->(DealActivity). Tenant connected to DealActivity via HAS_DEAL_ACTIVITY",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_enrichment_contact_leadenrichmentsnapshot",
+    "type": "relationship",
+    "name": "HAS_ENRICHMENT",
+    "description": "Contact connected to LeadEnrichmentSnapshot via HAS_ENRICHMENT",
+    "from_label": "Contact",
+    "to_label": "LeadEnrichmentSnapshot",
+    "pattern": "(Contact)-[:HAS_ENRICHMENT]->(LeadEnrichmentSnapshot)",
+    "synonyms": [],
+    "search_text": "HAS_ENRICHMENT relationship (Contact)-[:HAS_ENRICHMENT]->(LeadEnrichmentSnapshot). Contact connected to LeadEnrichmentSnapshot via HAS_ENRICHMENT",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_holiday_calendar_tenant_holidaycalendar",
+    "type": "relationship",
+    "name": "HAS_HOLIDAY_CALENDAR",
+    "description": "Tenant connected to HolidayCalendar via HAS_HOLIDAY_CALENDAR",
+    "from_label": "Tenant",
+    "to_label": "HolidayCalendar",
+    "pattern": "(Tenant)-[:HAS_HOLIDAY_CALENDAR]->(HolidayCalendar)",
+    "synonyms": [],
+    "search_text": "HAS_HOLIDAY_CALENDAR relationship (Tenant)-[:HAS_HOLIDAY_CALENDAR]->(HolidayCalendar). Tenant connected to HolidayCalendar via HAS_HOLIDAY_CALENDAR",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_insight_contact_insight",
+    "type": "relationship",
+    "name": "HAS_INSIGHT",
+    "description": "Contact connected to Insight via HAS_INSIGHT",
+    "from_label": "Contact",
+    "to_label": "Insight",
+    "pattern": "(Contact)-[:HAS_INSIGHT]->(Insight)",
+    "synonyms": [],
+    "search_text": "HAS_INSIGHT relationship (Contact)-[:HAS_INSIGHT]->(Insight). Contact connected to Insight via HAS_INSIGHT",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_invoice_tenant_invoice",
+    "type": "relationship",
+    "name": "HAS_INVOICE",
+    "description": "Tenant connected to Invoice via HAS_INVOICE",
+    "from_label": "Tenant",
+    "to_label": "Invoice",
+    "pattern": "(Tenant)-[:HAS_INVOICE]->(Invoice)",
+    "synonyms": [],
+    "search_text": "HAS_INVOICE relationship (Tenant)-[:HAS_INVOICE]->(Invoice). Tenant connected to Invoice via HAS_INVOICE",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_invoice_template_tenant_invoicetemplate",
+    "type": "relationship",
+    "name": "HAS_INVOICE_TEMPLATE",
+    "description": "Tenant connected to InvoiceTemplate via HAS_INVOICE_TEMPLATE",
+    "from_label": "Tenant",
+    "to_label": "InvoiceTemplate",
+    "pattern": "(Tenant)-[:HAS_INVOICE_TEMPLATE]->(InvoiceTemplate)",
+    "synonyms": [],
+    "search_text": "HAS_INVOICE_TEMPLATE relationship (Tenant)-[:HAS_INVOICE_TEMPLATE]->(InvoiceTemplate). Tenant connected to InvoiceTemplate via HAS_INVOICE_TEMPLATE",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_lead_summary_contact_leadsummary",
+    "type": "relationship",
+    "name": "HAS_LEAD_SUMMARY",
+    "description": "Contact connected to LeadSummary via HAS_LEAD_SUMMARY",
+    "from_label": "Contact",
+    "to_label": "LeadSummary",
+    "pattern": "(Contact)-[:HAS_LEAD_SUMMARY]->(LeadSummary)",
+    "synonyms": [],
+    "search_text": "HAS_LEAD_SUMMARY relationship (Contact)-[:HAS_LEAD_SUMMARY]->(LeadSummary). Contact connected to LeadSummary via HAS_LEAD_SUMMARY",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_line_invoice_invoiceline",
+    "type": "relationship",
+    "name": "HAS_LINE",
+    "description": "Invoice connected to InvoiceLine via HAS_LINE",
+    "from_label": "Invoice",
+    "to_label": "InvoiceLine",
+    "pattern": "(Invoice)-[:HAS_LINE]->(InvoiceLine)",
+    "synonyms": [],
+    "search_text": "HAS_LINE relationship (Invoice)-[:HAS_LINE]->(InvoiceLine). Invoice connected to InvoiceLine via HAS_LINE",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_line_quote_quoteline",
+    "type": "relationship",
+    "name": "HAS_LINE",
+    "description": "Quote connected to QuoteLine via HAS_LINE",
+    "from_label": "Quote",
+    "to_label": "QuoteLine",
+    "pattern": "(Quote)-[:HAS_LINE]->(QuoteLine)",
+    "synonyms": [],
+    "search_text": "HAS_LINE relationship (Quote)-[:HAS_LINE]->(QuoteLine). Quote connected to QuoteLine via HAS_LINE",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_line_salesorder_orderline",
+    "type": "relationship",
+    "name": "HAS_LINE",
+    "description": "SalesOrder connected to OrderLine via HAS_LINE",
+    "from_label": "SalesOrder",
+    "to_label": "OrderLine",
+    "pattern": "(SalesOrder)-[:HAS_LINE]->(OrderLine)",
+    "synonyms": [],
+    "search_text": "HAS_LINE relationship (SalesOrder)-[:HAS_LINE]->(OrderLine). SalesOrder connected to OrderLine via HAS_LINE",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_notification_tenant_notification",
+    "type": "relationship",
+    "name": "HAS_NOTIFICATION",
+    "description": "Tenant connected to Notification via HAS_NOTIFICATION",
+    "from_label": "Tenant",
+    "to_label": "Notification",
+    "pattern": "(Tenant)-[:HAS_NOTIFICATION]->(Notification)",
+    "synonyms": [],
+    "search_text": "HAS_NOTIFICATION relationship (Tenant)-[:HAS_NOTIFICATION]->(Notification). Tenant connected to Notification via HAS_NOTIFICATION",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_org_profile_tenant_orgprofile",
+    "type": "relationship",
+    "name": "HAS_ORG_PROFILE",
+    "description": "Tenant connected to OrgProfile via HAS_ORG_PROFILE",
+    "from_label": "Tenant",
+    "to_label": "OrgProfile",
+    "pattern": "(Tenant)-[:HAS_ORG_PROFILE]->(OrgProfile)",
+    "synonyms": [],
+    "search_text": "HAS_ORG_PROFILE relationship (Tenant)-[:HAS_ORG_PROFILE]->(OrgProfile). Tenant connected to OrgProfile via HAS_ORG_PROFILE",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_participant_conversation_conversationparticipant",
+    "type": "relationship",
+    "name": "HAS_PARTICIPANT",
+    "description": "Conversation connected to ConversationParticipant via HAS_PARTICIPANT",
+    "from_label": "Conversation",
+    "to_label": "ConversationParticipant",
+    "pattern": "(Conversation)-[:HAS_PARTICIPANT]->(ConversationParticipant)",
+    "synonyms": [],
+    "search_text": "HAS_PARTICIPANT relationship (Conversation)-[:HAS_PARTICIPANT]->(ConversationParticipant). Conversation connected to ConversationParticipant via HAS_PARTICIPANT",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_price_book_tenant_pricebook",
+    "type": "relationship",
+    "name": "HAS_PRICE_BOOK",
+    "description": "Tenant connected to PriceBook via HAS_PRICE_BOOK",
+    "from_label": "Tenant",
+    "to_label": "PriceBook",
+    "pattern": "(Tenant)-[:HAS_PRICE_BOOK]->(PriceBook)",
+    "synonyms": [],
+    "search_text": "HAS_PRICE_BOOK relationship (Tenant)-[:HAS_PRICE_BOOK]->(PriceBook). Tenant connected to PriceBook via HAS_PRICE_BOOK",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_product_offer_tenant_productoffer",
+    "type": "relationship",
+    "name": "HAS_PRODUCT_OFFER",
+    "description": "Tenant connected to ProductOffer via HAS_PRODUCT_OFFER",
+    "from_label": "Tenant",
+    "to_label": "ProductOffer",
+    "pattern": "(Tenant)-[:HAS_PRODUCT_OFFER]->(ProductOffer)",
+    "synonyms": [],
+    "search_text": "HAS_PRODUCT_OFFER relationship (Tenant)-[:HAS_PRODUCT_OFFER]->(ProductOffer). Tenant connected to ProductOffer via HAS_PRODUCT_OFFER",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_proposal_tenant_proposal",
+    "type": "relationship",
+    "name": "HAS_PROPOSAL",
+    "description": "Tenant connected to Proposal via HAS_PROPOSAL",
+    "from_label": "Tenant",
+    "to_label": "Proposal",
+    "pattern": "(Tenant)-[:HAS_PROPOSAL]->(Proposal)",
+    "synonyms": [],
+    "search_text": "HAS_PROPOSAL relationship (Tenant)-[:HAS_PROPOSAL]->(Proposal). Tenant connected to Proposal via HAS_PROPOSAL",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_proposal_template_tenant_proposaltemplate",
+    "type": "relationship",
+    "name": "HAS_PROPOSAL_TEMPLATE",
+    "description": "Tenant connected to ProposalTemplate via HAS_PROPOSAL_TEMPLATE",
+    "from_label": "Tenant",
+    "to_label": "ProposalTemplate",
+    "pattern": "(Tenant)-[:HAS_PROPOSAL_TEMPLATE]->(ProposalTemplate)",
+    "synonyms": [],
+    "search_text": "HAS_PROPOSAL_TEMPLATE relationship (Tenant)-[:HAS_PROPOSAL_TEMPLATE]->(ProposalTemplate). Tenant connected to ProposalTemplate via HAS_PROPOSAL_TEMPLATE",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_queue_owner_tenant_queue",
+    "type": "relationship",
+    "name": "HAS_QUEUE_OWNER",
+    "description": "Tenant connected to Queue via HAS_QUEUE_OWNER",
+    "from_label": "Tenant",
+    "to_label": "Queue",
+    "pattern": "(Tenant)-[:HAS_QUEUE_OWNER]->(Queue)",
+    "synonyms": [],
+    "search_text": "HAS_QUEUE_OWNER relationship (Tenant)-[:HAS_QUEUE_OWNER]->(Queue). Tenant connected to Queue via HAS_QUEUE_OWNER",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_quote_tenant_quote",
+    "type": "relationship",
+    "name": "HAS_QUOTE",
+    "description": "Tenant connected to Quote via HAS_QUOTE",
+    "from_label": "Tenant",
+    "to_label": "Quote",
+    "pattern": "(Tenant)-[:HAS_QUOTE]->(Quote)",
+    "synonyms": [],
+    "search_text": "HAS_QUOTE relationship (Tenant)-[:HAS_QUOTE]->(Quote). Tenant connected to Quote via HAS_QUOTE",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_quote_template_tenant_quotetemplate",
+    "type": "relationship",
+    "name": "HAS_QUOTE_TEMPLATE",
+    "description": "Tenant connected to QuoteTemplate via HAS_QUOTE_TEMPLATE",
+    "from_label": "Tenant",
+    "to_label": "QuoteTemplate",
+    "pattern": "(Tenant)-[:HAS_QUOTE_TEMPLATE]->(QuoteTemplate)",
+    "synonyms": [],
+    "search_text": "HAS_QUOTE_TEMPLATE relationship (Tenant)-[:HAS_QUOTE_TEMPLATE]->(QuoteTemplate). Tenant connected to QuoteTemplate via HAS_QUOTE_TEMPLATE",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_recommendation_contact_recommendation",
+    "type": "relationship",
+    "name": "HAS_RECOMMENDATION",
+    "description": "Contact connected to Recommendation via HAS_RECOMMENDATION",
+    "from_label": "Contact",
+    "to_label": "Recommendation",
+    "pattern": "(Contact)-[:HAS_RECOMMENDATION]->(Recommendation)",
+    "synonyms": [],
+    "search_text": "HAS_RECOMMENDATION relationship (Contact)-[:HAS_RECOMMENDATION]->(Recommendation). Contact connected to Recommendation via HAS_RECOMMENDATION",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_routing_attempt_conversation_routingattempt",
+    "type": "relationship",
+    "name": "HAS_ROUTING_ATTEMPT",
+    "description": "Conversation connected to RoutingAttempt via HAS_ROUTING_ATTEMPT",
+    "from_label": "Conversation",
+    "to_label": "RoutingAttempt",
+    "pattern": "(Conversation)-[:HAS_ROUTING_ATTEMPT]->(RoutingAttempt)",
+    "synonyms": [],
+    "search_text": "HAS_ROUTING_ATTEMPT relationship (Conversation)-[:HAS_ROUTING_ATTEMPT]->(RoutingAttempt). Conversation connected to RoutingAttempt via HAS_ROUTING_ATTEMPT",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_routing_policy_queue_routingpolicy",
+    "type": "relationship",
+    "name": "HAS_ROUTING_POLICY",
+    "description": "Queue connected to RoutingPolicy via HAS_ROUTING_POLICY",
+    "from_label": "Queue",
+    "to_label": "RoutingPolicy",
+    "pattern": "(Queue)-[:HAS_ROUTING_POLICY]->(RoutingPolicy)",
+    "synonyms": [],
+    "search_text": "HAS_ROUTING_POLICY relationship (Queue)-[:HAS_ROUTING_POLICY]->(RoutingPolicy). Queue connected to RoutingPolicy via HAS_ROUTING_POLICY",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_sales_order_tenant_salesorder",
+    "type": "relationship",
+    "name": "HAS_SALES_ORDER",
+    "description": "Tenant connected to SalesOrder via HAS_SALES_ORDER",
+    "from_label": "Tenant",
+    "to_label": "SalesOrder",
+    "pattern": "(Tenant)-[:HAS_SALES_ORDER]->(SalesOrder)",
+    "synonyms": [],
+    "search_text": "HAS_SALES_ORDER relationship (Tenant)-[:HAS_SALES_ORDER]->(SalesOrder). Tenant connected to SalesOrder via HAS_SALES_ORDER",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_scores_contact_customerscore",
+    "type": "relationship",
+    "name": "HAS_SCORES",
+    "description": "Contact connected to CustomerScore via HAS_SCORES",
+    "from_label": "Contact",
+    "to_label": "CustomerScore",
+    "pattern": "(Contact)-[:HAS_SCORES]->(CustomerScore)",
+    "synonyms": [],
+    "search_text": "HAS_SCORES relationship (Contact)-[:HAS_SCORES]->(CustomerScore). Contact connected to CustomerScore via HAS_SCORES",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_shared_note_tenant_sharednote",
+    "type": "relationship",
+    "name": "HAS_SHARED_NOTE",
+    "description": "Tenant connected to SharedNote via HAS_SHARED_NOTE",
+    "from_label": "Tenant",
+    "to_label": "SharedNote",
+    "pattern": "(Tenant)-[:HAS_SHARED_NOTE]->(SharedNote)",
+    "synonyms": [],
+    "search_text": "HAS_SHARED_NOTE relationship (Tenant)-[:HAS_SHARED_NOTE]->(SharedNote). Tenant connected to SharedNote via HAS_SHARED_NOTE",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_site_company_companysite",
+    "type": "relationship",
+    "name": "HAS_SITE",
+    "description": "Company connected to CompanySite via HAS_SITE",
+    "from_label": "Company",
+    "to_label": "CompanySite",
+    "pattern": "(Company)-[:HAS_SITE]->(CompanySite)",
+    "synonyms": [],
+    "search_text": "HAS_SITE relationship (Company)-[:HAS_SITE]->(CompanySite). Company connected to CompanySite via HAS_SITE",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_skill_agent_skill",
+    "type": "relationship",
+    "name": "HAS_SKILL",
+    "description": "Agent connected to Skill via HAS_SKILL",
+    "from_label": "Agent",
+    "to_label": "Skill",
+    "pattern": "(Agent)-[:HAS_SKILL]->(Skill)",
+    "synonyms": [],
+    "search_text": "HAS_SKILL relationship (Agent)-[:HAS_SKILL]->(Skill). Agent connected to Skill via HAS_SKILL",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_sla_conversation_slainstance",
+    "type": "relationship",
+    "name": "HAS_SLA",
+    "description": "Conversation connected to SLAInstance via HAS_SLA",
+    "from_label": "Conversation",
+    "to_label": "SLAInstance",
+    "pattern": "(Conversation)-[:HAS_SLA]->(SLAInstance)",
+    "synonyms": [],
+    "search_text": "HAS_SLA relationship (Conversation)-[:HAS_SLA]->(SLAInstance). Conversation connected to SLAInstance via HAS_SLA",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_summary_conversation_conversationsummary",
+    "type": "relationship",
+    "name": "HAS_SUMMARY",
+    "description": "Conversation connected to ConversationSummary via HAS_SUMMARY",
+    "from_label": "Conversation",
+    "to_label": "ConversationSummary",
+    "pattern": "(Conversation)-[:HAS_SUMMARY]->(ConversationSummary)",
+    "synonyms": [],
+    "search_text": "HAS_SUMMARY relationship (Conversation)-[:HAS_SUMMARY]->(ConversationSummary). Conversation connected to ConversationSummary via HAS_SUMMARY",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_task_user_task",
+    "type": "relationship",
+    "name": "HAS_TASK",
+    "description": "User connected to Task via HAS_TASK",
+    "from_label": "User",
+    "to_label": "Task",
+    "pattern": "(User)-[:HAS_TASK]->(Task)",
+    "synonyms": [],
+    "search_text": "HAS_TASK relationship (User)-[:HAS_TASK]->(Task). User connected to Task via HAS_TASK",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_team_tenant_team",
+    "type": "relationship",
+    "name": "HAS_TEAM",
+    "description": "Tenant connected to Team via HAS_TEAM",
+    "from_label": "Tenant",
+    "to_label": "Team",
+    "pattern": "(Tenant)-[:HAS_TEAM]->(Team)",
+    "synonyms": [],
+    "search_text": "HAS_TEAM relationship (Tenant)-[:HAS_TEAM]->(Team). Tenant connected to Team via HAS_TEAM",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_tier_addon_addontier",
+    "type": "relationship",
+    "name": "HAS_TIER",
+    "description": "Addon connected to AddonTier via HAS_TIER",
+    "from_label": "Addon",
+    "to_label": "AddonTier",
+    "pattern": "(Addon)-[:HAS_TIER]->(AddonTier)",
+    "synonyms": [],
+    "search_text": "HAS_TIER relationship (Addon)-[:HAS_TIER]->(AddonTier). Addon connected to AddonTier via HAS_TIER",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_transfer_conversation_transfer",
+    "type": "relationship",
+    "name": "HAS_TRANSFER",
+    "description": "Conversation connected to Transfer via HAS_TRANSFER",
+    "from_label": "Conversation",
+    "to_label": "Transfer",
+    "pattern": "(Conversation)-[:HAS_TRANSFER]->(Transfer)",
+    "synonyms": [],
+    "search_text": "HAS_TRANSFER relationship (Conversation)-[:HAS_TRANSFER]->(Transfer). Conversation connected to Transfer via HAS_TRANSFER",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_webchat_session_conversation_webchatsession",
+    "type": "relationship",
+    "name": "HAS_WEBCHAT_SESSION",
+    "description": "Conversation connected to WebchatSession via HAS_WEBCHAT_SESSION",
+    "from_label": "Conversation",
+    "to_label": "WebchatSession",
+    "pattern": "(Conversation)-[:HAS_WEBCHAT_SESSION]->(WebchatSession)",
+    "synonyms": [],
+    "search_text": "HAS_WEBCHAT_SESSION relationship (Conversation)-[:HAS_WEBCHAT_SESSION]->(WebchatSession). Conversation connected to WebchatSession via HAS_WEBCHAT_SESSION",
+    "domain": "core"
+  },
+  {
+    "id": "rel_has_work_note_conversation_worknote",
+    "type": "relationship",
+    "name": "HAS_WORK_NOTE",
+    "description": "Conversation connected to WorkNote via HAS_WORK_NOTE",
+    "from_label": "Conversation",
+    "to_label": "WorkNote",
+    "pattern": "(Conversation)-[:HAS_WORK_NOTE]->(WorkNote)",
+    "synonyms": [],
+    "search_text": "HAS_WORK_NOTE relationship (Conversation)-[:HAS_WORK_NOTE]->(WorkNote). Conversation connected to WorkNote via HAS_WORK_NOTE",
+    "domain": "core"
+  },
+  {
+    "id": "rel_hosted_by_meetingassistsession_user",
+    "type": "relationship",
+    "name": "HOSTED_BY",
+    "description": "MeetingAssistSession connected to User via HOSTED_BY",
+    "from_label": "MeetingAssistSession",
+    "to_label": "User",
+    "pattern": "(MeetingAssistSession)-[:HOSTED_BY]->(User)",
+    "synonyms": [],
+    "search_text": "HOSTED_BY relationship (MeetingAssistSession)-[:HOSTED_BY]->(User). MeetingAssistSession connected to User via HOSTED_BY",
+    "domain": "core"
+  },
+  {
+    "id": "rel_in_queue_conversation_queue",
+    "type": "relationship",
+    "name": "IN_QUEUE",
+    "description": "Conversation connected to Queue via IN_QUEUE",
+    "from_label": "Conversation",
+    "to_label": "Queue",
+    "pattern": "(Conversation)-[:IN_QUEUE]->(Queue)",
+    "synonyms": [],
+    "search_text": "IN_QUEUE relationship (Conversation)-[:IN_QUEUE]->(Queue). Conversation connected to Queue via IN_QUEUE",
+    "domain": "core"
+  },
+  {
+    "id": "rel_issued_to_invoice_company",
+    "type": "relationship",
+    "name": "ISSUED_TO",
+    "description": "Invoice connected to Company via ISSUED_TO",
+    "from_label": "Invoice",
+    "to_label": "Company",
+    "pattern": "(Invoice)-[:ISSUED_TO]->(Company)",
+    "synonyms": [],
+    "search_text": "ISSUED_TO relationship (Invoice)-[:ISSUED_TO]->(Company). Invoice connected to Company via ISSUED_TO",
+    "domain": "core"
+  },
+  {
+    "id": "rel_is_agent_for_agent_user",
+    "type": "relationship",
+    "name": "IS_AGENT_FOR",
+    "description": "Agent connected to User via IS_AGENT_FOR",
+    "from_label": "Agent",
+    "to_label": "User",
+    "pattern": "(Agent)-[:IS_AGENT_FOR]->(User)",
+    "synonyms": [],
+    "search_text": "IS_AGENT_FOR relationship (Agent)-[:IS_AGENT_FOR]->(User). Agent connected to User via IS_AGENT_FOR",
+    "domain": "core"
+  },
+  {
+    "id": "rel_lists_pricebook_pricebookentry",
+    "type": "relationship",
+    "name": "LISTS",
+    "description": "PriceBook connected to PriceBookEntry via LISTS",
+    "from_label": "PriceBook",
+    "to_label": "PriceBookEntry",
+    "pattern": "(PriceBook)-[:LISTS]->(PriceBookEntry)",
+    "synonyms": [],
+    "search_text": "LISTS relationship (PriceBook)-[:LISTS]->(PriceBookEntry). PriceBook connected to PriceBookEntry via LISTS",
+    "domain": "core"
+  },
+  {
+    "id": "rel_member_of_user_team",
+    "type": "relationship",
+    "name": "MEMBER_OF",
+    "description": "User connected to Team via MEMBER_OF",
+    "from_label": "User",
+    "to_label": "Team",
+    "pattern": "(User)-[:MEMBER_OF]->(Team)",
+    "synonyms": [],
+    "search_text": "MEMBER_OF relationship (User)-[:MEMBER_OF]->(Team). User connected to Team via MEMBER_OF",
+    "domain": "core"
+  },
+  {
+    "id": "rel_notifies_notification_user",
+    "type": "relationship",
+    "name": "NOTIFIES",
+    "description": "Notification connected to User via NOTIFIES",
+    "from_label": "Notification",
+    "to_label": "User",
+    "pattern": "(Notification)-[:NOTIFIES]->(User)",
+    "synonyms": [],
+    "search_text": "NOTIFIES relationship (Notification)-[:NOTIFIES]->(User). Notification connected to User via NOTIFIES",
+    "domain": "core"
+  },
+  {
+    "id": "rel_offered_agent_routingattempt_agent",
+    "type": "relationship",
+    "name": "OFFERED_AGENT",
+    "description": "RoutingAttempt connected to Agent via OFFERED_AGENT",
+    "from_label": "RoutingAttempt",
+    "to_label": "Agent",
+    "pattern": "(RoutingAttempt)-[:OFFERED_AGENT]->(Agent)",
+    "synonyms": [],
+    "search_text": "OFFERED_AGENT relationship (RoutingAttempt)-[:OFFERED_AGENT]->(Agent). RoutingAttempt connected to Agent via OFFERED_AGENT",
+    "domain": "core"
+  },
+  {
+    "id": "rel_offered_to_assignment_agent",
+    "type": "relationship",
+    "name": "OFFERED_TO",
+    "description": "Assignment connected to Agent via OFFERED_TO",
+    "from_label": "Assignment",
+    "to_label": "Agent",
+    "pattern": "(Assignment)-[:OFFERED_TO]->(Agent)",
+    "synonyms": [],
+    "search_text": "OFFERED_TO relationship (Assignment)-[:OFFERED_TO]->(Agent). Assignment connected to Agent via OFFERED_TO",
+    "domain": "core"
+  },
+  {
+    "id": "rel_offers_tenant_offering",
+    "type": "relationship",
+    "name": "OFFERS",
+    "description": "Tenant connected to Offering via OFFERS",
+    "from_label": "Tenant",
+    "to_label": "Offering",
+    "pattern": "(Tenant)-[:OFFERS]->(Offering)",
+    "synonyms": [],
+    "search_text": "OFFERS relationship (Tenant)-[:OFFERS]->(Offering). Tenant connected to Offering via OFFERS",
+    "domain": "core"
+  },
+  {
+    "id": "rel_overflows_to_routingpolicy_queue",
+    "type": "relationship",
+    "name": "OVERFLOWS_TO",
+    "description": "RoutingPolicy connected to Queue via OVERFLOWS_TO",
+    "from_label": "RoutingPolicy",
+    "to_label": "Queue",
+    "pattern": "(RoutingPolicy)-[:OVERFLOWS_TO]->(Queue)",
+    "synonyms": [],
+    "search_text": "OVERFLOWS_TO relationship (RoutingPolicy)-[:OVERFLOWS_TO]->(Queue). RoutingPolicy connected to Queue via OVERFLOWS_TO",
+    "domain": "core"
+  },
+  {
+    "id": "rel_overlay_of_contactprofile_contact",
+    "type": "relationship",
+    "name": "OVERLAY_OF",
+    "description": "ContactProfile connected to Contact via OVERLAY_OF",
+    "from_label": "ContactProfile",
+    "to_label": "Contact",
+    "pattern": "(ContactProfile)-[:OVERLAY_OF]->(Contact)",
+    "synonyms": [],
+    "search_text": "OVERLAY_OF relationship (ContactProfile)-[:OVERLAY_OF]->(Contact). ContactProfile connected to Contact via OVERLAY_OF",
+    "domain": "core"
+  },
+  {
+    "id": "rel_owned_by_company_user",
+    "type": "relationship",
+    "name": "OWNED_BY",
+    "description": "Company connected to User via OWNED_BY",
+    "from_label": "Company",
+    "to_label": "User",
+    "pattern": "(Company)-[:OWNED_BY]->(User)",
+    "synonyms": [],
+    "search_text": "OWNED_BY relationship (Company)-[:OWNED_BY]->(User). Company connected to User via OWNED_BY",
+    "domain": "core"
+  },
+  {
+    "id": "rel_owned_by_companysite_user",
+    "type": "relationship",
+    "name": "OWNED_BY",
+    "description": "CompanySite connected to User via OWNED_BY",
+    "from_label": "CompanySite",
+    "to_label": "User",
+    "pattern": "(CompanySite)-[:OWNED_BY]->(User)",
+    "synonyms": [],
+    "search_text": "OWNED_BY relationship (CompanySite)-[:OWNED_BY]->(User). CompanySite connected to User via OWNED_BY",
+    "domain": "core"
+  },
+  {
+    "id": "rel_owned_by_deal_user",
+    "type": "relationship",
+    "name": "OWNED_BY",
+    "description": "Deal connected to User via OWNED_BY",
+    "from_label": "Deal",
+    "to_label": "User",
+    "pattern": "(Deal)-[:OWNED_BY]->(User)",
+    "synonyms": [],
+    "search_text": "OWNED_BY relationship (Deal)-[:OWNED_BY]->(User). Deal connected to User via OWNED_BY",
+    "domain": "core"
+  },
+  {
+    "id": "rel_owned_by_processconfirmation_user",
+    "type": "relationship",
+    "name": "OWNED_BY",
+    "description": "ProcessConfirmation connected to User via OWNED_BY",
+    "from_label": "ProcessConfirmation",
+    "to_label": "User",
+    "pattern": "(ProcessConfirmation)-[:OWNED_BY]->(User)",
+    "synonyms": [],
+    "search_text": "OWNED_BY relationship (ProcessConfirmation)-[:OWNED_BY]->(User). ProcessConfirmation connected to User via OWNED_BY",
+    "domain": "core"
+  },
+  {
+    "id": "rel_owned_by_team_queue_team",
+    "type": "relationship",
+    "name": "OWNED_BY_TEAM",
+    "description": "Queue connected to Team via OWNED_BY_TEAM",
+    "from_label": "Queue",
+    "to_label": "Team",
+    "pattern": "(Queue)-[:OWNED_BY_TEAM]->(Team)",
+    "synonyms": [],
+    "search_text": "OWNED_BY_TEAM relationship (Queue)-[:OWNED_BY_TEAM]->(Team). Queue connected to Team via OWNED_BY_TEAM",
+    "domain": "core"
+  },
+  {
+    "id": "rel_parent_company_company_company",
+    "type": "relationship",
+    "name": "PARENT_COMPANY",
+    "description": "Company connected to Company via PARENT_COMPANY",
+    "from_label": "Company",
+    "to_label": "Company",
+    "pattern": "(Company)-[:PARENT_COMPANY]->(Company)",
+    "synonyms": [],
+    "search_text": "PARENT_COMPANY relationship (Company)-[:PARENT_COMPANY]->(Company). Company connected to Company via PARENT_COMPANY",
+    "domain": "core"
+  },
+  {
+    "id": "rel_participated_in_contact_conversation",
+    "type": "relationship",
+    "name": "PARTICIPATED_IN",
+    "description": "Contact connected to Conversation via PARTICIPATED_IN",
+    "from_label": "Contact",
+    "to_label": "Conversation",
+    "pattern": "(Contact)-[:PARTICIPATED_IN]->(Conversation)",
+    "synonyms": [],
+    "search_text": "PARTICIPATED_IN relationship (Contact)-[:PARTICIPATED_IN]->(Conversation). Contact connected to Conversation via PARTICIPATED_IN",
+    "domain": "core"
+  },
+  {
+    "id": "rel_placed_contact_order",
+    "type": "relationship",
+    "name": "PLACED",
+    "description": "Contact connected to Order via PLACED",
+    "from_label": "Contact",
+    "to_label": "Order",
+    "pattern": "(Contact)-[:PLACED]->(Order)",
+    "synonyms": [],
+    "search_text": "PLACED relationship (Contact)-[:PLACED]->(Order). Contact connected to Order via PLACED",
+    "domain": "core"
+  },
+  {
+    "id": "rel_placed_by_salesorder_contact",
+    "type": "relationship",
+    "name": "PLACED_BY",
+    "description": "SalesOrder connected to Contact via PLACED_BY",
+    "from_label": "SalesOrder",
+    "to_label": "Contact",
+    "pattern": "(SalesOrder)-[:PLACED_BY]->(Contact)",
+    "synonyms": [],
+    "search_text": "PLACED_BY relationship (SalesOrder)-[:PLACED_BY]->(Contact). SalesOrder connected to Contact via PLACED_BY",
+    "domain": "core"
+  },
+  {
+    "id": "rel_primary_contact_deal_contact",
+    "type": "relationship",
+    "name": "PRIMARY_CONTACT",
+    "description": "Deal connected to Contact via PRIMARY_CONTACT",
+    "from_label": "Deal",
+    "to_label": "Contact",
+    "pattern": "(Deal)-[:PRIMARY_CONTACT]->(Contact)",
+    "synonyms": [],
+    "search_text": "PRIMARY_CONTACT relationship (Deal)-[:PRIMARY_CONTACT]->(Contact). Deal connected to Contact via PRIMARY_CONTACT",
+    "domain": "core"
+  },
+  {
+    "id": "rel_renewed_by_contract_deal",
+    "type": "relationship",
+    "name": "RENEWED_BY",
+    "description": "Contract connected to Deal via RENEWED_BY",
+    "from_label": "Contract",
+    "to_label": "Deal",
+    "pattern": "(Contract)-[:RENEWED_BY]->(Deal)",
+    "synonyms": [],
+    "search_text": "RENEWED_BY relationship (Contract)-[:RENEWED_BY]->(Deal). Contract connected to Deal via RENEWED_BY",
+    "domain": "core"
+  },
+  {
+    "id": "rel_requires_skill_queue_skill",
+    "type": "relationship",
+    "name": "REQUIRES_SKILL",
+    "description": "Queue connected to Skill via REQUIRES_SKILL",
+    "from_label": "Queue",
+    "to_label": "Skill",
+    "pattern": "(Queue)-[:REQUIRES_SKILL]->(Skill)",
+    "synonyms": [],
+    "search_text": "REQUIRES_SKILL relationship (Queue)-[:REQUIRES_SKILL]->(Skill). Queue connected to Skill via REQUIRES_SKILL",
+    "domain": "core"
+  },
+  {
+    "id": "rel_resulted_in_conversation_disposition",
+    "type": "relationship",
+    "name": "RESULTED_IN",
+    "description": "Conversation connected to Disposition via RESULTED_IN",
+    "from_label": "Conversation",
+    "to_label": "Disposition",
+    "pattern": "(Conversation)-[:RESULTED_IN]->(Disposition)",
+    "synonyms": [],
+    "search_text": "RESULTED_IN relationship (Conversation)-[:RESULTED_IN]->(Disposition). Conversation connected to Disposition via RESULTED_IN",
+    "domain": "core"
+  },
+  {
+    "id": "rel_reviewed_by_privacyrequest_user",
+    "type": "relationship",
+    "name": "REVIEWED_BY",
+    "description": "PrivacyRequest connected to User via REVIEWED_BY",
+    "from_label": "PrivacyRequest",
+    "to_label": "User",
+    "pattern": "(PrivacyRequest)-[:REVIEWED_BY]->(User)",
+    "synonyms": [],
+    "search_text": "REVIEWED_BY relationship (PrivacyRequest)-[:REVIEWED_BY]->(User). PrivacyRequest connected to User via REVIEWED_BY",
+    "domain": "core"
+  },
+  {
+    "id": "rel_supports_channel_tenant_channel",
+    "type": "relationship",
+    "name": "SUPPORTS_CHANNEL",
+    "description": "Tenant connected to Channel via SUPPORTS_CHANNEL",
+    "from_label": "Tenant",
+    "to_label": "Channel",
+    "pattern": "(Tenant)-[:SUPPORTS_CHANNEL]->(Channel)",
+    "synonyms": [],
+    "search_text": "SUPPORTS_CHANNEL relationship (Tenant)-[:SUPPORTS_CHANNEL]->(Channel). Tenant connected to Channel via SUPPORTS_CHANNEL",
+    "domain": "core"
+  },
+  {
+    "id": "rel_targeted_queue_routingattempt_queue",
+    "type": "relationship",
+    "name": "TARGETED_QUEUE",
+    "description": "RoutingAttempt connected to Queue via TARGETED_QUEUE",
+    "from_label": "RoutingAttempt",
+    "to_label": "Queue",
+    "pattern": "(RoutingAttempt)-[:TARGETED_QUEUE]->(Queue)",
+    "synonyms": [],
+    "search_text": "TARGETED_QUEUE relationship (RoutingAttempt)-[:TARGETED_QUEUE]->(Queue). RoutingAttempt connected to Queue via TARGETED_QUEUE",
+    "domain": "core"
+  },
+  {
+    "id": "rel_through_conversation_channel",
+    "type": "relationship",
+    "name": "THROUGH",
+    "description": "Conversation connected to Channel via THROUGH",
+    "from_label": "Conversation",
+    "to_label": "Channel",
+    "pattern": "(Conversation)-[:THROUGH]->(Channel)",
+    "synonyms": [],
+    "search_text": "THROUGH relationship (Conversation)-[:THROUGH]->(Channel). Conversation connected to Channel via THROUGH",
+    "domain": "core"
+  },
+  {
+    "id": "rel_transferred_to_transfer_queue",
+    "type": "relationship",
+    "name": "TRANSFERRED_TO",
+    "description": "Transfer connected to Queue via TRANSFERRED_TO",
+    "from_label": "Transfer",
+    "to_label": "Queue",
+    "pattern": "(Transfer)-[:TRANSFERRED_TO]->(Queue)",
+    "synonyms": [],
+    "search_text": "TRANSFERRED_TO relationship (Transfer)-[:TRANSFERRED_TO]->(Queue). Transfer connected to Queue via TRANSFERRED_TO",
+    "domain": "core"
+  },
+  {
+    "id": "rel_updated_by_assignmentsettings_user",
+    "type": "relationship",
+    "name": "UPDATED_BY",
+    "description": "AssignmentSettings connected to User via UPDATED_BY",
+    "from_label": "AssignmentSettings",
+    "to_label": "User",
+    "pattern": "(AssignmentSettings)-[:UPDATED_BY]->(User)",
+    "synonyms": [],
+    "search_text": "UPDATED_BY relationship (AssignmentSettings)-[:UPDATED_BY]->(User). AssignmentSettings connected to User via UPDATED_BY",
+    "domain": "core"
+  },
+  {
+    "id": "rel_uses_holiday_calendar_businesshours_holidaycalendar",
+    "type": "relationship",
+    "name": "USES_HOLIDAY_CALENDAR",
+    "description": "BusinessHours connected to HolidayCalendar via USES_HOLIDAY_CALENDAR",
+    "from_label": "BusinessHours",
+    "to_label": "HolidayCalendar",
+    "pattern": "(BusinessHours)-[:USES_HOLIDAY_CALENDAR]->(HolidayCalendar)",
+    "synonyms": [],
+    "search_text": "USES_HOLIDAY_CALENDAR relationship (BusinessHours)-[:USES_HOLIDAY_CALENDAR]->(HolidayCalendar). BusinessHours connected to HolidayCalendar via USES_HOLIDAY_CALENDAR",
+    "domain": "core"
+  },
+  {
+    "id": "rel_uses_template_invoice_invoicetemplate",
+    "type": "relationship",
+    "name": "USES_TEMPLATE",
+    "description": "Invoice connected to InvoiceTemplate via USES_TEMPLATE",
+    "from_label": "Invoice",
+    "to_label": "InvoiceTemplate",
+    "pattern": "(Invoice)-[:USES_TEMPLATE]->(InvoiceTemplate)",
+    "synonyms": [],
+    "search_text": "USES_TEMPLATE relationship (Invoice)-[:USES_TEMPLATE]->(InvoiceTemplate). Invoice connected to InvoiceTemplate via USES_TEMPLATE",
+    "domain": "core"
+  },
+  {
+    "id": "rel_uses_template_proposal_proposaltemplate",
+    "type": "relationship",
+    "name": "USES_TEMPLATE",
+    "description": "Proposal connected to ProposalTemplate via USES_TEMPLATE",
+    "from_label": "Proposal",
+    "to_label": "ProposalTemplate",
+    "pattern": "(Proposal)-[:USES_TEMPLATE]->(ProposalTemplate)",
+    "synonyms": [],
+    "search_text": "USES_TEMPLATE relationship (Proposal)-[:USES_TEMPLATE]->(ProposalTemplate). Proposal connected to ProposalTemplate via USES_TEMPLATE",
+    "domain": "core"
+  },
+  {
+    "id": "rel_uses_template_quote_quotetemplate",
+    "type": "relationship",
+    "name": "USES_TEMPLATE",
+    "description": "Quote connected to QuoteTemplate via USES_TEMPLATE",
+    "from_label": "Quote",
+    "to_label": "QuoteTemplate",
+    "pattern": "(Quote)-[:USES_TEMPLATE]->(QuoteTemplate)",
+    "synonyms": [],
+    "search_text": "USES_TEMPLATE relationship (Quote)-[:USES_TEMPLATE]->(QuoteTemplate). Quote connected to QuoteTemplate via USES_TEMPLATE",
+    "domain": "core"
+  },
+  {
+    "id": "rel_with_company_deal_company",
+    "type": "relationship",
+    "name": "WITH_COMPANY",
+    "description": "Deal connected to Company via WITH_COMPANY",
+    "from_label": "Deal",
+    "to_label": "Company",
+    "pattern": "(Deal)-[:WITH_COMPANY]->(Company)",
+    "synonyms": [],
+    "search_text": "WITH_COMPANY relationship (Deal)-[:WITH_COMPANY]->(Company). Deal connected to Company via WITH_COMPANY",
+    "domain": "core"
+  },
+  {
+    "id": "rel_works_at_contactprofile_company",
+    "type": "relationship",
+    "name": "WORKS_AT",
+    "description": "ContactProfile connected to Company via WORKS_AT",
+    "from_label": "ContactProfile",
+    "to_label": "Company",
+    "pattern": "(ContactProfile)-[:WORKS_AT]->(Company)",
+    "synonyms": [],
+    "search_text": "WORKS_AT relationship (ContactProfile)-[:WORKS_AT]->(Company). ContactProfile connected to Company via WORKS_AT",
+    "domain": "core"
+  },
+  {
+    "id": "rel_wrote_shared_note_user_sharednote",
+    "type": "relationship",
+    "name": "WROTE_SHARED_NOTE",
+    "description": "User connected to SharedNote via WROTE_SHARED_NOTE",
+    "from_label": "User",
+    "to_label": "SharedNote",
+    "pattern": "(User)-[:WROTE_SHARED_NOTE]->(SharedNote)",
+    "synonyms": [],
+    "search_text": "WROTE_SHARED_NOTE relationship (User)-[:WROTE_SHARED_NOTE]->(SharedNote). User connected to SharedNote via WROTE_SHARED_NOTE",
+    "domain": "core"
+  }
+]

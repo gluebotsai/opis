@@ -1,0 +1,378 @@
+/* ==========================================================================
+   Brand enforcement — final consistency layer
+   Loaded after styles.css + brand-portals.css
+   ========================================================================== */
+
+/* --- Forms & inputs --- */
+.field > input,
+.field > select,
+.field > textarea,
+.field__control,
+.checkbox-dropdown__trigger,
+.mobile-field {
+  border-color: var(--border-default);
+  border-radius: var(--radius-regular);
+  color: var(--text-primary);
+  font-size: var(--font-size-body);
+}
+
+.field > input::placeholder,
+.field > textarea::placeholder,
+.field__control input::placeholder {
+  color: var(--text-placeholder);
+}
+
+.field > input:focus,
+.field > select:focus,
+.field > textarea:focus,
+.field__control:focus-within,
+.checkbox-dropdown__trigger:focus-visible {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--border-focus) 12%, transparent);
+  outline: none;
+}
+
+/* Nested inputs inside .field__control must never receive their own border or ring */
+.field__control input:focus {
+  border: none;
+  box-shadow: none;
+  outline: none;
+}
+
+.field > span {
+  color: var(--text-primary);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+}
+
+/* --- Tertiary / link actions --- */
+.link-button {
+  color: var(--text-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.link-button:hover {
+  color: var(--text-accent);
+}
+
+/* --- Selection: steps & progress --- */
+.onboarding-steps__item.is-active,
+.workflow-steps__item.is-active {
+  background: var(--color-neutral-100);
+  border-color: var(--btn-primary-bg);
+  color: var(--text-primary);
+}
+
+/* Product progress chips — thin grey border, not black ring. */
+.pricing-progress__item.is-active {
+  background: var(--color-neutral-100);
+  border-color: var(--border-default);
+  color: var(--text-primary);
+  box-shadow: none;
+}
+
+/* --- Selection: cards & options --- */
+.change-type-option.is-active {
+  background: var(--color-neutral-100);
+  border-color: var(--btn-primary-bg);
+  box-shadow: 0 0 0 1px var(--btn-primary-bg);
+}
+
+.change-type-option.is-active strong {
+  color: var(--text-primary);
+}
+
+.change-type-option:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+.bundle-option:hover,
+.bundle-option.is-selected {
+  border-color: var(--btn-primary-bg);
+  box-shadow: 0 0 0 1px var(--btn-primary-bg);
+}
+
+.invoice-mode-option.is-active {
+  border-color: var(--btn-primary-bg);
+  box-shadow: 0 0 0 1px var(--btn-primary-bg);
+}
+
+/* Pricing summary product switcher — thin grey border, not black ring. */
+.configured-product.is-active {
+  border-color: var(--border-default);
+  box-shadow: none;
+}
+
+.remove-products-modal__item.is-selected {
+  border-color: var(--btn-primary-bg);
+  box-shadow: 0 0 0 1px var(--btn-primary-bg);
+}
+
+/* --- Selection: lists & queues --- */
+.finance-queue-item.is-active {
+  background: var(--color-neutral-100);
+  border-color: var(--btn-primary-bg);
+  box-shadow: 0 0 0 1px var(--btn-primary-bg);
+}
+
+.mail-list-item.is-active {
+  background: var(--mail-accent-soft);
+  box-shadow: inset 3px 0 0 var(--mail-accent);
+}
+
+.customer-support-list__item.is-active {
+  background: #f4f4f6;
+  border-color: #0b0b10;
+  box-shadow: none;
+}
+
+.mail-folders__item.is-active {
+  background: var(--mail-accent-soft);
+  box-shadow: inset 3px 0 0 var(--mail-accent);
+  color: var(--text-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.mail-sidebar__item.is-active {
+  background: var(--mail-accent-soft);
+  color: var(--text-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* --- Mail (all portals) --- */
+.mail-folders__badge,
+.mail-list-item__status.is-unread {
+  background: var(--mail-accent);
+}
+
+/* Mail profile initials use accent-palette tones (profile-avatar.css), not mail-accent. */
+
+.mail-compose-row__actions button,
+.mail-read-pane__back {
+  color: var(--text-primary);
+}
+
+.mail-compose-row__actions button:hover,
+.mail-read-pane__back:hover {
+  color: var(--text-accent);
+}
+
+.mail-compose__chrome-title svg {
+  color: var(--icon-on-light);
+}
+
+/* --- Selection: tabs & nav --- */
+.admin-pricing-nav__item.is-active {
+  background: var(--color-neutral-100);
+  border-color: var(--btn-primary-bg);
+  color: var(--text-primary);
+}
+
+.invoice-review-modal__tab.is-active {
+  border-bottom-color: var(--btn-primary-bg);
+  color: var(--text-primary);
+}
+
+.workspace-view-select__option.is-selected {
+  background: var(--color-neutral-100);
+  color: var(--text-primary);
+}
+
+.sales-dashboard-table-tools__filter.is-active,
+.admin-users-panel__tool-button.is-active,
+.admin-users-panel__pagination button.is-active,
+.sa-agents-panel__view-toggle button.is-active {
+  background: var(--btn-primary-bg);
+  border-color: var(--btn-primary-bg);
+  color: var(--text-on-primary);
+}
+
+.segmented-toggle__option.is-active {
+  color: var(--text-on-primary);
+}
+
+/* --- Status pills (semantic only) --- */
+.status-pill,
+.support-status-pill,
+.support-priority-pill,
+.admin-users-status-pill,
+.lead-status {
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.04em;
+}
+
+.support-status-pill--open {
+  background: color-mix(in srgb, #3a9ee0 14%, #ffffff);
+  color: #3a9ee0;
+}
+
+.lead-status--qualified .lead-status__dot {
+  background: var(--color-success);
+}
+
+.lead-status--qualified {
+  color: var(--text-primary);
+}
+
+/* --- Tables --- */
+.leads-table th,
+.admin-users-table th,
+.admin-pricing-table th,
+.sa-agents-table th,
+.finance-queue-list,
+.sales-dashboard-table th {
+  color: var(--text-caption);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.04em;
+}
+
+.leads-table td,
+.admin-users-table td,
+.sales-dashboard-table td {
+  color: var(--text-primary);
+  font-size: var(--font-size-body);
+}
+
+.leads-table__sort-icon.is-active {
+  color: var(--text-primary);
+}
+
+/* --- Cards & panels --- */
+.onboarding-card,
+.lead-dashboard-panel,
+.sales-dashboard-panel,
+.sa-panel,
+.admin-users-panel,
+.admin-users-kpi-card,
+.sa-kpi-card,
+.finance-queue-detail,
+.customer-support-detail,
+.customer-support-form,
+.mail-compose {
+  border-color: var(--border-default);
+  border-radius: var(--radius-large);
+}
+
+/* --- Modals --- */
+.confirm-modal,
+.onboarding-modal,
+.invoice-review-modal,
+.remove-products-modal,
+.mail-attachment-modal {
+  border-radius: var(--radius-large);
+}
+
+.confirm-modal__close {
+  flex-shrink: 0;
+}
+
+/* --- Finance login (legacy page) --- */
+.finance-login-page {
+  background: var(--bg-canvas-subtle);
+}
+
+/* --- KPI trend percentages (keep colored; icons stay black) --- */
+.sa-kpi-card .sa-trend--up {
+  color: var(--color-success);
+}
+
+.sa-kpi-card .sa-trend--down {
+  color: var(--color-danger);
+}
+
+.sa-kpi-card__value--percent,
+.sa-agent-detail-metric__value--percent,
+.sales-dashboard-stat-card__value--percent {
+  color: var(--color-info);
+}
+
+/* --- Focus visible (accessibility) --- */
+button:focus-visible:not(
+    .icon-button,
+    .confirm-modal__close,
+    .invoice-review-modal__close,
+    .mail-reply__close,
+    .mail-attachment-modal__close,
+    .mail-compose__chrome-close,
+    .admin-users-panel__icon-button,
+    .sa-agent-detail-leads__icon-btn,
+    .lead-actions__trigger,
+    .sa-agent-detail-table__menu-trigger,
+    .pricing-progress__remove,
+    .mail-list-pane__refresh,
+    .address-card__remove,
+    .shell-header__toggle,
+    .icon-button--on-dark
+  ),
+a:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+.admin-users-panel__pagination button:has(> svg):focus-visible,
+.sa-agents-panel__pagination button:has(> svg):focus-visible,
+.mail-compose__attachment-chip button:focus-visible {
+  outline: none;
+}
+
+/* --- Disabled states --- */
+button:disabled,
+input:disabled,
+select:disabled,
+.primary-button:disabled,
+.secondary-button:disabled {
+  cursor: not-allowed;
+}
+
+/* --- Responsive touch targets --- */
+@media (max-width: 767px) {
+  .primary-button,
+  .secondary-button,
+  .danger-button,
+  .alt-button {
+    min-height: var(--btn-height-md);
+  }
+
+  .icon-button,
+  .confirm-modal__close,
+  .invoice-review-modal__close,
+  .mail-reply__close,
+  .mail-attachment-modal__close,
+  .mail-compose__chrome-close,
+  .admin-users-panel__icon-button,
+  .sa-agent-detail-leads__icon-btn,
+  .lead-actions__trigger,
+  .sa-agent-detail-table__menu-trigger,
+  .mail-list-pane__refresh,
+  .address-card__remove,
+  .admin-users-panel__pagination button:has(> svg),
+  .sa-agents-panel__pagination button:has(> svg) {
+    --icon-button-size: 40px;
+    height: 40px;
+    width: 40px;
+  }
+
+  .field__control .icon-button {
+    height: 36px;
+    width: 36px;
+  }
+
+  .pricing-progress__remove {
+    height: 32px;
+    width: 32px;
+  }
+
+  .mail-compose__attachment-chip button {
+    height: 28px;
+    width: 28px;
+  }
+
+  .sa-agent-detail-table__menu-trigger {
+    height: 36px;
+    width: 36px;
+  }
+}

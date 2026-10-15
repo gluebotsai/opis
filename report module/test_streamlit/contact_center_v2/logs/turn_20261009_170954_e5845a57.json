@@ -1,0 +1,60 @@
+{
+  "turn_id": "e5845a57",
+  "timestamp": "2026-10-09T11:39:54.920661+00:00",
+  "question": "what is the transfer rate...",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1016,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Transfer rate</strong></p><p>The transfer rate is not available in Contact Center reports for all time.</p><p>Would you like to see the number of transferred conversations instead?</p>",
+  "card": "card: none",
+  "facts": "result_id: r1\nwindow: all time\nkpi: transfer_rate\ncertified: true\nunit: percent\ntask_goal: Calculate the transfer rate for all time.\nanswer_type: percentage\nrow_count: 1\nrow 1: transferred_n=0; handled_n=0; rate_pct=None",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1016,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "what is the transfer rate...",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants to know the transfer rate for all time.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Calculate the transfer rate for all time.",
+          "time": "all time",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "percentage"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "transfer_rate",
+        "row_count": 1
+      }
+    ],
+    "facts": "result_id: r1\nwindow: all time\nkpi: transfer_rate\ncertified: true\nunit: percent\ntask_goal: Calculate the transfer rate for all time.\nanswer_type: percentage\nrow_count: 1\nrow 1: transferred_n=0; handled_n=0; rate_pct=None",
+    "grounded": true,
+    "card": "card: none"
+  },
+  "error": null
+}

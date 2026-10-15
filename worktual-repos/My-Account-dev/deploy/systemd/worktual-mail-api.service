@@ -1,0 +1,24 @@
+[Unit]
+Description=Worktual Accounts Mail API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=@@DEPLOY_USER@@
+Group=@@DEPLOY_USER@@
+WorkingDirectory=@@DEPLOY_ROOT@@/current/backend
+# database.env has only DATABASE_URL (safe for systemd). Full .env is loaded by Node dotenv.
+EnvironmentFile=-@@DEPLOY_ROOT@@/shared/database.env
+Environment=SERVE_FRONTEND=true
+# Deployment applies migrations before switching the release. Never repeat them on API boot.
+Environment=SKIP_MIGRATE_ON_BOOT=true
+Environment=NODE_ENV=production
+ExecStart=@@NODE_BIN@@ dist/server.js
+Restart=on-failure
+RestartSec=5
+StandardOutput=append:@@DEPLOY_ROOT@@/logs/mail-api.log
+StandardError=append:@@DEPLOY_ROOT@@/logs/mail-api.log
+
+[Install]
+WantedBy=multi-user.target

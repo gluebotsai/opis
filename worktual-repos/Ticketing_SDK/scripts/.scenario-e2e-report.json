@@ -1,0 +1,101 @@
+{
+  "at": "2026-08-27T09:21:59.788Z",
+  "base": "http://127.0.0.1:3000",
+  "agents": "http://127.0.0.1:8012",
+  "passed": 85,
+  "failed": 23,
+  "findings": [
+    {
+      "name": "resolver chat create",
+      "detail": "expected deny reply, got: I can certainly help you with that. To create a new ticket, I'll need a few details:\n\n1. **Customer Name** (or Email)\n2."
+    },
+    {
+      "name": "escalate",
+      "detail": "escalate: HTTP 500 (want 200) {\"error\":\"Failed to escalate ticket\"}"
+    },
+    {
+      "name": "chat filter: show all customers",
+      "detail": "no clear-customers filter: undefined"
+    },
+    {
+      "name": "chat filter: open urgent tickets",
+      "detail": ""
+    },
+    {
+      "name": "chat filter: high priority (resolver)",
+      "detail": ""
+    },
+    {
+      "name": "chat filter: high priorty typo (admin)",
+      "detail": ""
+    },
+    {
+      "name": "chat filter: medium priority",
+      "detail": ""
+    },
+    {
+      "name": "chat filter: low priority",
+      "detail": ""
+    },
+    {
+      "name": "chat filter: pending tickets",
+      "detail": ""
+    },
+    {
+      "name": "chat filter: resolved tickets",
+      "detail": ""
+    },
+    {
+      "name": "chat filter: on hold tickets",
+      "detail": ""
+    },
+    {
+      "name": "chat filter: overdue tickets",
+      "detail": ""
+    },
+    {
+      "name": "chat filter: email channel",
+      "detail": ""
+    },
+    {
+      "name": "chat filter: active customers",
+      "detail": ""
+    },
+    {
+      "name": "chat filter: inactive customers",
+      "detail": ""
+    },
+    {
+      "name": "chat filter: list all tickets (resolver)",
+      "detail": ""
+    },
+    {
+      "name": "chat create_ticket action (admin)",
+      "detail": "missing create_ticket: undefined"
+    },
+    {
+      "name": "chat create_team action (admin)",
+      "detail": "missing create_team: undefined"
+    },
+    {
+      "name": "chat create denied (resolver) has no create action",
+      "detail": "expected deny: I can certainly help you with that. To create a ticket, I'll need a few details:\n\n1. **Customer Name** (or email/phone)\n"
+    },
+    {
+      "name": "chat escalate",
+      "detail": "expected resolver picker reply: I've found ticket #56 (\"Chat escalate scenario 1787822440596\").\n\nTo escalate this correctly, could you please provide:\n1. **Who** should it be escalated to? (A specific agent or assignee)\n2. **The rea"
+    },
+    {
+      "name": "chat filter high priority",
+      "detail": ""
+    },
+    {
+      "name": "filter during escalate ask",
+      "detail": "expected high priority filter during escalate ask: {\"reply\":\"Here are the high-priority tickets:\\n\\n| ID | Subject | Customer | Status | Assignee |\\n| :--- | :--- | :--- | :--- | :--- |\\n| **#56** | Chat escalate scenario 1787822440596 | deva | Pending | Mohammed Fazil |\\n| **#55** | Race ticket 1787822273831-0 | deva | Pending | Mohammed Fazil |\\n| **#54** | Race ticket 1787822273831-2 | deva | Pending | Mohammed Fazil |\\n| **#53** | Race ticket 1787822273831-4 | deva | Pending | Mohammed Fazil |\\n| **#52** | Race ticket 1787822273831-5 | deva | Pending | Mohammed Fazil |\\n| **#51** | Race ticket 1787822273831-1 | deva | Pending | Mohammed Fazil |\\n| **#50** | Race ticket 1787822273831-3 | deva | Pending | Mohammed Fazil |\\n\\n*(Showing first 7 of 30 results)*\",\"agent\":\"tickets\",\"session_id\":\"scenario-filter-esc-1787822476900\",\"ui_actions\":[],\"request_id\":\"req_mtbbcxp7_a6f6tvz3\",\"data\":{\"active_agent\":\"tickets\",\"last_entity\":null,\"recent_entities\":[],\"last_query\":null,\"parked_workflows\":[],\"tool_memory\":{\"last\":{\"tool\":\"list_tickets\",\"success\":true,\"summary\":{\"keys\":[\"data\",\"totalRows\",\"truncated\"]}}},\"recent_history\":[{\"role\":\"user\",\"text\":\"escalate ticket #57\"},{\"role\":\"assistant\",\"text\":\"Routing to tickets\"},{\"role\":\"user\",\"text\":\"escalate ticket #57\"},{\"role\":\"assistant\",\"text\":\"I've found ticket #57 (\\\"Filter during escalate 1787822476900\\\").\\n\\nTo escalate this properly, could you please provide:\\n1. **Who** should it be escalated to? (A specific agent or assignee)\\n2. **Why** is it being escalated? (A brief rationale)\"},{\"role\":\"user\",\"text\":\"show high priorty tickets\"},{\"role\":\"assistant\",\"text\":\"Routing to tickets\"},{\"role\":\"user\",\"text\":\"show high priority tickets\"},{\"role\":\"assistant\",\"text\":\"Here are the high-priority tickets:\\n\\n| ID | Subject | Customer | Status | Assignee |\\n| :--- | :--- | :--- | :--- | :--- |\\n| **#56** | Chat escalate scenario 1787822440596 | deva | Pending | Mohammed Fazil |\\n| **#55** | Race ticket 1787822273831-0 | deva | Pending | Mohammed Fazil |\\n| **#54** | Race ticket 1787822273831-2 | deva | Pending | Mohammed Fazil |\\n| **#53** | Race ticket 1787822273831-4 | deva | Pending | Mohammed Fazil |\\n| **#52** | Race ticket 1787822273831-5 | deva | Pending | Mohammed Fazil |\\n| **#51** | Race ticket 1787822273831-1 | deva | Pending | Mohammed Fazil |\\n| **#50** | Race ticket 1787822273831-3 | deva | Pending | Mohammed Fazil |\\n\\n*(Showing first 7 of 30 results)*\"}],\"handoff_trace\":[\"ticketing_coworker->tickets\",\"ticketing_coworker->tickets\"],\"last_tool_outcome\":{\"tool\":\"list_tickets\",\"success\":true,\"error\":null,\"error_code\":null,\"arguments\":{\"priority\":\"high\"}},\"conversation_context_version\":2,\"source\":\"ai\"}}"
+    },
+    {
+      "name": "agents create spoof",
+      "detail": "spoof bypass: I can certainly help you with that. To create a ticket, I'll need a few details:\n\n1. **Customer Name** (or Email)\n2. **S"
+    }
+  ]
+}

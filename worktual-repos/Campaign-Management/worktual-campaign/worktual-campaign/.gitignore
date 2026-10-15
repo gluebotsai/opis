@@ -1,0 +1,47 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.*
+
+# Build
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Logs / OS
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+
+# Prisma
+backend/prisma/*.db
+
+# Agents local runtime (sessions now live in campaign_db)
+agents/data/
+agents/tmp/
+agents/.venv/
+agents/__pycache__/
+agents/**/__pycache__/
+agents/.env
+agents/.env.*
+!agents/.env.example
+
+# Local template image uploads
+backend/uploads/
+
+# Web push demo TLS (mkcert)
+demo/webpush-site/.certs/
+demo/webpush-site/.tunnel-url

@@ -1,0 +1,326 @@
+kpi_id: callback_count
+object: task
+grain_table: ccass.agent_tasks
+joined_tables:
+- accounts.setup_users
+- ccass.conversations
+- cdp.customer_profile
+columns:
+- column: accounts.setup_users.business_hours_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: accounts.setup_users.city
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_users.country
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_users.created_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_users.employee_id
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_users.ext
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_users.first_name
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_users.id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: accounts.setup_users.invite_status
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_users.invited_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_users.last_name
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_users.location_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: accounts.setup_users.organization_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: accounts.setup_users.primary_language
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_users.secondary_language
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_users.sip_domain_name
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_users.state
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_users.status
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_users.team_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: cdp.customer_profile.acquisition_channel
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: cdp.customer_profile.acquisition_date
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: cdp.customer_profile.blocked
+  use: filter
+  reason: Can filter this task metric. Not a default volume GROUP BY.
+- column: cdp.customer_profile.cdp_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: cdp.customer_profile.city
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: cdp.customer_profile.company
+  use: filter
+  reason: Can filter this task metric. Not a default volume GROUP BY.
+- column: cdp.customer_profile.contact_type
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: cdp.customer_profile.country
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: cdp.customer_profile.created_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: cdp.customer_profile.first_name
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: cdp.customer_profile.first_referrer
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: cdp.customer_profile.first_seen_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: cdp.customer_profile.gender
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: cdp.customer_profile.industry
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: cdp.customer_profile.language
+  use: filter
+  reason: Can filter this task metric. Not a default volume GROUP BY.
+- column: cdp.customer_profile.last_name
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: cdp.customer_profile.last_seen_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: cdp.customer_profile.organization_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: cdp.customer_profile.primary_product
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: cdp.customer_profile.region
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: cdp.customer_profile.tenant_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: cdp.customer_profile.timezone
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.assigned_agent_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.assigned_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.assigned_user_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.bot_active
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.channel_config_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.channel
+  use: both
+  reason: Filter and GROUP BY on this task metric.
+- column: ccass.conversations.closed_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.contact_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.created_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.direction
+  use: both
+  reason: Filter and GROUP BY on this task metric.
+- column: ccass.conversations.disposition_code
+  use: not_this_metric
+  reason: Disposition split is the catalog label, not the raw code.
+- column: ccass.conversations.disposition_note
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.end_actor
+  use: filter
+  reason: Can filter this task metric. Not a default volume GROUP BY.
+- column: ccass.conversations.end_reason
+  use: filter
+  reason: Can filter this task metric. Not a default volume GROUP BY.
+- column: ccass.conversations.ended_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.external_thread_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.first_agent_response_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.first_response_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.first_response_due_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.handoff_reason
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.lifecycle_state
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.live_agent_enabled
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.mailbox_connection_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.nlp_enabled
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.organization_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.previous_conversation_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.priority
+  use: both
+  reason: Filter and GROUP BY on this task metric.
+- column: ccass.conversations.provider_thread_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.queue_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.queued_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.resolution_code
+  use: filter
+  reason: Can filter this task metric. Not a default volume GROUP BY.
+- column: ccass.conversations.resolution_due_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.resolution_summary
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.resolved_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.sla_status
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.status
+  use: both
+  reason: Filter and GROUP BY on this task metric.
+- column: ccass.conversations.subject
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.transferred_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.visitor_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.webchat_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.agent_tasks.assigned_by_label
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.agent_tasks.assigned_by_user_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.agent_tasks.assigned_user_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.agent_tasks.channel
+  use: both
+  reason: Filter and GROUP BY on this task metric.
+- column: ccass.agent_tasks.completed_at
+  use: filter
+  reason: Completed at is a filter. Not the card clock (created_at).
+- column: ccass.agent_tasks.contact_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.agent_tasks.conversation_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.agent_tasks.created_at
+  use: not_this_metric
+  reason: Time window. Python time.py binds :start/:end. Not a filter slot.
+- column: ccass.agent_tasks.created_by_user_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.agent_tasks.dismissed_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.agent_tasks.due_at
+  use: filter
+  reason: Due date is a filter. Not the card clock (created_at).
+- column: ccass.agent_tasks.id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.agent_tasks.notes
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.agent_tasks.organization_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.agent_tasks.priority
+  use: both
+  reason: Filter and GROUP BY on this task metric.
+- column: ccass.agent_tasks.source
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.agent_tasks.status
+  use: both
+  reason: Filter and GROUP BY on this task metric.
+- column: ccass.agent_tasks.summary
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.agent_tasks.task_type
+  use: both
+  reason: Filter and GROUP BY on this task metric.
+- column: ccass.agent_tasks.title
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.is_reopened
+  use: filter
+  reason: Can filter this task metric. Not a default volume GROUP BY.
+- column: ccass.conversations.is_bot_only
+  use: filter
+  reason: Can filter this task metric. Not a default volume GROUP BY.
+- column: ccass.conversations.handler
+  use: both
+  reason: Filter and GROUP BY on this task metric.
+- column: cdp.customer_profile.customer_name
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.

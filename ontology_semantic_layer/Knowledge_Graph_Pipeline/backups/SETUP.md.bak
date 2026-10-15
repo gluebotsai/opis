@@ -1,0 +1,457 @@
+# CDC Pipeline — Deployment Runbook
+
+Three machines are involved. **Every command below is tagged with the machine it runs on.**
+
+| Tag | Machine | Runs |
+|---|---|---|
+| **[PG]** | PostgreSQL host — `192.168.11.156:5656` | PostgreSQL in Docker (container `latest-rebuild`) |
+| **[NEO]** | Neo4j host — `<NEO4J_IP>:7687` | Neo4j Enterprise |
+| **[APP]** | Your workstation | Kafka, Kafka Connect + Debezium, the Python consumer |
+
+Fill these in before starting:
+
+```
+NEO4J_IP       = ____________________
+NEO4J_USER     = ____________________
+NEO4J_PASSWORD = ____________________
+PG_PASSWORD    = ____________________
+```
+
+---
+
+## Why the order matters (read this once)
+
+You have two loaders:
+
+1. **CSV backfill** — your existing pipeline, loads what is already in PostgreSQL
+2. **CDC sync** — this pipeline, keeps the graph current from then on
+
+The dangerous mistake is running the backfill first and setting up CDC afterwards. Anything that changes in PostgreSQL between the two is **lost permanently** — the backfill did not see it because it had not happened yet, and CDC did not see it because the replication slot did not exist yet.
+
+So the correct order is:
+
+```
+1. Register the Debezium connector   <- creates the slot, WAL retention starts here
+2. Run the CSV backfill              <- changes during this are queued in Kafka, not lost
+3. Start the consumer                <- drains the queue, then stays live
+```
+
+Step 2's changes are applied after step 3 and are safe, because every write is `MERGE`-on-key: re-applying the same row is a no-op.
+
+---
+
+## Phase 1 — PostgreSQL **[PG]**
+
+### 1.1 Logical replication
+
+```bash
+CONTAINER=latest-rebuild
+
+docker exec -it $CONTAINER psql -U nlp -d combinedDB -c "SHOW wal_level;"
+```
+
+If it is not `logical`:
+
+```bash
+docker exec -it $CONTAINER psql -U nlp -d combinedDB -c "ALTER SYSTEM SET wal_level='logical';"
+docker exec -it $CONTAINER psql -U nlp -d combinedDB -c "ALTER SYSTEM SET max_replication_slots=4;"
+docker exec -it $CONTAINER psql -U nlp -d combinedDB -c "ALTER SYSTEM SET max_wal_senders=4;"
+docker restart $CONTAINER
+sleep 8
+docker exec -it $CONTAINER psql -U nlp -d combinedDB -c "SHOW wal_level;"   # must print: logical
+```
+
+`wal_level` needs a **restart**, not a reload.
+
+### 1.2 Replication role
+
+```bash
+docker exec -it $CONTAINER psql -U nlp -d combinedDB -c "\du nlp"
+```
+
+If `Replication` is not listed:
+
+```bash
+docker exec -it $CONTAINER psql -U nlp -d combinedDB -c "ALTER ROLE nlp WITH REPLICATION;"
+```
+
+### 1.3 Allow the Connect container to reach this host
+
+```bash
+HBA=$(docker exec $CONTAINER psql -U nlp -d combinedDB -tAc "SHOW hba_file;")
+docker exec $CONTAINER bash -c "grep -v '^#' $HBA | grep ."
+```
+
+If there is no line permitting your workstation's subnet:
+
+```bash
+docker exec -it $CONTAINER bash -c "echo 'host all all 192.168.11.0/24 scram-sha-256' >> $HBA"
+docker exec -it $CONTAINER psql -U nlp -d combinedDB -c "SELECT pg_reload_conf();"
+```
+
+### 1.4 REPLICA IDENTITY FULL — all 21 tables
+
+**What this does:** it controls how much of the *old* row PostgreSQL writes to the WAL on UPDATE and DELETE. Under the default, the before-image contains only primary-key columns — so `organization_id` is absent, the router cannot tell which tenant's graph to write to, and **every delete is quarantined while the node stays in Neo4j forever**. `FULL` writes every column, so deletes route correctly.
+
+Cost: more WAL volume and slightly more CPU on this host. Negligible on config tables; revisit only if a high-churn table becomes a problem.
+
+```bash
+docker exec -it $CONTAINER psql -U nlp -d combinedDB <<'SQL'
+ALTER TABLE accounts.organizations                  REPLICA IDENTITY FULL;
+ALTER TABLE accounts.setup_roles                    REPLICA IDENTITY FULL;
+ALTER TABLE accounts.setup_teams                    REPLICA IDENTITY FULL;
+ALTER TABLE accounts.setup_holiday_calendars        REPLICA IDENTITY FULL;
+ALTER TABLE accounts.setup_business_hours           REPLICA IDENTITY FULL;
+ALTER TABLE ccass.skills                            REPLICA IDENTITY FULL;
+ALTER TABLE ccass.dispositions                      REPLICA IDENTITY FULL;
+ALTER TABLE ccass.sla_policies                      REPLICA IDENTITY FULL;
+ALTER TABLE ccass.routing_policies                  REPLICA IDENTITY FULL;
+ALTER TABLE ccass.conversation_memory               REPLICA IDENTITY FULL;
+ALTER TABLE ccass.conversation_sla_state            REPLICA IDENTITY FULL;
+ALTER TABLE ccass.conversation_message_attachments  REPLICA IDENTITY FULL;
+ALTER TABLE ccass.routing_attempts                  REPLICA IDENTITY FULL;
+ALTER TABLE ccass.agent_tasks                       REPLICA IDENTITY FULL;
+ALTER TABLE cdp.segments                            REPLICA IDENTITY FULL;
+ALTER TABLE cdp.customer_profile                    REPLICA IDENTITY FULL;
+ALTER TABLE cdp.customer_scores                     REPLICA IDENTITY FULL;
+ALTER TABLE cdp.ai_insights                         REPLICA IDENTITY FULL;
+ALTER TABLE cdp.customer_recommendations            REPLICA IDENTITY FULL;
+ALTER TABLE cdp.orders                              REPLICA IDENTITY FULL;
+ALTER TABLE inventory.products                      REPLICA IDENTITY FULL;
+SQL
+```
+
+Verify — this must return **21 rows, all FULL**:
+
+```bash
+docker exec -it $CONTAINER psql -U nlp -d combinedDB -c "
+SELECT n.nspname||'.'||c.relname AS tbl,
+       CASE c.relreplident WHEN 'f' THEN 'FULL' ELSE 'NOT FULL' END AS identity
+FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+WHERE c.relkind='r' AND c.relreplident='f'
+  AND n.nspname IN ('accounts','ccass','cdp','inventory')
+ORDER BY 1;"
+```
+
+Any table you later add to the pipeline needs this too. **A table without it silently fails on deletes.**
+
+---
+
+## Phase 2 — Neo4j **[NEO]**
+
+### 2.1 Confirm Enterprise
+
+```bash
+cypher-shell -u <NEO4J_USER> -p '<NEO4J_PASSWORD>' -d system \
+  "CALL dbms.components() YIELD name, versions, edition RETURN *;"
+```
+
+Must show `edition: "enterprise"`. Community Edition supports only one database and **cannot run this design**.
+
+### 2.2 Listen on the network
+
+In `neo4j.conf`:
+
+```conf
+server.default_listen_address=0.0.0.0
+server.bolt.advertised_address=<NEO4J_IP>:7687
+```
+
+The advertised address matters: if Neo4j advertises `localhost`, your driver connects, gets redirected to localhost, and fails with a confusing routing error.
+
+```bash
+sudo systemctl restart neo4j          # or: docker restart <neo4j-container>
+sudo ufw allow 7687/tcp
+```
+
+---
+
+## Phase 3 — Application setup **[APP]**
+
+### 3.1 Environment
+
+```bash
+cd ~/Desktop/learn/cdc-pipeline
+conda activate myenv
+pip install -r requirements.txt
+```
+
+Edit `.env`:
+
+```bash
+PG_HOST=192.168.11.156
+PG_PORT=5656
+PG_DATABASE=combinedDB
+PG_USER=nlp
+PG_PASSWORD=<PG_PASSWORD>
+
+DEBEZIUM_PG_HOST=192.168.11.156
+DEBEZIUM_PG_PORT=5656
+
+KAFKA_BOOTSTRAP=localhost:9092
+
+NEO4J_URI=bolt://<NEO4J_IP>:7687
+NEO4J_USER=<NEO4J_USER>
+NEO4J_PASSWORD=<NEO4J_PASSWORD>
+```
+
+**Load it in every terminal you use:**
+
+```bash
+set -a && source .env && set +a
+echo "$PG_HOST:$PG_PORT/$PG_DATABASE -> $NEO4J_URI"
+```
+
+### 3.2 Confirm both hosts are reachable
+
+```bash
+psql -h 192.168.11.156 -p 5656 -U nlp -d combinedDB -c "SHOW wal_level;"     # logical
+cypher-shell -a bolt://<NEO4J_IP>:7687 -u <NEO4J_USER> -p '<NEO4J_PASSWORD>' -d system "SHOW DATABASES;"
+```
+
+Do not continue until both succeed.
+
+### 3.3 Config
+
+`config/connections.yaml`:
+
+```yaml
+control_plane:
+  organisations_table: accounts.organizations
+  organization_id_column: id
+  tenant_id_column: id
+  tenant_column: organization_id
+  status_column: lifecycle_status
+  active_status_values: [active]
+
+database_naming:
+  prefix: org
+
+cypher:
+  subquery_syntax: scoped        # required for Neo4j 2026.x / Cypher 25
+```
+
+`subquery_syntax` is the key the code reads. `call_syntax` is read by nothing — remove it if present.
+
+### 3.4 Offline validation
+
+```bash
+python main.py validate          # must exit 0
+python main.py dry-run
+python main.py preflight
+```
+
+`preflight` checks `wal_level`, the replication role, replica identity, and the tenancy column. Fix everything it reports before continuing.
+
+### 3.5 Start Kafka and Connect
+
+```bash
+cd docker
+docker compose -f docker-compose.external.yml --env-file ../.env up -d
+docker compose -f docker-compose.external.yml ps
+cd ..
+```
+
+Confirm the Connect container can reach PostgreSQL:
+
+```bash
+docker exec cdc-external-connect-1 bash -c \
+  "timeout 3 bash -c '</dev/tcp/192.168.11.156/5656' && echo REACHABLE || echo BLOCKED"
+```
+
+`BLOCKED` means `pg_hba.conf` or the firewall on **[PG]** — go back to 1.3.
+
+### 3.6 Provision the tenant databases
+
+```bash
+python main.py provision --all
+python main.py verify-indexes --org 1000
+```
+
+`verify-indexes` must report `NodeUniqueIndexSeek`, never `NodeByLabelScan`. **This is the release gate** — a missing constraint is invisible in testing and turns every write into a full label scan as the graph grows.
+
+Confirm the databases exist:
+
+```bash
+cypher-shell -a bolt://<NEO4J_IP>:7687 -u <NEO4J_USER> -p '<NEO4J_PASSWORD>' -d system "SHOW DATABASES;"
+```
+
+---
+
+## Phase 4 — Backfill, then sync (order is critical)
+
+### 4.1 Set the snapshot mode
+
+In `docker/connectors/postgres-source.json`:
+
+```json
+"snapshot.mode": "no_data",
+```
+
+**Why:** your CSV pipeline performs the initial load. `initial` would make Debezium snapshot every table as well — harmless, because `MERGE` is idempotent, but it duplicates the work. `no_data` captures the schema and streams only changes from the moment the slot is created.
+
+Confirm `table.include.list` names all 21 tables (comma-separated, no spaces).
+
+### 4.2 Register the connector — **do this BEFORE the backfill**
+
+```bash
+set -a && source .env && set +a
+bash scripts/register_connector.sh
+curl -s localhost:8083/connectors/cdc-postgres-source/status | python -m json.tool
+```
+
+Both `connector` and `task` must be `RUNNING`.
+
+This creates the replication slot. **From this instant, no change in PostgreSQL can be lost** — anything that happens during the backfill is retained in the WAL and delivered afterwards.
+
+### 4.3 Run your CSV backfill
+
+Run your existing CSV → Neo4j pipeline now. It writes the historical data.
+
+Changes occurring during this window accumulate in Kafka and are applied in the next step.
+
+### 4.4 Start the consumer
+
+```bash
+set -a && source .env && set +a
+python main.py run
+```
+
+It drains everything queued during the backfill, then stays live. Leave this running.
+
+To run it as a service instead:
+
+```bash
+nohup python main.py run > logs/consumer.log 2>&1 &
+```
+
+### 4.5 Verify end to end
+
+**[PG]** — insert a test row:
+
+```bash
+psql -h 192.168.11.156 -p 5656 -U nlp -d combinedDB -c \
+"INSERT INTO ccass.skills (organization_id, key, name, is_active)
+ VALUES (1000, 'deploy_check', 'Deployment Check', true) RETURNING id;"
+```
+
+**[APP]** — confirm it landed and the relationship formed:
+
+```bash
+cypher-shell -a bolt://<NEO4J_IP>:7687 -u <NEO4J_USER> -p '<NEO4J_PASSWORD>' -d org1000 \
+"MATCH (t:Tenant)-[:DEFINES_SKILL]->(s:Skill {name:'Deployment Check'}) RETURN t.company_name, s.id;"
+```
+
+Confirm tenant isolation — this is the guarantee the whole design exists for:
+
+```bash
+cypher-shell -a bolt://<NEO4J_IP>:7687 -u <NEO4J_USER> -p '<NEO4J_PASSWORD>' -d org1001 \
+"MATCH (s:Skill {name:'Deployment Check'}) RETURN count(*);"      # must be 0
+```
+
+Confirm nothing is being dropped:
+
+```bash
+ls -la quarantine/ && tail -5 quarantine/*.jsonl 2>/dev/null
+```
+
+Empty is correct. Anything present names the reason — usually a missing tenancy column or an unmapped table.
+
+---
+
+## Phase 5 — Ongoing operations
+
+### The one check that protects your database
+
+```bash
+psql -h 192.168.11.156 -p 5656 -U nlp -d combinedDB -c "
+SELECT slot_name, active, pg_size_pretty(
+  pg_wal_lsn_diff(pg_current_wal_lsn(), confirmed_flush_lsn)) AS lag
+FROM pg_replication_slots;"
+```
+
+`active` should be `t` and `lag` should stay small (bytes to a few MB).
+
+**If the consumer stops, the slot stops advancing and WAL accumulates on [PG] until the disk fills.** This is the failure mode that can take down your PostgreSQL primary. Alert on it.
+
+If you must stop the pipeline for an extended period:
+
+```bash
+# [APP] stop the consumer, then:
+curl -X DELETE localhost:8083/connectors/cdc-postgres-source
+
+# [PG] release the WAL
+docker exec -it latest-rebuild psql -U nlp -d combinedDB -c \
+  "SELECT pg_drop_replication_slot('cdc_slot');"
+```
+
+Dropping the slot means changes from that point are **not** captured — you will need a fresh backfill before resuming.
+
+### Safely Evolving the Schema While Running
+
+If the pipeline is already running and you need to add a new table, column, or relationship to `core.yaml`, here is the exact safe procedure you must follow:
+
+### Step 1: Tell Debezium to watch the new table
+Update the `"table.include.list"` in `postgres-source.json` and push that updated config to Kafka Connect. Debezium will immediately start capturing *new* changes for that table and sending them to Kafka. *(Note: Skip this step if you are only adding columns or relationships to an existing table).*
+
+### Step 2: Stop the Python Consumer
+Gracefully stop the currently running `python main.py run` process. Because Kafka stores the messages safely, no data is lost while the script is offline.
+
+### Step 3: Update core.yaml
+Add your new table, columns, hub nodes, or relationships to the `config/mappings/core.yaml` file.
+
+### Step 4: Provision Constraints (CRITICAL)
+Before you start the consumer again, you must run:
+```bash
+python main.py provision --all
+```
+Because the operations are strictly idempotent, this is perfectly safe to run on an already-running system. It will look at your updated `core.yaml`, see any new tables or stub labels, and quickly create the necessary uniqueness constraints in Neo4j to prevent full database scans.
+
+### Step 5: Start the Python Consumer
+Start the pipeline again:
+```bash
+python main.py run
+```
+The consumer will read the new `core.yaml` into memory, process any messages that backed up in Kafka while it was offline, and start correctly routing your new schema for all new changes.
+
+### Step 6: Backfill the Historical Data
+Because Debezium only caught changes from Step 1 onward, Neo4j is missing all the old data for that table/column. You need to pull the historical data directly from PostgreSQL:
+```bash
+# Example for a specific table
+python main.py backfill --org <org_id> --table <your_new_table>
+```
+The backfill script bypasses Kafka, reads the historical data directly from PostgreSQL, and pushes it through the exact same routing and Cypher logic into Neo4j. It is completely safe to run this while the streaming consumer is running in the background.
+
+### Daily checks
+
+```bash
+# [APP]
+curl -s localhost:8083/connectors/cdc-postgres-source/status | python -m json.tool   # RUNNING
+ls quarantine/                                                                        # empty
+curl -s localhost:9108/metrics | head -20                                             # consumer metrics
+```
+
+---
+
+## Failure map
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| Connector `FAILED`, DNS error | `DEBEZIUM_PG_HOST` wrong | must be the PG host's IP, reachable from the container |
+| Connector `FAILED`, auth error | `pg_hba.conf` on **[PG]** | add the workstation subnet, reload |
+| Consumer: `UNKNOWN_TOPIC_OR_PART` | table has had no changes yet | harmless; resolves on first write |
+| Row inserted, nothing in Neo4j | table missing from `table.include.list` | add it, re-register, restart consumer |
+| Deletes not reflected | `REPLICA IDENTITY` not FULL | run the ALTER, see 1.4 |
+| Quarantine growing | unknown tenant, or missing tenancy column | read the reason field in the JSONL |
+| `provision` fails on CREATE DATABASE | Neo4j is Community | Enterprise is required |
+| Slot lag growing continuously | consumer down or lagging | restart it; if stopped for long, drop the slot and re-backfill |
+
+---
+
+## Deferred — known limitations
+
+- **9 of ~31 node types are not yet mapped.** They need `joined`, `derived`, or `union` support (User, Channel, Queue, Conversation, ChannelType, ConversationJourney, ChannelAutomationPolicy, ConversationParticipant, WorkNote). These are pipeline features, not mappings.
+- **`cdp.identity_keys` (ContactPoint) is excluded.** Your batch loader renames `key_type → point_type` and `key_value → value`; CDC cannot rename, so both spellings would end up on the same node. Align the loaders before mapping it.
+- **`Order -[:CONTAINS]-> Offering` is excluded.** `cdp.order_items.product_id` does not join to `inventory.products.id` (verified: 0 matches), so the edge would only create orphan stub nodes.
+- **JSONB and array columns are omitted** from mappings (`custom_fields`, `consent_json`, `traits_json`, `metadata`, `candidate_scores`). Neo4j cannot store a nested map. Add them as typed `custom_properties` once their shape is confirmed.
+- **`accounts.setup_business_hour_shifts` (Shift) is excluded.** It has no `organization_id`; the tenant must be derived through `business_hours_id`, which needs the derived-tenant-scope feature.

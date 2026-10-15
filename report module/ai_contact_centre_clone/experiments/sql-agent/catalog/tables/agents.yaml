@@ -1,0 +1,15 @@
+name: ccass.agents
+alias: a
+schema: ccass
+grain: agent
+purpose: CCaaS agent identity. Join from assigned_agent_id or assignment.agent_id.
+aliases: [agent, advisor]
+columns:
+  - { name: id, type: bigint, pk: true, description: Agent id }
+  - { name: organization_id, type: bigint, description: Tenant id }
+  - { name: display_name, type: text, description: Display name }
+  - { name: email, type: text, description: Work email }
+  - { name: status, type: text, values: [active, inactive], description: Agent status }
+  - { name: setup_user_id, type: bigint, description: Linked setup user }
+sample_rows:
+  - { id: 12, display_name: Priya N, email: priya@tenant.example, status: active, setup_user_id: 55 }

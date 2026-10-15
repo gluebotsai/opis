@@ -1,0 +1,60 @@
+{
+  "turn_id": "c1003d8c",
+  "timestamp": "2026-10-09T12:20:38.668092+00:00",
+  "question": "What percentage of interactions required a transfer?",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1018,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong><p>Transfer percentage</p></strong></p><p>The percentage of conversations where transferred_at is set for all time is <strong>0.47318611987381703470</strong>.</p><p>Would you like to see a list of the specific conversations that were transferred?</p>",
+  "card": "card: none",
+  "facts": "result_id: r1\nwindow: all time\ncertified: false\ntask_goal: Calculate the percentage of conversations where transferred_at is set.\nanswer_type: percentage\nrow_count: 1\nrow 1: ?column?=0.47318611987381703470",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1018,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "What percentage of interactions required a transfer?",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants to know the percentage of interactions that were transferred.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Calculate the percentage of conversations where transferred_at is set.",
+          "time": "all time",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "percentage"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": false,
+        "kpi_id": null,
+        "row_count": 1
+      }
+    ],
+    "facts": "result_id: r1\nwindow: all time\ncertified: false\ntask_goal: Calculate the percentage of conversations where transferred_at is set.\nanswer_type: percentage\nrow_count: 1\nrow 1: ?column?=0.47318611987381703470",
+    "grounded": true,
+    "card": "card: none"
+  },
+  "error": null
+}

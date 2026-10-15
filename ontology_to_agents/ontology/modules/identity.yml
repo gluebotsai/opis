@@ -1,0 +1,87 @@
+# Module: identity
+module: identity
+layer: domain
+depends_on: [core]
+usecase: >
+  Customer Identification & Merge, contact coworker, support_bot enrich.
+  Create/update contacts with draft+confirm. Merge is never silent.
+
+classes:
+  - id: Identity
+    definition: One identifier for a party (cdpId, email, phone, crmId, social).
+    properties: [type, value, verified]
+    relations:
+      identifies: Party
+
+  - id: ContactProfile
+    definition: Unified view assembled from identities and enrich.
+    relations:
+      of: Contact
+      resolvedFrom: Identity
+
+  - id: Contact
+    extends: Person
+    definition: Named person record in CC contact book (may resolve to Customer).
+    properties:
+      - firstName
+      - lastName
+      - primaryEmail
+      - primaryPhone
+      - secondaryPhone
+      - gender
+      - city
+      - country
+      - isActive
+    relations:
+      resolvesTo: Contact
+      hasSkill: ContactSkill
+
+  - id: ContactDraft
+    definition: Staged create/update before confirmation. Not an instance of Contact yet.
+    properties: [mode, nextField, skippedFields]
+
+  - id: ContactSkill
+    definition: Skill tag on a contact (routing / eligibility).
+    properties: [name]
+
+relations:
+  - { from: Identity, type: identifies, to: Party }
+  - { from: Contact, type: resolves_to, to: Contact }
+  - { from: Contact, type: has_skill, to: ContactSkill }
+
+actions:
+  - id: action.list_contacts
+    operates_on: [Contact]
+    mutates: false
+
+  - id: action.get_contact
+    operates_on: [Contact]
+    mutates: false
+
+  - id: action.stage_contact_draft
+    operates_on: [ContactDraft]
+    mutates: false
+    definition: Stage fields; does not persist Contact.
+
+  - id: action.create_contact
+    operates_on: [Contact]
+    requires: [draftComplete, userConfirmed]
+    maps_to_tools: [create_contact]
+
+  - id: action.update_contact
+    operates_on: [Contact]
+    requires: [identityResolved, userConfirmed]
+    maps_to_tools: [update_contact]
+
+  - id: action.contact_enrich
+    operates_on: [Contact, Contact]
+    requires: []
+    definition: Apply stated profile fields; conflicts need confirmedFields.
+    maps_to_tools: [contact_enrich]
+
+  - id: action.merge_contacts
+    operates_on: [Contact]
+    requires: [approvalGranted]
+    definition: Duplicate merge remains approval-gated.
+
+metric_ids: []

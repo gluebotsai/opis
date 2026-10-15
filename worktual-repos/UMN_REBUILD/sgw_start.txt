@@ -1,0 +1,29 @@
+From the `ur-signaling` directory:
+
+```bash
+cd ~/Documents/REBUILD_CURSORAI/UMN_rebuild_start_aug_03_26/ur-signaling
+./scripts/run-local.sh
+```
+
+That builds if needed, then runs:
+
+```bash
+./build/ur-signaling configs/ur-signaling.conf.json
+```
+
+**Before start**
+- Redis up at `192.168.13.190:6379` (or override with `UR_REDIS_*` env vars)
+- Host has IP `192.168.13.190` (SIP bind)
+- Prefer cwd = `ur-signaling/` so relative paths work (`configs/…`, `logs/ur-signaling.log`, `data/…`)
+
+**While running**
+- Foreground process — leave the terminal open
+- Stop with **Ctrl+C**
+
+**Check it’s up**
+
+```bash
+ps -eo pid,cmd | grep '[.]/build/ur-signaling'
+ss -lunup | rg '15060'
+tail -f logs/ur-signaling.log
+```

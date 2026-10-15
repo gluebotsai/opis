@@ -1,0 +1,101 @@
+{
+  "started": "2026-08-12T14:11:43.027Z",
+  "finished": "2026-08-12T14:16:38.842Z",
+  "base": "http://127.0.0.1:3000",
+  "agents": "http://127.0.0.1:8012",
+  "passed": 30,
+  "failed": 0,
+  "bySeverity": {
+    "CRITICAL": 0,
+    "HIGH": 0,
+    "MED": 0,
+    "LOW": 0
+  },
+  "findings": [],
+  "flows": [
+    {
+      "id": "A",
+      "name": "Create → enrich → creator notes",
+      "status": "ok",
+      "notes": "enrich reassigned to Mohamed Fazil; creator retained note access"
+    },
+    {
+      "id": "B",
+      "name": "Resolver create denial",
+      "status": "ok",
+      "notes": "API + Express + Agents all deny"
+    },
+    {
+      "id": "C",
+      "name": "Agent coworker create intent",
+      "status": "ok",
+      "notes": "I've noted down **Alice** as the customer. To make sure we can get in touch with her, could you plea"
+    },
+    {
+      "id": "D",
+      "name": "Escalate ticket",
+      "status": "ok",
+      "notes": "resolver=sri annamalai"
+    },
+    {
+      "id": "E",
+      "name": "KB create + RBAC",
+      "status": "ok",
+      "notes": "validation + resolver gate ok"
+    },
+    {
+      "id": "F",
+      "name": "Resolver scope matrix",
+      "status": "ok",
+      "notes": "assignee only; team/unassigned/org blocked"
+    },
+    {
+      "id": "G",
+      "name": "Creator access to reassigned tickets",
+      "status": "ok",
+      "notes": "status update ok; steal blocked or unchanged"
+    },
+    {
+      "id": "H",
+      "name": "Cross-org isolation",
+      "status": "ok",
+      "notes": "org-scoped; ticket_number collisions handled"
+    },
+    {
+      "id": "I",
+      "name": "Customers directory",
+      "status": "ok",
+      "notes": "read-only"
+    },
+    {
+      "id": "J",
+      "name": "Macros RBAC",
+      "status": "ok",
+      "notes": ""
+    },
+    {
+      "id": "K",
+      "name": "Coworker ui-actions counts",
+      "status": "ok",
+      "notes": ""
+    },
+    {
+      "id": "L",
+      "name": "SLA dueAt on create",
+      "status": "ok",
+      "notes": "2026-08-13T14:15:21.917Z"
+    },
+    {
+      "id": "M",
+      "name": "Ticket number uniqueness",
+      "status": "ok",
+      "notes": "global sequence · #13138 ≠ #13139"
+    }
+  ],
+  "flowSummary": {
+    "ok": 13,
+    "bug": 0,
+    "wrong": 0,
+    "skip": 0
+  }
+}

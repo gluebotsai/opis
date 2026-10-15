@@ -1,0 +1,1477 @@
+version: 2026.09.3
+certified_only_in_prompts: true
+note: Auto-generated from semantic/dbt. MetricFlow name = agent id.
+sources:
+  aiccaas:
+    product: aiccaas
+    kind: dbt_metricflow
+    file: semantic/dbt/ccaas/default/dbt/models/semantic_layer/semantic_layer.yml
+    metric_count: 58
+  ticketing:
+    product: ticketing
+    kind: dbt_metricflow
+    file: semantic/dbt/ticketing/default/dbt/models/semantic_layer/semantic_layer.yml
+    metric_count: 95
+  crm:
+    product: crm
+    kind: dbt_metricflow
+    file: semantic/dbt/crm/default/dbt/models/semantic_layer/semantic_layer.yml
+    metric_count: 82
+  campaign:
+    product: campaign
+    kind: dbt_metricflow
+    file: semantic/dbt/campaign/default/dbt/models/semantic_layer/metrics.yml
+    metric_count: 40
+  webtracking:
+    product: webtracking
+    kind: dbt_metricflow
+    file: semantic/dbt/webtracking/default/dbt/models/semantic_layer/semantic_layer.yml
+    metric_count: 83
+metrics:
+  total_conversations:
+    certified: true
+    source: aiccaas
+    source_metric: total_conversations
+  handled_volume:
+    certified: true
+    source: aiccaas
+    source_metric: handled_volume
+  resolved_conversations_count:
+    certified: true
+    source: aiccaas
+    source_metric: resolved_conversations_count
+  resolution_rate:
+    certified: true
+    sources:
+      aiccaas:
+        certified: true
+        source_metric: resolution_rate
+      ticketing:
+        certified: true
+        source_metric: resolution_rate
+  webchat_volume:
+    certified: true
+    source: aiccaas
+    source_metric: webchat_volume
+  call_volume:
+    certified: true
+    source: aiccaas
+    source_metric: call_volume
+  chat_volume:
+    certified: true
+    source: aiccaas
+    source_metric: chat_volume
+  email_volume:
+    certified: true
+    source: aiccaas
+    source_metric: email_volume
+  instagram_volume:
+    certified: true
+    source: aiccaas
+    source_metric: instagram_volume
+  whatsapp_volume:
+    certified: true
+    source: aiccaas
+    source_metric: whatsapp_volume
+  facebook_volume:
+    certified: true
+    source: aiccaas
+    source_metric: facebook_volume
+  social_media_volume:
+    certified: true
+    source: aiccaas
+    source_metric: social_media_volume
+  unique_contacts_handled:
+    certified: true
+    source: aiccaas
+    source_metric: unique_contacts_handled
+  open_conversations:
+    certified: true
+    source: aiccaas
+    source_metric: open_conversations
+  breached_sla_count:
+    certified: true
+    source: aiccaas
+    source_metric: breached_sla_count
+  total_sla_states:
+    certified: true
+    source: aiccaas
+    source_metric: total_sla_states
+  sla_breach_rate:
+    certified: true
+    sources:
+      aiccaas:
+        certified: true
+        source_metric: sla_breach_rate
+      ticketing:
+        certified: true
+        source_metric: sla_breach_rate
+  total_agents:
+    certified: true
+    source: aiccaas
+    source_metric: total_agents
+  active_agents:
+    certified: true
+    source: aiccaas
+    source_metric: active_agents
+  total_agents_setup:
+    certified: true
+    source: aiccaas
+    source_metric: total_agents_setup
+  active_agents_setup:
+    certified: true
+    source: aiccaas
+    source_metric: active_agents_setup
+  open_agent_tasks:
+    certified: true
+    source: aiccaas
+    source_metric: open_agent_tasks
+  callback_tasks:
+    certified: true
+    source: aiccaas
+    source_metric: callback_tasks
+  follow_up_tasks:
+    certified: true
+    source: aiccaas
+    source_metric: follow_up_tasks
+  suggestion_tasks:
+    certified: true
+    source: aiccaas
+    source_metric: suggestion_tasks
+  agents_assigned_callback:
+    certified: true
+    source: aiccaas
+    source_metric: agents_assigned_callback
+  total_transfers:
+    certified: true
+    source: aiccaas
+    source_metric: total_transfers
+  handover_rate:
+    certified: true
+    source: aiccaas
+    source_metric: handover_rate
+  handoff_conversations:
+    certified: true
+    source: aiccaas
+    source_metric: handoff_conversations
+  ai_handover_rate:
+    certified: true
+    source: aiccaas
+    source_metric: ai_handover_rate
+  ai_only_completed_conversations:
+    certified: true
+    source: aiccaas
+    source_metric: ai_only_completed_conversations
+  ai_containment_rate:
+    certified: true
+    source: aiccaas
+    source_metric: ai_containment_rate
+  resolved_dispositions:
+    certified: true
+    source: aiccaas
+    source_metric: resolved_dispositions
+  total_queues_configured:
+    certified: true
+    source: aiccaas
+    source_metric: total_queues_configured
+  total_queue_agent_assignments:
+    certified: true
+    source: aiccaas
+    source_metric: total_queue_agent_assignments
+  total_teams:
+    certified: true
+    source: aiccaas
+    source_metric: total_teams
+  average_speed_of_answer:
+    certified: true
+    source: aiccaas
+    source_metric: average_speed_of_answer
+  average_first_response_time:
+    certified: true
+    source: aiccaas
+    source_metric: average_first_response_time
+  human_handle_seconds_sum:
+    certified: true
+    source: aiccaas
+    source_metric: human_handle_seconds_sum
+  completed_leg_count:
+    certified: true
+    source: aiccaas
+    source_metric: completed_leg_count
+  average_handle_time:
+    certified: true
+    source: aiccaas
+    source_metric: average_handle_time
+  total_active_agent_count:
+    certified: true
+    source: aiccaas
+    source_metric: total_active_agent_count
+  total_agent_capacity:
+    certified: true
+    source: aiccaas
+    source_metric: total_agent_capacity
+  human_agent_occupancy_rate_capacity:
+    certified: true
+    source: aiccaas
+    source_metric: human_agent_occupancy_rate_capacity
+  handling_or_wrap_seconds:
+    certified: true
+    source: aiccaas
+    source_metric: handling_or_wrap_seconds
+  logged_in_eligible_seconds:
+    certified: true
+    source: aiccaas
+    source_metric: logged_in_eligible_seconds
+  human_agent_occupancy_rate_presence:
+    certified: true
+    source: aiccaas
+    source_metric: human_agent_occupancy_rate_presence
+  missed_assignments:
+    certified: true
+    source: aiccaas
+    source_metric: missed_assignments
+  total_assignments:
+    certified: true
+    source: aiccaas
+    source_metric: total_assignments
+  missed_contact_rate:
+    certified: true
+    source: aiccaas
+    source_metric: missed_contact_rate
+  tool_executions_total:
+    certified: true
+    source: aiccaas
+    source_metric: tool_executions_total
+  tool_executions_succeeded:
+    certified: true
+    source: aiccaas
+    source_metric: tool_executions_succeeded
+  tool_success_rate:
+    certified: true
+    source: aiccaas
+    source_metric: tool_success_rate
+  agent_assist_suggestions_total:
+    certified: true
+    source: aiccaas
+    source_metric: agent_assist_suggestions_total
+  agent_assist_accepted_or_modified:
+    certified: true
+    source: aiccaas
+    source_metric: agent_assist_accepted_or_modified
+  agent_assist_modified:
+    certified: true
+    source: aiccaas
+    source_metric: agent_assist_modified
+  agent_assist_adoption_rate:
+    certified: true
+    source: aiccaas
+    source_metric: agent_assist_adoption_rate
+  agent_assist_modification_rate:
+    certified: true
+    source: aiccaas
+    source_metric: agent_assist_modification_rate
+  ticket_volume:
+    certified: true
+    source: ticketing
+    source_metric: ticket_volume
+  resolved_tickets_metric:
+    certified: true
+    source: ticketing
+    source_metric: resolved_tickets_metric
+  open_tickets_metric:
+    certified: true
+    source: ticketing
+    source_metric: open_tickets_metric
+  active_tickets_metric:
+    certified: true
+    source: ticketing
+    source_metric: active_tickets_metric
+  unassigned_tickets_metric:
+    certified: true
+    source: ticketing
+    source_metric: unassigned_tickets_metric
+  unassignment_rate:
+    certified: true
+    source: ticketing
+    source_metric: unassignment_rate
+  customers_served:
+    certified: true
+    source: ticketing
+    source_metric: customers_served
+  accounts_served:
+    certified: true
+    source: ticketing
+    source_metric: accounts_served
+  open_ticket_age_days_total:
+    certified: true
+    source: ticketing
+    source_metric: open_ticket_age_days_total
+  average_open_ticket_age_days:
+    certified: true
+    source: ticketing
+    source_metric: average_open_ticket_age_days
+  tickets_created_today_metric:
+    certified: true
+    source: ticketing
+    source_metric: tickets_created_today_metric
+  tickets_created_by_me:
+    certified: true
+    source: ticketing
+    source_metric: tickets_created_by_me
+  ticket_active_days:
+    certified: true
+    source: ticketing
+    source_metric: ticket_active_days
+  tickets_last_30_days:
+    certified: true
+    source: ticketing
+    source_metric: tickets_last_30_days
+  days_since_last_ticket:
+    certified: true
+    source: ticketing
+    source_metric: days_since_last_ticket
+  reopened_tickets_metric:
+    certified: true
+    source: ticketing
+    source_metric: reopened_tickets_metric
+  high_priority_ticket_volume:
+    certified: true
+    source: ticketing
+    source_metric: high_priority_ticket_volume
+  closed_tickets_metric:
+    certified: true
+    source: ticketing
+    source_metric: closed_tickets_metric
+  pending_tickets_metric:
+    certified: true
+    source: ticketing
+    source_metric: pending_tickets_metric
+  assigned_tickets_metric:
+    certified: true
+    source: ticketing
+    source_metric: assigned_tickets_metric
+  assignment_rate:
+    certified: true
+    source: ticketing
+    source_metric: assignment_rate
+  tickets_last_7_days:
+    certified: true
+    source: ticketing
+    source_metric: tickets_last_7_days
+  average_tickets_per_day:
+    certified: true
+    source: ticketing
+    source_metric: average_tickets_per_day
+  active_customers_metric:
+    certified: true
+    source: ticketing
+    source_metric: active_customers_metric
+  total_customers_metric:
+    certified: true
+    source: ticketing
+    source_metric: total_customers_metric
+  breached_tickets_metric:
+    certified: true
+    source: ticketing
+    source_metric: breached_tickets_metric
+  resolution_hours_total:
+    certified: true
+    source: ticketing
+    source_metric: resolution_hours_total
+  resolved_for_avg:
+    certified: true
+    source: ticketing
+    source_metric: resolved_for_avg
+  average_resolution_time_hours:
+    certified: true
+    source: ticketing
+    source_metric: average_resolution_time_hours
+  first_response_hours_total:
+    certified: true
+    source: ticketing
+    source_metric: first_response_hours_total
+  tickets_with_first_response_metric:
+    certified: true
+    source: ticketing
+    source_metric: tickets_with_first_response_metric
+  average_first_response_hours:
+    certified: true
+    source: ticketing
+    source_metric: average_first_response_hours
+  average_first_response_minutes:
+    certified: true
+    source: ticketing
+    source_metric: average_first_response_minutes
+  first_response_sla_met_metric:
+    certified: true
+    source: ticketing
+    source_metric: first_response_sla_met_metric
+  tickets_with_first_response_sla_target_metric:
+    certified: true
+    source: ticketing
+    source_metric: tickets_with_first_response_sla_target_metric
+  first_response_sla_compliance_rate:
+    certified: true
+    source: ticketing
+    source_metric: first_response_sla_compliance_rate
+  first_response_coverage_rate:
+    certified: true
+    source: ticketing
+    source_metric: first_response_coverage_rate
+  resolution_hours_variance_total:
+    certified: true
+    source: ticketing
+    source_metric: resolution_hours_variance_total
+  tickets_with_sla_target_metric:
+    certified: true
+    source: ticketing
+    source_metric: tickets_with_sla_target_metric
+  average_resolution_hours_variance:
+    certified: true
+    source: ticketing
+    source_metric: average_resolution_hours_variance
+  tickets_with_resolution_sla_target_metric:
+    certified: true
+    source: ticketing
+    source_metric: tickets_with_resolution_sla_target_metric
+  resolution_sla_met_metric:
+    certified: true
+    source: ticketing
+    source_metric: resolution_sla_met_metric
+  resolution_sla_compliance_rate:
+    certified: true
+    source: ticketing
+    source_metric: resolution_sla_compliance_rate
+  due_today_tickets_metric:
+    certified: true
+    source: ticketing
+    source_metric: due_today_tickets_metric
+  current_overdue_tickets_metric:
+    certified: true
+    source: ticketing
+    source_metric: current_overdue_tickets_metric
+  unanswered_tickets_metric:
+    certified: true
+    source: ticketing
+    source_metric: unanswered_tickets_metric
+  sla_at_risk_tickets_metric:
+    certified: true
+    source: ticketing
+    source_metric: sla_at_risk_tickets_metric
+  average_overdue_hours:
+    certified: true
+    source: ticketing
+    source_metric: average_overdue_hours
+  queues_at_risk_metric:
+    certified: true
+    source: ticketing
+    source_metric: queues_at_risk_metric
+  csat_score_total:
+    certified: true
+    source: ticketing
+    source_metric: csat_score_total
+  csat_rated_metric:
+    certified: true
+    source: ticketing
+    source_metric: csat_rated_metric
+  average_csat_score:
+    certified: true
+    source: ticketing
+    source_metric: average_csat_score
+  csat_response_rate:
+    certified: true
+    source: ticketing
+    source_metric: csat_response_rate
+  csat_promoter_metric:
+    certified: true
+    source: ticketing
+    source_metric: csat_promoter_metric
+  csat_neutral_metric:
+    certified: true
+    source: ticketing
+    source_metric: csat_neutral_metric
+  csat_detractor_metric:
+    certified: true
+    source: ticketing
+    source_metric: csat_detractor_metric
+  csat_promoter_rate:
+    certified: true
+    source: ticketing
+    source_metric: csat_promoter_rate
+  csat_detractor_rate:
+    certified: true
+    source: ticketing
+    source_metric: csat_detractor_rate
+  reopen_rate:
+    certified: true
+    source: ticketing
+    source_metric: reopen_rate
+  queue_coverage_count:
+    certified: true
+    source: ticketing
+    source_metric: queue_coverage_count
+  distinct_agents_in_queues:
+    certified: true
+    source: ticketing
+    source_metric: distinct_agents_in_queues
+  distinct_queues_covered:
+    certified: true
+    source: ticketing
+    source_metric: distinct_queues_covered
+  tickets_with_resolver_metric:
+    certified: true
+    source: ticketing
+    source_metric: tickets_with_resolver_metric
+  tickets_without_resolver_metric:
+    certified: true
+    source: ticketing
+    source_metric: tickets_without_resolver_metric
+  active_agents_metric:
+    certified: true
+    source: ticketing
+    source_metric: active_agents_metric
+  queue_count:
+    certified: true
+    source: ticketing
+    source_metric: queue_count
+  note_volume:
+    certified: true
+    source: ticketing
+    source_metric: note_volume
+  internal_note_volume:
+    certified: true
+    source: ticketing
+    source_metric: internal_note_volume
+  customer_reply_volume:
+    certified: true
+    source: ticketing
+    source_metric: customer_reply_volume
+  internal_note_ratio:
+    certified: true
+    source: ticketing
+    source_metric: internal_note_ratio
+  average_notes_per_ticket:
+    certified: true
+    source: ticketing
+    source_metric: average_notes_per_ticket
+  notification_volume:
+    certified: true
+    source: ticketing
+    source_metric: notification_volume
+  unread_notifications_metric:
+    certified: true
+    source: ticketing
+    source_metric: unread_notifications_metric
+  outbound_email_volume:
+    certified: true
+    source: ticketing
+    source_metric: outbound_email_volume
+  audit_event_volume:
+    certified: true
+    source: ticketing
+    source_metric: audit_event_volume
+  escalation_volume:
+    certified: true
+    source: ticketing
+    source_metric: escalation_volume
+  reassignment_volume:
+    certified: true
+    source: ticketing
+    source_metric: reassignment_volume
+  escalation_rate:
+    certified: true
+    source: ticketing
+    source_metric: escalation_rate
+  kb_article_volume:
+    certified: true
+    source: ticketing
+    source_metric: kb_article_volume
+  kb_published_article_metric:
+    certified: true
+    source: ticketing
+    source_metric: kb_published_article_metric
+  kb_views_total:
+    certified: true
+    source: ticketing
+    source_metric: kb_views_total
+  macro_volume:
+    certified: true
+    source: ticketing
+    source_metric: macro_volume
+  recommendation_volume:
+    certified: true
+    source: ticketing
+    source_metric: recommendation_volume
+  accepted_recommendations_metric:
+    certified: true
+    source: ticketing
+    source_metric: accepted_recommendations_metric
+  dismissed_recommendations_metric:
+    certified: true
+    source: ticketing
+    source_metric: dismissed_recommendations_metric
+  open_recommendations_metric:
+    certified: true
+    source: ticketing
+    source_metric: open_recommendations_metric
+  recommendation_acceptance_rate:
+    certified: true
+    source: ticketing
+    source_metric: recommendation_acceptance_rate
+  approval_volume:
+    certified: true
+    source: ticketing
+    source_metric: approval_volume
+  approved_metric:
+    certified: true
+    source: ticketing
+    source_metric: approved_metric
+  rejected_metric:
+    certified: true
+    source: ticketing
+    source_metric: rejected_metric
+  pending_approvals_metric:
+    certified: true
+    source: ticketing
+    source_metric: pending_approvals_metric
+  approval_rate:
+    certified: true
+    source: ticketing
+    source_metric: approval_rate
+  decision_hours_total:
+    certified: true
+    source: ticketing
+    source_metric: decision_hours_total
+  decided_approvals_metric:
+    certified: true
+    source: ticketing
+    source_metric: decided_approvals_metric
+  average_decision_hours:
+    certified: true
+    source: ticketing
+    source_metric: average_decision_hours
+  proactive_audit_volume:
+    certified: true
+    source: ticketing
+    source_metric: proactive_audit_volume
+  average_deal_volume:
+    certified: true
+    source: crm
+    source_metric: average_deal_volume
+  average_open_pipeline_value:
+    certified: true
+    source: crm
+    source_metric: average_open_pipeline_value
+  average_deals_won:
+    certified: true
+    source: crm
+    source_metric: average_deals_won
+  average_deal_lost:
+    certified: true
+    source: crm
+    source_metric: average_deal_lost
+  average_closed_deal:
+    certified: true
+    source: crm
+    source_metric: average_closed_deal
+  average_deal_won_rate:
+    certified: true
+    source: crm
+    source_metric: average_deal_won_rate
+  average_loss_rate:
+    certified: true
+    source: crm
+    source_metric: average_loss_rate
+  average_win_rate_of_the_agent:
+    certified: true
+    source: crm
+    source_metric: average_win_rate_of_the_agent
+  average_contact_volume:
+    certified: true
+    source: crm
+    source_metric: average_contact_volume
+  average_new_lead_volume:
+    certified: true
+    source: crm
+    source_metric: average_new_lead_volume
+  average_mql_contact_count:
+    certified: true
+    source: crm
+    source_metric: average_mql_contact_count
+  average_eligible_lead_count:
+    certified: true
+    source: crm
+    source_metric: average_eligible_lead_count
+  average_customer_contact_count:
+    certified: true
+    source: crm
+    source_metric: average_customer_contact_count
+  average_mql_rate:
+    certified: true
+    source: crm
+    source_metric: average_mql_rate
+  average_customer_conversion_rate:
+    certified: true
+    source: crm
+    source_metric: average_customer_conversion_rate
+  average_proposal_sent:
+    certified: true
+    source: crm
+    source_metric: average_proposal_sent
+  average_proposal_accepted:
+    certified: true
+    source: crm
+    source_metric: average_proposal_accepted
+  average_proposal_acceptance_rate:
+    certified: true
+    source: crm
+    source_metric: average_proposal_acceptance_rate
+  average_units_sold:
+    certified: true
+    source: crm
+    source_metric: average_units_sold
+  average_product_revenue:
+    certified: true
+    source: crm
+    source_metric: average_product_revenue
+  average_distinct_product_sold_count:
+    certified: true
+    source: crm
+    source_metric: average_distinct_product_sold_count
+  contact_volume:
+    certified: true
+    source: crm
+    source_metric: contact_volume
+  new_lead_volume:
+    certified: true
+    source: crm
+    source_metric: new_lead_volume
+  mql_rate:
+    certified: true
+    source: crm
+    source_metric: mql_rate
+  mql_contact_count:
+    certified: true
+    source: crm
+    source_metric: mql_contact_count
+  eligible_lead_contact_count:
+    certified: true
+    source: crm
+    source_metric: eligible_lead_contact_count
+  customer_conversion_rate:
+    certified: true
+    source: crm
+    source_metric: customer_conversion_rate
+  customer_contact_count:
+    certified: true
+    source: crm
+    source_metric: customer_contact_count
+  funnel_eligible_contact_count:
+    certified: true
+    source: crm
+    source_metric: funnel_eligible_contact_count
+  deal_volume:
+    certified: true
+    source: crm
+    source_metric: deal_volume
+  open_pipeline_value:
+    certified: true
+    source: crm
+    source_metric: open_pipeline_value
+  won_deal_rate:
+    certified: true
+    source: crm
+    source_metric: won_deal_rate
+  won_deals_metric:
+    certified: true
+    source: crm
+    source_metric: won_deals_metric
+  closed_deals_metric:
+    certified: true
+    source: crm
+    source_metric: closed_deals_metric
+  loss_rate:
+    certified: true
+    source: crm
+    source_metric: loss_rate
+  lost_deals_metric:
+    certified: true
+    source: crm
+    source_metric: lost_deals_metric
+  average_sales_cycle_days:
+    certified: true
+    source: crm
+    source_metric: average_sales_cycle_days
+  sales_cycle_days_total:
+    certified: true
+    source: crm
+    source_metric: sales_cycle_days_total
+  won_deals_for_avg:
+    certified: true
+    source: crm
+    source_metric: won_deals_for_avg
+  average_deal_value:
+    certified: true
+    source: crm
+    source_metric: average_deal_value
+  won_deal_amount_total:
+    certified: true
+    source: crm
+    source_metric: won_deal_amount_total
+  lost_deal_amount_total:
+    certified: true
+    source: crm
+    source_metric: lost_deal_amount_total
+  pipeline_coverage_ratio:
+    certified: true
+    source: crm
+    source_metric: pipeline_coverage_ratio
+  sales_agent_win_rate:
+    certified: true
+    source: crm
+    source_metric: sales_agent_win_rate
+  quote_to_close_rate:
+    certified: true
+    source: crm
+    source_metric: quote_to_close_rate
+  won_deals_with_accepted_quote_metric:
+    certified: true
+    source: crm
+    source_metric: won_deals_with_accepted_quote_metric
+  deals_with_quote_metric:
+    certified: true
+    source: crm
+    source_metric: deals_with_quote_metric
+  proposal_acceptance_rate:
+    certified: true
+    source: crm
+    source_metric: proposal_acceptance_rate
+  proposal_accepted_metric:
+    certified: true
+    source: crm
+    source_metric: proposal_accepted_metric
+  proposal_sent_metric:
+    certified: true
+    source: crm
+    source_metric: proposal_sent_metric
+  order_volume:
+    certified: true
+    source: crm
+    source_metric: order_volume
+  order_gmv:
+    certified: true
+    source: crm
+    source_metric: order_gmv
+  average_order_value:
+    certified: true
+    sources:
+      crm:
+        certified: true
+        source_metric: average_order_value
+      webtracking:
+        certified: true
+        source_metric: average_order_value
+  repurchase_rate:
+    certified: true
+    source: crm
+    source_metric: repurchase_rate
+  repeat_customers_metric:
+    certified: true
+    source: crm
+    source_metric: repeat_customers_metric
+  contacts_with_orders_metric:
+    certified: true
+    source: crm
+    source_metric: contacts_with_orders_metric
+  customer_lifetime_value:
+    certified: true
+    source: crm
+    source_metric: customer_lifetime_value
+  lifetime_order_value_total:
+    certified: true
+    source: crm
+    source_metric: lifetime_order_value_total
+  invoice_outstanding_amount:
+    certified: true
+    source: crm
+    source_metric: invoice_outstanding_amount
+  days_sales_outstanding:
+    certified: true
+    source: crm
+    source_metric: days_sales_outstanding
+  days_to_pay_total:
+    certified: true
+    source: crm
+    source_metric: days_to_pay_total
+  paid_invoices_metric:
+    certified: true
+    source: crm
+    source_metric: paid_invoices_metric
+  units_sold:
+    certified: true
+    source: crm
+    source_metric: units_sold
+  product_revenue:
+    certified: true
+    source: crm
+    source_metric: product_revenue
+  average_selling_price:
+    certified: true
+    source: crm
+    source_metric: average_selling_price
+  product_revenue_total:
+    certified: true
+    source: crm
+    source_metric: product_revenue_total
+  distinct_products_sold_count:
+    certified: true
+    source: crm
+    source_metric: distinct_products_sold_count
+  quoted_product_revenue:
+    certified: true
+    source: crm
+    source_metric: quoted_product_revenue
+  invoiced_product_revenue:
+    certified: true
+    source: crm
+    source_metric: invoiced_product_revenue
+  account_volume:
+    certified: true
+    source: crm
+    source_metric: account_volume
+  franchise_node_volume:
+    certified: true
+    source: crm
+    source_metric: franchise_node_volume
+  total_account_locations:
+    certified: true
+    source: crm
+    source_metric: total_account_locations
+  active_arr:
+    certified: true
+    source: crm
+    source_metric: active_arr
+  contract_renewal_rate:
+    certified: true
+    source: crm
+    source_metric: contract_renewal_rate
+  renewed_contracts_metric:
+    certified: true
+    source: crm
+    source_metric: renewed_contracts_metric
+  contract_volume:
+    certified: true
+    source: crm
+    source_metric: contract_volume
+  contracts_due_for_renewal:
+    certified: true
+    source: crm
+    source_metric: contracts_due_for_renewal
+  deal_activity_volume:
+    certified: true
+    source: crm
+    source_metric: deal_activity_volume
+  deal_activity_completion_rate:
+    certified: true
+    source: crm
+    source_metric: deal_activity_completion_rate
+  completed_deal_activities_metric:
+    certified: true
+    source: crm
+    source_metric: completed_deal_activities_metric
+  contact_activity_volume:
+    certified: true
+    source: crm
+    source_metric: contact_activity_volume
+  open_task_volume:
+    certified: true
+    source: crm
+    source_metric: open_task_volume
+  campaign_volume:
+    certified: true
+    source: campaign
+    source_metric: campaign_volume
+  audience_reached:
+    certified: true
+    source: campaign
+    source_metric: audience_reached
+  touch_count:
+    certified: true
+    source: campaign
+    source_metric: touch_count
+  sent_touch_count:
+    certified: true
+    source: campaign
+    source_metric: sent_touch_count
+  opened_touch_count:
+    certified: true
+    source: campaign
+    source_metric: opened_touch_count
+  clicked_touch_count:
+    certified: true
+    source: campaign
+    source_metric: clicked_touch_count
+  failed_touch_count:
+    certified: true
+    source: campaign
+    source_metric: failed_touch_count
+  unique_contacts_touched:
+    certified: true
+    source: campaign
+    source_metric: unique_contacts_touched
+  template_count:
+    certified: true
+    source: campaign
+    source_metric: template_count
+  approved_template_count:
+    certified: true
+    source: campaign
+    source_metric: approved_template_count
+  engaged_contact_count:
+    certified: true
+    source: campaign
+    source_metric: engaged_contact_count
+  unsubscribed_contact_count:
+    certified: true
+    source: campaign
+    source_metric: unsubscribed_contact_count
+  suppressed_email_count:
+    certified: true
+    source: campaign
+    source_metric: suppressed_email_count
+  bounce_suppressed_count:
+    certified: true
+    source: campaign
+    source_metric: bounce_suppressed_count
+  complaint_suppressed_count:
+    certified: true
+    source: campaign
+    source_metric: complaint_suppressed_count
+  avg_planned_duration_seconds:
+    certified: true
+    source: campaign
+    source_metric: avg_planned_duration_seconds
+  avg_attempt_count:
+    certified: true
+    source: campaign
+    source_metric: avg_attempt_count
+  avg_seconds_to_open:
+    certified: true
+    source: campaign
+    source_metric: avg_seconds_to_open
+  avg_seconds_open_to_click:
+    certified: true
+    source: campaign
+    source_metric: avg_seconds_open_to_click
+  variant_touch_count:
+    certified: true
+    source: campaign
+    source_metric: variant_touch_count
+  variant_sent_touch_count:
+    certified: true
+    source: campaign
+    source_metric: variant_sent_touch_count
+  variant_opened_touch_count:
+    certified: true
+    source: campaign
+    source_metric: variant_opened_touch_count
+  variant_clicked_touch_count:
+    certified: true
+    source: campaign
+    source_metric: variant_clicked_touch_count
+  batch_count:
+    certified: true
+    source: campaign
+    source_metric: batch_count
+  failed_batch_count:
+    certified: true
+    source: campaign
+    source_metric: failed_batch_count
+  avg_batch_processing_seconds:
+    certified: true
+    source: campaign
+    source_metric: avg_batch_processing_seconds
+  rejected_template_count:
+    certified: true
+    source: campaign
+    source_metric: rejected_template_count
+  delivery_rate:
+    certified: true
+    source: campaign
+    source_metric: delivery_rate
+  open_rate:
+    certified: true
+    source: campaign
+    source_metric: open_rate
+  click_rate:
+    certified: true
+    source: campaign
+    source_metric: click_rate
+  failure_rate:
+    certified: true
+    source: campaign
+    source_metric: failure_rate
+  template_approval_rate:
+    certified: true
+    source: campaign
+    source_metric: template_approval_rate
+  unsubscribe_rate:
+    certified: true
+    source: campaign
+    source_metric: unsubscribe_rate
+  suppression_rate:
+    certified: true
+    source: campaign
+    source_metric: suppression_rate
+  bounce_share_of_suppressions:
+    certified: true
+    source: campaign
+    source_metric: bounce_share_of_suppressions
+  complaint_share_of_suppressions:
+    certified: true
+    source: campaign
+    source_metric: complaint_share_of_suppressions
+  batch_failure_rate:
+    certified: true
+    source: campaign
+    source_metric: batch_failure_rate
+  variant_open_rate:
+    certified: true
+    source: campaign
+    source_metric: variant_open_rate
+  variant_click_rate:
+    certified: true
+    source: campaign
+    source_metric: variant_click_rate
+  frequency_per_contact:
+    certified: true
+    source: campaign
+    source_metric: frequency_per_contact
+  web_session_volume:
+    certified: true
+    source: webtracking
+    source_metric: web_session_volume
+  unique_visitors:
+    certified: true
+    source: webtracking
+    source_metric: unique_visitors
+  page_views:
+    certified: true
+    source: webtracking
+    source_metric: page_views
+  average_session_duration:
+    certified: true
+    source: webtracking
+    source_metric: average_session_duration
+  pages_per_session:
+    certified: true
+    source: webtracking
+    source_metric: pages_per_session
+  bounce_count:
+    certified: true
+    source: webtracking
+    source_metric: bounce_count
+  bounce_rate:
+    certified: true
+    source: webtracking
+    source_metric: bounce_rate
+  online_visitors:
+    certified: true
+    source: webtracking
+    source_metric: online_visitors
+  engaged_session_count:
+    certified: true
+    source: webtracking
+    source_metric: engaged_session_count
+  engagement_rate:
+    certified: true
+    source: webtracking
+    source_metric: engagement_rate
+  total_events:
+    certified: true
+    source: webtracking
+    source_metric: total_events
+  events_per_session:
+    certified: true
+    source: webtracking
+    source_metric: events_per_session
+  new_visitor_count:
+    certified: true
+    source: webtracking
+    source_metric: new_visitor_count
+  returning_visitor_count:
+    certified: true
+    source: webtracking
+    source_metric: returning_visitor_count
+  new_visitor_rate:
+    certified: true
+    source: webtracking
+    source_metric: new_visitor_rate
+  returning_visitor_rate:
+    certified: true
+    source: webtracking
+    source_metric: returning_visitor_rate
+  lifetime_new_visitor_count:
+    certified: true
+    source: webtracking
+    source_metric: lifetime_new_visitor_count
+  lifetime_returning_visitor_count:
+    certified: true
+    source: webtracking
+    source_metric: lifetime_returning_visitor_count
+  identified_visitor_count:
+    certified: true
+    source: webtracking
+    source_metric: identified_visitor_count
+  visitor_identification_rate:
+    certified: true
+    source: webtracking
+    source_metric: visitor_identification_rate
+  identified_session_count:
+    certified: true
+    source: webtracking
+    source_metric: identified_session_count
+  identified_session_rate:
+    certified: true
+    source: webtracking
+    source_metric: identified_session_rate
+  campaign_attributed_sessions:
+    certified: true
+    source: webtracking
+    source_metric: campaign_attributed_sessions
+  campaign_attributed_session_rate:
+    certified: true
+    source: webtracking
+    source_metric: campaign_attributed_session_rate
+  landing_page_conversion_rate:
+    certified: true
+    source: webtracking
+    source_metric: landing_page_conversion_rate
+  total_clicks:
+    certified: true
+    source: webtracking
+    source_metric: total_clicks
+  clicks_per_session:
+    certified: true
+    source: webtracking
+    source_metric: clicks_per_session
+  rage_clicks:
+    certified: true
+    source: webtracking
+    source_metric: rage_clicks
+  rage_click_session_count:
+    certified: true
+    source: webtracking
+    source_metric: rage_click_session_count
+  rage_click_rate:
+    certified: true
+    source: webtracking
+    source_metric: rage_click_rate
+  dead_clicks:
+    certified: true
+    source: webtracking
+    source_metric: dead_clicks
+  dead_click_rate:
+    certified: true
+    source: webtracking
+    source_metric: dead_click_rate
+  avg_scroll_depth:
+    certified: true
+    source: webtracking
+    source_metric: avg_scroll_depth
+  sessions_with_deep_scroll:
+    certified: true
+    source: webtracking
+    source_metric: sessions_with_deep_scroll
+  scroll_engagement_rate:
+    certified: true
+    source: webtracking
+    source_metric: scroll_engagement_rate
+  avg_time_on_page_seconds:
+    certified: true
+    source: webtracking
+    source_metric: avg_time_on_page_seconds
+  form_views:
+    certified: true
+    source: webtracking
+    source_metric: form_views
+  form_starts:
+    certified: true
+    source: webtracking
+    source_metric: form_starts
+  form_submits:
+    certified: true
+    source: webtracking
+    source_metric: form_submits
+  form_successes:
+    certified: true
+    source: webtracking
+    source_metric: form_successes
+  form_failures:
+    certified: true
+    source: webtracking
+    source_metric: form_failures
+  form_abandons:
+    certified: true
+    source: webtracking
+    source_metric: form_abandons
+  form_submit_rate:
+    certified: true
+    source: webtracking
+    source_metric: form_submit_rate
+  form_success_rate:
+    certified: true
+    source: webtracking
+    source_metric: form_success_rate
+  form_abandon_rate:
+    certified: true
+    source: webtracking
+    source_metric: form_abandon_rate
+  total_conversions:
+    certified: true
+    source: webtracking
+    source_metric: total_conversions
+  sessions_with_conversions:
+    certified: true
+    source: webtracking
+    source_metric: sessions_with_conversions
+  conversion_rate:
+    certified: true
+    source: webtracking
+    source_metric: conversion_rate
+  total_revenue:
+    certified: true
+    source: webtracking
+    source_metric: total_revenue
+  purchase_count:
+    certified: true
+    source: webtracking
+    source_metric: purchase_count
+  signup_count:
+    certified: true
+    source: webtracking
+    source_metric: signup_count
+  checkout_start_count:
+    certified: true
+    source: webtracking
+    source_metric: checkout_start_count
+  sessions_with_checkout_start:
+    certified: true
+    source: webtracking
+    source_metric: sessions_with_checkout_start
+  checkout_start_rate:
+    certified: true
+    source: webtracking
+    source_metric: checkout_start_rate
+  checkout_conversion_rate:
+    certified: true
+    source: webtracking
+    source_metric: checkout_conversion_rate
+  cart_add_count:
+    certified: true
+    source: webtracking
+    source_metric: cart_add_count
+  sessions_with_cart_add:
+    certified: true
+    source: webtracking
+    source_metric: sessions_with_cart_add
+  cart_add_rate:
+    certified: true
+    source: webtracking
+    source_metric: cart_add_rate
+  product_interaction_count:
+    certified: true
+    source: webtracking
+    source_metric: product_interaction_count
+  sessions_with_product_views:
+    certified: true
+    source: webtracking
+    source_metric: sessions_with_product_views
+  product_view_rate:
+    certified: true
+    source: webtracking
+    source_metric: product_view_rate
+  avg_lcp_ms:
+    certified: true
+    source: webtracking
+    source_metric: avg_lcp_ms
+  avg_fcp_ms:
+    certified: true
+    source: webtracking
+    source_metric: avg_fcp_ms
+  avg_cls:
+    certified: true
+    source: webtracking
+    source_metric: avg_cls
+  avg_inp_ms:
+    certified: true
+    source: webtracking
+    source_metric: avg_inp_ms
+  avg_ttfb_ms:
+    certified: true
+    source: webtracking
+    source_metric: avg_ttfb_ms
+  poor_vitals_event_count:
+    certified: true
+    source: webtracking
+    source_metric: poor_vitals_event_count
+  performance_event_count:
+    certified: true
+    source: webtracking
+    source_metric: performance_event_count
+  poor_vitals_rate:
+    certified: true
+    source: webtracking
+    source_metric: poor_vitals_rate
+  error_count:
+    certified: true
+    source: webtracking
+    source_metric: error_count
+  error_session_count:
+    certified: true
+    source: webtracking
+    source_metric: error_session_count
+  error_session_rate:
+    certified: true
+    source: webtracking
+    source_metric: error_session_rate
+  tracking_consent_granted_count:
+    certified: true
+    source: webtracking
+    source_metric: tracking_consent_granted_count
+  tracking_consent_denied_count:
+    certified: true
+    source: webtracking
+    source_metric: tracking_consent_denied_count
+  consent_action_count:
+    certified: true
+    source: webtracking
+    source_metric: consent_action_count
+  tracking_consent_grant_rate:
+    certified: true
+    source: webtracking
+    source_metric: tracking_consent_grant_rate
+  search_session_count:
+    certified: true
+    source: webtracking
+    source_metric: search_session_count
+  search_usage_rate:
+    certified: true
+    source: webtracking
+    source_metric: search_usage_rate
+  total_custom_events:
+    certified: true
+    source: webtracking
+    source_metric: total_custom_events
+  distinct_custom_event_types:
+    certified: true
+    source: webtracking
+    source_metric: distinct_custom_event_types
+  custom_event_session_count:
+    certified: true
+    source: webtracking
+    source_metric: custom_event_session_count
+  custom_event_session_rate:
+    certified: true
+    source: webtracking
+    source_metric: custom_event_session_rate

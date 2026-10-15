@@ -1,0 +1,69 @@
+# Module: followup
+module: followup
+layer: domain
+depends_on: [core, interaction]
+usecase: >
+  Follow-Up Management (task coworker), Interaction Recovery (proactive),
+  monitoring create_callback_task, Lola CALL_BACK.
+
+classes:
+  - id: Task
+    extends: WorkItem
+    definition: Follow-up work item on My Tasks (admin or coworker assigned).
+    properties: [tab, dueFilter]
+    # tab: admin_assigned | coworker_assigned | done
+    relations:
+      assignee: Agent
+      relatedConversation: Conversation
+      relatedCustomer: Contact
+
+  - id: Callback
+    extends: Task
+    definition: Scheduled outbound recovery or promised call-back.
+    properties: [duePreset, channel]
+    classified_by: [channel, callback.due]
+    relations:
+      customer: Contact
+      assignee: Agent
+      fromInteraction: Conversation
+
+relations:
+  - { from: Task, type: assigned_to, to: Agent }
+  - { from: Task, type: related_to, to: Conversation }
+  - { from: Callback, type: raised_by, to: Contact }
+  - { from: Callback, type: assigned_to, to: Agent }
+  - { from: Callback, type: FROM, to: Conversation }
+
+actions:
+  - id: action.list_tasks
+    operates_on: [Task]
+    mutates: false
+    maps_to_tools: [list_tasks]
+
+  - id: action.get_task
+    operates_on: [Task]
+    mutates: false
+    maps_to_tools: [get_task]
+
+  - id: action.update_task
+    operates_on: [Task]
+    requires: [explicitIntent]
+    definition: complete / dismiss / accept-suggestion only — do not substitute.
+    maps_to_tools: [update_task]
+
+  - id: action.open_task_workspace
+    operates_on: [Task]
+    maps_to_tools: [open_task_workspace]
+
+  - id: action.callback
+    operates_on: [Callback]
+    requires: [consent.support]
+    maps_to_tools: [create_callback_task, CALL_BACK, cc.callback.create]
+    spoke_targets: [contact_centre]
+
+  - id: action.assign_recovery
+    operates_on: [Callback]
+    definition: Pick one workforce agent + due_preset + channel, or skip.
+    maps_to_tools: [proactive]
+
+metric_ids: []

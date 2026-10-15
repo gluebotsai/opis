@@ -1,0 +1,122 @@
+id: performance-analytics
+name: My Performance Analytics
+description: >
+  Use when the user asks about My Performance KPIs, handle time, resolution rate,
+  channel mix, daily trends, transfers, SLA, dispositions, pie/bar/line charts,
+  or performance reports on /agent/performance.
+version: 10
+triggers:
+  - performance
+  - kpi
+  - metrics
+  - how am i doing
+  - report
+  - resolution rate
+  - handle time
+  - channel mix
+  - daily trend
+  - transfers
+  - sla
+  - pie chart
+  - bar chart
+  - line chart
+tools_preferred:
+  - generate_performance_report
+  - ask_semantic_layer
+  - ask_ontology_layer
+  - get_metric
+  - get_metric_schema
+  - sql_analytics
+  - generate_plot
+references:
+  - metrics.yaml
+  - schema-conversations.yaml
+workflow:
+  - Reports-visible KPI, mix, trend, or "why is this displayed rate X%" → generate_performance_report for the selected dashboard period. Match the Reports panel; do not quote a different source.
+  - ask_semantic_layer only when Reports cannot answer (custom joins, metrics not on the panel). Pass chart_type when they asked for a pie, bar, or line.
+  - ask_semantic_layer ok=false → choose generate_performance_report or sql_analytics from the question. Pass metric_ids and chart_type yourself. A miss does not pick a chart for you.
+  - Admin dashboard comparative causal (why X increased vs last week, how two metrics relate) → ask_ontology_layer once. A displayed rate on Reports is not this path.
+  - generate_plot only as fallback when sql_analytics already returned rows without presentation.
+rules:
+  - generate_performance_report is the source of truth for KPIs on Reports: handled, resolution, first response, handle time, First-Reply SLA, transfers, AI channel mix, support agent channel mix, dispositions, daily trends.
+  - 'Scalar Reports KPI cards from ask_semantic_layer are replaced with generate_performance_report so they match the panel. Custom Cube charts stay on Path S.'
+  - Never contradict a Reports number with semantic or ontology output. If the user quotes a dashboard value, retrieve that overview and explain it.
+  - "Why is First-Reply SLA X%? is composition: withinSlaCount of firstResponseCount within 60s of assignment, plus slaBreakdown for who missed. Not a definition. Not ontology."
+  - "Why is the resolution rate X% quotes resolvedCount of handledCount from that card. How many were resolved quotes resolvedCount. What is a Reports KPI quotes the live card, not a definition."
+  - ask_ontology_layer is admin-dashboard-only and only for comparative causal questions. Never use it to explain a currently displayed rate, count, or mix.
+  - Prefer generate_performance_report over SQL for snapshot KPIs, channel mix (pie/bar), disposition, total daily trend, AHT, and custom day windows. One line per channel needs sql_analytics.
+  - AI channel mix versus support agent channel mix are the two Reports donuts (handler slices). Call generate_performance_report with focus ai and/or agent. Never invent product names such as channel IX.
+  - When the user misspells a catalog name, use the canonical Reports name and do not repeat the misspelling as a metric.
+  - Never mention routing, specialists, or other agents in user-visible text.
+  - Pass chart_type from the user's request. A mix/share is not a line chart. A daily count over time is not a pie.
+  - Never invent KPI numbers; use tool rows only.
+  - Never invent causes. Do not say timestamps are missing, not recorded, or that logging is broken unless a tool counted null vs present timestamps. Do not blame staffing, presence, queues, go-live, call length, issue complexity, or agent count unless a tool counted those rows. A zero, a spike, or a disposition mix is the count only. Do not explain a transfer count from a disposition.
+  - Analytics-page missed-contact incidents, forecasts, peak hour, and contributing factors are not Reports KPIs. Use get_dashboard_analytics_snapshot and get_analytics_hourly_volume. A missed-contact rate above 100% is valid unique/demand math, not a reporting bug.
+  - Empty duration (—) means no conversations in the period had both timestamps for that metric. 0s with sampleSize>0 is a rounded sub-second mean. Live monitoring missed/waiting/reached rows are not this KPI.
+  - A day×channel result is one line per channel. Do not flatten it to a single total line.
+  - SELECT/WITH only; single statement; no DML/DDL; no :param placeholders.
+  - Dashboard org dates use COALESCE(assigned_at, resolved_at, ended_at, created_at). Do not filter those questions on assigned_at alone.
+  - assigned_user_id is scoped server-side — do not reference agent_id.
+  - Never paste SQL, tool arguments, or chart JSON in user-visible text. Do not write chart_type, label_column, value_column, or series_column in the reply.
+body: |
+  My Performance analytics for the logged-in agent.
+
+  Canonical names (use these even if the user mistypes them): First-Reply SLA,
+  AI channel mix, support agent channel mix, channel mix, resolution rate,
+  average first response, average handle time. Never copy a typo such as
+  "channel ix" or "channel IX" into the answer.
+
+  Path A (Reports overview — FIRST for anything already on the Reports panel):
+  generate_performance_report once. Pass metric_ids, focus, and chart_type.
+  When the user names a period, pass inclusive ISO start and end computed from
+  Today in the system prompt and omit range. When they name no period, pass the
+  selected dashboard period and do not invent dates. Never ask them to switch
+  to 7 or 30 days.
+  Channel mix / share → channel_mix with pie or bar. AI vs support-agent mix →
+  the same metric with focus ai and/or agent. Daily volume over time →
+  daily_handled_trend with line. Two numbers → two KPI cards. Overview cannot
+  draw one line per channel.
+  Why a displayed rate is X% stays on this path. First-Reply SLA: quote
+  sampleSize / withinSlaCount / missedSlaCount and name slaBreakdown rows that
+  missed. Resolution rate: quote resolvedCount of handledCount. How many were
+  resolved uses resolvedCount, not the percent. What is a Reports KPI uses the
+  live card value, not a definition. Do not guess a cause.
+  A request for a line, bar, pie, or KPI always calls this tool in the current
+  turn, even when an earlier reply already stated the numbers. Do not describe
+  a chart this turn did not return. get_metric is the written definition only.
+  What is a Reports KPI still uses this tool for the live number.
+  Do not include an img tag. The chart card is already the picture.
+  Follow answerRule on the tool result: state the numbers and do not add a cause.
+
+  Path S (semantic layer — only when Reports cannot answer):
+  ask_semantic_layer once with the user's question and chart_type when they asked
+  for a pie, bar, or line. On ok=true, summarize the card only if it does not
+  contradict Reports. On ok=false, use Path A or B in the next tool round.
+  A miss does not pick a chart for you.
+
+  Path O (admin dashboard only): comparative causal why/how/root-cause versus
+  another period, or a relationship between metrics. ask_ontology_layer once.
+  A period or KPI name inside "why is this rate X%?" does not make it Path O.
+  This path is unavailable on My Performance.
+
+  Path B (SQL — when overview cannot answer, after Path A or S):
+  sql_analytics once WITH presentation { chart_type, label_column, value_column,
+  title, description, series_column }. Use for by-agent joins and day×channel
+  (one line per channel). For one line per channel: SELECT day, channel, count(*)
+  … GROUP BY day, channel, then presentation chart_type=line, label_column=day,
+  value_column=count, series_column=channel.
+  On the admin dashboard, filter dates with COALESCE(assigned_at, resolved_at,
+  ended_at, created_at), not assigned_at alone.
+
+  Path C (fallback): sql_analytics rows already in turn → generate_plot with matching
+  chart_type.
+
+  Follow-ups change the filter/period/chart type; retry Path A for Reports KPIs.
+  After charts: brief HTML summary + one follow-up question. No raw SQL, tool
+  arguments, or chart JSON in replies. Do not explain a zero, a spike, a short
+  handle time, or a disposition by guessing go-live, staffing, fewer agents,
+  longer calls, complexity, or that a disposition is not a transfer.
+  If the user asked why a duration is 0s or empty, use sampleSize and note from the
+  KPI card (or one sql_analytics count of rows with both timestamps). Never claim a
+  logging or recording failure from the number alone. Live queue activity is a
+  different metric from last-period average first response.

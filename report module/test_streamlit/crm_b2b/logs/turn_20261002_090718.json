@@ -1,0 +1,139 @@
+{
+  "question": "Why did the number of lost deals increase?\"",
+  "answer": "There was 1 lost deal totaling 1,255.00 USD over all time.\n\n| Lost Reason | Total Lost Amount | Lost Deals Count |\n| :--- | :--- | :--- |\n| Pricing | 1,255.00 USD | 1 |\n\nThe loss was driven by the \"crm\" deal, which was closed-lost due to Pricing. There were no recorded activities or specific stage transitions captured for this deal prior to the loss.\n\nYou may want to review current pricing models or conduct a win/loss interview for the \"crm\" account to determine if the issue was related to total contract value or specific line-item costs.",
+  "trace": {
+    "question": "Why did the number of lost deals increase?\"",
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1015,
+      "role": "admin"
+    },
+    "model": "worktual-gemma",
+    "tasks": [
+      {
+        "status": "ok",
+        "store": "sql",
+        "sql": "WITH rpt_deals AS (\nSELECT src.id, src.organization_id, src.title, src.stage, src.amount, src.currency_code, src.stage_weight, src.weighted_amount, src.company_id, src.company_name, src.company_industry, src.location_id, src.contact_id, src.contact_name, src.contact_email, src.owner_user_id, src.owner_name, src.created_at, src.closed_at, src.close_ts, src.updated_at, src.expected_close_date, src.lost_reason, src.is_open, src.is_won, src.is_lost, src.aging_days, src.forecast_category, src.forecast_reason, src.forecast_flagged FROM (\nSELECT \n  d.id,\n  d.organization_id,\n  d.title,\n  d.stage,\n  COALESCE(d.amount, 0) AS amount,\n  CASE\n    WHEN pq.currency IS NOT NULL AND pq.currency <> 'USD' THEN pq.currency\n    WHEN o.country IS NOT NULL AND o.country <> 'US' AND cc.curr IS NOT NULL THEN cc.curr\n    WHEN pq.currency = 'USD' THEN 'USD'\n    WHEN o.country = 'US' THEN 'USD'\n    ELSE 'USD'\n  END AS currency_code,\n  CASE d.stage\n    WHEN 'qualification' THEN 0.10\n    WHEN 'discover' THEN 0.25\n    WHEN 'propose' THEN 0.50\n    WHEN 'negotiate' THEN 0.75\n    WHEN 'closed_won' THEN 1.00\n    WHEN 'closed_lost' THEN 0.00\n    ELSE 0.00\n  END AS stage_weight,\n  ROUND(COALESCE(d.amount, 0) * (\n    CASE d.stage\n      WHEN 'qualification' THEN 0.10\n      WHEN 'discover' THEN 0.25\n      WHEN 'propose' THEN 0.50\n      WHEN 'negotiate' THEN 0.75\n      WHEN 'closed_won' THEN 1.00\n      WHEN 'closed_lost' THEN 0.00\n      ELSE 0.00\n    END\n  ), 2) AS weighted_amount,\n  d.company_id,\n  c.name AS company_name,\n  c.industry AS company_industry,\n  d.location_id,\n  d.contact_id,\n  COALESCE(d.contact_name, cdp.first_name || ' ' || COALESCE(cdp.last_name, '')) AS contact_name,\n  COALESCE(d.contact_email, id_k.key_value) AS contact_email,\n  d.owner_user_id,\n  su.first_name || ' ' || COALESCE(su.last_name, '') AS owner_name,\n  d.created_at,\n  d.closed_at,\n  COALESCE(d.closed_at, d.created_at) AS close_ts,\n  d.updated_at,\n  d.expected_close_date,\n  d.lost_reason,\n  (d.stage IN ('qualification', 'discover', 'propose', 'negotiate')) AS is_open,\n  (d.stage = 'closed_won') AS is_won,\n  (d.stage = 'closed_lost') AS is_lost,\n  FLOOR(EXTRACT(EPOCH FROM (NOW() - d.created_at))/86400)::integer AS aging_days,\n  d.forecast_category,\n  d.forecast_reason,\n  d.forecast_flagged\nFROM crm.deals d\nLEFT JOIN crm.companies c ON c.id = d.company_id AND c.organization_id = d.organization_id\nLEFT JOIN accounts.setup_users su ON su.id = d.owner_user_id\nLEFT JOIN accounts.organizations o ON o.id = d.organization_id\nLEFT JOIN cdp.customer_profile cdp ON cdp.cdp_id = d.contact_id\nLEFT JOIN LATERAL (\n  SELECT ik.key_value \n  FROM cdp.identity_keys ik \n  WHERE ik.cdp_id = d.contact_id AND ik.key_type = 'email' AND ik.organization_id = d.organization_id \n  ORDER BY ik.created_at ASC \n  LIMIT 1\n) id_k ON TRUE\nLEFT JOIN LATERAL (\n  SELECT q.currency \n  FROM crm.quotes q \n  WHERE q.deal_id = d.id AND q.organization_id = d.organization_id \n  ORDER BY CASE WHEN q.status = 'accepted' THEN 1 WHEN q.status = 'sent' THEN 2 ELSE 3 END, q.updated_at DESC \n  LIMIT 1\n) pq ON TRUE\nLEFT JOIN LATERAL (\n  SELECT CASE o.country \n    WHEN 'India' THEN 'INR' \n    WHEN 'United Kingdom' THEN 'GBP' \n    WHEN 'Germany' THEN 'EUR' \n    WHEN 'Canada' THEN 'CAD' \n    WHEN 'Australia' THEN 'AUD' \n    ELSE 'USD' \n  END AS curr\n) cc ON TRUE\nWHERE d.organization_id = %(_org_id)s\n) src WHERE TRUE\n)\nSELECT CAST(COUNT(*) AS BIGINT) AS lost_deal_count FROM rpt_deals AS deals WHERE is_lost = TRUE AND TRUE AND TRUE AND TRUE LIMIT 500",
+        "views": [
+          "deals"
+        ],
+        "guard_notes": [
+          "row cap 500 applied"
+        ],
+        "bound_params": {
+          "_org_id": 1003,
+          "_user_id": 1015,
+          "user_id": 1015,
+          "organization_id": 1003,
+          "org_id": 1003,
+          "tenant_id": 1003,
+          "current_user_id": 1015
+        },
+        "rows": [
+          {
+            "lost_deal_count": 1
+          }
+        ],
+        "kpi_id": "lost_deal_count",
+        "time_status": "all_time",
+        "attempts": [
+          {
+            "raw": "```json\n{\"tool\":\"run_kpi\",\"kpi_id\":\"lost_deal_count\",\"dimension\":\"close_date\"}\n```",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "lost_deal_count",
+              "dimension": "close_date"
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "tool": "run_kpi",
+        "requested_kpi": "lost_deal_count",
+        "requested_dimension": "close_date",
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "lost_deal_count",
+          "goal": "Count of lost deals over time to confirm the increase",
+          "time": "all time",
+          "scope": "org",
+          "dimension": "close_date",
+          "answer_type": "breakdown",
+          "depends_on": []
+        }
+      },
+      {
+        "status": "ok",
+        "rows": [
+          {
+            "lost_reason": "Pricing",
+            "currency": "USD",
+            "lost_deals_count": 1,
+            "total_lost_amount": 1255.0,
+            "sample_deals": [
+              {
+                "amount": 1255.0,
+                "closed_at": "2026-09-17T14:58:24.127000000",
+                "currency": "USD",
+                "deal_id": "cmtsms61u00111aimq9lsb7aw",
+                "lost_reason": "Pricing",
+                "title": "crm"
+              }
+            ]
+          }
+        ],
+        "sql": "MATCH (d:Deal)\nWHERE toLower(d.stage) = 'closed_lost'\n  AND ($can_view_all = true OR d.owner_user_id = $effective_user_id)\nOPTIONAL MATCH (d)-[:HAS]->(q:Quote)\nWITH d, collect(q) AS quotes\nWITH d,\n     [q IN quotes WHERE toLower(q.approval_status) = 'approved'][0] AS approved_quote,\n     quotes[0] AS any_quote\nWITH d,\n     coalesce(approved_quote.currency, any_quote.currency, d.currency, $default_currency, 'INR') AS currency,\n     coalesce(d.amount, approved_quote.total, any_quote.total, 0) AS final_amount\nRETURN coalesce(d.lost_reason, 'Unspecified') AS lost_reason,\n       currency,\n       count(d) AS lost_deals_count,\n       sum(coalesce(final_amount, 0)) AS total_lost_amount,\n       collect({\n         deal_id: d.id,\n         title: d.title,\n         amount: final_amount,\n         currency: currency,\n         lost_reason: d.lost_reason,\n         closed_at: d.closed_at\n       })[0..5] AS sample_deals\nORDER BY total_lost_amount DESC\nLIMIT 100",
+        "tool": "kg",
+        "attempts_made": 1,
+        "kg_notes": "### Analysis of Closed-Lost Deals\n\nThere is 1 closed-lost deal totaling 1,255.00 USD. The primary driver for this loss is attributed to Pricing.\n\n| Lost Reason | Total Lost Amount | Lost Deals Count |\n| :--- | :--- | :--- |\n| **Pricing** | **1,255.00 USD** | **1** |\n\n### Commercial Diagnosis\n\nThe recorded loss is concentrated in the `crm` deal (ID: `cmtsms61u00111aimq9lsb7aw`), which was closed-lost due to Pricing constraints. Based on the available data, the loss occurred at a value of 1,255.00 USD. There are currently no associated ContactActivities or specific stage transitions recorded in the provided dataset to determine the exact pipeline stage immediately preceding the loss.\n\n### Recommended Next Steps\n\n* **Pricing Sensitivity Review:** Evaluate the current discount thresholds and pricing models to determine if the 1,255.00 USD loss indicates a misalignment with market expectations for the `crm` product line.\n* **Win/Loss Interview:** Conduct a follow-up with the account associated with the `crm` deal to identify if the pricing issue was related to total contract value or specific line-item costs.\n* **Competitive Benchmarking:** Analyze if recent competitor entries in the market are driving the \"Pricing\" lost reason for similar deal sizes.",
+        "task": {
+          "id": "t2",
+          "executor": "kg",
+          "kpi": null,
+          "goal": "Analyze closed-lost deals: lost_reason, amounts, stages before loss, and associated activities",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "why_breakdown",
+          "depends_on": [
+            "t1"
+          ]
+        }
+      }
+    ],
+    "domain_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"deep\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"lost_deal_count\",\n      \"goal\": \"Count of lost deals over time to confirm the increase\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"dimension\": \"close_date\",\n      \"answer_type\": \"breakdown\",\n      \"depends_on\": []\n    },\n    {\n      \"id\": \"t2\",\n      \"executor\": \"kg\",\n      \"kpi\": null,\n      \"goal\": \"Analyze closed-lost deals: lost_reason, amounts, stages before loss, and associated activities\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"dimension\": null,\n      \"answer_type\": \"why_breakdown\",\n      \"depends_on\": [\"t1\"]\n    }\n  ]\n}\n```",
+    "plan": {
+      "kind": "plan",
+      "depth": "deep",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "lost_deal_count",
+          "goal": "Count of lost deals over time to confirm the increase",
+          "time": "all time",
+          "scope": "org",
+          "dimension": "close_date",
+          "answer_type": "breakdown",
+          "depends_on": []
+        },
+        {
+          "id": "t2",
+          "executor": "kg",
+          "kpi": null,
+          "goal": "Analyze closed-lost deals: lost_reason, amounts, stages before loss, and associated activities",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "why_breakdown",
+          "depends_on": [
+            "t1"
+          ]
+        }
+      ]
+    },
+    "facts": "time_requested: all time\nperiod_applied: overall (no date filter, UTC)\ntime_status: all_time\ncatalog_kpi: lost_deal_count\nRESULT: lost_deal_count = 1\n\ntime_requested: all time\ntime_status: kg\nRESULT: 1 row(s)\ntask_goal: Analyze closed-lost deals: lost_reason, amounts, stages before loss, and associated activities\n  lost_reason=Pricing | currency=USD | lost_deals_count=1 | total_lost_amount=1255.0 | sample_deals=[{'amount': 1255.0, 'closed_at': '2026-09-17T14:58:24.127000000', 'currency': 'USD', 'deal_id': 'cmtsms61u00111aimq9lsb7aw', 'lost_reason': 'Pricing', 'title': 'crm'}]\nkg_notes:\n### Analysis of Closed-Lost Deals\n\nThere is 1 closed-lost deal totaling 1,255.00 USD. The primary driver for this loss is attributed to Pricing.\n\n| Lost Reason | Total Lost Amount | Lost Deals Count |\n| :--- | :--- | :--- |\n| **Pricing** | **1,255.00 USD** | **1** |\n\n### Commercial Diagnosis\n\nThe recorded loss is concentrated in the `crm` deal (ID: `cmtsms61u00111aimq9lsb7aw`), which was closed-lost due to Pricing constraints. Based on the available data, the loss occurred at a value of 1,255.00 USD. There are currently no associated ContactActivities or specific stage transitions recorded in the provided dataset to determine the exact pipeline stage immediately preceding the loss.\n\n### Recommended Next Steps\n\n* **Pricing Sensitivity Review:** Evaluate the current discount thresholds and pricing models to determine if the 1,255.00 USD loss indicates a misalignment with market expectations for the `crm` product line.\n* **Win/Loss Interview:** Conduct a follow-up with the account associated with the `crm` deal to identify if the pricing issue was related to total contract value or specific line-item costs.\n* **Competitive Benchmarking:** Analyze if recent competitor entries in the market are driving the \"Pricing\" lost reason for similar deal sizes.",
+    "grounded": true,
+    "briefing_raw": "There was 1 lost deal totaling 1,255.00 USD over all time.\n\n| Lost Reason | Total Lost Amount | Lost Deals Count |\n| :--- | :--- | :--- |\n| Pricing | 1,255.00 USD | 1 |\n\nThe loss was driven by the \"crm\" deal, which was closed-lost due to Pricing. There were no recorded activities or specific stage transitions captured for this deal prior to the loss.\n\nYou may want to review current pricing models or conduct a win/loss interview for the \"crm\" account to determine if the issue was related to total contract value or specific line-item costs."
+  }
+}

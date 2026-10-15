@@ -1,0 +1,92 @@
+# Webtracking SELECT-only metric report (org 1003)
+
+- org=`1003` product=`webtracking`
+- total=85 ok=84 fail=1 non_zero=39
+
+| # | Metric | Status | Value | Table | Error |
+|---|--------|--------|-------|-------|-------|
+| 1 | `average_order_value` | ok | None | `mart_conversion_events` |  |
+| 2 | `average_session_duration` | ok | 3305.0188679245284 | `mart_web_sessions` |  |
+| 3 | `avg_cls` | ok | None | `mart_performance_events` |  |
+| 4 | `avg_fcp_ms` | ok | None | `mart_performance_events` |  |
+| 5 | `avg_inp_ms` | ok | None | `mart_performance_events` |  |
+| 6 | `avg_lcp_ms` | ok | None | `mart_performance_events` |  |
+| 7 | `avg_scroll_depth` | ok | 0.0 | `mart_page_views` |  |
+| 8 | `avg_time_on_page_seconds` | ok | 0.0 | `mart_page_views` |  |
+| 9 | `avg_ttfb_ms` | ok | None | `mart_performance_events` |  |
+| 10 | `bounce_count` | ok | 77 | `mart_web_sessions` |  |
+| 11 | `bounce_rate` | ok | 0.29056603773584905 | `mart_web_sessions` |  |
+| 12 | `campaign_attributed_session_rate` | ok | 0.0 | `mart_web_sessions` |  |
+| 13 | `campaign_attributed_sessions` | ok | 0 | `mart_web_sessions` |  |
+| 14 | `cart_add_count` | ok | 0 | `mart_product_interactions` |  |
+| 15 | `cart_add_rate` | ok | 0.0 | `mart_web_sessions` |  |
+| 16 | `checkout_conversion_rate` | ok | None | `mart_conversion_events` |  |
+| 17 | `checkout_start_count` | ok | 0 | `mart_product_interactions` |  |
+| 18 | `checkout_start_rate` | ok | 0.0 | `mart_web_sessions` |  |
+| 19 | `clicks_per_session` | ok | 7.867924528301887 | `mart_interaction_events` |  |
+| 20 | `consent_action_count` | ok | 0 | `mart_cookie_operations` |  |
+| 21 | `conversion_rate` | ok | 0.0 | `mart_web_sessions` |  |
+| 22 | `custom_event_session_count` | ok | 252 | `mart_custom_events` |  |
+| 23 | `custom_event_session_rate` | ok | 0.9509433962264151 | `mart_custom_events` |  |
+| 24 | `dead_click_rate` | ok | 0.3320754716981132 | `mart_web_sessions` |  |
+| 25 | `dead_click_session_count` | ok | 88 | `mart_web_sessions` |  |
+| 26 | `dead_clicks` | ok | 592 | `mart_interaction_events` |  |
+| 27 | `distinct_custom_event_types` | ok | 8 | `mart_custom_events` |  |
+| 28 | `engaged_session_count` | ok | 188 | `mart_web_sessions` |  |
+| 29 | `engagement_rate` | ok | 0.7094339622641509 | `mart_web_sessions` |  |
+| 30 | `error_count` | ok | 0 | `mart_error_events` |  |
+| 31 | `error_session_count` | ok | 0 | `mart_web_sessions` |  |
+| 32 | `error_session_rate` | ok | 0.0 | `mart_web_sessions` |  |
+| 33 | `events_per_session` | ok | 12.067924528301887 | `mart_interaction_events` |  |
+| 34 | `form_abandon_rate` | ok | 0.4869109947643979 | `mart_form_events` |  |
+| 35 | `form_abandons` | ok | 93 | `mart_form_events` |  |
+| 36 | `form_failures` | ok | 0 | `mart_form_events` |  |
+| 37 | `form_starts` | ok | 191 | `mart_form_events` |  |
+| 38 | `form_submit_rate` | ok | 0.41379310344827586 | `mart_form_events` |  |
+| 39 | `form_submits` | ok | 108 | `mart_form_events` |  |
+| 40 | `form_success_rate` | ok | 0.18518518518518517 | `mart_form_events` |  |
+| 41 | `form_successes` | ok | 20 | `mart_form_events` |  |
+| 42 | `form_views` | ok | 261 | `mart_form_events` |  |
+| 43 | `identified_session_count` | ok | 0 | `mart_web_sessions` |  |
+| 44 | `identified_session_rate` | ok | 0.0 | `mart_web_sessions` |  |
+| 45 | `identified_visitor_count` | ok | 0 | `mart_web_visitors` |  |
+| 46 | `landing_page_conversion_rate` | ok | 0.0 | `mart_conversion_events` |  |
+| 47 | `lifetime_new_visitor_count` | ok | 77 | `mart_web_visitors` |  |
+| 48 | `lifetime_returning_visitor_count` | ok | 43 | `mart_web_visitors` |  |
+| 49 | `new_visitor_count` | ok | 77 | `mart_web_sessions` |  |
+| 50 | `new_visitor_rate` | ok | 0.6416666666666667 | `mart_web_sessions` |  |
+| 51 | `online_visitors` | ok | 0 | `mart_web_sessions` |  |
+| 52 | `page_views` | ok | 470 | `mart_page_views` |  |
+| 53 | `pages_per_session` | ok | 1.7735849056603774 | `mart_page_views` |  |
+| 54 | `performance_event_count` | ok | 0 | `mart_performance_events` |  |
+| 55 | `poor_vitals_event_count` | ok | 0 | `mart_performance_events` |  |
+| 56 | `poor_vitals_rate` | ok | None | `mart_performance_events` |  |
+| 57 | `product_interaction_count` | ok | 0 | `mart_product_interactions` |  |
+| 58 | `product_view_rate` | ok | 0.0 | `mart_web_sessions` |  |
+| 59 | `purchase_count` | ok | 0 | `mart_conversion_events` |  |
+| 60 | `rage_click_rate` | ok | 0.04150943396226415 | `mart_web_sessions` |  |
+| 61 | `rage_click_session_count` | ok | 11 | `mart_web_sessions` |  |
+| 62 | `rage_clicks` | ok | 59 | `mart_interaction_events` |  |
+| 63 | `returning_visitor_count` | ok | 43 | `mart_web_sessions` |  |
+| 64 | `returning_visitor_rate` | ok | 0.35833333333333334 | `mart_web_sessions` |  |
+| 65 | `scroll_engagement_rate` | ok | 0.0 | `mart_web_sessions` |  |
+| 66 | `search_session_count` | ok | 0 | `mart_web_sessions` |  |
+| 67 | `search_usage_rate` | ok | 0.0 | `mart_web_sessions` |  |
+| 68 | `sessions_with_cart_add` | ok | 0 | `mart_web_sessions` |  |
+| 69 | `sessions_with_checkout_start` | ok | 0 | `mart_web_sessions` |  |
+| 70 | `sessions_with_conversions` | ok | 0 | `mart_web_sessions` |  |
+| 71 | `sessions_with_deep_scroll` | ok | 0 | `mart_web_sessions` |  |
+| 72 | `sessions_with_product_views` | ok | 0 | `mart_web_sessions` |  |
+| 73 | `signup_count` | ok | 0 | `mart_conversion_events` |  |
+| 74 | `total_clicks` | ok | 2085 | `mart_interaction_events` |  |
+| 75 | `total_conversion_value` | ok | 0.00 | `mart_conversion_events` |  |
+| 76 | `total_conversions` | ok | 0 | `mart_conversion_events` |  |
+| 77 | `total_custom_events` | ok | 41584 | `mart_custom_events` |  |
+| 78 | `total_events` | ok | 3198 | `mart_interaction_events` |  |
+| 79 | `total_revenue` | ok | 0.00 | `mart_conversion_events` |  |
+| 80 | `tracking_consent_denied_count` | ok | 0 | `mart_cookie_operations` |  |
+| 81 | `tracking_consent_grant_rate` | ok | None | `mart_cookie_operations` |  |
+| 82 | `tracking_consent_granted_count` | ok | 0 | `mart_cookie_operations` |  |
+| 83 | `unique_visitors` | ok | 120 | `mart_web_sessions` |  |
+| 84 | `visitor_identification_rate` | error | None | `mart_web_visitors` | DatabaseError: Received ClickHouse exception, code: 47, server response: Code: 47. DB::Exception: Unknown expression or  |
+| 85 | `web_session_volume` | ok | 265 | `mart_web_sessions` |  |

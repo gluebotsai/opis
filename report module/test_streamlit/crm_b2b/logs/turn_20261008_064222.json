@@ -1,0 +1,86 @@
+{
+  "question": "how many tasks are due today",
+  "answer": "There is 1 task due today.",
+  "trace": {
+    "question": "how many tasks are due today",
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1017,
+      "role": "admin"
+    },
+    "model": "worktual-gemma",
+    "tasks": [
+      {
+        "status": "ok",
+        "store": "sql",
+        "sql": "WITH rpt_activities AS (\nSELECT src.id, src.organization_id, src.activity_source, src.deal_id, src.contact_id, src.type, src.subject, src.body, src.task_status, src.due_at, src.completed_at, src.performed_by_user_id, src.assignee_user_id, src.owner_name, src.created_at FROM (\nSELECT \n  u.id,\n  u.organization_id,\n  u.activity_source,\n  u.deal_id,\n  u.contact_id,\n  u.type,\n  u.subject,\n  u.body,\n  u.task_status,\n  u.due_at,\n  u.completed_at,\n  u.performed_by_user_id,\n  u.assignee_user_id,\n  su.first_name || ' ' || COALESCE(su.last_name, '') AS owner_name,\n  u.created_at\nFROM (\n  SELECT \n    da.id,\n    da.organization_id,\n    'deal' AS activity_source,\n    da.deal_id,\n    NULL::text AS contact_id,\n    da.type::text AS type,\n    da.subject,\n    da.body,\n    NULL::text AS task_status,\n    da.due_at,\n    da.completed_at,\n    da.created_by_user_id AS performed_by_user_id,\n    NULL::bigint AS assignee_user_id,\n    da.created_at\n  FROM crm.deal_activities da\n  WHERE da.organization_id = %(_org_id)s\n  UNION ALL\n  SELECT \n    ca.id,\n    ca.organization_id,\n    'contact' AS activity_source,\n    NULL::text AS deal_id,\n    ca.contact_id,\n    ca.type::text AS type,\n    ca.subject,\n    ca.body,\n    ca.task_status::text AS task_status,\n    ca.due_at,\n    ca.completed_at,\n    ca.created_by_user_id AS performed_by_user_id,\n    ca.assignee_user_id,\n    ca.created_at\n  FROM crm.contact_activities ca\n  WHERE ca.organization_id = %(_org_id)s\n) u\nLEFT JOIN accounts.setup_users su ON su.id = u.performed_by_user_id\n) src WHERE TRUE\n)\nSELECT CAST(COUNT(*) AS BIGINT) AS task_count FROM rpt_activities AS activities WHERE type = 'task' AND task_status <> 'completed' AND due_at >= %(start)s AND due_at < %(end)s LIMIT 500",
+        "views": [
+          "activities"
+        ],
+        "guard_notes": [
+          "row cap 500 applied"
+        ],
+        "bound_params": {
+          "_org_id": 1003,
+          "_user_id": 1017,
+          "user_id": 1017,
+          "organization_id": 1003,
+          "org_id": 1003,
+          "tenant_id": 1003,
+          "current_user_id": 1017,
+          "start": "2026-10-08T00:00:00+00:00",
+          "end": "2026-10-09T00:00:00+00:00"
+        },
+        "rows": [
+          {
+            "task_count": 1
+          }
+        ],
+        "attempts": [
+          {
+            "raw": "```sql\nSELECT COUNT(*)::bigint AS task_count\nFROM rpt.activities\nWHERE type = 'task'\n  AND task_status != 'completed'\n  AND due_at >= :start\n  AND due_at < :end;\n```",
+            "call": {
+              "kind": "run_sql",
+              "sql": "SELECT COUNT(*)::bigint AS task_count\nFROM rpt.activities\nWHERE type = 'task'\n  AND task_status != 'completed'\n  AND due_at >= :start\n  AND due_at < :end"
+            }
+          }
+        ],
+        "time_echo": "today (UTC)",
+        "time_status": "bounded",
+        "tool": "run_sql",
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "open_task_count",
+          "goal": "Count tasks due today",
+          "time": "today",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "kpi",
+          "depends_on": []
+        }
+      }
+    ],
+    "domain_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"quick\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"open_task_count\",\n      \"goal\": \"Count tasks due today\",\n      \"time\": \"today\",\n      \"scope\": \"org\",\n      \"dimension\": null,\n      \"answer_type\": \"kpi\",\n      \"depends_on\": []\n    }\n  ]\n}\n```",
+    "plan": {
+      "kind": "plan",
+      "depth": "quick",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "open_task_count",
+          "goal": "Count tasks due today",
+          "time": "today",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "kpi",
+          "depends_on": []
+        }
+      ]
+    },
+    "facts": "time_requested: today\nperiod_applied: today (UTC)\ntime_status: bounded\ncatalog_kpi: open_task_count\nRESULT: open_task_count = 1",
+    "grounded": true,
+    "briefing_raw": "There is 1 task due today."
+  }
+}

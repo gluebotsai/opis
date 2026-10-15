@@ -1,0 +1,44 @@
+presets:
+  cdp.profile:
+    agent: CDP Profile Agent
+    level: L3
+    modules:
+    - cdp
+    - identity
+    - metrics_cdp
+    usecase: Customer spine — profile, identity resolution, and cross-product customer
+      KPIs.
+    prompt:
+      classes:
+      - Contact
+      - IdentityKey
+      - ContactEvent
+      - AudienceSegment
+      actions:
+      - action.resolve_identity
+      - action.get_customer_profile
+      - ask_semantic
+      metrics_mode: headlines
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+  cdp.reporting_mas:
+    agent: CDP Reporting MAS
+    level: platform
+    modules:
+    - cdp
+    - identity
+    usecase: MAS catalog for KG, MetricFlow, and SQL-agent setup — not staff-chat routing.
+    prompt:
+      full_ontology: true
+      full_definitions: true
+      include_module_index: true
+      metrics_mode: full
+      metrics: []
+      actions:
+      - ask_semantic
+      - ask_ontology
+      - generate_report
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - MAS catalog / KG / MetricFlow / SQL-agent setup — not staff-chat routing.
+      - Distinct from cdp.profile (runtime KPI worker; headlines only).

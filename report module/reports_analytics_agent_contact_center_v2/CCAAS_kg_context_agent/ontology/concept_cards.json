@@ -1,0 +1,340 @@
+[
+  {
+    "id": "concept_first_contact_resolution",
+    "type": "business_concept",
+    "name": "First Contact Resolution (FCR)",
+    "aliases": [
+      "fcr",
+      "first call resolution",
+      "resolved on first contact"
+    ],
+    "description": "Measures the percentage of incoming customer interactions resolved on the initial contact without requiring transfers, escalations, or follow-up continuation sessions.",
+    "category": "Quality",
+    "base_entities": [
+      "Conversation"
+    ],
+    "business_rules": [
+      "An interaction achieves FCR when status is closed or resolved, with no outgoing CONTINUES relationship and no Transfer record.",
+      "Conversations with (:Conversation)-[:CONTINUES]->() indicate repeat contacts or unaddressed root causes.",
+      "Exclude interactions abandoned or disconnected before agent assignment."
+    ],
+    "pattern": "(:Conversation)-[:CONTINUES]->(:Conversation)",
+    "domain": "ccaas",
+    "cypher_template": "MATCH (c:Conversation) WHERE c.status IN [\"resolved\", \"closed\"] OPTIONAL MATCH (c)-[:CONTINUES]->(next:Conversation) WITH c, count(next) AS continuations RETURN count(c) AS total_resolved, sum(CASE WHEN continuations = 0 THEN 1 ELSE 0 END) AS fcr_count, round(100.0 * sum(CASE WHEN continuations = 0 THEN 1 ELSE 0 END) / count(c), 1) AS fcr_rate_pct",
+    "diagnostic_template": "MATCH (c:Conversation) WHERE c.created_at >= datetime() AND c.created_at < datetime() AND c.status IN [\"resolved\", \"closed\"] OPTIONAL MATCH (c)-[:CONTINUES]->(next:Conversation) WITH c.channel AS dimension, sum(CASE WHEN c.created_at >= datetime() THEN 1 ELSE 0 END) AS curr_total, sum(CASE WHEN c.created_at >= datetime() AND next IS NULL THEN 1 ELSE 0 END) AS curr_fcr, sum(CASE WHEN c.created_at < datetime() THEN 1 ELSE 0 END) AS prev_total, sum(CASE WHEN c.created_at < datetime() AND next IS NULL THEN 1 ELSE 0 END) AS prev_fcr RETURN dimension AS channel, curr_total, curr_fcr, CASE WHEN curr_total > 0 THEN round(100.0 * curr_fcr / curr_total, 1) ELSE 0.0 END AS current_fcr_pct, prev_total, prev_fcr, CASE WHEN prev_total > 0 THEN round(100.0 * prev_fcr / prev_total, 1) ELSE 0.0 END AS previous_fcr_pct, curr_total - prev_total AS volume_delta ORDER BY curr_total DESC"
+  },
+  {
+    "id": "concept_average_handle_time",
+    "type": "business_concept",
+    "name": "Average Handle Time (AHT)",
+    "aliases": [
+      "aht",
+      "handle time",
+      "average duration",
+      "call duration",
+      "chat duration"
+    ],
+    "description": "Calculates the average duration from conversation start to end. Must ALWAYS be segmented by channel because synchronous channels differ drastically from asynchronous channels.",
+    "category": "Performance",
+    "base_entities": [
+      "Conversation"
+    ],
+    "business_rules": [
+      "Handle time duration is computed in seconds using duration.between(c.created_at, c.ended_at).seconds.",
+      "Always group by c.channel. Never pool asynchronous email (~1.5 hours) with live voice calls (~23 min) or webchat (~12 min).",
+      "Exclude records where ended_at is null."
+    ],
+    "pattern": "(:Conversation)",
+    "domain": "ccaas",
+    "cypher_template": "MATCH (c:Conversation) WHERE c.created_at IS NOT NULL AND c.ended_at IS NOT NULL RETURN c.channel AS channel, count(c) AS total_conversations, round(avg(duration.between(c.created_at, c.ended_at).seconds), 1) AS avg_handle_time_sec, min(duration.between(c.created_at, c.ended_at).seconds) AS min_sec, max(duration.between(c.created_at, c.ended_at).seconds) AS max_sec ORDER BY total_conversations DESC",
+    "diagnostic_template": "MATCH (c:Conversation) WHERE c.created_at >= datetime() AND c.created_at < datetime() AND c.ended_at IS NOT NULL WITH c.channel AS dimension, [x IN collect(CASE WHEN c.created_at >= datetime() THEN duration.between(c.created_at, c.ended_at).seconds ELSE NULL END) WHERE x IS NOT NULL] AS curr_durs, [x IN collect(CASE WHEN c.created_at < datetime() THEN duration.between(c.created_at, c.ended_at).seconds ELSE NULL END) WHERE x IS NOT NULL] AS prev_durs RETURN dimension AS channel, size(curr_durs) AS current_volume, CASE WHEN size(curr_durs) > 0 THEN round(reduce(s = 0.0, d IN curr_durs | s + d) / size(curr_durs), 1) ELSE 0.0 END AS current_aht_sec, size(prev_durs) AS previous_volume, CASE WHEN size(prev_durs) > 0 THEN round(reduce(s = 0.0, d IN prev_durs | s + d) / size(prev_durs), 1) ELSE 0.0 END AS previous_aht_sec, size(curr_durs) - size(prev_durs) AS volume_delta ORDER BY current_volume DESC"
+  },
+  {
+    "id": "concept_service_level",
+    "type": "business_concept",
+    "name": "Service Level (SLA Adherence)",
+    "aliases": [
+      "sla",
+      "service level agreement",
+      "sla adherence",
+      "response threshold"
+    ],
+    "description": "Percentage of interactions answered or resolved within defined SLA target thresholds.",
+    "category": "Compliance",
+    "base_entities": [
+      "Conversation",
+      "ContactCentreSLA"
+    ],
+    "business_rules": [
+      "Tracked on c.sla_status: within_sla, breached, not_started.",
+      "First response breach occurs when first_agent_response_at > first_response_due_at.",
+      "Resolution breach occurs when resolved_at > resolution_due_at."
+    ],
+    "pattern": "(:Conversation)-[:HAS_SLA]->(:SLAInstance)",
+    "domain": "ccaas",
+    "cypher_template": "MATCH (c:Conversation) WHERE c.sla_status IS NOT NULL RETURN c.sla_status AS sla_status, c.channel AS channel, count(c) AS total_count ORDER BY total_count DESC",
+    "diagnostic_template": "MATCH (c:Conversation) WHERE c.created_at >= datetime() AND c.created_at < datetime() AND c.sla_status IS NOT NULL WITH c.sla_status + \" (\" + c.channel + \")\" AS dimension, sum(CASE WHEN c.created_at >= datetime() THEN 1 ELSE 0 END) AS current, sum(CASE WHEN c.created_at < datetime() THEN 1 ELSE 0 END) AS previous RETURN dimension AS status_channel, current, previous, current - previous AS delta ORDER BY abs(current - previous) DESC LIMIT 5"
+  },
+  {
+    "id": "concept_occupancy",
+    "type": "business_concept",
+    "name": "Occupancy Rate",
+    "aliases": [
+      "agent occupancy",
+      "utilization",
+      "agent workload percentage"
+    ],
+    "description": "Percentage of logged-in time that contact center agents spend actively handling customer interactions versus waiting in idle ready state.",
+    "category": "Workforce",
+    "base_entities": [
+      "ContactCentreAgent",
+      "Conversation"
+    ],
+    "business_rules": [
+      "Measures active handling duration vs total shift availability duration.",
+      "High occupancy (>85-90%) indicates understaffing and agent burnout risk.",
+      "Low occupancy (<60%) indicates overstaffing or inefficient routing."
+    ],
+    "pattern": "(:Conversation)-[:HANDLED_BY]->(:ContactCentreAgent)",
+    "domain": "ccaas",
+    "cypher_template": "MATCH (c:Conversation)-[:HANDLED_BY]->(a:ContactCentreAgent) WHERE c.created_at IS NOT NULL AND c.ended_at IS NOT NULL RETURN a.display_name AS agent, count(c) AS handled_interactions, round(sum(duration.between(c.created_at, c.ended_at).seconds) / 3600.0, 2) AS total_handle_hours ORDER BY total_handle_hours DESC",
+    "diagnostic_template": "MATCH (c:Conversation)-[:HANDLED_BY]->(a:ContactCentreAgent) WHERE c.created_at >= datetime() AND c.created_at < datetime() AND c.ended_at IS NOT NULL WITH a.display_name AS dimension, sum(CASE WHEN c.created_at >= datetime() THEN duration.between(c.created_at, c.ended_at).seconds ELSE 0 END) AS curr_secs, sum(CASE WHEN c.created_at < datetime() THEN duration.between(c.created_at, c.ended_at).seconds ELSE 0 END) AS prev_secs RETURN dimension AS agent, round(curr_secs / 3600.0, 2) AS current_handle_hours, round(prev_secs / 3600.0, 2) AS previous_handle_hours, round((curr_secs - prev_secs) / 3600.0, 2) AS hours_delta ORDER BY current_handle_hours DESC"
+  },
+  {
+    "id": "concept_abandonment_rate",
+    "type": "business_concept",
+    "name": "Abandonment Rate & Missed Contacts",
+    "aliases": [
+      "abandonment",
+      "abandon rate",
+      "missed calls",
+      "dropped chats",
+      "abandoned interactions"
+    ],
+    "description": "Percentage of customer interactions where the customer disconnected before being connected to an agent or where routing attempts timed out.",
+    "category": "Routing",
+    "base_entities": [
+      "MissedContact",
+      "Conversation"
+    ],
+    "business_rules": [
+      "Explicitly logged in (:MissedContact) nodes attached to (:Conversation).",
+      "Primary abandonment reasons in telemetry are no_agent_available and offer_timeout.",
+      "Customer-side disconnects feature end_actor = customer and end_reason = customer_ended while assigned_at IS NULL."
+    ],
+    "pattern": "(:Conversation)-[:HAS]->(:MissedContact)",
+    "domain": "ccaas",
+    "cypher_template": "MATCH (m:MissedContact) RETURN m.reason AS missed_reason, coalesce(m.channel, \"unknown\") AS channel, count(m) AS incident_count ORDER BY incident_count DESC",
+    "diagnostic_template": "MATCH (m:MissedContact) WHERE m.created_at >= datetime() AND m.created_at < datetime() WITH m.reason + \" (\" + coalesce(m.channel, \"unknown\") + \")\" AS dimension, sum(CASE WHEN m.created_at >= datetime() THEN 1 ELSE 0 END) AS current, sum(CASE WHEN m.created_at < datetime() THEN 1 ELSE 0 END) AS previous RETURN dimension AS reason_channel, current, previous, current - previous AS delta ORDER BY abs(current - previous) DESC LIMIT 5"
+  },
+  {
+    "id": "concept_wrap_up_time",
+    "type": "business_concept",
+    "name": "After-Call Work / Wrap-up Time (ACW)",
+    "aliases": [
+      "acw",
+      "wrap up",
+      "wrap up time",
+      "post call work",
+      "after call work"
+    ],
+    "description": "Time spent by agents immediately following interaction disconnect to complete documentation, add internal work notes, and assign disposition codes.",
+    "category": "Performance",
+    "base_entities": [
+      "Conversation",
+      "InternalNote",
+      "ContactCentreAgent"
+    ],
+    "business_rules": [
+      "Documented via (:Conversation)-[:HAS]->(:InternalNote) authored by (:ContactCentreAgent).",
+      "Excessive wrap-up time increases queue wait times for subsequent callers."
+    ],
+    "pattern": "(:Conversation)-[:HAS]->(:InternalNote)-[:WRITTEN_BY]->(:ContactCentreAgent)",
+    "domain": "ccaas",
+    "cypher_template": "MATCH (c:Conversation)-[:HAS]->(n:InternalNote) RETURN c.channel AS channel, count(n) AS notes_count, count(DISTINCT c) AS conversations_with_notes ORDER BY notes_count DESC",
+    "diagnostic_template": "MATCH (c:Conversation)-[:HAS]->(n:InternalNote) WHERE c.created_at >= datetime() AND c.created_at < datetime() WITH c.channel AS dimension, sum(CASE WHEN c.created_at >= datetime() THEN 1 ELSE 0 END) AS current_notes, sum(CASE WHEN c.created_at < datetime() THEN 1 ELSE 0 END) AS previous_notes RETURN dimension AS channel, current_notes, previous_notes, current_notes - previous_notes AS delta ORDER BY current_notes DESC"
+  },
+  {
+    "id": "concept_shrinkage",
+    "type": "business_concept",
+    "name": "Shrinkage",
+    "aliases": [
+      "shrinkage",
+      "off queue time",
+      "unproductive time"
+    ],
+    "description": "Percentage of scheduled agent shift time unavailable to handle customer interactions due to breaks, meetings, training, or unplanned absenteeism.",
+    "category": "Workforce",
+    "base_entities": [
+      "Shift",
+      "ContactCentreAgent"
+    ],
+    "business_rules": [
+      "Computed from planned shift hours vs active handling logged hours.",
+      "Break intervals configured in Shift: break_start_time, break_end_time."
+    ],
+    "pattern": "(:BusinessHours)-[:HAS]->(:Shift)",
+    "domain": "ccaas",
+    "cypher_template": "MATCH (b:BusinessHours)-[:HAS]->(s:Shift) RETURN b.name AS business_hours, count(s) AS shifts, collect(DISTINCT s.start_time)[0..3] AS sample_start_times",
+    "diagnostic_template": "MATCH (b:BusinessHours)-[:HAS]->(s:Shift) RETURN s.start_time AS start_time, s.end_time AS end_time, count(s) AS shift_count ORDER BY start_time ASC"
+  },
+  {
+    "id": "concept_disconnect_trinity",
+    "type": "business_concept",
+    "name": "Disconnect Reason & Actor Breakdown (The Disconnect Trinity)",
+    "aliases": [
+      "disconnect reason",
+      "end actor",
+      "end reason",
+      "disposition code",
+      "why call dropped",
+      "why chat ended"
+    ],
+    "description": "Empirical diagnostic breakdown of interaction terminations across the three database telemetry fields: who ended it (actor), why it ended (reason), and agent outcome (disposition).",
+    "category": "Diagnostics",
+    "base_entities": [
+      "Conversation"
+    ],
+    "business_rules": [
+      "end_actor values: customer, system, agent, session.",
+      "end_reason values: customer_ended, visitor_disconnected, idle_timeout, bot_resolved_inactivity, agent_completed, agent_declined, superseded_by_new_voice_call, forced_close.",
+      "disposition_code values: agent_declined, customer_disconnected, browser_disconnected."
+    ],
+    "pattern": "(:Conversation)",
+    "domain": "ccaas",
+    "cypher_template": "MATCH (c:Conversation) WHERE c.end_actor IS NOT NULL RETURN c.end_actor AS actor, c.end_reason AS reason, c.disposition_code AS disposition, count(c) AS volume ORDER BY volume DESC",
+    "diagnostic_template": "MATCH (c:Conversation) WHERE c.created_at >= datetime() AND c.created_at < datetime() AND c.end_actor IS NOT NULL WITH c.end_actor + \" : \" + coalesce(c.end_reason, \"unknown\") AS dimension, sum(CASE WHEN c.created_at >= datetime() THEN 1 ELSE 0 END) AS current, sum(CASE WHEN c.created_at < datetime() THEN 1 ELSE 0 END) AS previous RETURN dimension AS actor_reason, current, previous, current - previous AS delta, CASE WHEN previous > 0 THEN round(100.0 * (current - previous) / previous, 1) ELSE NULL END AS pct_change ORDER BY abs(current - previous) DESC LIMIT 5"
+  },
+  {
+    "id": "concept_queue_wait_time",
+    "type": "business_concept",
+    "name": "Queue Wait Time & Average Speed to Answer (ASA)",
+    "aliases": [
+      "queue wait",
+      "asa",
+      "speed to answer",
+      "queue delay",
+      "hold time"
+    ],
+    "description": "Duration a customer interaction waits in a queue before being assigned to and answered by a live agent.",
+    "category": "Routing",
+    "base_entities": [
+      "Conversation",
+      "ContactCentreQueue"
+    ],
+    "business_rules": [
+      "Calculated as duration.between(c.queued_at, c.assigned_at).seconds.",
+      "Correlates with queue backlog and agent availability."
+    ],
+    "pattern": "(:Conversation)-[:ROUTED_TO]->(:ContactCentreQueue)",
+    "domain": "ccaas",
+    "cypher_template": "MATCH (c:Conversation)-[:ROUTED_TO]->(q:ContactCentreQueue) WHERE c.queued_at IS NOT NULL AND c.assigned_at IS NOT NULL RETURN q.name AS queue_name, count(c) AS routed_count, round(avg(duration.between(c.queued_at, c.assigned_at).seconds), 1) AS avg_wait_seconds, max(duration.between(c.queued_at, c.assigned_at).seconds) AS max_wait_seconds ORDER BY routed_count DESC",
+    "diagnostic_template": "MATCH (c:Conversation)-[:ROUTED_TO]->(q:ContactCentreQueue) WHERE c.created_at >= datetime() AND c.created_at < datetime() AND c.queued_at IS NOT NULL AND c.assigned_at IS NOT NULL WITH q.name AS dimension, [x IN collect(CASE WHEN c.created_at >= datetime() THEN duration.between(c.queued_at, c.assigned_at).seconds ELSE NULL END) WHERE x IS NOT NULL] AS curr_waits, [x IN collect(CASE WHEN c.created_at < datetime() THEN duration.between(c.queued_at, c.assigned_at).seconds ELSE NULL END) WHERE x IS NOT NULL] AS prev_waits RETURN dimension AS queue, size(curr_waits) AS current_routed, CASE WHEN size(curr_waits) > 0 THEN round(reduce(s = 0.0, w IN curr_waits | s + w) / size(curr_waits), 1) ELSE 0.0 END AS current_avg_wait_sec, size(prev_waits) AS previous_routed, CASE WHEN size(prev_waits) > 0 THEN round(reduce(s = 0.0, w IN prev_waits | s + w) / size(prev_waits), 1) ELSE 0.0 END AS previous_avg_wait_sec, size(curr_waits) - size(prev_waits) AS volume_delta ORDER BY current_routed DESC"
+  },
+  {
+    "id": "concept_agent_workload",
+    "type": "business_concept",
+    "name": "Agent Workload & Concurrency",
+    "aliases": [
+      "agent workload",
+      "agent volume",
+      "agent capacity",
+      "agent performance",
+      "agent handled calls"
+    ],
+    "description": "Distribution of customer interactions handled, resolved, and currently active across contact center staff.",
+    "category": "Workforce",
+    "base_entities": [
+      "Conversation",
+      "ContactCentreAgent"
+    ],
+    "business_rules": [
+      "Tracked via (:Conversation)-[:HANDLED_BY]->(a:ContactCentreAgent).",
+      "Agents identified by display_name and email.",
+      "Compare closed conversations vs total handled."
+    ],
+    "pattern": "(:Conversation)-[:HANDLED_BY]->(:ContactCentreAgent)",
+    "domain": "ccaas",
+    "cypher_template": "MATCH (c:Conversation)-[:HANDLED_BY]->(a:ContactCentreAgent) RETURN a.display_name AS agent_name, a.email AS email, count(c) AS handled_count, sum(CASE WHEN c.status = \"closed\" THEN 1 ELSE 0 END) AS closed_count, round(avg(duration.between(c.created_at, c.ended_at).seconds), 1) AS avg_handle_time_sec ORDER BY handled_count DESC",
+    "diagnostic_template": "MATCH (c:Conversation)-[:HANDLED_BY]->(a:ContactCentreAgent) WHERE c.created_at >= datetime() AND c.created_at < datetime() WITH a.display_name AS dimension, sum(CASE WHEN c.created_at >= datetime() THEN 1 ELSE 0 END) AS current_volume, sum(CASE WHEN c.created_at < datetime() THEN 1 ELSE 0 END) AS previous_volume, round(avg(duration.between(c.created_at, c.ended_at).seconds), 1) AS aht_sec RETURN dimension AS agent, current_volume, previous_volume, current_volume - previous_volume AS delta, aht_sec ORDER BY current_volume DESC"
+  },
+  {
+    "id": "concept_bot_handoff_failure",
+    "type": "business_concept",
+    "name": "Bot-to-Human Escalation & Failure Telemetry",
+    "aliases": [
+      "bot handoff",
+      "bot escalation failure",
+      "live agent unavailable",
+      "bot failure"
+    ],
+    "description": "Diagnoses interactions where the automated bot attempted to hand off to a human agent but failed due to unstaffed queues or timeout.",
+    "category": "Automation",
+    "base_entities": [
+      "Conversation",
+      "BotHandled"
+    ],
+    "business_rules": [
+      "c.facts contains empirical diagnostic tags: no_ready_agents, live_agent_unavailable, bot_continue.",
+      "c.handoff_reason indicates customer escalation request: User requested live agent.",
+      "c.summary provides machine routing event details."
+    ],
+    "pattern": "(:Conversation:BotHandled)",
+    "domain": "ccaas",
+    "cypher_template": "MATCH (c:Conversation) WHERE any(f IN c.facts WHERE f IN [\"no_ready_agents\", \"live_agent_unavailable\"]) RETURN c.channel AS channel, c.handoff_reason AS handoff_reason, count(c) AS failed_handoffs, collect(DISTINCT c.summary)[0..3] AS sample_logs ORDER BY failed_handoffs DESC",
+    "diagnostic_template": "MATCH (c:Conversation) WHERE c.created_at >= datetime() AND c.created_at < datetime()   AND any(f IN c.facts WHERE f IN [\"no_ready_agents\", \"live_agent_unavailable\"]) WITH c.channel + \" (\" + coalesce(c.handoff_reason, \"unknown\") + \")\" AS dimension, sum(CASE WHEN c.created_at >= datetime() THEN 1 ELSE 0 END) AS current, sum(CASE WHEN c.created_at < datetime() THEN 1 ELSE 0 END) AS previous RETURN dimension AS handoff_incident, current, previous, current - previous AS delta ORDER BY abs(current - previous) DESC LIMIT 5"
+  },
+  {
+    "id": "concept_transfer_loops",
+    "type": "business_concept",
+    "name": "Transfer Loops & Journey Continuations",
+    "aliases": [
+      "transfers",
+      "transfer loops",
+      "repeat contacts",
+      "bouncing callers",
+      "escalations"
+    ],
+    "description": "Identifies customer interactions that were bounced between multiple queues or agents across sequential threads.",
+    "category": "Customer Journey",
+    "base_entities": [
+      "Conversation",
+      "Transfer"
+    ],
+    "business_rules": [
+      "Tracked via (:Conversation)-[:CONTINUES]->(:Conversation) and (:Conversation)-[:HAS]->(:Transfer).",
+      "Multi-hop continuations highlight severe routing failure and customer friction."
+    ],
+    "pattern": "(c1:Conversation)-[:CONTINUES]->(c2:Conversation)",
+    "domain": "ccaas",
+    "cypher_template": "MATCH (c1:Conversation)-[:CONTINUES]->(c2:Conversation) RETURN c1.channel AS source_channel, c2.channel AS target_channel, count(*) AS continuation_volume ORDER BY continuation_volume DESC",
+    "diagnostic_template": "MATCH (c1:Conversation)-[:CONTINUES]->(c2:Conversation) WHERE c1.created_at >= datetime() AND c1.created_at < datetime() WITH c1.channel + \" -> \" + c2.channel AS dimension, sum(CASE WHEN c1.created_at >= datetime() THEN 1 ELSE 0 END) AS current_hops, sum(CASE WHEN c1.created_at < datetime() THEN 1 ELSE 0 END) AS previous_hops RETURN dimension AS channel_flow, current_hops, previous_hops, current_hops - previous_hops AS delta ORDER BY abs(current_hops - previous_hops) DESC LIMIT 5"
+  },
+  {
+    "id": "concept_shift_coverage",
+    "type": "business_concept",
+    "name": "Shift Coverage & Business Hours Adherence",
+    "aliases": [
+      "shift coverage",
+      "business hours",
+      "operating hours",
+      "after hours calls",
+      "out of hours"
+    ],
+    "description": "Correlates interaction volumes and abandonment spikes with operational shifts and business operating schedules.",
+    "category": "Scheduling",
+    "base_entities": [
+      "BusinessHours",
+      "Shift"
+    ],
+    "business_rules": [
+      "Operating hours defined in (:BusinessHours)-[:HAS]->(:Shift).",
+      "Shifts in Asia/Kolkata: Morning (06:00-14:00), Evening (14:00-22:00), Night (22:00-06:00).",
+      "High after-hours traffic indicates need for expanded shift coverage or enhanced bot self-service."
+    ],
+    "pattern": "(:BusinessHours)-[:HAS]->(:Shift)",
+    "domain": "ccaas",
+    "cypher_template": "MATCH (b:BusinessHours)-[:HAS]->(s:Shift) RETURN b.name AS calendar_name, b.timezone AS timezone, count(s) AS total_shifts",
+    "diagnostic_template": "MATCH (c:Conversation) WHERE c.created_at >= datetime() AND c.created_at < datetime() WITH substring(toString(c.created_at), 11, 2) AS dimension, sum(CASE WHEN c.created_at >= datetime() THEN 1 ELSE 0 END) AS current_volume, sum(CASE WHEN c.created_at < datetime() THEN 1 ELSE 0 END) AS previous_volume, sum(CASE WHEN c.created_at >= datetime() AND c.end_reason = \"customer_ended\" AND c.assigned_at IS NULL THEN 1 ELSE 0 END) AS curr_abandoned RETURN dimension AS hour_utc, current_volume, previous_volume, current_volume - previous_volume AS delta, curr_abandoned AS abandoned_in_current_period ORDER BY current_volume DESC LIMIT 6"
+  }
+]

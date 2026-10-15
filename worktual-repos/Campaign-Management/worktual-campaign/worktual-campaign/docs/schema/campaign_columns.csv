@@ -1,0 +1,225 @@
+table_name,column_name,db_type,nullable,default,description
+branches,id,uuid,NO,gen uuid,Primary key
+branches,tenant_id,uuid,NO,,Owning tenant (account system)
+branches,name,text,NO,,Branch display name
+branches,is_default,boolean,NO,false,Default branch for tenant
+branches,created_at,timestamptz,NO,now(),Created
+branches,updated_at,timestamptz,NO,auto,Updated
+organization_products,id,uuid,NO,gen uuid,Primary key
+organization_products,tenant_id,uuid,NO,,Tenant
+organization_products,branch_id,uuid,NO,,FK branches.id CASCADE
+organization_products,product_code,enum(campaign|crm),NO,,Product entitlement
+organization_products,status,enum(active|inactive),NO,active,Entitlement status
+organization_products,starts_at,timestamptz,YES,,Entitlement start
+organization_products,ends_at,timestamptz,YES,,Entitlement end
+organization_products,created_at,timestamptz,NO,now(),Created
+organization_products,updated_at,timestamptz,NO,auto,Updated
+campaigns,id,uuid,NO,gen uuid,Primary key
+campaigns,tenant_id,uuid,NO,,Tenant
+campaigns,branch_id,uuid,NO,,FK branches.id RESTRICT
+campaigns,name,text,NO,,Campaign name
+campaigns,description,text,YES,,Long description
+campaigns,goal,text,YES,,Business goal
+campaigns,objective,text,YES,,Measurable objective
+campaigns,session_id,uuid,YES,,UK - agent session this was saved from
+campaigns,audience_summary,text,YES,,Human summary of audience
+campaigns,audience_filters,jsonb,YES,,Filter definition used to build audience
+campaigns,audience_count,int,NO,0,Count at save/launch
+campaigns,launch_plan,jsonb,YES,,Schedule channels A/B channel_run metrics
+campaigns,status,enum(draft|scheduled|live|completed|cancelled),NO,draft,Lifecycle status
+campaigns,starts_at,timestamptz,YES,,UTC start/launch instant
+campaigns,ends_at,timestamptz,YES,,UTC end
+campaigns,timezone,text,YES,Asia/Kolkata,IANA timezone for local launch
+campaigns,launch_local_date,text,YES,,Local YYYY-MM-DD launch date
+campaigns,launch_local_time,text,YES,,Local HH:mm launch time
+campaigns,source_channel,enum(standalone_campaign|crm_marketing),NO,standalone_campaign,Origin product surface
+campaigns,created_by_user_id,uuid,NO,,Creator user ref (account DB)
+campaigns,created_at,timestamptz,NO,now(),Created
+campaigns,updated_at,timestamptz,NO,auto,Updated
+campaign_channels,id,uuid,NO,gen uuid,Primary key
+campaign_channels,campaign_id,uuid,NO,,FK campaigns.id CASCADE
+campaign_channels,tenant_id,uuid,NO,,Tenant denorm
+campaign_channels,channel,text,NO,,email|sms|whatsapp|push|web|…
+campaign_channels,template_id,uuid,YES,,Optional template ref
+campaign_channels,how_it_works,text,YES,,Channel plan notes
+campaign_channels,planned_launch_at,text,YES,,Planned launch string
+campaign_channels,status,text,NO,ready,Channel readiness/status
+campaign_channels,created_at,timestamptz,NO,now(),Created
+campaign_channels,updated_at,timestamptz,NO,auto,Updated
+campaign_audience,campaign_id,uuid,NO,,PK part + FK campaigns CASCADE
+campaign_audience,contact_id,uuid,NO,,PK part - CDP/account contact ref
+campaign_audience,created_at,timestamptz,NO,now(),Frozen at
+campaign_agent_sessions,id,uuid,NO,,Primary key (client/agent supplied)
+campaign_agent_sessions,tenant_id,uuid,NO,,Tenant
+campaign_agent_sessions,branch_id,uuid,NO,,FK branches RESTRICT
+campaign_agent_sessions,created_by_user_id,uuid,NO,,User ref
+campaign_agent_sessions,module,text,NO,create_campaign,Agent module
+campaign_agent_sessions,stage,text,NO,intake,Wizard/agent stage
+campaign_agent_sessions,payload,jsonb,NO,,Messages templates channel plans
+campaign_agent_sessions,created_at,timestamptz,NO,now(),Created
+campaign_agent_sessions,updated_at,timestamptz,NO,auto,Updated
+campaign_audience_refs,session_id,uuid,NO,,PK + FK sessions CASCADE
+campaign_audience_refs,contact_id,uuid,NO,,PK - contact UUID ref
+campaign_channel_templates,id,uuid,NO,gen uuid,Primary key = template_id
+campaign_channel_templates,session_id,uuid,NO,,FK sessions CASCADE
+campaign_channel_templates,tenant_id,uuid,NO,,Tenant
+campaign_channel_templates,branch_id,uuid,NO,,Branch
+campaign_channel_templates,channel,text,NO,,Channel key
+campaign_channel_templates,logo,text,YES,,Logo URL/path
+campaign_channel_templates,launch_at,text,YES,,Template launch hint
+campaign_channel_templates,how_it_works,text,YES,,Copy/plan text
+campaign_channel_templates,fields,jsonb,NO,,Structured shell fields
+campaign_channel_templates,generation_batch_id,uuid,YES,,AI generation batch
+campaign_channel_templates,created_at,timestamptz,NO,now(),Created
+campaign_channel_templates,updated_at,timestamptz,NO,auto,Updated
+campaign_template_messages,id,uuid,NO,gen uuid,Primary key
+campaign_template_messages,template_id,uuid,NO,,FK templates CASCADE
+campaign_template_messages,role,text,NO,,user|assistant|system
+campaign_template_messages,seq,int,NO,,Order within template
+campaign_template_messages,kind,text,NO,,text|template
+campaign_template_messages,payload,jsonb,NO,,Message body/content
+campaign_template_messages,created_at,timestamptz,NO,now(),Created
+channel_sending_profiles,id,uuid,NO,gen uuid,Primary key
+channel_sending_profiles,tenant_id,uuid,NO,,Tenant
+channel_sending_profiles,channel,text,NO,,Channel key
+channel_sending_profiles,status,enum(not_started|in_progress|ready|blocked),NO,not_started,Config readiness
+channel_sending_profiles,checklist,jsonb,YES,,Checklist progress bag
+channel_sending_profiles,created_at,timestamptz,NO,now(),Created
+channel_sending_profiles,updated_at,timestamptz,NO,auto,Updated
+push_channel_settings,id,uuid,NO,gen uuid,Primary key
+push_channel_settings,tenant_id,uuid,NO,,Tenant
+push_channel_settings,channel,text,NO,,web_push|app_push
+push_channel_settings,settings,jsonb,NO,{},Provider secrets/config
+push_channel_settings,status,text,NO,not_started,Config status
+push_channel_settings,created_at,timestamptz,NO,now(),Created
+push_channel_settings,updated_at,timestamptz,NO,auto,Updated
+email_org_profiles,id,uuid,NO,gen uuid,Primary key
+email_org_profiles,tenant_id,uuid,NO,,UK one per tenant
+email_org_profiles,legal_name,text,NO,,Legal entity name
+email_org_profiles,street,text,NO,,Street address
+email_org_profiles,city,text,NO,,City
+email_org_profiles,country,text,NO,,Country
+email_org_profiles,phone,text,YES,,Phone
+email_org_profiles,created_at,timestamptz,NO,now(),Created
+email_org_profiles,updated_at,timestamptz,NO,auto,Updated
+email_senders,id,uuid,NO,gen uuid,Primary key
+email_senders,tenant_id,uuid,NO,,Tenant
+email_senders,display_name,text,NO,,From display name
+email_senders,from_email,text,NO,,From address
+email_senders,reply_to,text,YES,,Reply-To
+email_senders,status,text,NO,pending_verification,pending|verified|…
+email_senders,is_active,boolean,NO,false,Active From for send worker
+email_senders,verify_token,text,YES,,Email verify token
+email_senders,verify_expires_at,timestamptz,YES,,Token expiry
+email_senders,verified_at,timestamptz,YES,,When verified
+email_senders,created_at,timestamptz,NO,now(),Created
+email_senders,updated_at,timestamptz,NO,auto,Updated
+email_domains,id,uuid,NO,gen uuid,Primary key
+email_domains,tenant_id,uuid,NO,,Tenant
+email_domains,domain,text,NO,,Sending domain
+email_domains,spf_ok,boolean,NO,false,SPF check passed
+email_domains,dkim_ok,boolean,NO,false,DKIM check passed
+email_domains,dmarc_ok,boolean,NO,false,DMARC check passed
+email_domains,status,text,NO,not_started,Auth lifecycle status
+email_domains,provider_domain_id,text,YES,,ESP/Worktual domain id
+email_domains,dns_records,jsonb,YES,,DNS records for operator paste
+email_domains,created_at,timestamptz,NO,now(),Created
+email_domains,updated_at,timestamptz,NO,auto,Updated
+email_return_paths,id,uuid,NO,gen uuid,Primary key
+email_return_paths,tenant_id,uuid,NO,,UK one per tenant
+email_return_paths,domain,text,NO,,Bounce domain
+email_return_paths,status,text,NO,not_started,Verify status
+email_return_paths,created_at,timestamptz,NO,now(),Created
+email_return_paths,updated_at,timestamptz,NO,auto,Updated
+email_sending_caps,id,uuid,NO,gen uuid,Primary key
+email_sending_caps,tenant_id,uuid,NO,,UK one per tenant
+email_sending_caps,batch_size,int,NO,200,Recipients per batch
+email_sending_caps,hourly_cap,int,NO,500,Max sends/hour
+email_sending_caps,daily_cap,int,NO,1000,Max sends/day
+email_sending_caps,warmup_stage,int,NO,0,Warmup stage index
+email_sending_caps,health_status,text,NO,healthy,healthy|blocked_sending|…
+email_sending_caps,health_stats,jsonb,YES,,Rolling sent/bounce/complaint window
+email_sending_caps,created_at,timestamptz,NO,now(),Created
+email_sending_caps,updated_at,timestamptz,NO,auto,Updated
+email_suppressions,id,uuid,NO,gen uuid,Primary key
+email_suppressions,tenant_id,uuid,NO,,Tenant
+email_suppressions,email,text,NO,,Suppressed address
+email_suppressions,reason,text,NO,,unsub|hard_bounce|complaint|…
+email_suppressions,created_at,timestamptz,NO,now(),Created
+campaign_send_batches,id,uuid,NO,gen uuid,Primary key
+campaign_send_batches,tenant_id,uuid,NO,,Tenant
+campaign_send_batches,campaign_id,uuid,NO,,FK campaigns CASCADE
+campaign_send_batches,channel,text,NO,email,email|push|web|…
+campaign_send_batches,seq,int,NO,,Batch sequence within channel
+campaign_send_batches,scheduled_for,timestamptz,NO,,When worker may process
+campaign_send_batches,status,text,NO,queued,queued|running|done|failed|…
+campaign_send_batches,size,int,NO,0,Recipient count
+campaign_send_batches,created_at,timestamptz,NO,now(),Created
+campaign_send_batches,updated_at,timestamptz,NO,auto,Updated
+campaign_send_recipients,id,uuid,NO,gen uuid,Primary key
+campaign_send_recipients,tenant_id,uuid,NO,,Tenant
+campaign_send_recipients,batch_id,uuid,NO,,FK batches CASCADE
+campaign_send_recipients,campaign_id,uuid,NO,,Campaign denorm
+campaign_send_recipients,contact_id,uuid,YES,,Contact ref
+campaign_send_recipients,email,text,YES,,To address when email
+campaign_send_recipients,destination,text,YES,,Push token / web endpoint
+campaign_send_recipients,platform,text,YES,,ios|android|web|…
+campaign_send_recipients,status,text,NO,pending,pending|sent|failed|skipped|…
+campaign_send_recipients,attempt_count,int,NO,0,Send attempts
+campaign_send_recipients,skip_fail_reason,text,YES,,Skip/fail reason
+campaign_send_recipients,provider_message_id,text,YES,,ESP message id
+campaign_send_recipients,created_at,timestamptz,NO,now(),Created
+campaign_send_recipients,updated_at,timestamptz,NO,auto,Updated
+push_endpoints,id,uuid,NO,gen uuid,Primary key
+push_endpoints,tenant_id,uuid,NO,,Tenant
+push_endpoints,contact_id,uuid,YES,,Contact ref
+push_endpoints,channel,text,NO,,push|web
+push_endpoints,platform,text,YES,,Device platform
+push_endpoints,endpoint,text,NO,,Token or subscription URL
+push_endpoints,auth_keys,jsonb,YES,,Web push auth keys
+push_endpoints,label,text,YES,,Operator label
+push_endpoints,active,boolean,NO,true,Active flag
+push_endpoints,created_at,timestamptz,NO,now(),Created
+push_endpoints,updated_at,timestamptz,NO,auto,Updated
+campaign_contact_engagement,id,uuid,NO,gen uuid,Primary key
+campaign_contact_engagement,tenant_id,uuid,NO,,Tenant
+campaign_contact_engagement,contact_id,uuid,NO,,Contact ref
+campaign_contact_engagement,email_unsubscribed,boolean,NO,false,Unsubscribed from email
+campaign_contact_engagement,email_unsubscribed_at,timestamptz,YES,,When unsubscribed
+campaign_contact_engagement,email_unsubscribe_reason,text,YES,,Reason
+campaign_contact_engagement,last_email_opened_at,timestamptz,YES,,Last open
+campaign_contact_engagement,last_email_clicked_at,timestamptz,YES,,Last click
+campaign_contact_engagement,email_open_count,int,NO,0,Open count
+campaign_contact_engagement,email_click_count,int,NO,0,Click count
+campaign_contact_engagement,created_at,timestamptz,NO,now(),Created
+campaign_contact_engagement,updated_at,timestamptz,NO,auto,Updated
+regulated_channel_templates,id,uuid,NO,gen uuid,Primary key
+regulated_channel_templates,tenant_id,uuid,NO,,Tenant
+regulated_channel_templates,channel,text,NO,,sms|whatsapp
+regulated_channel_templates,name,text,NO,,Template name
+regulated_channel_templates,external_id,text,NO,"",DLT id or Meta template name
+regulated_channel_templates,provider_template_id,text,YES,,Meta Graph template id
+regulated_channel_templates,language,text,NO,en,Language
+regulated_channel_templates,category,text,NO,"",Category
+regulated_channel_templates,header,text,NO,"",Header
+regulated_channel_templates,body,text,NO,,Body
+regulated_channel_templates,footer,text,NO,"",Footer
+regulated_channel_templates,buttons,text,NO,"",Newline-separated button labels
+regulated_channel_templates,status,enum(draft|pending|approved|rejected|paused|disabled),NO,draft,Approval status
+regulated_channel_templates,rejected_reason,text,YES,,Reject reason
+regulated_channel_templates,campaign_name,text,NO,"",Context campaign name
+regulated_channel_templates,goal,text,NO,"",Context goal
+regulated_channel_templates,objective,text,NO,"",Context objective
+regulated_channel_templates,source_campaign_id,uuid,YES,,Optional campaign link
+regulated_channel_templates,channel_config_id,uuid,YES,,Internal setup_channel_configs ref - never expose to UI
+regulated_channel_templates,submitted_at,timestamptz,YES,,Submitted
+regulated_channel_templates,last_status_checked_at,timestamptz,YES,,Last sync check
+regulated_channel_templates,created_by_user_id,uuid,YES,,Creator ref
+regulated_channel_templates,created_at,timestamptz,NO,now(),Created
+regulated_channel_templates,updated_at,timestamptz,NO,auto,Updated
+sms_channel_settings,id,uuid,NO,gen uuid,Primary key
+sms_channel_settings,tenant_id,uuid,NO,,UK one per tenant
+sms_channel_settings,settings,jsonb,NO,{},provider api_key sender_id entity_id base_url
+sms_channel_settings,status,text,NO,not_started,Config status
+sms_channel_settings,created_at,timestamptz,NO,now(),Created
+sms_channel_settings,updated_at,timestamptz,NO,auto,Updated

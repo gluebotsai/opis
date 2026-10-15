@@ -1,0 +1,87 @@
+{
+  "question": "what is our customer retention ",
+  "answer": "The customer retention rate is 0.00% for all time.",
+  "trace": {
+    "question": "what is our customer retention",
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1015,
+      "role": "admin"
+    },
+    "model": "worktual-gemma",
+    "tasks": [
+      {
+        "status": "ok",
+        "store": "sql",
+        "sql": "WITH rpt_contracts AS (\nSELECT src.id, src.organization_id, src.title, src.company_id, src.company_name, src.deal_id, src.starts_at, src.ends_at, src.arr, src.billing_frequency, src.auto_renew, src.status, src.renew_deal_id, src.created_at FROM (\nSELECT \n  ct.id,\n  ct.organization_id,\n  ct.title,\n  ct.company_id,\n  c.name AS company_name,\n  ct.deal_id,\n  ct.starts_at,\n  ct.ends_at,\n  COALESCE(ct.arr, 0) AS arr,\n  ct.billing_frequency,\n  ct.auto_renew,\n  ct.status,\n  ct.renew_deal_id,\n  ct.created_at\nFROM crm.contracts ct\nLEFT JOIN crm.companies c ON c.id = ct.company_id AND c.organization_id = ct.organization_id\nWHERE ct.organization_id = %(_org_id)s\n) src WHERE TRUE\n)\nSELECT CAST(COUNT(*) AS BIGINT) AS evaluated_contracts, CAST(COUNT(*) FILTER(WHERE status = 'active' AND auto_renew = TRUE) AS BIGINT) AS retained_contracts, CASE WHEN COUNT(*) > 0 THEN ROUND(CAST((CAST(COUNT(*) FILTER(WHERE status = 'active' AND auto_renew = TRUE) AS DECIMAL) / CAST(COUNT(*) AS DECIMAL)) * 100.0 AS DECIMAL), 2) ELSE 0.00 END AS retention_rate FROM rpt_contracts AS contracts WHERE TRUE AND TRUE AND TRUE LIMIT 500",
+        "views": [
+          "contracts"
+        ],
+        "guard_notes": [
+          "row cap 500 applied"
+        ],
+        "bound_params": {
+          "_org_id": 1003,
+          "_user_id": 1015,
+          "user_id": 1015,
+          "organization_id": 1003,
+          "org_id": 1003,
+          "tenant_id": 1003,
+          "current_user_id": 1015
+        },
+        "rows": [
+          {
+            "evaluated_contracts": 2,
+            "retained_contracts": 0,
+            "retention_rate": "0.00"
+          }
+        ],
+        "kpi_id": "customer_retention",
+        "time_status": "all_time",
+        "attempts": [
+          {
+            "raw": "{\"tool\":\"run_kpi\",\"kpi_id\":\"customer_retention\",\"dimension\":null}",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "customer_retention"
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "tool": "run_kpi",
+        "requested_kpi": "customer_retention",
+        "requested_dimension": null,
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "customer_retention",
+          "goal": "Calculate customer retention rate",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "kpi",
+          "depends_on": []
+        }
+      }
+    ],
+    "domain_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"quick\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"customer_retention\",\n      \"goal\": \"Calculate customer retention rate\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"answer_type\": \"kpi\",\n      \"depends_on\": []\n    }\n  ]\n}\n```",
+    "plan": {
+      "kind": "plan",
+      "depth": "quick",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "customer_retention",
+          "goal": "Calculate customer retention rate",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "kpi",
+          "depends_on": []
+        }
+      ]
+    },
+    "facts": "time_requested: all time\nperiod_applied: overall (no date filter, UTC)\ntime_status: all_time\ncatalog_kpi: customer_retention\nRESULT: 1 row(s)\ntask_goal: Calculate customer retention rate\n  evaluated_contracts=2 | retained_contracts=0 | retention_rate=0.00",
+    "grounded": true,
+    "briefing_raw": "The customer retention rate is 0.00% for all time."
+  }
+}

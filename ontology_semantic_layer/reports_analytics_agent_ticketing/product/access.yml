@@ -1,0 +1,70 @@
+version: 1
+# Runtime enforces this file. Identity comes only from trusted context.
+
+roles:
+  admin:
+    default_scope: org
+    my_tickets_column: assignee_id
+    created_by_me_column: created_by_id
+    can_create_tickets: true
+  agent:
+    default_scope: own
+    my_tickets_column: assignee_id
+    created_by_me_column: created_by_id
+    can_create_tickets: true
+  resolver:
+    default_scope: own
+    my_tickets_column: resolver_id
+    created_by_me_column: null
+    can_create_tickets: false
+
+scope_levels:
+  - org
+  - own
+  - created_by_me
+  - queue
+  - agent
+  - resolver
+
+# metric_set: all = every KPI this role may see at that target.
+# ticket_count_only = only the ticket_count KPI.
+matrix:
+  org:
+    admin: all
+    agent: deny
+    resolver: deny
+  own:
+    admin: all
+    agent: all
+    resolver: all
+  created_by_me:
+    admin: all
+    agent: all
+    resolver: deny
+  agent:
+    admin: all
+    agent: deny
+    resolver: deny
+  resolver:
+    admin: all
+    agent: all_in_my_queues
+    resolver: ticket_count_in_my_queues
+  queue:
+    admin: all
+    agent: all_in_my_queues
+    resolver: ticket_count_in_my_queues
+
+resolver_notes:
+  own_tickets: all metrics on resolver_id = user
+  queue_or_other_resolvers: ticket_count only; no rates, CSAT, SLA, or averages
+
+queue_membership:
+  table: ticketing.agent_queue_members
+  queue_column: queue_id
+  user_column: user_id
+
+column_masking:
+  personal_data_roles:
+    admin: show
+    agent: show_own_scope
+    resolver: show_own_scope

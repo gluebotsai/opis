@@ -1,0 +1,139 @@
+/**
+ * Profile / initials avatars — accent palette soft washes.
+ * Loaded after styles.css so grey legacy tone rules cannot win.
+ * Soft wash = accent @ 14–18% mixed with #fff; text = solid accent hex.
+ * Palette only: #653AE0 #098F6A #E0B73A #D83AE0 #3A9EE0 #3A3FE0
+ */
+
+:root {
+  --avatar-purple: #653ae0;
+  --avatar-teal: #098f6a;
+  --avatar-amber: #e0b73a;
+  --avatar-rose: #d83ae0;
+  --avatar-blue: #3a9ee0;
+  --avatar-indigo: #3a3fe0;
+}
+
+.profile-avatar,
+.admin-users-name-cell__avatar,
+.sa-agent-cell__avatar,
+.mail-list-item__avatar,
+.mail-read-pane__avatar {
+  align-items: center;
+  border-radius: 999px;
+  display: inline-flex;
+  flex-shrink: 0;
+  font-weight: 800;
+  justify-content: center;
+  line-height: 1;
+  text-transform: uppercase;
+  user-select: none;
+}
+
+.profile-avatar,
+.admin-users-name-cell__avatar,
+.sa-agent-cell__avatar {
+  font-size: 0.72rem;
+  height: 32px;
+  width: 32px;
+}
+
+.mail-list-item__avatar {
+  font-size: 12px;
+  font-weight: 700;
+  height: 36px;
+  width: 36px;
+}
+
+.mail-read-pane__avatar {
+  font-size: 14px;
+  font-weight: 700;
+  height: 40px;
+  width: 40px;
+}
+
+.profile-avatar--sm {
+  font-size: 0.72rem;
+  height: 32px;
+  width: 32px;
+}
+
+.profile-avatar--md {
+  font-size: 12px;
+  height: 36px;
+  width: 36px;
+}
+
+.profile-avatar--lg {
+  font-size: 14px;
+  height: 40px;
+  width: 40px;
+}
+
+/* Soft wash backgrounds + accent text */
+.admin-users-name-cell__avatar--purple,
+.sa-agent-cell__avatar--purple,
+.mail-list-item__avatar--purple,
+.mail-read-pane__avatar--purple,
+.profile-avatar--purple {
+  background: color-mix(in srgb, var(--avatar-purple) 14%, #fff);
+  color: var(--avatar-purple);
+}
+
+.admin-users-name-cell__avatar--teal,
+.sa-agent-cell__avatar--teal,
+.mail-list-item__avatar--teal,
+.mail-read-pane__avatar--teal,
+.profile-avatar--teal {
+  background: color-mix(in srgb, var(--avatar-teal) 14%, #fff);
+  color: var(--avatar-teal);
+}
+
+.admin-users-name-cell__avatar--amber,
+.sa-agent-cell__avatar--amber,
+.mail-list-item__avatar--amber,
+.mail-read-pane__avatar--amber,
+.profile-avatar--amber {
+  background: color-mix(in srgb, var(--avatar-amber) 18%, #fff);
+  color: var(--avatar-amber);
+}
+
+.admin-users-name-cell__avatar--rose,
+.sa-agent-cell__avatar--rose,
+.mail-list-item__avatar--rose,
+.mail-read-pane__avatar--rose,
+.profile-avatar--rose {
+  background: color-mix(in srgb, var(--avatar-rose) 14%, #fff);
+  color: var(--avatar-rose);
+}
+
+.admin-users-name-cell__avatar--blue,
+.sa-agent-cell__avatar--blue,
+.mail-list-item__avatar--blue,
+.mail-read-pane__avatar--blue,
+.profile-avatar--blue {
+  background: color-mix(in srgb, var(--avatar-blue) 14%, #fff);
+  color: var(--avatar-blue);
+}
+
+.admin-users-name-cell__avatar--indigo,
+.sa-agent-cell__avatar--indigo,
+.mail-list-item__avatar--indigo,
+.mail-read-pane__avatar--indigo,
+.profile-avatar--indigo {
+  background: color-mix(in srgb, var(--avatar-indigo) 14%, #fff);
+  color: var(--avatar-indigo);
+}
+
+/* Untoned base circles still get a readable default (primary accent wash) */
+.sa-agent-cell__avatar:not([class*="--"]),
+.mail-list-item__avatar:not([class*="avatar--"]),
+.mail-read-pane__avatar:not([class*="avatar--"]) {
+  background: color-mix(in srgb, var(--avatar-purple) 14%, #fff);
+  color: var(--avatar-purple);
+}
+
+.sales-oversight-agent-summary-card__avatar {
+  background: color-mix(in srgb, var(--avatar-blue) 14%, #fff);
+  color: var(--avatar-blue);
+}

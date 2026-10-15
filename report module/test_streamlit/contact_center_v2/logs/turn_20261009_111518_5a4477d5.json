@@ -1,0 +1,62 @@
+{
+  "turn_id": "5a4477d5",
+  "timestamp": "2026-10-09T05:45:18.057009+00:00",
+  "question": "for the past 7 days give me the volume of calls handled breakdown by  the channels",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1016,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Handled call volume for the past 7 days</strong></p>\n<p>In the past 7 days (UTC), there were <strong>188</strong> handled calls via the <strong>call</strong> channel.</p>\n<p>Would you like to see this volume broken down by day instead?</p>",
+  "card": "card: table r1",
+  "facts": "result_id: r1\nwindow: past 7 days (UTC)\nkpi: handled\ncertified: true\ntask_goal: Count the number of handled calls for the past 7 days, split by channel.\nanswer_type: number\nrow_count: 1\nrow 1: channel=call; handled=188",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1016,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "for the past 7 days give me the volume of calls handled breakdown by  the channels",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The total volume of handled calls for the past 7 days, broken down by channel.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Count the number of handled calls for the past 7 days, split by channel.",
+          "time": "the past 7 days",
+          "scope": "org",
+          "slice": [
+            "channel"
+          ],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "handled",
+        "row_count": 1
+      }
+    ],
+    "facts": "result_id: r1\nwindow: past 7 days (UTC)\nkpi: handled\ncertified: true\ntask_goal: Count the number of handled calls for the past 7 days, split by channel.\nanswer_type: number\nrow_count: 1\nrow 1: channel=call; handled=188",
+    "grounded": true,
+    "card": "card: table r1"
+  },
+  "error": null
+}

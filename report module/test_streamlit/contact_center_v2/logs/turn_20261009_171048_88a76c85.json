@@ -1,0 +1,60 @@
+{
+  "turn_id": "88a76c85",
+  "timestamp": "2026-10-09T11:40:48.236688+00:00",
+  "question": "what is the fcr... overall",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1016,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>First Contact Resolution Rate</strong></p><p>The overall First Contact Resolution rate for all time is <strong>58.8%</strong>.</p><p>Would you like to see this rate broken down by channel?</p>",
+  "card": "card: kpi r1",
+  "facts": "result_id: r1\nwindow: all time\nkpi: fcr\ncertified: true\nunit: percent\ntask_goal: Calculate the First Contact Resolution rate overall.\nanswer_type: number\nrow_count: 1\nrow 1: fcr_n=47; resolved_n=80; rate_pct=58.8",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1016,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "what is the fcr... overall",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants to know the overall First Contact Resolution rate.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Calculate the First Contact Resolution rate overall.",
+          "time": "all time",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "fcr",
+        "row_count": 1
+      }
+    ],
+    "facts": "result_id: r1\nwindow: all time\nkpi: fcr\ncertified: true\nunit: percent\ntask_goal: Calculate the First Contact Resolution rate overall.\nanswer_type: number\nrow_count: 1\nrow 1: fcr_n=47; resolved_n=80; rate_pct=58.8",
+    "grounded": true,
+    "card": "card: kpi r1"
+  },
+  "error": null
+}

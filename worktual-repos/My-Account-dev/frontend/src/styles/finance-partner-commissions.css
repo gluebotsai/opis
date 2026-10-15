@@ -1,0 +1,655 @@
+/**
+ * Finance — Partner commissions
+ * Admin list chrome: canvas #F4F4F6 · panels #FFFFFF · border #C9C9CF
+ * Status + Country live in panel Filters popovers (not page chrome).
+ */
+
+.app-shell--finance .app-content:has(.finance-partner-commissions-page) {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.admin-users-page.finance-partner-commissions-page {
+  --au-canvas: #f4f4f6;
+  background: #f4f4f6;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 24px;
+  min-height: 0;
+  min-width: 0;
+  padding-bottom: 0;
+  width: 100%;
+}
+
+.finance-partner-commissions-page .admin-users-page__header h1 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.finance-partner-commissions-page .admin-users-page__subtitle {
+  font-size: 0.875rem;
+  margin-top: 4px;
+  max-width: 720px;
+}
+
+.finance-partner-commissions-panel {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.finance-partner-commissions-panel > .admin-users-panel__body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.finance-partner-commissions-panel .admin-users-panel__table-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
+.finance-partner-commissions-panel > .admin-users-panel__footer {
+  flex: 0 0 auto;
+}
+
+.finance-partner-commissions-slabs-panel {
+  flex: 0 0 auto;
+}
+
+/*
+ * Slabs tables are 2 data columns (Deal range · Commission rate). Admin-users-light
+ * pins th/td:last-child as a sticky Actions column (right:0, 56px). CommissionSlabsReadonly
+ * re-imports that stylesheet after page CSS, so overrides must live here (later in the
+ * cascade) and use higher specificity than `.admin-users-page .admin-users-table th:last-child`.
+ * Keep thead sticky as one row — never position:static on th:last-child.
+ */
+.admin-users-page .finance-partner-commissions-slabs-panel .admin-users-table.finance-partner-commissions-slabs-table th:last-child,
+.admin-users-page .finance-partner-commissions-slabs-panel .admin-users-table.finance-partner-commissions-slabs-table td:last-child,
+.admin-users-page .partner-bank-slabs-panel .admin-users-table.finance-partner-commissions-slabs-table th:last-child,
+.admin-users-page .partner-bank-slabs-panel .admin-users-table.finance-partner-commissions-slabs-table td:last-child {
+  background: var(--au-surface, #ffffff);
+  box-shadow: none;
+  max-width: none;
+  min-width: 10rem;
+  overflow: hidden;
+  right: auto;
+  text-align: left;
+  text-overflow: ellipsis;
+  width: 28%;
+}
+
+.admin-users-page .finance-partner-commissions-slabs-panel .admin-users-table.finance-partner-commissions-slabs-table thead th,
+.admin-users-page .partner-bank-slabs-panel .admin-users-table.finance-partner-commissions-slabs-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+}
+
+.admin-users-page .finance-partner-commissions-slabs-panel .admin-users-table.finance-partner-commissions-slabs-table thead th:last-child,
+.admin-users-page .partner-bank-slabs-panel .admin-users-table.finance-partner-commissions-slabs-table thead th:last-child {
+  position: sticky;
+  right: auto;
+  top: 0;
+  z-index: 3;
+}
+
+.admin-users-page .finance-partner-commissions-slabs-panel .admin-users-table.finance-partner-commissions-slabs-table td:last-child,
+.admin-users-page .partner-bank-slabs-panel .admin-users-table.finance-partner-commissions-slabs-table td:last-child {
+  position: static;
+  z-index: auto;
+}
+
+/*
+ * Partner portal Entries table — Status is a data column, not Actions.
+ * Must live here (after CommissionSlabsReadonly re-imports admin-users-light)
+ * so Status keeps vertical sticky with the rest of thead.
+ */
+.admin-users-page.partner-commissions-page .admin-users-table.partner-commissions-table thead th {
+  background: var(--au-surface, #ffffff);
+  position: sticky;
+  top: 0;
+  z-index: 3;
+}
+
+.admin-users-page.partner-commissions-page .admin-users-table.partner-commissions-table th:last-child,
+.admin-users-page.partner-commissions-page .admin-users-table.partner-commissions-table td:last-child {
+  background: var(--au-surface, #ffffff);
+  box-shadow: none;
+  max-width: none;
+  min-width: 0;
+  overflow: visible;
+  right: auto;
+  text-align: left;
+  text-overflow: clip;
+  width: auto;
+}
+
+.admin-users-page.partner-commissions-page .admin-users-table.partner-commissions-table thead th:last-child {
+  position: sticky;
+  right: auto;
+  top: 0;
+  z-index: 4;
+}
+
+.admin-users-page.partner-commissions-page .admin-users-table.partner-commissions-table tbody td:last-child {
+  position: static;
+  z-index: auto;
+}
+
+/* Compact Filters popover — shared by entries + slabs */
+.finance-partner-commissions-page .admin-users-filter-dropdown.finance-partner-commissions-filter,
+.finance-partner-commissions-slabs-panel .admin-users-filter-dropdown.finance-partner-commissions-filter,
+.partner-bank-slabs-panel .admin-users-filter-dropdown.finance-partner-commissions-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-height: min(280px, calc(100vh - 140px));
+  max-width: min(240px, calc(100vw - 32px));
+  min-width: 200px;
+  overflow: hidden;
+  padding: 0;
+  width: min(240px, calc(100vw - 32px));
+}
+
+.finance-partner-commissions-filter__scroll {
+  display: grid;
+  flex: 1 1 auto;
+  gap: 8px;
+  max-height: min(200px, calc(100vh - 200px));
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 10px 12px;
+}
+
+.finance-partner-commissions-filter .admin-users-filter-dropdown__title {
+  font-size: 0.6875rem;
+  margin: 0 0 4px;
+}
+
+.finance-partner-commissions-filter .admin-users-filter-dropdown__section {
+  display: grid;
+  gap: 8px;
+}
+
+.finance-partner-commissions-filter .admin-users-filter-dropdown__field {
+  display: grid;
+  gap: 4px;
+}
+
+.finance-partner-commissions-filter .admin-users-filter-dropdown__field > span {
+  color: #5e5e69;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.finance-partner-commissions-filter .admin-users-filter-dropdown__field select {
+  -webkit-appearance: none;
+  appearance: none;
+  background-color: var(--bg-surface);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%237E7E88' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-position: right 16px center;
+  background-repeat: no-repeat;
+  background-size: 16px 16px;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  box-shadow: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  min-height: 32px;
+  padding: 5px 40px 5px 12px;
+  width: 100%;
+}
+
+.finance-partner-commissions-filter .admin-users-filter-dropdown__field select:hover {
+  background-color: var(--bg-subtle);
+  border-color: var(--border-strong);
+}
+
+.finance-partner-commissions-filter .admin-users-filter-dropdown__field select:focus {
+  border-color: #5f1fb0;
+  box-shadow: 0 0 0 3px color-mix(in srgb, #5f1fb0 18%, transparent);
+  outline: none;
+}
+
+.finance-partner-commissions-filter .admin-users-filter-dropdown__actions {
+  border-top: 1px solid #c9c9cf;
+  display: flex;
+  flex: 0 0 auto;
+  gap: 6px;
+  margin: 0;
+  padding: 8px 12px;
+}
+
+.finance-partner-commissions-filter .admin-users-filter-dropdown__actions .secondary-button,
+.finance-partner-commissions-filter .admin-users-filter-dropdown__actions .primary-button {
+  border-radius: 8px;
+  flex: 1 1 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  height: 28px;
+  line-height: 1;
+  max-height: 28px;
+  min-height: 28px;
+  padding: 0 10px;
+}
+
+/* Table — match admin/customer row density; no row hover (action-only) */
+.finance-partner-commissions-page .admin-users-table.finance-partner-commissions-table th,
+.finance-partner-commissions-page .admin-users-table.finance-partner-commissions-table td,
+.finance-partner-commissions-page .admin-users-table.finance-partner-commissions-slabs-table th,
+.finance-partner-commissions-page .admin-users-table.finance-partner-commissions-slabs-table td {
+  color: #3f3f49;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.4;
+  padding: 14px 12px;
+  vertical-align: middle;
+}
+
+.finance-partner-commissions-page .admin-users-table.finance-partner-commissions-table th,
+.finance-partner-commissions-page .admin-users-table.finance-partner-commissions-slabs-table th {
+  color: #5e5e69;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: none;
+}
+
+.finance-partner-commissions-table__primary {
+  color: #0b0b10;
+  display: block;
+  font-weight: 500;
+  max-width: 14rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.finance-partner-commissions-table__meta {
+  color: #5e5e69;
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 500;
+  max-width: 14rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.finance-partner-commissions-pill {
+  border-radius: 999px;
+  display: inline-block;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.2;
+  padding: 4px 10px;
+}
+
+.finance-partner-commissions-pill.is-paid {
+  background: color-mix(in srgb, #098f6a 12%, #ffffff);
+  color: #098f6a;
+}
+
+.finance-partner-commissions-pill.is-pending {
+  background: color-mix(in srgb, #e0b73a 14%, #ffffff);
+  color: #866300;
+}
+
+.finance-partner-commissions-pill.is-mixed {
+  background: color-mix(in srgb, #3a9ee0 14%, #ffffff);
+  color: #1f6f9e;
+}
+
+.finance-partner-commissions-table__payout {
+  min-width: 14rem;
+  white-space: normal;
+}
+
+/* Partner list: Status sticky for horizontal scroll AND vertical thead stick */
+.finance-partner-commissions-page .admin-users-table.finance-partner-commissions-table thead th {
+  background: var(--au-surface, #ffffff);
+  position: sticky;
+  top: 0;
+  z-index: 3;
+}
+
+.finance-partner-commissions-page .admin-users-table.finance-partner-commissions-table .finance-partner-commissions-table__status-col {
+  background: var(--au-surface, #ffffff);
+  box-shadow: -6px 0 10px rgba(11, 11, 16, 0.04);
+  max-width: none;
+  min-width: 7rem;
+  overflow: visible;
+  position: sticky;
+  right: 0;
+  text-overflow: clip;
+  width: 7rem;
+  z-index: 2;
+}
+
+/* Corner cell needs both insets or Status header scrolls away vertically */
+.finance-partner-commissions-page .admin-users-table.finance-partner-commissions-table thead th.finance-partner-commissions-table__status-col {
+  position: sticky;
+  right: 0;
+  top: 0;
+  z-index: 5;
+}
+
+/* Detail deals: Payout column needs room for Mark paid form */
+.finance-partner-detail-page .admin-users-table.finance-partner-detail-deals-table th:last-child,
+.finance-partner-detail-page .admin-users-table.finance-partner-detail-deals-table td:last-child {
+  max-width: none;
+  min-width: 14rem;
+  overflow: visible;
+  position: static;
+  text-overflow: clip;
+  width: auto;
+  box-shadow: none;
+}
+
+/* Slabs: no Actions pin — keep thead sticky as one row */
+.finance-partner-commissions-page .admin-users-table.finance-partner-commissions-slabs-table th:last-child,
+.finance-partner-commissions-page .admin-users-table.finance-partner-commissions-slabs-table td:last-child {
+  max-width: none;
+  min-width: 0;
+  overflow: hidden;
+  right: auto;
+  text-overflow: ellipsis;
+  width: auto;
+  box-shadow: none;
+}
+
+.finance-partner-commissions-page .admin-users-table.finance-partner-commissions-slabs-table thead th:last-child {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+}
+
+.finance-partner-commissions-page .admin-users-table.finance-partner-commissions-slabs-table td:last-child {
+  position: static;
+  z-index: auto;
+}
+
+.finance-partner-commissions-table__paid {
+  display: grid;
+  gap: 2px;
+}
+
+.finance-partner-commissions-payout-form {
+  display: grid;
+  gap: 8px;
+  min-width: 12rem;
+}
+
+.finance-partner-commissions-payout-form__field {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  min-width: 0;
+}
+
+.finance-partner-commissions-payout-form input {
+  background: #ffffff;
+  border: 1px solid #c9c9cf;
+  border-radius: 8px;
+  color: #0b0b10;
+  font: inherit;
+  font-size: 0.8125rem;
+  letter-spacing: 0.02em;
+  min-height: 32px;
+  padding: 6px 12px;
+  width: 100%;
+}
+
+.finance-partner-commissions-payout-form input:hover {
+  border-color: #23232b;
+}
+
+.finance-partner-commissions-payout-form input:focus {
+  border-color: #5f1fb0;
+  box-shadow: 0 0 0 3px color-mix(in srgb, #5f1fb0 18%, transparent);
+  outline: none;
+}
+
+/* Field-level UTR invalid — danger on the control + message under it */
+.finance-partner-commissions-payout-form__field.field--invalid > input {
+  border-color: #db4437;
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, #c73e32 22%, transparent),
+    0 6px 16px color-mix(in srgb, #c73e32 18%, transparent);
+}
+
+.finance-partner-commissions-payout-form__field.field--invalid > input:focus {
+  border-color: #db4437;
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, #c73e32 28%, transparent),
+    0 6px 16px color-mix(in srgb, #c73e32 18%, transparent);
+  outline: none;
+}
+
+.finance-partner-commissions-payout-form__field .field__error {
+  color: #c73e32;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.finance-partner-commissions-payout-form__action {
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  height: 28px;
+  max-height: 28px;
+  min-height: 28px;
+  padding: 0 10px;
+  width: fit-content;
+}
+
+.finance-partner-commissions-empty {
+  align-items: center;
+  color: #5e5e69;
+  display: grid;
+  flex: 1 1 auto;
+  gap: 12px;
+  justify-items: center;
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.finance-partner-commissions-empty h3 {
+  color: #0b0b10;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.finance-partner-commissions-empty p {
+  margin: 0;
+  max-width: 360px;
+}
+
+.finance-partner-commissions-slabs-table {
+  min-width: 360px;
+}
+
+/* Partner overview detail */
+.app-shell--finance .app-content:has(.finance-partner-detail-page) {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.admin-users-page.finance-partner-detail-page {
+  --au-canvas: #f4f4f6;
+  background: #f4f4f6;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 24px;
+  min-height: 0;
+  min-width: 0;
+  /* Allow page/main scroll when KPIs + content panels exceed short viewports */
+  overflow-x: hidden;
+  overflow-y: auto;
+  width: 100%;
+}
+
+.finance-partner-detail-page__chrome {
+  display: grid;
+  flex: 0 0 auto;
+  gap: 8px;
+}
+
+.finance-partner-detail-page__back {
+  color: #0b0b10;
+  display: inline-block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  width: fit-content;
+}
+
+.finance-partner-detail-page__back:hover {
+  text-decoration: underline;
+}
+
+.finance-partner-detail-page__header {
+  flex: 0 0 auto;
+}
+
+.finance-partner-detail-page .admin-users-page__header h1 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.finance-partner-detail-kpi-grid {
+  flex: 0 0 auto;
+  height: max-content;
+  max-width: none;
+}
+
+.finance-partner-detail-kpi {
+  flex: 0 0 auto;
+  height: auto;
+}
+
+/* Content-sized — must beat `.admin-users-page .admin-users-panel { flex: 1 }` */
+.admin-users-page.finance-partner-detail-page .finance-partner-detail-panel {
+  flex: 0 0 auto;
+  height: auto;
+  min-height: 0;
+  width: 100%;
+}
+
+.finance-partner-detail-grid {
+  display: grid;
+  flex: 0 0 auto;
+  gap: 16px 24px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
+  padding: 16px 20px 20px;
+}
+
+.finance-partner-detail-grid > div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.finance-partner-detail-grid dt {
+  color: #5e5e69;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.finance-partner-detail-grid dd {
+  color: #0b0b10;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-users-page.finance-partner-detail-page .finance-partner-detail-deals-panel {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  width: 100%;
+}
+
+.finance-partner-detail-deals-panel > .admin-users-panel__body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.finance-partner-detail-deals-panel .admin-users-panel__table-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
+.finance-partner-detail-deals-panel > .admin-users-panel__footer {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 900px) {
+  .finance-partner-detail-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .finance-partner-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-height: 720px) {
+  .admin-users-page.finance-partner-commissions-page,
+  .admin-users-page.finance-partner-detail-page {
+    gap: 20px;
+  }
+
+  .finance-partner-commissions-page .admin-users-page__header h1,
+  .finance-partner-detail-page .admin-users-page__header h1 {
+    font-size: 1.25rem;
+  }
+
+  .finance-partner-commissions-page .admin-users-table.finance-partner-commissions-table th,
+  .finance-partner-commissions-page .admin-users-table.finance-partner-commissions-table td,
+  .finance-partner-commissions-page .admin-users-table.finance-partner-commissions-slabs-table th,
+  .finance-partner-commissions-page .admin-users-table.finance-partner-commissions-slabs-table td,
+  .finance-partner-detail-page .admin-users-table th,
+  .finance-partner-detail-page .admin-users-table td {
+    padding: 12px 10px;
+  }
+}
+
+@media (max-height: 600px) {
+  .admin-users-page.finance-partner-detail-page {
+    gap: 16px;
+  }
+}

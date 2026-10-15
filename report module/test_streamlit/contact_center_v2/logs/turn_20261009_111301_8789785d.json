@@ -1,0 +1,60 @@
+{
+  "turn_id": "8789785d",
+  "timestamp": "2026-10-09T05:43:01.570210+00:00",
+  "question": "in what channels does we handled the conversation in last 7 days",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1016,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Handled channels for the past 7 days</strong></p>\n<p>The channels used for handled conversations in the past 7 days (UTC) were:</p>\n<ul>\n<li>email</li>\n<li>facebook</li>\n<li>instagram</li>\n<li>webchat</li>\n<li>whatsapp</li>\n<li>call</li>\n</ul>\n<p>Would you like to see the volume of conversations for each of these channels?</p>",
+  "card": "card: table r1",
+  "facts": "result_id: r1\nwindow: past 7 days (UTC)\ncertified: false\ntask_goal: List the names of the channels used for handled conversations.\nanswer_type: list\nrow_count: 6\nrow 1: channel=email\nrow 2: channel=facebook\nrow 3: channel=instagram\nrow 4: channel=webchat\nrow 5: channel=whatsapp\nrow 6: channel=call",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1016,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "in what channels does we handled the conversation in last 7 days",
+    "plan": {
+      "kind": "plan",
+      "understanding": "A list of channels where conversations were handled in the last 7 days.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "free_sql",
+          "goal": "List the names of the channels used for handled conversations.",
+          "time": "last 7 days",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "list"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": false,
+        "kpi_id": null,
+        "row_count": 6
+      }
+    ],
+    "facts": "result_id: r1\nwindow: past 7 days (UTC)\ncertified: false\ntask_goal: List the names of the channels used for handled conversations.\nanswer_type: list\nrow_count: 6\nrow 1: channel=email\nrow 2: channel=facebook\nrow 3: channel=instagram\nrow 4: channel=webchat\nrow 5: channel=whatsapp\nrow 6: channel=call",
+    "grounded": true,
+    "card": "card: table r1"
+  },
+  "error": null
+}

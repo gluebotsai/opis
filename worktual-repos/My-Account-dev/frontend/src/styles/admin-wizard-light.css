@@ -1,0 +1,93 @@
+/**
+ * Admin create/edit wizards — light canvas + field validation (skill).
+ * Import with admin-users-light.css for toast tokens if needed.
+ */
+
+.admin-wizard-page {
+  background: #f4f4f6;
+  min-height: 100%;
+}
+
+.admin-wizard-page__topbar {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.admin-wizard-page__topbar h1 {
+  color: #0b0b10;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.admin-wizard-page__shell {
+  background: #ffffff;
+  border: 1px solid #c9c9cf;
+  border-radius: 16px;
+  box-shadow: none;
+  overflow: hidden;
+}
+
+.admin-wizard-page__shell.onboarding-card {
+  background: #ffffff;
+  border: 1px solid #c9c9cf;
+  box-shadow: none;
+}
+
+.admin-wizard-page__steps {
+  background: #f4f4f6;
+  border-bottom: 1px solid #c9c9cf;
+}
+
+.admin-wizard-page__panel {
+  background: #ffffff;
+}
+
+.admin-wizard-page__panel-heading h2 {
+  color: #0b0b10;
+}
+
+.admin-wizard-page .field.is-invalid > input,
+.admin-wizard-page .field.is-invalid > select,
+.admin-wizard-page .field.is-invalid > textarea {
+  border-color: #db4437;
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, #c73e32 22%, transparent),
+    0 6px 16px color-mix(in srgb, #c73e32 18%, transparent);
+}
+
+/* Long emails wrap (native input cannot) */
+.admin-wizard-page .field textarea.field__input--wrap {
+  field-sizing: content;
+  max-height: 7.5rem;
+  min-height: 40px;
+  overflow-wrap: anywhere;
+  overflow-y: auto;
+  resize: none;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.admin-wizard-field__error {
+  color: #c73e32;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.admin-wizard-page__form > .form-error,
+.admin-wizard-page__form > .admin-users-form__inline-error {
+  background: #fffafb;
+  border: 1px solid color-mix(in srgb, #db4437 28%, #c9c9cf);
+  border-radius: 8px;
+  color: #c73e32;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  margin: 0 0 8px;
+  padding: 10px 12px;
+}

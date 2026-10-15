@@ -1,0 +1,21 @@
+{
+  "name": "@ai-contact-center/test-harness",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "test": "npm run check-types"
+  },
+  "dependencies": {
+    "@ai-contact-center/config": "*",
+    "@ai-contact-center/db-cc": "*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "typescript": "^5.8.3"
+  }
+}

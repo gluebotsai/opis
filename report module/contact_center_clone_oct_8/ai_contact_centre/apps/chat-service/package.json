@@ -1,0 +1,34 @@
+{
+  "name": "chat-service",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "PORT=3002 LOG_FILE=logs/chat-service.log WEBCHAT_WS_PATHS=/ws/webchat,/ccaas/chat,/chat-api/ws/webchat tsx watch src/index.ts",
+    "build": "tsc",
+    "check-types": "tsc --noEmit",
+    "test": "tsx --test src/**/*.test.ts",
+    "test:e2e-email": "tsx scripts/e2e-worktual1-email.ts",
+    "start": "LOG_FILE=logs/chat-service.log node dist/index.js"
+  },
+  "dependencies": {
+    "@ai-contact-center/config": "*",
+    "@ai-contact-center/db-cc": "*",
+    "@ai-contact-center/event-contracts": "*",
+    "@ai-contact-center/observability": "*",
+    "@ai-contact-center/shared-types": "*",
+    "@fastify/cors": "^11.0.1",
+    "@fastify/sensible": "^6.0.3",
+    "@google-cloud/pubsub": "^4.11.0",
+    "fastify": "^5.3.2",
+    "googleapis": "^148.0.0",
+    "ws": "^8.18.1",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "@types/ws": "^8.18.1",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
+  }
+}

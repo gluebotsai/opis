@@ -1,0 +1,235 @@
+{
+  "question": "Why are deals not progressing from meetings to proposals?",
+  "answer": "There are 15 total opportunities, with 7 deals currently stalled in the discovery and qualification stages.\n\nThe primary barrier to progression is a lack of BANT documentation; across these 7 deals, only 1 \"Need\" has been identified, while Budget, Authority, and Timeline remain at 0. Additionally, most of these deals lack formal quotes, with only `positron \u2014 gugan s` having a \"draft\" quote status.\n\n| Deal Title | Current Stage | Quote Status | Bant Need | Activity Count |\n| :--- | :--- | :--- | :--- | :--- |\n| Aspero\u2014 dpzoro Customer | discover | No Quote | N/A | 0 |\n| Lakshmi P | qualification | No Quote | N/A | 7 |\n| HCL \u2014 yaswanth M G | qualification | No Quote | 0 | 28 |\n| kavin-crm | qualification | No Quote | 0 | 7 |\n| positron \u2014 gugan s | qualification | draft | 0 | 1 |\n| hexaware \u2014 Hitler hit | qualification | No Quote | 0 | 6 |\n| Netflix \u2014 Kirti Patidar | discover | No Quote | 1 | 42 |\n| **Total** | - | - | **1** | **91** |\n\nThere is a notable disconnect between engagement and documentation: `Netflix \u2014 Kirti Patidar` shows high engagement with 42 activities but remains in discovery without a quote, while `Aspero\u2014 dpzoro Customer` shows 0 activities and no quote.\n\nYou should prioritize BANT validation for these accounts and focus on generating formal quotes for high-activity deals like `Netflix \u2014 Kirti Patidar` and `HCL \u2014 yaswanth M G`.",
+  "trace": {
+    "question": "Why are deals not progressing from meetings to proposals?",
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1015,
+      "role": "admin"
+    },
+    "model": "worktual-gemma",
+    "tasks": [
+      {
+        "status": "ok",
+        "store": "sql",
+        "sql": "WITH rpt_deals AS (\nSELECT src.id, src.organization_id, src.title, src.stage, src.amount, src.currency_code, src.stage_weight, src.weighted_amount, src.company_id, src.company_name, src.company_industry, src.location_id, src.contact_id, src.contact_name, src.contact_email, src.owner_user_id, src.owner_name, src.created_at, src.closed_at, src.close_ts, src.updated_at, src.expected_close_date, src.lost_reason, src.is_open, src.is_won, src.is_lost, src.aging_days, src.forecast_category, src.forecast_reason, src.forecast_flagged FROM (\nSELECT \n  d.id,\n  d.organization_id,\n  d.title,\n  d.stage,\n  COALESCE(d.amount, 0) AS amount,\n  CASE\n    WHEN pq.currency IS NOT NULL AND pq.currency <> 'USD' THEN pq.currency\n    WHEN o.country IS NOT NULL AND o.country <> 'US' AND cc.curr IS NOT NULL THEN cc.curr\n    WHEN pq.currency = 'USD' THEN 'USD'\n    WHEN o.country = 'US' THEN 'USD'\n    ELSE 'USD'\n  END AS currency_code,\n  CASE d.stage\n    WHEN 'qualification' THEN 0.10\n    WHEN 'discover' THEN 0.25\n    WHEN 'propose' THEN 0.50\n    WHEN 'negotiate' THEN 0.75\n    WHEN 'closed_won' THEN 1.00\n    WHEN 'closed_lost' THEN 0.00\n    ELSE 0.00\n  END AS stage_weight,\n  ROUND(COALESCE(d.amount, 0) * (\n    CASE d.stage\n      WHEN 'qualification' THEN 0.10\n      WHEN 'discover' THEN 0.25\n      WHEN 'propose' THEN 0.50\n      WHEN 'negotiate' THEN 0.75\n      WHEN 'closed_won' THEN 1.00\n      WHEN 'closed_lost' THEN 0.00\n      ELSE 0.00\n    END\n  ), 2) AS weighted_amount,\n  d.company_id,\n  c.name AS company_name,\n  c.industry AS company_industry,\n  d.location_id,\n  d.contact_id,\n  COALESCE(d.contact_name, cdp.first_name || ' ' || COALESCE(cdp.last_name, '')) AS contact_name,\n  COALESCE(d.contact_email, id_k.key_value) AS contact_email,\n  d.owner_user_id,\n  su.first_name || ' ' || COALESCE(su.last_name, '') AS owner_name,\n  d.created_at,\n  d.closed_at,\n  COALESCE(d.closed_at, d.created_at) AS close_ts,\n  d.updated_at,\n  d.expected_close_date,\n  d.lost_reason,\n  (d.stage IN ('qualification', 'discover', 'propose', 'negotiate')) AS is_open,\n  (d.stage = 'closed_won') AS is_won,\n  (d.stage = 'closed_lost') AS is_lost,\n  FLOOR(EXTRACT(EPOCH FROM (NOW() - d.created_at))/86400)::integer AS aging_days,\n  d.forecast_category,\n  d.forecast_reason,\n  d.forecast_flagged\nFROM crm.deals d\nLEFT JOIN crm.companies c ON c.id = d.company_id AND c.organization_id = d.organization_id\nLEFT JOIN accounts.setup_users su ON su.id = d.owner_user_id\nLEFT JOIN accounts.organizations o ON o.id = d.organization_id\nLEFT JOIN cdp.customer_profile cdp ON cdp.cdp_id = d.contact_id\nLEFT JOIN LATERAL (\n  SELECT ik.key_value \n  FROM cdp.identity_keys ik \n  WHERE ik.cdp_id = d.contact_id AND ik.key_type = 'email' AND ik.organization_id = d.organization_id \n  ORDER BY ik.created_at ASC \n  LIMIT 1\n) id_k ON TRUE\nLEFT JOIN LATERAL (\n  SELECT q.currency \n  FROM crm.quotes q \n  WHERE q.deal_id = d.id AND q.organization_id = d.organization_id \n  ORDER BY CASE WHEN q.status = 'accepted' THEN 1 WHEN q.status = 'sent' THEN 2 ELSE 3 END, q.updated_at DESC \n  LIMIT 1\n) pq ON TRUE\nLEFT JOIN LATERAL (\n  SELECT CASE o.country \n    WHEN 'India' THEN 'INR' \n    WHEN 'United Kingdom' THEN 'GBP' \n    WHEN 'Germany' THEN 'EUR' \n    WHEN 'Canada' THEN 'CAD' \n    WHEN 'Australia' THEN 'AUD' \n    ELSE 'USD' \n  END AS curr\n) cc ON TRUE\nWHERE d.organization_id = %(_org_id)s\n) src WHERE TRUE\n)\nSELECT CAST(COUNT(*) AS BIGINT) AS total_opportunities FROM rpt_deals AS deals WHERE TRUE AND TRUE AND TRUE LIMIT 500",
+        "views": [
+          "deals"
+        ],
+        "guard_notes": [
+          "row cap 500 applied"
+        ],
+        "bound_params": {
+          "_org_id": 1003,
+          "_user_id": 1015,
+          "user_id": 1015,
+          "organization_id": 1003,
+          "org_id": 1003,
+          "tenant_id": 1003,
+          "current_user_id": 1015
+        },
+        "rows": [
+          {
+            "total_opportunities": 15
+          }
+        ],
+        "kpi_id": "total_opportunities",
+        "time_status": "all_time",
+        "attempts": [
+          {
+            "raw": "```json\n{\"tool\":\"run_kpi\",\"kpi_id\":\"total_opportunities\",\"dimension\":null}\n```",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "total_opportunities"
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "tool": "run_kpi",
+        "requested_kpi": "total_opportunities",
+        "requested_dimension": null,
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "total_opportunities",
+          "goal": "Count of deals currently in stages between meetings and proposals",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "kpi",
+          "depends_on": []
+        }
+      },
+      {
+        "status": "ok",
+        "rows": [
+          {
+            "deal_title": "Aspero\u2014 dpzoro Customer",
+            "current_stage": "discover",
+            "owner_id": 1018,
+            "owner_notes": null,
+            "quote_status": "No Quote",
+            "bant_authority": "N/A",
+            "bant_budget": "N/A",
+            "bant_need": "N/A",
+            "bant_timeline": "N/A",
+            "activity_count": 0,
+            "activity_types": [
+              "GeneralActivity"
+            ]
+          },
+          {
+            "deal_title": "Lakshmi P",
+            "current_stage": "qualification",
+            "owner_id": 1018,
+            "owner_notes": null,
+            "quote_status": "No Quote",
+            "bant_authority": "N/A",
+            "bant_budget": "N/A",
+            "bant_need": "N/A",
+            "bant_timeline": "N/A",
+            "activity_count": 7,
+            "activity_types": [
+              "EmailActivity",
+              "GeneralActivity"
+            ]
+          },
+          {
+            "deal_title": "HCL \u2014 yaswanth M G",
+            "current_stage": "qualification",
+            "owner_id": 1018,
+            "owner_notes": null,
+            "quote_status": "No Quote",
+            "bant_authority": false,
+            "bant_budget": false,
+            "bant_need": false,
+            "bant_timeline": false,
+            "activity_count": 28,
+            "activity_types": [
+              "EmailActivity",
+              "GeneralActivity",
+              "MeetingActivity"
+            ]
+          },
+          {
+            "deal_title": "kavin-crm",
+            "current_stage": "qualification",
+            "owner_id": 1066,
+            "owner_notes": null,
+            "quote_status": "No Quote",
+            "bant_authority": false,
+            "bant_budget": false,
+            "bant_need": false,
+            "bant_timeline": false,
+            "activity_count": 7,
+            "activity_types": [
+              "EmailActivity",
+              "GeneralActivity"
+            ]
+          },
+          {
+            "deal_title": "positron \u2014 gugan s",
+            "current_stage": "qualification",
+            "owner_id": 1015,
+            "owner_notes": null,
+            "quote_status": "draft",
+            "bant_authority": false,
+            "bant_budget": false,
+            "bant_need": false,
+            "bant_timeline": false,
+            "activity_count": 1,
+            "activity_types": [
+              "EmailActivity"
+            ]
+          },
+          {
+            "deal_title": "hexaware \u2014 Hitler hit",
+            "current_stage": "qualification",
+            "owner_id": 1017,
+            "owner_notes": null,
+            "quote_status": "No Quote",
+            "bant_authority": false,
+            "bant_budget": false,
+            "bant_need": false,
+            "bant_timeline": false,
+            "activity_count": 6,
+            "activity_types": [
+              "MeetingActivity",
+              "EmailActivity",
+              "GeneralActivity"
+            ]
+          },
+          {
+            "deal_title": "Netflix \u2014 Kirti Patidar",
+            "current_stage": "discover",
+            "owner_id": 1015,
+            "owner_notes": null,
+            "quote_status": "No Quote",
+            "bant_authority": false,
+            "bant_budget": false,
+            "bant_need": true,
+            "bant_timeline": false,
+            "activity_count": 42,
+            "activity_types": [
+              "MeetingActivity",
+              "EmailActivity",
+              "GeneralActivity"
+            ]
+          }
+        ],
+        "sql": "MATCH (d:Deal) WHERE toLower(d.stage) IN ['qualification', 'discover'] OPTIONAL MATCH (d)-[:HAS]->(q:Quote) OPTIONAL MATCH (c:Contact {cdp_id: d.contact_id}) OPTIONAL MATCH (ca:ContactActivity) WHERE ca.contact_id = c.cdp_id OR ca.contact_id = d.contact_id OPTIONAL MATCH (sp:SalesProfile {account_contact_id: c.cdp_id}) RETURN d.title AS deal_title, d.stage AS current_stage, d.owner_user_id AS owner_id, d.notes AS owner_notes, coalesce(q.status, 'No Quote') AS quote_status, coalesce(sp.bant_authority, 'N/A') AS bant_authority, coalesce(sp.bant_budget, 'N/A') AS bant_budget, coalesce(sp.bant_need, 'N/A') AS bant_need, coalesce(sp.bant_timeline, 'N/A') AS bant_timeline, count(DISTINCT ca) AS activity_count, collect(DISTINCT coalesce([l IN labels(ca) WHERE l <> 'ContactActivity' AND l <> 'Sales'][0], 'GeneralActivity')) AS activity_types ORDER BY d.updated_at DESC\nLIMIT 100\nMATCH (d:Deal) WHERE toLower(d.stage) IN ['qualification', 'discover'] OPTIONAL MATCH (d)-[:HAS]->(q:Quote) OPTIONAL MATCH (c:Contact) WHERE c.cdp_id = d.contact_id OPTIONAL MATCH (ca:ContactActivity) WHERE ca.contact_id = c.cdp_id OPTIONAL MATCH (sp:SalesProfile) WHERE sp.account_contact_id = c.cdp_id WITH d, q, sp, count(ca) AS activity_count, collect(DISTINCT coalesce([l IN labels(ca) WHERE l <> 'ContactActivity' AND l <> 'Sales'][0], 'GeneralActivity')) AS activity_types RETURN d.title AS deal_title, d.stage AS current_stage, d.owner_user_id AS owner_id, d.notes AS owner_notes, coalesce(q.status, 'No Quote') AS quote_status, coalesce(sp.bant_authority, 'N/A') AS bant_authority, coalesce(sp.bant_budget, 'N/A') AS bant_budget, coalesce(sp.bant_need, 'N/A') AS bant_need, coalesce(sp.bant_timeline, 'N/A') AS bant_timeline, activity_count, activity_types ORDER BY d.updated_at DESC\nLIMIT 100",
+        "tool": "kg",
+        "attempts_made": 2,
+        "kg_notes": "### Pipeline Stagnation and BANT Gaps\n\nThere are 7 deals currently identified in the discovery and qualification stages that have failed to progress to the proposal stage. A significant barrier to progression is the lack of BANT (Budget, Authority, Need, Timeline) documentation; across these deals, there is only 1 recorded instance of \"Need\" identified, while Budget, Authority, and Timeline remain at 0.\n\n| Deal Title | Current Stage | Quote Status | Bant Need | Activity Count |\n| :--- | :--- | :--- | :--- | :--- |\n| Aspero\u2014 dpzoro Customer | discover | No Quote | N/A | 0 |\n| Lakshmi P | qualification | No Quote | N/A | 7 |\n| HCL \u2014 yaswanth M G | qualification | No Quote | 0 | 28 |\n| kavin-crm | qualification | No Quote | 0 | 7 |\n| positron \u2014 gugan s | qualification | draft | 0 | 1 |\n| hexaware \u2014 Hitler hit | qualification | No Quote | 0 | 6 |\n| Netflix \u2014 Kirti Patidar | discover | No Quote | 1 | 42 |\n| **Total** | - | - | **1** | **91** |\n\n### Activity and Quote Status Analysis\n\nThe data indicates a disconnect between high engagement levels and formal documentation. While `Netflix \u2014 Kirti Patidar` shows high engagement with 42 activities (including MeetingActivity and EmailActivity), it remains in the discover stage with No Quote. Conversely, `Aspero\u2014 dpzoro Customer` shows 0 activities and no quote, representing a complete data gap in the engagement pipeline. \n\nThe following deals are currently stalled without a formal quote:\n* **Aspero\u2014 dpzoro Customer**: No Quote (Missing quote/lines)\n* **Lakshmi P**: No Quote (Missing quote/lines)\n* **HCL \u2014 yaswanth M G**: No Quote (Missing quote/lines)\n* **kavin-crm**: No Quote (Missing quote/lines)\n* **hexaware \u2014 Hitler hit**: No Quote (Missing quote/lines)\n* **Netflix \u2014 Kirti Patidar**: No Quote (Missing quote/lines)\n\nOnly `positron \u2014 gugan s` has moved into a \"draft\" quote status, despite having only 1 recorded activity.\n\n### Recommended Next Steps\n\n* **BANT Validation**: Reps (including 1,018, 1,066, 1,015, and 1,017) must update qualification fields for Budget, Authority, and Timeline to move deals from qualification to proposal.\n* **Quote Generation**: Prioritize converting the \"draft\" status for `positron \u2014 gugan s` and generating formal quotes for high-activity accounts like `Netflix \u2014 Kirti Patidar` and `HCL \u2014 yaswanth M G`.\n* **Engagement Audit**: Investigate the 0-activity status of `Aspero\u2014 dpzoro Customer` to determine if the deal is abandoned or if activity logs are missing.",
+        "task": {
+          "id": "t2",
+          "executor": "kg",
+          "kpi": null,
+          "goal": "Analyze deals stuck between meeting and proposal stages: activity logs, quote status, BANT completeness, and owner notes",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "why_breakdown",
+          "depends_on": [
+            "t1"
+          ]
+        }
+      }
+    ],
+    "domain_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"deep\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"total_opportunities\",\n      \"goal\": \"Count of deals currently in stages between meetings and proposals\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"dimension\": null,\n      \"answer_type\": \"kpi\",\n      \"depends_on\": []\n    },\n    {\n      \"id\": \"t2\",\n      \"executor\": \"kg\",\n      \"kpi\": null,\n      \"goal\": \"Analyze deals stuck between meeting and proposal stages: activity logs, quote status, BANT completeness, and owner notes\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"dimension\": null,\n      \"answer_type\": \"why_breakdown\",\n      \"depends_on\": [\"t1\"]\n    }\n  ]\n}\n```",
+    "plan": {
+      "kind": "plan",
+      "depth": "deep",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "total_opportunities",
+          "goal": "Count of deals currently in stages between meetings and proposals",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "kpi",
+          "depends_on": []
+        },
+        {
+          "id": "t2",
+          "executor": "kg",
+          "kpi": null,
+          "goal": "Analyze deals stuck between meeting and proposal stages: activity logs, quote status, BANT completeness, and owner notes",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "why_breakdown",
+          "depends_on": [
+            "t1"
+          ]
+        }
+      ]
+    },
+    "facts": "time_requested: all time\nperiod_applied: overall (no date filter, UTC)\ntime_status: all_time\ncatalog_kpi: total_opportunities\nRESULT: total_opportunities = 15\n\ntime_requested: all time\ntime_status: kg\nRESULT: 7 group(s)\ngroup_by: group\ntotal_activity_count: 91\n  Aspero\u2014 dpzoro Customer / discover / 1018 / None / No Quote / N/A / N/A / N/A / N/A / ['GeneralActivity']: 0\n  Lakshmi P / qualification / 1018 / None / No Quote / N/A / N/A / N/A / N/A / ['EmailActivity', 'GeneralActivity']: 7\n  HCL \u2014 yaswanth M G / qualification / 1018 / None / No Quote / False / False / False / False / ['EmailActivity', 'GeneralActivity', 'MeetingActivity']: 28\n  kavin-crm / qualification / 1066 / None / No Quote / False / False / False / False / ['EmailActivity', 'GeneralActivity']: 7\n  positron \u2014 gugan s / qualification / 1015 / None / draft / False / False / False / False / ['EmailActivity']: 1\n  hexaware \u2014 Hitler hit / qualification / 1017 / None / No Quote / False / False / False / False / ['MeetingActivity', 'EmailActivity', 'GeneralActivity']: 6\n  Netflix \u2014 Kirti Patidar / discover / 1015 / None / No Quote / False / False / True / False / ['MeetingActivity', 'EmailActivity', 'GeneralActivity']: 42\nkg_notes:\n### Pipeline Stagnation and BANT Gaps\n\nThere are 7 deals currently identified in the discovery and qualification stages that have failed to progress to the proposal stage. A significant barrier to progression is the lack of BANT (Budget, Authority, Need, Timeline) documentation; across these deals, there is only 1 recorded instance of \"Need\" identified, while Budget, Authority, and Timeline remain at 0.\n\n| Deal Title | Current Stage | Quote Status | Bant Need | Activity Count |\n| :--- | :--- | :--- | :--- | :--- |\n| Aspero\u2014 dpzoro Customer | discover | No Quote | N/A | 0 |\n| Lakshmi P | qualification | No Quote | N/A | 7 |\n| HCL \u2014 yaswanth M G | qualification | No Quote | 0 | 28 |\n| kavin-crm | qualification | No Quote | 0 | 7 |\n| positron \u2014 gugan s | qualification | draft | 0 | 1 |\n| hexaware \u2014 Hitler hit | qualification | No Quote | 0 | 6 |\n| Netflix \u2014 Kirti Patidar | discover | No Quote | 1 | 42 |\n| **Total** | - | - | **1** | **91** |\n\n### Activity and Quote Status Analysis\n\nThe data indicates a disconnect between high engagement levels and formal documentation. While `Netflix \u2014 Kirti Patidar` shows high engagement with 42 activities (including MeetingActivity and EmailActivity), it remains in the discover stage with No Quote. Conversely, `Aspero\u2014 dpzoro Customer` shows 0 activities and no quote, representing a complete data gap in the engagement pipeline. \n\nThe following deals are currently stalled without a formal quote:\n* **Aspero\u2014 dpzoro Customer**: No Quote (Missing quote/lines)\n* **Lakshmi P**: No Quote (Missing quote/lines)\n* **HCL \u2014 yaswanth M G**: No Quote (Missing quote/lines)\n* **kavin-crm**: No Quote (Missing quote/lines)\n* **hexaware \u2014 Hitler hit**: No Quote (Missing quote/lines)\n* **Netflix \u2014 Kirti Patidar**: No Quote (Missing quote/lines)\n\nOnly `positron \u2014 gugan s` has moved into a \"draft\" quote status, despite having only 1 recorded activity.\n\n### Recommended Next Steps\n\n* **BANT Validation**: Reps (including 1,018, 1,066, 1,015, and 1,017) must update qualification fields for Budget, Authority, and Timeline to move deals from qualification to proposal.\n* **Quote Generation**: Prioritize converting the \"draft\" status for `positron \u2014 gugan s` and generating formal quotes for high-activity accounts like `Netflix \u2014 Kirti Patidar` and `HCL \u2014 yaswanth M G`.\n* **Engagement Audit**: Investigate the 0-activity status of `Aspero\u2014 dpzoro Customer` to determine if the deal is abandoned or if activity logs are missing.",
+    "grounded": true,
+    "briefing_raw": "There are 15 total opportunities, with 7 deals currently stalled in the discovery and qualification stages.\n\nThe primary barrier to progression is a lack of BANT documentation; across these 7 deals, only 1 \"Need\" has been identified, while Budget, Authority, and Timeline remain at 0. Additionally, most of these deals lack formal quotes, with only `positron \u2014 gugan s` having a \"draft\" quote status.\n\n| Deal Title | Current Stage | Quote Status | Bant Need | Activity Count |\n| :--- | :--- | :--- | :--- | :--- |\n| Aspero\u2014 dpzoro Customer | discover | No Quote | N/A | 0 |\n| Lakshmi P | qualification | No Quote | N/A | 7 |\n| HCL \u2014 yaswanth M G | qualification | No Quote | 0 | 28 |\n| kavin-crm | qualification | No Quote | 0 | 7 |\n| positron \u2014 gugan s | qualification | draft | 0 | 1 |\n| hexaware \u2014 Hitler hit | qualification | No Quote | 0 | 6 |\n| Netflix \u2014 Kirti Patidar | discover | No Quote | 1 | 42 |\n| **Total** | - | - | **1** | **91** |\n\nThere is a notable disconnect between engagement and documentation: `Netflix \u2014 Kirti Patidar` shows high engagement with 42 activities but remains in discovery without a quote, while `Aspero\u2014 dpzoro Customer` shows 0 activities and no quote.\n\nYou should prioritize BANT validation for these accounts and focus on generating formal quotes for high-activity deals like `Netflix \u2014 Kirti Patidar` and `HCL \u2014 yaswanth M G`."
+  }
+}

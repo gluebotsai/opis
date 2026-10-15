@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Help</title>
+  </head>
+  <body>
+    <script>
+      (function () {
+        var id = new URLSearchParams(location.search).get("id") || "";
+        if (!id) return;
+        var script = document.createElement("script");
+        script.src = new URL("worktual-help.js", location.href).href;
+        script.async = true;
+        script.setAttribute("data-widget-id", id);
+        document.body.appendChild(script);
+      })();
+    </script>
+  </body>
+</html>

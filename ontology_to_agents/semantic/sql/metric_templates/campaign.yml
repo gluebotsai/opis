@@ -1,0 +1,446 @@
+metrics:
+  approved_template_count:
+    product: campaign
+    result_column: approved_template_count
+    time_column: first_submitted_at
+    table: mart_template_approval
+    sql: 'SELECT SUM(approved_template_count) AS approved_template_count
+
+      FROM campaign_marts.mart_template_approval
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  audience_reached:
+    product: campaign
+    result_column: audience_reached
+    time_column: created_at
+    table: mart_campaign_overview
+    sql: 'SELECT SUM(audience_reached) AS audience_reached
+
+      FROM campaign_marts.mart_campaign_overview
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  avg_attempt_count:
+    product: campaign
+    result_column: avg_attempt_count
+    time_column: campaign_created_at
+    table: mart_campaign_touch_performance
+    sql: 'SELECT AVG(avg_attempt_count)::float AS avg_attempt_count
+
+      FROM campaign_marts.mart_campaign_touch_performance
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  avg_batch_processing_seconds:
+    product: campaign
+    result_column: avg_batch_processing_seconds
+    time_column: first_batch_created_at
+    table: mart_campaign_batch_health
+    sql: 'SELECT AVG(avg_batch_processing_seconds)::float AS avg_batch_processing_seconds
+
+      FROM campaign_marts.mart_campaign_batch_health
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  avg_planned_duration_seconds:
+    product: campaign
+    result_column: avg_planned_duration_seconds
+    time_column: created_at
+    table: mart_campaign_overview
+    sql: 'SELECT AVG(planned_duration_seconds)::float AS avg_planned_duration_seconds
+
+      FROM campaign_marts.mart_campaign_overview
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  avg_seconds_open_to_click:
+    product: campaign
+    result_column: avg_seconds_open_to_click
+    time_column: campaign_created_at
+    table: mart_campaign_touch_performance
+    sql: 'SELECT AVG(avg_seconds_open_to_click)::float AS avg_seconds_open_to_click
+
+      FROM campaign_marts.mart_campaign_touch_performance
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  avg_seconds_to_open:
+    product: campaign
+    result_column: avg_seconds_to_open
+    time_column: campaign_created_at
+    table: mart_campaign_touch_performance
+    sql: 'SELECT AVG(avg_seconds_to_open)::float AS avg_seconds_to_open
+
+      FROM campaign_marts.mart_campaign_touch_performance
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  batch_count:
+    product: campaign
+    result_column: batch_count
+    time_column: first_batch_created_at
+    table: mart_campaign_batch_health
+    sql: 'SELECT SUM(batch_count) AS batch_count
+
+      FROM campaign_marts.mart_campaign_batch_health
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  batch_failure_rate:
+    product: campaign
+    result_column: batch_failure_rate
+    time_column: first_batch_created_at
+    table: mart_campaign_batch_health
+    sql: "SELECT\n  (SUM(failed_batch_count))::float\n  / nullIf((SUM(batch_count)),\
+      \ 0) AS batch_failure_rate\nFROM campaign_marts.mart_campaign_batch_health\n\
+      WHERE organization_id = %s{{extra_where}}\n"
+    default_zero: true
+  bounce_share_of_suppressions:
+    product: campaign
+    result_column: bounce_share_of_suppressions
+    time_column: first_engagement_at
+    table: mart_contact_engagement_org
+    sql: "SELECT\n  (SUM(bounce_suppressed_count))::float\n  / nullIf((SUM(suppressed_email_count)),\
+      \ 0) AS bounce_share_of_suppressions\nFROM campaign_marts.mart_contact_engagement_org\n\
+      WHERE organization_id = %s{{extra_where}}\n"
+    default_zero: true
+  bounce_suppressed_count:
+    product: campaign
+    result_column: bounce_suppressed_count
+    time_column: first_engagement_at
+    table: mart_contact_engagement_org
+    sql: 'SELECT SUM(bounce_suppressed_count) AS bounce_suppressed_count
+
+      FROM campaign_marts.mart_contact_engagement_org
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  campaign_volume:
+    product: campaign
+    result_column: campaign_volume
+    time_column: created_at
+    table: mart_campaign_overview
+    sql: 'SELECT COUNT(DISTINCT campaign_id)::bigint AS campaign_volume
+
+      FROM campaign_marts.mart_campaign_overview
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  click_rate:
+    product: campaign
+    result_column: click_rate
+    time_column: campaign_created_at
+    table: mart_campaign_touch_performance
+    sql: "SELECT\n  (SUM(clicked_touch_count))::float\n  / nullIf((SUM(sent_touch_count)),\
+      \ 0) AS click_rate\nFROM campaign_marts.mart_campaign_touch_performance\nWHERE\
+      \ organization_id = %s{{extra_where}}\n"
+    default_zero: true
+  clicked_touch_count:
+    product: campaign
+    result_column: clicked_touch_count
+    time_column: campaign_created_at
+    table: mart_campaign_touch_performance
+    sql: 'SELECT SUM(clicked_touch_count) AS clicked_touch_count
+
+      FROM campaign_marts.mart_campaign_touch_performance
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  complaint_share_of_suppressions:
+    product: campaign
+    result_column: complaint_share_of_suppressions
+    time_column: first_engagement_at
+    table: mart_contact_engagement_org
+    sql: "SELECT\n  (SUM(complaint_suppressed_count))::float\n  / nullIf((SUM(suppressed_email_count)),\
+      \ 0) AS complaint_share_of_suppressions\nFROM campaign_marts.mart_contact_engagement_org\n\
+      WHERE organization_id = %s{{extra_where}}\n"
+    default_zero: true
+  complaint_suppressed_count:
+    product: campaign
+    result_column: complaint_suppressed_count
+    time_column: first_engagement_at
+    table: mart_contact_engagement_org
+    sql: 'SELECT SUM(complaint_suppressed_count) AS complaint_suppressed_count
+
+      FROM campaign_marts.mart_contact_engagement_org
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  delivery_rate:
+    product: campaign
+    result_column: delivery_rate
+    time_column: campaign_created_at
+    table: mart_campaign_touch_performance
+    sql: "SELECT\n  (SUM(sent_touch_count))::float\n  / nullIf((SUM(touch_count)),\
+      \ 0) AS delivery_rate\nFROM campaign_marts.mart_campaign_touch_performance\n\
+      WHERE organization_id = %s{{extra_where}}\n"
+    default_zero: true
+  engaged_contact_count:
+    product: campaign
+    result_column: engaged_contact_count
+    time_column: first_engagement_at
+    table: mart_contact_engagement_org
+    sql: 'SELECT SUM(engaged_contact_count) AS engaged_contact_count
+
+      FROM campaign_marts.mart_contact_engagement_org
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  failed_batch_count:
+    product: campaign
+    result_column: failed_batch_count
+    time_column: first_batch_created_at
+    table: mart_campaign_batch_health
+    sql: 'SELECT SUM(failed_batch_count) AS failed_batch_count
+
+      FROM campaign_marts.mart_campaign_batch_health
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  failed_touch_count:
+    product: campaign
+    result_column: failed_touch_count
+    time_column: campaign_created_at
+    table: mart_campaign_touch_performance
+    sql: 'SELECT SUM(failed_touch_count) AS failed_touch_count
+
+      FROM campaign_marts.mart_campaign_touch_performance
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  failure_rate:
+    product: campaign
+    result_column: failure_rate
+    time_column: campaign_created_at
+    table: mart_campaign_touch_performance
+    sql: "SELECT\n  (SUM(failed_touch_count))::float\n  / nullIf((SUM(touch_count)),\
+      \ 0) AS failure_rate\nFROM campaign_marts.mart_campaign_touch_performance\n\
+      WHERE organization_id = %s{{extra_where}}\n"
+    default_zero: true
+  frequency_per_contact:
+    product: campaign
+    result_column: frequency_per_contact
+    time_column: campaign_created_at
+    table: mart_campaign_touch_performance
+    sql: 'SELECT ((SELECT SUM(touch_count) FROM campaign_marts.mart_campaign_touch_performance
+      WHERE organization_id = %s{{extra_where}}) / nullif((SELECT SUM(unique_contacts_touched)
+      FROM campaign_marts.mart_campaign_touch_performance WHERE organization_id =
+      %s{{extra_where}}), 0))::float AS frequency_per_contact
+
+      '
+    default_zero: true
+  open_rate:
+    product: campaign
+    result_column: open_rate
+    time_column: campaign_created_at
+    table: mart_campaign_touch_performance
+    sql: "SELECT\n  (SUM(opened_touch_count))::float\n  / nullIf((SUM(sent_touch_count)),\
+      \ 0) AS open_rate\nFROM campaign_marts.mart_campaign_touch_performance\nWHERE\
+      \ organization_id = %s{{extra_where}}\n"
+    default_zero: true
+  opened_touch_count:
+    product: campaign
+    result_column: opened_touch_count
+    time_column: campaign_created_at
+    table: mart_campaign_touch_performance
+    sql: 'SELECT SUM(opened_touch_count) AS opened_touch_count
+
+      FROM campaign_marts.mart_campaign_touch_performance
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  rejected_template_count:
+    product: campaign
+    result_column: rejected_template_count
+    time_column: first_rejected_template_submitted_at
+    table: mart_template_rejection_reasons
+    sql: 'SELECT SUM(rejected_template_count) AS rejected_template_count
+
+      FROM campaign_marts.mart_template_rejection_reasons
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  sent_touch_count:
+    product: campaign
+    result_column: sent_touch_count
+    time_column: campaign_created_at
+    table: mart_campaign_touch_performance
+    sql: 'SELECT SUM(sent_touch_count) AS sent_touch_count
+
+      FROM campaign_marts.mart_campaign_touch_performance
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  suppressed_email_count:
+    product: campaign
+    result_column: suppressed_email_count
+    time_column: first_engagement_at
+    table: mart_contact_engagement_org
+    sql: 'SELECT SUM(suppressed_email_count) AS suppressed_email_count
+
+      FROM campaign_marts.mart_contact_engagement_org
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  suppression_rate:
+    product: campaign
+    result_column: suppression_rate
+    time_column: first_engagement_at
+    table: mart_contact_engagement_org
+    sql: "SELECT\n  (SUM(suppressed_email_count))::float\n  / nullIf((SUM(engaged_contact_count)),\
+      \ 0) AS suppression_rate\nFROM campaign_marts.mart_contact_engagement_org\n\
+      WHERE organization_id = %s{{extra_where}}\n"
+    default_zero: true
+  template_approval_rate:
+    product: campaign
+    result_column: template_approval_rate
+    time_column: first_submitted_at
+    table: mart_template_approval
+    sql: "SELECT\n  (SUM(approved_template_count))::float\n  / nullIf((SUM(template_count)),\
+      \ 0) AS template_approval_rate\nFROM campaign_marts.mart_template_approval\n\
+      WHERE organization_id = %s{{extra_where}}\n"
+    default_zero: true
+  template_count:
+    product: campaign
+    result_column: template_count
+    time_column: first_submitted_at
+    table: mart_template_approval
+    sql: 'SELECT SUM(template_count) AS template_count
+
+      FROM campaign_marts.mart_template_approval
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  touch_count:
+    product: campaign
+    result_column: touch_count
+    time_column: campaign_created_at
+    table: mart_campaign_touch_performance
+    sql: 'SELECT SUM(touch_count) AS touch_count
+
+      FROM campaign_marts.mart_campaign_touch_performance
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  unique_contacts_touched:
+    product: campaign
+    result_column: unique_contacts_touched
+    time_column: campaign_created_at
+    table: mart_campaign_touch_performance
+    sql: 'SELECT SUM(unique_contacts_touched) AS unique_contacts_touched
+
+      FROM campaign_marts.mart_campaign_touch_performance
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  unsubscribe_rate:
+    product: campaign
+    result_column: unsubscribe_rate
+    time_column: first_engagement_at
+    table: mart_contact_engagement_org
+    sql: "SELECT\n  (SUM(unsubscribed_contact_count))::float\n  / nullIf((SUM(engaged_contact_count)),\
+      \ 0) AS unsubscribe_rate\nFROM campaign_marts.mart_contact_engagement_org\n\
+      WHERE organization_id = %s{{extra_where}}\n"
+    default_zero: true
+  unsubscribed_contact_count:
+    product: campaign
+    result_column: unsubscribed_contact_count
+    time_column: first_engagement_at
+    table: mart_contact_engagement_org
+    sql: 'SELECT SUM(unsubscribed_contact_count) AS unsubscribed_contact_count
+
+      FROM campaign_marts.mart_contact_engagement_org
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  variant_click_rate:
+    product: campaign
+    result_column: variant_click_rate
+    time_column: campaign_created_at
+    table: mart_campaign_variant_performance
+    sql: "SELECT\n  (SUM(clicked_touch_count))::float\n  / nullIf((SUM(sent_touch_count)),\
+      \ 0) AS variant_click_rate\nFROM campaign_marts.mart_campaign_variant_performance\n\
+      WHERE organization_id = %s{{extra_where}}\n"
+    default_zero: true
+  variant_clicked_touch_count:
+    product: campaign
+    result_column: variant_clicked_touch_count
+    time_column: campaign_created_at
+    table: mart_campaign_variant_performance
+    sql: 'SELECT SUM(clicked_touch_count) AS variant_clicked_touch_count
+
+      FROM campaign_marts.mart_campaign_variant_performance
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  variant_open_rate:
+    product: campaign
+    result_column: variant_open_rate
+    time_column: campaign_created_at
+    table: mart_campaign_variant_performance
+    sql: "SELECT\n  (SUM(opened_touch_count))::float\n  / nullIf((SUM(sent_touch_count)),\
+      \ 0) AS variant_open_rate\nFROM campaign_marts.mart_campaign_variant_performance\n\
+      WHERE organization_id = %s{{extra_where}}\n"
+    default_zero: true
+  variant_opened_touch_count:
+    product: campaign
+    result_column: variant_opened_touch_count
+    time_column: campaign_created_at
+    table: mart_campaign_variant_performance
+    sql: 'SELECT SUM(opened_touch_count) AS variant_opened_touch_count
+
+      FROM campaign_marts.mart_campaign_variant_performance
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  variant_sent_touch_count:
+    product: campaign
+    result_column: variant_sent_touch_count
+    time_column: campaign_created_at
+    table: mart_campaign_variant_performance
+    sql: 'SELECT SUM(sent_touch_count) AS variant_sent_touch_count
+
+      FROM campaign_marts.mart_campaign_variant_performance
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  variant_touch_count:
+    product: campaign
+    result_column: variant_touch_count
+    time_column: campaign_created_at
+    table: mart_campaign_variant_performance
+    sql: 'SELECT SUM(touch_count) AS variant_touch_count
+
+      FROM campaign_marts.mart_campaign_variant_performance
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '

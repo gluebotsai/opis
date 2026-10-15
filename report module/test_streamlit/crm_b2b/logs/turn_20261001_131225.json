@@ -1,0 +1,218 @@
+{
+  "question": "why raghu have more deals/",
+  "answer": "Raghuram M has the highest volume of active opportunities with 5 deals, compared to Manoj M (3), Yaswanth MG (3), DivyaPrasath RS (1), and 2 unassigned deals. Raghuram's portfolio is the only one with significant multi-currency value, managing \u20b9123,250.00 INR across accounts like positron, Dell, and Netflix, alongside $30,000.00 USD for CRM deals.\n\nWhile other reps have similar deal counts, there is a significant data integrity gap in their pipelines:\n\n| Rep Name | Total Deals | Currency | Total Pipeline Value | Key Accounts/Deals |\n| :--- | :---: | :---: | :--- | :--- |\n| Raghuram M | 3 | INR | 123,250.00 | positron, Dell, Netflix |\n| Raghuram M | 2 | USD | 30,000.00 | crm, CRM |\n| Manoj M | 3 | INR | 0 | Lakshmi P, Aspero, HCL |\n| Yaswanth MG | 2 | INR | 0 | hexaware, Lokesh deal |\n| Yaswanth MG | 1 | USD | 123.94 | GRT Jewellers |\n| DivyaPrasath RS | 1 | USD | 15,000.00 | CRM |\n\nThe primary reason for the disparity in pipeline health is that Manoj M and Yaswanth MG are holding 5 combined deals in INR with a recorded value of \u20b90, creating a \"ghost pipeline\" that lacks associated quotes or estimated values. Raghuram M is currently the only representative managing a balanced mix of both INR and USD, which concentrates the majority of the company's projected revenue in his portfolio.\n\nYou may want to review the \u20b90 value deals held by Manoj M and Yaswanth MG to ensure all active opportunities have associated quotes or verified estimated values.",
+  "trace": {
+    "question": "why raghu have more deals/",
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1015,
+      "role": "admin"
+    },
+    "model": "worktual-gemma",
+    "tasks": [
+      {
+        "status": "ok",
+        "store": "sql",
+        "sql": "WITH rpt_deals AS (\nSELECT src.id, src.organization_id, src.title, src.stage, src.amount, src.currency_code, src.stage_weight, src.weighted_amount, src.company_id, src.company_name, src.company_industry, src.location_id, src.contact_id, src.contact_name, src.contact_email, src.owner_user_id, src.owner_name, src.created_at, src.closed_at, src.close_ts, src.updated_at, src.expected_close_date, src.lost_reason, src.is_open, src.is_won, src.is_lost, src.aging_days, src.forecast_category, src.forecast_reason, src.forecast_flagged FROM (\nSELECT \n  d.id,\n  d.organization_id,\n  d.title,\n  d.stage,\n  COALESCE(d.amount, 0) AS amount,\n  CASE\n    WHEN pq.currency IS NOT NULL AND pq.currency <> 'USD' THEN pq.currency\n    WHEN o.country IS NOT NULL AND o.country <> 'US' AND cc.curr IS NOT NULL THEN cc.curr\n    WHEN pq.currency = 'USD' THEN 'USD'\n    WHEN o.country = 'US' THEN 'USD'\n    ELSE 'USD'\n  END AS currency_code,\n  CASE d.stage\n    WHEN 'qualification' THEN 0.10\n    WHEN 'discover' THEN 0.25\n    WHEN 'propose' THEN 0.50\n    WHEN 'negotiate' THEN 0.75\n    WHEN 'closed_won' THEN 1.00\n    WHEN 'closed_lost' THEN 0.00\n    ELSE 0.00\n  END AS stage_weight,\n  ROUND(COALESCE(d.amount, 0) * (\n    CASE d.stage\n      WHEN 'qualification' THEN 0.10\n      WHEN 'discover' THEN 0.25\n      WHEN 'propose' THEN 0.50\n      WHEN 'negotiate' THEN 0.75\n      WHEN 'closed_won' THEN 1.00\n      WHEN 'closed_lost' THEN 0.00\n      ELSE 0.00\n    END\n  ), 2) AS weighted_amount,\n  d.company_id,\n  c.name AS company_name,\n  c.industry AS company_industry,\n  d.location_id,\n  d.contact_id,\n  COALESCE(d.contact_name, cdp.first_name || ' ' || COALESCE(cdp.last_name, '')) AS contact_name,\n  COALESCE(d.contact_email, id_k.key_value) AS contact_email,\n  d.owner_user_id,\n  su.first_name || ' ' || COALESCE(su.last_name, '') AS owner_name,\n  d.created_at,\n  d.closed_at,\n  COALESCE(d.closed_at, d.created_at) AS close_ts,\n  d.updated_at,\n  d.expected_close_date,\n  d.lost_reason,\n  (d.stage IN ('qualification', 'discover', 'propose', 'negotiate')) AS is_open,\n  (d.stage = 'closed_won') AS is_won,\n  (d.stage = 'closed_lost') AS is_lost,\n  FLOOR(EXTRACT(EPOCH FROM (NOW() - d.created_at))/86400)::integer AS aging_days,\n  d.forecast_category,\n  d.forecast_reason,\n  d.forecast_flagged\nFROM crm.deals d\nLEFT JOIN crm.companies c ON c.id = d.company_id AND c.organization_id = d.organization_id\nLEFT JOIN accounts.setup_users su ON su.id = d.owner_user_id\nLEFT JOIN accounts.organizations o ON o.id = d.organization_id\nLEFT JOIN cdp.customer_profile cdp ON cdp.cdp_id = d.contact_id\nLEFT JOIN LATERAL (\n  SELECT ik.key_value \n  FROM cdp.identity_keys ik \n  WHERE ik.cdp_id = d.contact_id AND ik.key_type = 'email' AND ik.organization_id = d.organization_id \n  ORDER BY ik.created_at ASC \n  LIMIT 1\n) id_k ON TRUE\nLEFT JOIN LATERAL (\n  SELECT q.currency \n  FROM crm.quotes q \n  WHERE q.deal_id = d.id AND q.organization_id = d.organization_id \n  ORDER BY CASE WHEN q.status = 'accepted' THEN 1 WHEN q.status = 'sent' THEN 2 ELSE 3 END, q.updated_at DESC \n  LIMIT 1\n) pq ON TRUE\nLEFT JOIN LATERAL (\n  SELECT CASE o.country \n    WHEN 'India' THEN 'INR' \n    WHEN 'United Kingdom' THEN 'GBP' \n    WHEN 'Germany' THEN 'EUR' \n    WHEN 'Canada' THEN 'CAD' \n    WHEN 'Australia' THEN 'AUD' \n    ELSE 'USD' \n  END AS curr\n) cc ON TRUE\nWHERE d.organization_id = %(_org_id)s\n) src WHERE TRUE\n)\nSELECT COALESCE(CAST(owner_name AS TEXT), 'Unassigned') AS owner, CAST(COUNT(*) AS BIGINT) AS total_opportunities FROM rpt_deals AS deals WHERE TRUE AND TRUE AND TRUE GROUP BY COALESCE(CAST(owner_name AS TEXT), 'Unassigned') ORDER BY 2 DESC NULLS LAST LIMIT 500",
+        "views": [
+          "deals"
+        ],
+        "guard_notes": [
+          "row cap 500 applied"
+        ],
+        "bound_params": {
+          "_org_id": 1003,
+          "_user_id": 1015,
+          "user_id": 1015,
+          "organization_id": 1003,
+          "org_id": 1003,
+          "tenant_id": 1003,
+          "current_user_id": 1015
+        },
+        "rows": [
+          {
+            "owner": "Raghuram M",
+            "total_opportunities": 5
+          },
+          {
+            "owner": "Manoj M",
+            "total_opportunities": 3
+          },
+          {
+            "owner": "Yaswanth MG",
+            "total_opportunities": 3
+          },
+          {
+            "owner": "Unassigned",
+            "total_opportunities": 2
+          },
+          {
+            "owner": "DivyaPrasath RS",
+            "total_opportunities": 1
+          }
+        ],
+        "kpi_id": "total_opportunities",
+        "dimension": "owner",
+        "time_status": "all_time",
+        "attempts": [
+          {
+            "raw": "{\"tool\":\"run_kpi\",\"kpi_id\":\"total_opportunities\",\"dimension\":\"owner\"}",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "total_opportunities",
+              "dimension": "owner"
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "tool": "run_kpi",
+        "requested_kpi": "total_opportunities",
+        "requested_dimension": "owner",
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "total_opportunities",
+          "goal": "Count total deals for Raghu and compare to others",
+          "time": "all time",
+          "scope": "org",
+          "dimension": "owner",
+          "answer_type": "breakdown",
+          "depends_on": []
+        }
+      },
+      {
+        "status": "ok",
+        "rows": [
+          {
+            "user_id": 1015,
+            "rep_name": "Raghuram M",
+            "total_deals": 3,
+            "currency": "INR",
+            "total_pipeline_value": 123250.0,
+            "sample_deals": [
+              "positron \u2014 gugan s",
+              "Dell \u2014 vighesh s",
+              "Netflix \u2014 Kirti Patidar"
+            ]
+          },
+          {
+            "user_id": 1018,
+            "rep_name": "Manoj M",
+            "total_deals": 3,
+            "currency": "INR",
+            "total_pipeline_value": 0,
+            "sample_deals": [
+              "Lakshmi P",
+              "Aspero\u2014 dpzoro Customer",
+              "HCL \u2014 yaswanth M G"
+            ]
+          },
+          {
+            "user_id": 1015,
+            "rep_name": "Raghuram M",
+            "total_deals": 2,
+            "currency": "USD",
+            "total_pipeline_value": 30000.0,
+            "sample_deals": [
+              "crm",
+              "CRM"
+            ]
+          },
+          {
+            "user_id": 1017,
+            "rep_name": "Yaswanth MG",
+            "total_deals": 2,
+            "currency": "INR",
+            "total_pipeline_value": 0,
+            "sample_deals": [
+              "hexaware \u2014 Hitler hit",
+              "Lokesh deal"
+            ]
+          },
+          {
+            "user_id": 1028,
+            "rep_name": null,
+            "total_deals": 2,
+            "currency": "USD",
+            "total_pipeline_value": 15000.0,
+            "sample_deals": [
+              "pricing",
+              "crm"
+            ]
+          },
+          {
+            "user_id": 1017,
+            "rep_name": "Yaswanth MG",
+            "total_deals": 1,
+            "currency": "USD",
+            "total_pipeline_value": 123.94,
+            "sample_deals": [
+              "GRT Jewellers \u2014 Nandhu A"
+            ]
+          },
+          {
+            "user_id": 1066,
+            "rep_name": "DivyaPrasath RS",
+            "total_deals": 1,
+            "currency": "USD",
+            "total_pipeline_value": 15000.0,
+            "sample_deals": [
+              "CRM"
+            ]
+          }
+        ],
+        "sql": "MATCH (u:User)\nWHERE ($can_view_all = true OR u.id = $effective_user_id)\nOPTIONAL MATCH (d:Deal) WHERE d.owner_user_id = u.id\nOPTIONAL MATCH (d)-[:HAS]->(q:Quote)\nWITH u, d, collect(q) AS quotes\nWITH u, d,\n     [q IN quotes WHERE toLower(q.approval_status) = 'approved'][0] AS approved_quote,\n     quotes[0] AS any_quote\nWITH u, d,\n     coalesce(approved_quote.currency, any_quote.currency, d.currency, $default_currency, 'INR') AS currency,\n     coalesce(approved_quote.total, any_quote.total, d.amount, 0) AS final_amount\nWITH u,\n     count(DISTINCT d) AS total_deals,\n     currency,\n     sum(coalesce(final_amount, 0)) AS total_pipeline_value,\n     collect(DISTINCT d.title)[0..5] AS sample_deals\nWHERE total_deals > 0 OR (coalesce($rep_name, '') <> '' AND (toLower(u.first_name) CONTAINS toLower($rep_name) OR toLower(u.last_name) CONTAINS toLower($rep_name)))\nRETURN u.id AS user_id,\n       u.first_name + ' ' + coalesce(u.last_name, '') AS rep_name,\n       total_deals,\n       currency,\n       total_pipeline_value,\n       sample_deals\nORDER BY total_deals DESC\nLIMIT 20",
+        "tool": "kg",
+        "attempts_made": 1,
+        "kg_notes": "### Sales Representative Pipeline Allocation\n\nRaghuram M currently holds the highest volume of active opportunities across both currency denominations, managing a total of 5 deals valued at **\u20b9123,250.00 INR** and **$30,000.00 USD**. While other representatives like Manoj M hold a similar deal count in INR, Raghuram's portfolio is distinguished by its significant multi-currency valuation and active pipeline presence.\n\n| Rep Name | Total Deals | Currency | Total Pipeline Value | Key Accounts/Deals |\n| :--- | :---: | :---: | :--- | :--- |\n| Raghuram M | 3 | INR | 123,250.00 | positron, Dell, Netflix |\n| Raghuram M | 2 | USD | 30,000.00 | crm, CRM |\n| Manoj M | 3 | INR | 0 | Lakshmi P, Aspero, HCL |\n| Yaswanth MG | 2 | INR | 0 | hexaware, Lokesh deal |\n| Yaswanth MG | 1 | USD | 123.94 | GRT Jewellers |\n| DivyaPrasath RS | 1 | USD | 15,000.00 | CRM |\n| N/A | 2 | USD | 15,000.00 | pricing, crm |\n| **Total** | **\u20b98 (INR) / $6 (USD)** | **Multi** | **\u20b9123,250.00 (INR) / $60,123.94 (USD)** | |\n\n### Commercial Diagnosis: Portfolio Concentration & Value Gaps\n\nThe data reveals a stark contrast between deal volume and pipeline visibility across the top owners:\n\n*   **High-Value Concentration in Raghuram M's Portfolio:** Raghuram is currently managing the most substantial portion of the company's projected revenue. His ability to maintain deals in both INR and USD suggests a broader territory or a more diverse client base compared to his peers.\n*   **The \"Zero-Value\" Pipeline Risk:** A critical observation is that while Manoj M and Yaswanth MG hold a combined 5 deals in INR, their recorded pipeline value is **\u20b90**. This indicates a significant data integrity gap where opportunities are being tracked in the system without associated quotes or estimated deal values. This \"ghost pipeline\" prevents accurate forecasting and makes it impossible to prioritize high-impact accounts.\n*   **Currency Fragmentation:** The pipeline is split between INR and USD. Raghuram is the only representative currently managing a balanced mix of both, whereas others are heavily skewed toward one currency or the other, which may impact how regional targets are met.\n\n### Strategic Levers to Improve Forecast Accuracy\n\nTo transition from mere deal tracking to predictable revenue generation, the following operational steps are recommended:\n\n*   **Mandatory Quote Attachment for Pipeline Integrity:** We must address the \u20b90 value deals held by Manoj M and Yaswanth MG. If a deal is active, it must have an associated quote or a verified estimated value. Implementing a validation rule that prevents deals from moving past the \"Discovery\" stage without a value will eliminate \"ghost\" pipeline and provide leadership with a realistic forecast.\n*   **Value-Based Territory Management:** Given Raghuram's high concentration of both volume and value, we should evaluate if his current workload allows for the necessary depth of engagement required for high-value USD accounts. If his capacity is stretched, reallocating lower-value INR opportunities to other reps could allow him to focus on closing the $30,000 USD segment.\n*   **Standardize Multi-Currency Reporting:** To ensure clear visibility, all reps should be coached on the importance of selecting the correct currency at the quote stage to prevent the current fragmentation, ensuring that total pipeline health can be viewed through a single, unified lens.",
+        "task": {
+          "id": "t2",
+          "executor": "kg",
+          "kpi": null,
+          "goal": "Lost reasons, forecast stall, and commercial path for deals owned by Raghu and other top owners",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "why_breakdown",
+          "depends_on": [
+            "t1"
+          ]
+        }
+      }
+    ],
+    "domain_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"deep\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"total_opportunities\",\n      \"goal\": \"Count total deals for Raghu and compare to others\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"dimension\": \"owner\",\n      \"answer_type\": \"breakdown\",\n      \"depends_on\": []\n    },\n    {\n      \"id\": \"t2\",\n      \"executor\": \"kg\",\n      \"kpi\": null,\n      \"goal\": \"Lost reasons, forecast stall, and commercial path for deals owned by Raghu and other top owners\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"dimension\": null,\n      \"answer_type\": \"why_breakdown\",\n      \"depends_on\": [\n        \"t1\"\n      ]\n    }\n  ]\n}\n```",
+    "plan": {
+      "kind": "plan",
+      "depth": "deep",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "total_opportunities",
+          "goal": "Count total deals for Raghu and compare to others",
+          "time": "all time",
+          "scope": "org",
+          "dimension": "owner",
+          "answer_type": "breakdown",
+          "depends_on": []
+        },
+        {
+          "id": "t2",
+          "executor": "kg",
+          "kpi": null,
+          "goal": "Lost reasons, forecast stall, and commercial path for deals owned by Raghu and other top owners",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "why_breakdown",
+          "depends_on": [
+            "t1"
+          ]
+        }
+      ]
+    },
+    "facts": "time_requested: all time\nperiod_applied: overall (no date filter, UTC)\ntime_status: all_time\ncatalog_kpi: total_opportunities\nRESULT: 5 group(s)\ngroup_by: owner\ntotal_total_opportunities: 14\n  Raghuram M: 5\n  Manoj M: 3\n  Yaswanth MG: 3\n  Unassigned: 2\n  DivyaPrasath RS: 1\n\ntime_requested: all time\ntime_status: kg\nRESULT: 7 group(s)\ngroup_by: group\ntotal_total_pipeline_value: 183373.94\n  1015 / Raghuram M / 3 / INR / ['positron \u2014 gugan s', 'Dell \u2014 vighesh s', 'Netflix \u2014 Kirti Patidar']: 123250.0\n  1018 / Manoj M / 3 / INR / ['Lakshmi P', 'Aspero\u2014 dpzoro Customer', 'HCL \u2014 yaswanth M G']: 0\n  1015 / Raghuram M / 2 / USD / ['crm', 'CRM']: 30000.0\n  1017 / Yaswanth MG / 2 / INR / ['hexaware \u2014 Hitler hit', 'Lokesh deal']: 0\n  1028 / None / 2 / USD / ['pricing', 'crm']: 15000.0\n  1017 / Yaswanth MG / 1 / USD / ['GRT Jewellers \u2014 Nandhu A']: 123.94\n  1066 / DivyaPrasath RS / 1 / USD / ['CRM']: 15000.0\nkg_notes:\n### Sales Representative Pipeline Allocation\n\nRaghuram M currently holds the highest volume of active opportunities across both currency denominations, managing a total of 5 deals valued at **\u20b9123,250.00 INR** and **$30,000.00 USD**. While other representatives like Manoj M hold a similar deal count in INR, Raghuram's portfolio is distinguished by its significant multi-currency valuation and active pipeline presence.\n\n| Rep Name | Total Deals | Currency | Total Pipeline Value | Key Accounts/Deals |\n| :--- | :---: | :---: | :--- | :--- |\n| Raghuram M | 3 | INR | 123,250.00 | positron, Dell, Netflix |\n| Raghuram M | 2 | USD | 30,000.00 | crm, CRM |\n| Manoj M | 3 | INR | 0 | Lakshmi P, Aspero, HCL |\n| Yaswanth MG | 2 | INR | 0 | hexaware, Lokesh deal |\n| Yaswanth MG | 1 | USD | 123.94 | GRT Jewellers |\n| DivyaPrasath RS | 1 | USD | 15,000.00 | CRM |\n| N/A | 2 | USD | 15,000.00 | pricing, crm |\n| **Total** | **\u20b98 (INR) / $6 (USD)** | **Multi** | **\u20b9123,250.00 (INR) / $60,123.94 (USD)** | |\n\n### Commercial Diagnosis: Portfolio Concentration & Value Gaps\n\nThe data reveals a stark contrast between deal volume and pipeline visibility across the top owners:\n\n*   **High-Value Concentration in Raghuram M's Portfolio:** Raghuram is currently managing the most substantial portion of the company's projected revenue. His ability to maintain deals in both INR and USD suggests a broader territory or a more diverse client base compared to his peers.\n*   **The \"Zero-Value\" Pipeline Risk:** A critical observation is that while Manoj M and Yaswanth MG hold a combined 5 deals in INR, their recorded pipeline value is **\u20b90**. This indicates a significant data integrity gap where opportunities are being tracked in the system without associated quotes or estimated deal values. This \"ghost pipeline\" prevents accurate forecasting and makes it impossible to prioritize high-impact accounts.\n*   **Currency Fragmentation:** The pipeline is split between INR and USD. Raghuram is the only representative currently managing a balanced mix of both, whereas others are heavily skewed toward one currency or the other, which may impact how regional targets are met.\n\n### Strategic Levers to Improve Forecast Accuracy\n\nTo transition from mere deal tracking to predictable revenue generation, the following operational steps are recommended:\n\n*   **Mandatory Quote Attachment for Pipeline Integrity:** We must address the \u20b90 value deals held by Manoj M and Yaswanth MG. If a deal is active, it must have an associated quote or a verified estimated value. Implementing a validation rule that prevents deals from moving past the \"Discovery\" stage without a value will eliminate \"ghost\" pipeline and provide leadership with a realistic forecast.\n*   **Value-Based Territory Management:** Given Raghuram's high concentration of both volume and value, we should evaluate if his current workload allows for the necessary depth of engagement required for high-value USD accounts. If his capacity is stretched, reallocating lower-value INR opportunities to other reps could allow him to focus on closing the $30,000 USD segment.\n*   **Standardize Multi-Currency Reporting:** To ensure clear visibility, all reps should be coached on the importance of selecting the correct currency at the quote stage to prevent the current fragmentation, ensuring that total pipeline health can be viewed through a single, unified lens.",
+    "grounded": true,
+    "briefing_raw": "Raghuram M has the highest volume of active opportunities with 5 deals, compared to Manoj M (3), Yaswanth MG (3), DivyaPrasath RS (1), and 2 unassigned deals. Raghuram's portfolio is the only one with significant multi-currency value, managing \u20b9123,250.00 INR across accounts like positron, Dell, and Netflix, alongside $30,000.00 USD for CRM deals.\n\nWhile other reps have similar deal counts, there is a significant data integrity gap in their pipelines:\n\n| Rep Name | Total Deals | Currency | Total Pipeline Value | Key Accounts/Deals |\n| :--- | :---: | :---: | :--- | :--- |\n| Raghuram M | 3 | INR | 123,250.00 | positron, Dell, Netflix |\n| Raghuram M | 2 | USD | 30,000.00 | crm, CRM |\n| Manoj M | 3 | INR | 0 | Lakshmi P, Aspero, HCL |\n| Yaswanth MG | 2 | INR | 0 | hexaware, Lokesh deal |\n| Yaswanth MG | 1 | USD | 123.94 | GRT Jewellers |\n| DivyaPrasath RS | 1 | USD | 15,000.00 | CRM |\n\nThe primary reason for the disparity in pipeline health is that Manoj M and Yaswanth MG are holding 5 combined deals in INR with a recorded value of \u20b90, creating a \"ghost pipeline\" that lacks associated quotes or estimated values. Raghuram M is currently the only representative managing a balanced mix of both INR and USD, which concentrates the majority of the company's projected revenue in his portfolio.\n\nYou may want to review the \u20b90 value deals held by Manoj M and Yaswanth MG to ensure all active opportunities have associated quotes or verified estimated values."
+  }
+}

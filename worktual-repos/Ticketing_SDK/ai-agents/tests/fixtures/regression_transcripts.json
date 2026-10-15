@@ -1,0 +1,214 @@
+[
+  {
+    "id": "interrupt_kb_then_resume",
+    "steps": [
+      {
+        "user": "how many open tickets?",
+        "kb_draft": { "awaiting": "category", "title": "add" },
+        "workflow_decision": {
+          "action": "SIDE_QUEST",
+          "intent": "TICKET",
+          "agent": "tickets",
+          "operation": "GET_METRICS",
+          "confidence": 0.99
+        },
+        "expect": { "handled": false, "kb_kept": true }
+      },
+      {
+        "user": "continue the article",
+        "parked_drafts": [
+          { "flow": "kb", "draft": { "awaiting": "category", "title": "add" } }
+        ],
+        "workflow_decision": {
+          "action": "RESUME_WORKFLOW",
+          "intent": "CREATE",
+          "entity_type": "article",
+          "confidence": 0.99
+        },
+        "expect": { "handled": true, "kb_awaiting": "category" }
+      }
+    ]
+  },
+  {
+    "id": "cancel_team_create",
+    "steps": [
+      {
+        "user": "cancel",
+        "team_draft": { "awaiting": "description", "name": "nlp" },
+        "workflow_decision": {
+          "action": "CANCEL_WORKFLOW",
+          "intent": "CREATE",
+          "entity_type": "team",
+          "confidence": 0.99
+        },
+        "expect": { "handled": true, "team_draft_cleared": true }
+      }
+    ]
+  },
+  {
+    "id": "last_entity_add_members_not_create",
+    "steps": [
+      {
+        "user": "add members",
+        "last_entity": { "type": "team", "id": "q1", "name": "nlp" },
+        "workflow_decision": {
+          "action": "START_ADD_TEAM_MEMBERS",
+          "intent": "UPDATE",
+          "entity_type": "team",
+          "entity_name": "nlp",
+          "values": [],
+          "confidence": 0.99
+        },
+        "expect": { "handled": true, "not_awaiting": "name", "team_name": "nlp" }
+      }
+    ]
+  },
+  {
+    "id": "members_draft_continues",
+    "steps": [
+      {
+        "user": "add members",
+        "team_draft": { "awaiting": "members", "name": "nlp", "id": "q1" },
+        "expect": { "handled": true, "not_awaiting": "name" }
+      }
+    ]
+  },
+  {
+    "id": "which_team_bare_name",
+    "steps": [
+      {
+        "user": "nlp",
+        "team_draft": { "awaiting": "members_team", "name": "", "id": "" },
+        "expect": { "handled": true, "not_awaiting": "name", "team_name": "nlp" }
+      }
+    ]
+  },
+  {
+    "id": "escalate_side_quest_keeps_draft",
+    "steps": [
+      {
+        "user": "how many open tickets?",
+        "escalate_draft": { "ticket_number": "12840", "awaiting": "assignee" },
+        "workflow_decision": {
+          "action": "SIDE_QUEST",
+          "intent": "TICKET",
+          "entity_type": null,
+          "entity_name": null,
+          "values": [],
+          "confidence": 0.99
+        },
+        "expect": { "handled": false, "escalate_kept": true }
+      }
+    ]
+  },
+  {
+    "id": "escalate_cancel_clears_draft",
+    "steps": [
+      {
+        "user": "cancel",
+        "escalate_draft": { "ticket_number": "12840", "awaiting": "assignee" },
+        "workflow_decision": {
+          "action": "CANCEL_WORKFLOW",
+          "intent": "UPDATE",
+          "entity_type": "ticket",
+          "entity_name": null,
+          "values": [],
+          "confidence": 0.99
+        },
+        "expect": { "handled": true, "escalate_draft_cleared": true }
+      }
+    ]
+  },
+  {
+    "id": "cancel_macro_clears_draft",
+    "steps": [
+      {
+        "user": "cancel",
+        "macro_draft": { "awaiting": "body", "title": "vip" },
+        "workflow_decision": {
+          "action": "CANCEL_WORKFLOW",
+          "intent": "UPDATE",
+          "entity_type": null,
+          "entity_name": null,
+          "values": [],
+          "confidence": 0.99
+        },
+        "expect": { "handled": true, "macro_draft_cleared": true }
+      }
+    ]
+  },
+  {
+    "id": "cancel_kb_clears_draft",
+    "steps": [
+      {
+        "user": "cancel",
+        "kb_draft": { "awaiting": "category", "title": "Reset VPN" },
+        "workflow_decision": {
+          "action": "CANCEL_WORKFLOW",
+          "intent": "UPDATE",
+          "entity_type": null,
+          "entity_name": null,
+          "values": [],
+          "confidence": 0.99
+        },
+        "expect": { "handled": true, "kb_draft_cleared": true }
+      }
+    ]
+  },
+  {
+    "id": "macro_title_continues",
+    "steps": [
+      {
+        "user": "vip greeting",
+        "macro_draft": { "awaiting": "title" },
+        "expect": { "handled": true, "macro_awaiting": "body", "macro_title": "vip greeting" }
+      }
+    ]
+  },
+  {
+    "id": "create_ticket_list_side_quest_resume",
+    "steps": [
+      {
+        "user": "show tickets created by me",
+        "ticket_draft": {
+          "awaiting": "issue",
+          "customerName": "Ada",
+          "customerEmail": "ada@example.com"
+        },
+        "workflow_decision": {
+          "action": "SIDE_QUEST",
+          "intent": "TICKET",
+          "operation": "LIST_TICKETS",
+          "filters": { "created_by": "SELF" },
+          "proposed_tool": "list_tickets",
+          "confidence": 0.99
+        },
+        "expect": {
+          "handled": false,
+          "ticket_kept": true,
+          "ticket_customer": "Ada"
+        }
+      },
+      {
+        "user": "continue",
+        "parked_drafts": [
+          {
+            "flow": "ticket",
+            "draft": {
+              "awaiting": "issue",
+              "customerName": "Ada",
+              "customerEmail": "ada@example.com"
+            }
+          }
+        ],
+        "workflow_decision": {
+          "action": "RESUME_WORKFLOW",
+          "intent": "CREATE",
+          "entity_type": "ticket",
+          "confidence": 0.99
+        },
+        "expect": { "handled": true, "ticket_awaiting": "issue" }
+      }
+    ]
+  }
+]

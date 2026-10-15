@@ -1,0 +1,63 @@
+name: CI
+
+# Validate changes before merge. Deployment is handled by deploy.yml + scripts/deploy.sh.
+on:
+  pull_request:
+    branches:
+      - main
+
+env:
+  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres_myaccount_qa
+
+jobs:
+  validate:
+    name: Validate build
+    runs-on: self-hosted
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build frontend
+        run: pnpm run build
+
+      - name: Check mail API syntax
+        run: |
+          for file in server/*.js server/db/*.js server/payments/*.js server/billing/*.js; do
+            node --check "$file"
+          done
+
+      - name: Run database smoke test
+        run: node scripts/smoke-test-db.mjs
+
+      - name: Run payment smoke test
+        run: node scripts/smoke-test-payments.mjs
+
+      - name: Run billing smoke test
+        run: node scripts/smoke-test-billing.mjs
+
+      - name: Run sales admin smoke test
+        run: node scripts/smoke-test-sales-admin.mjs
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Verify Python backend imports
+        working-directory: backend
+        run: |
+          pip install -r requirements.txt
+          python -c "from app.main import app; from app.models import User"

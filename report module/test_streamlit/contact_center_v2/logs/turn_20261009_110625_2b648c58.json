@@ -1,0 +1,62 @@
+{
+  "turn_id": "2b648c58",
+  "timestamp": "2026-10-09T05:36:25.667273+00:00",
+  "question": "how many past queued channel are there.. ",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1016,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>What came back</strong></p><ul><li>6</li><li>channel=email; total=6</li><li>channel=facebook; total=10</li><li>channel=instagram; total=10</li><li>channel=webchat; total=359</li><li>channel=whatsapp; total=28</li><li>channel=call; total=211</li></ul><p>Want this broken down another way?</p>",
+  "card": "card: none",
+  "facts": "result_id: r1\nwindow: all time\nkpi: total\ncertified: true\ntask_goal: Count the total number of conversations that entered a queued state, split by channel.\nanswer_type: number\nrow_count: 6\nrow 1: channel=email; total=6\nrow 2: channel=facebook; total=10\nrow 3: channel=instagram; total=10\nrow 4: channel=webchat; total=359\nrow 5: channel=whatsapp; total=28\nrow 6: channel=call; total=211",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1016,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "how many past queued channel are there.. ",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants to know the total number of conversations that have entered a queued state in the past, broken down by channel.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Count the total number of conversations that entered a queued state, split by channel.",
+          "time": "all time",
+          "scope": "org",
+          "slice": [
+            "channel"
+          ],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "total",
+        "row_count": 6
+      }
+    ],
+    "facts": "result_id: r1\nwindow: all time\nkpi: total\ncertified: true\ntask_goal: Count the total number of conversations that entered a queued state, split by channel.\nanswer_type: number\nrow_count: 6\nrow 1: channel=email; total=6\nrow 2: channel=facebook; total=10\nrow 3: channel=instagram; total=10\nrow 4: channel=webchat; total=359\nrow 5: channel=whatsapp; total=28\nrow 6: channel=call; total=211",
+    "grounded": true,
+    "card": "card: none"
+  },
+  "error": null
+}

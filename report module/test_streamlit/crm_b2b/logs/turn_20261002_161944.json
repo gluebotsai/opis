@@ -1,0 +1,84 @@
+{
+  "question": "how many agnets are there?",
+  "answer": "There are 2,366 agents overall.",
+  "trace": {
+    "question": "how many agnets are there?",
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1015,
+      "role": "admin"
+    },
+    "model": "worktual-gemma",
+    "tasks": [
+      {
+        "status": "ok",
+        "store": "sql",
+        "sql": "WITH rpt_agent_jobs AS (\nSELECT src.id, src.organization_id, src.job_type, src.contact_id, src.status, src.created_at, src.updated_at FROM (\nSELECT \n  id,\n  organization_id,\n  job_type,\n  contact_id,\n  status,\n  created_at,\n  updated_at\nFROM (\n  SELECT id, organization_id, 'enrichment' AS job_type, contact_id, status::text AS status, created_at, updated_at FROM crm.lead_enrichment_jobs WHERE organization_id = %(_org_id)s\n  UNION ALL\n  SELECT id, organization_id, 'scoring' AS job_type, contact_id, status::text AS status, created_at, updated_at FROM crm.lead_scoring_jobs WHERE organization_id = %(_org_id)s\n  UNION ALL\n  SELECT id, organization_id, 'nurture' AS job_type, contact_id, status::text AS status, created_at, updated_at FROM crm.lead_nurture_jobs WHERE organization_id = %(_org_id)s\n  UNION ALL\n  SELECT id, organization_id, 'lifecycle' AS job_type, contact_id, status::text AS status, created_at, updated_at FROM crm.lead_lifecycle_jobs WHERE organization_id = %(_org_id)s\n) aj\n) src WHERE TRUE\n)\nSELECT COUNT(*) FROM rpt_agent_jobs AS agent_jobs LIMIT 500",
+        "views": [
+          "agent_jobs"
+        ],
+        "guard_notes": [
+          "row cap 500 applied"
+        ],
+        "bound_params": {
+          "_org_id": 1003,
+          "_user_id": 1015,
+          "user_id": 1015,
+          "organization_id": 1003,
+          "org_id": 1003,
+          "tenant_id": 1003,
+          "current_user_id": 1015
+        },
+        "rows": [
+          {
+            "count": 2366
+          }
+        ],
+        "attempts": [
+          {
+            "raw": "```sql\nSELECT COUNT(*) FROM rpt.agent_jobs;\n```",
+            "call": {
+              "kind": "run_sql",
+              "sql": "SELECT COUNT(*) FROM rpt.agent_jobs"
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "time_status": "all_time",
+        "tool": "run_sql",
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": null,
+          "goal": "Count total number of agents",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "kpi",
+          "depends_on": []
+        }
+      }
+    ],
+    "domain_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"quick\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": null,\n      \"goal\": \"Count total number of agents\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"dimension\": null,\n      \"answer_type\": \"kpi\",\n      \"depends_on\": []\n    }\n  ]\n}\n```",
+    "plan": {
+      "kind": "plan",
+      "depth": "quick",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": null,
+          "goal": "Count total number of agents",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "kpi",
+          "depends_on": []
+        }
+      ]
+    },
+    "facts": "time_requested: all time\nperiod_applied: overall (no date filter, UTC)\ntime_status: all_time\nRESULT: count = 2366",
+    "grounded": true,
+    "briefing_raw": "There are 2,366 agents overall."
+  }
+}

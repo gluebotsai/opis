@@ -1,0 +1,60 @@
+{
+  "turn_id": "321aaa8f",
+  "timestamp": "2026-10-09T11:51:43.449461+00:00",
+  "question": "what is the average speed of answer",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1016,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Average Speed of Answer</strong></p><p>The average speed of answer for all time is <strong>1.10 minutes</strong>.</p><p>Would you like to see this broken down by channel or queue?</p>",
+  "card": "card: kpi r1",
+  "facts": "result_id: r1\nwindow: all time\nkpi: asa\ncertified: true\nunit: minutes\ntask_goal: Calculate the average speed of answer in minutes.\nanswer_type: number\nrow_count: 1\nrow 1: asa=1.10",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1016,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "what is the average speed of answer",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants to know the average speed of answer.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Calculate the average speed of answer in minutes.",
+          "time": "all time",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "asa",
+        "row_count": 1
+      }
+    ],
+    "facts": "result_id: r1\nwindow: all time\nkpi: asa\ncertified: true\nunit: minutes\ntask_goal: Calculate the average speed of answer in minutes.\nanswer_type: number\nrow_count: 1\nrow 1: asa=1.10",
+    "grounded": true,
+    "card": "card: kpi r1"
+  },
+  "error": null
+}

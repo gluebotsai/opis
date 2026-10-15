@@ -1,0 +1,189 @@
+.assistant-message-html {
+  min-width: 0;
+  max-width: 100%;
+  color: #171717;
+  font-size: 14px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.assistant-message-html > :first-child {
+  margin-top: 0;
+}
+
+.assistant-message-html > :last-child {
+  margin-bottom: 0;
+}
+
+.assistant-message-html p {
+  margin: 0 0 12px;
+  line-height: 1.7;
+}
+
+.assistant-message-html strong,
+.assistant-message-html b {
+  font-weight: 600;
+  color: #171717;
+}
+
+.assistant-message-html p:has(+ .assistant-list-wrap),
+.assistant-message-html p:has(+ .assistant-table-wrap),
+.assistant-message-html p:has(+ ul),
+.assistant-message-html p:has(+ ol),
+.assistant-message-html p:has(+ table) {
+  margin-bottom: 0;
+}
+
+.assistant-message-html ul + p,
+.assistant-message-html ol + p,
+.assistant-list-wrap + p,
+.assistant-table-wrap + p {
+  margin-top: 16px;
+}
+
+.assistant-list-wrap {
+  margin: 20px 0;
+  padding: 14px 16px;
+  overflow: hidden;
+  border: 0.6px solid #bfbfbf;
+  border-radius: 12px;
+  background: #fafafa;
+}
+
+.assistant-message-html ul,
+.assistant-message-html ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  background: transparent;
+}
+
+.assistant-message-html li {
+  position: relative;
+  margin: 0;
+  padding: 10px 0 10px 16px;
+  line-height: 1.5;
+  color: #525252;
+}
+
+.assistant-message-html li + li {
+  margin-top: 2px;
+}
+
+.assistant-message-html li:has(> .assistant-list-desc) > strong:first-child,
+.assistant-message-html li:has(> .assistant-list-desc) > b:first-child {
+  display: block;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.assistant-message-html .assistant-list-desc {
+  display: block;
+  margin-top: 2px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #525252;
+}
+
+.assistant-message-html ul > li::before {
+  content: "";
+  position: absolute;
+  top: 17px;
+  left: 0;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #858f96;
+}
+
+.assistant-message-html ol {
+  counter-reset: assistant-ol;
+}
+
+.assistant-message-html ol > li {
+  counter-increment: assistant-ol;
+  padding-left: 22px;
+}
+
+.assistant-message-html ol > li::before {
+  content: counter(assistant-ol) ".";
+  position: absolute;
+  top: 10px;
+  left: 0;
+  color: #858f96;
+  font-size: 13px;
+  font-weight: 600;
+  background: none;
+}
+
+.assistant-table-wrap {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin: 20px 0;
+  overflow-x: auto;
+  border: 0.6px solid #bfbfbf;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.assistant-message-html table {
+  margin: 0;
+  width: max(100%, max-content);
+  min-width: 100%;
+  table-layout: auto;
+  border-collapse: collapse;
+  background: #fff;
+}
+
+.assistant-message-html th,
+.assistant-message-html td {
+  box-sizing: border-box;
+  min-width: 256px;
+  padding: 10px 12px;
+  text-align: left;
+  vertical-align: top;
+  white-space: nowrap;
+  border: 0;
+  border-bottom: 0.6px solid #e5e5e5;
+}
+
+.assistant-message-html th {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #171717;
+  background: #e2e2e6;
+  border-bottom: 0.6px solid #bfbfbf;
+}
+
+.assistant-message-html td {
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  color: #171717;
+}
+
+.assistant-message-html th:first-child,
+.assistant-message-html td:first-child {
+  position: sticky;
+  left: 0;
+}
+
+.assistant-message-html th:first-child {
+  background: #e2e2e6;
+  z-index: 2;
+}
+
+.assistant-message-html td:first-child {
+  background: #fff;
+  z-index: 1;
+}
+
+.assistant-message-html tbody tr:last-child td {
+  border-bottom: 0;
+}

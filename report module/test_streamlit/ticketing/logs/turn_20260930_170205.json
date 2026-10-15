@@ -1,0 +1,189 @@
+{
+  "question": "breakdown the ticket count based on the priority and status",
+  "answer": "Across all time, there are **20,037** total tickets distributed across 22 groups. A breakdown of these tickets by priority and status shows that for the **high** priority segment, there are **3,719** Closed tickets, **1,225** Overdue tickets, **672** Open tickets, and **549** Reopened tickets, with **3** Resolved tickets.",
+  "trace": {
+    "question": "breakdown the ticket count based on the priority and status",
+    "identity": {
+      "organization_id": 1012,
+      "user_id": 1015,
+      "role": "admin",
+      "queue_ids": [
+        1060,
+        1061,
+        1062,
+        1063,
+        1064,
+        1065,
+        1066
+      ]
+    },
+    "model": "worktual-gemma",
+    "tasks": [
+      {
+        "status": "ok",
+        "store": "sql",
+        "sql": "WITH rpt_tickets AS (\nSELECT src.id, src.ticket_number, src.subject, src.description, src.status, src.priority, src.channel, src.category, src.skill, src.customer_id, src.customer_name, src.customer_email, src.customer_phone, src.assignee_id, src.assignee_name, src.resolver_id, src.resolver_name, src.queue_id, src.queue_name, src.created_by_id, src.created_by_name, src.due_at, src.first_response_at, src.resolved_at, src.csat_score, src.csat_rated_at, src.csat_comment, src.ai_summary, src.created_at, src.updated_at FROM (\nSELECT * FROM ticketing.tickets WHERE organization_id = %(_org_id)s\n) src WHERE TRUE\n)\nSELECT priority, status, COUNT(*) AS ticket_count FROM rpt_tickets AS tickets GROUP BY priority, status ORDER BY priority ASC, status ASC LIMIT 500",
+        "views": [
+          "tickets"
+        ],
+        "guard_notes": [
+          "row cap 500 applied"
+        ],
+        "rows": [
+          {
+            "priority": "high",
+            "status": "Closed",
+            "ticket_count": 3719
+          },
+          {
+            "priority": "high",
+            "status": "Open",
+            "ticket_count": 672
+          },
+          {
+            "priority": "high",
+            "status": "Overdue",
+            "ticket_count": 1225
+          },
+          {
+            "priority": "high",
+            "status": "Reopened",
+            "ticket_count": 549
+          },
+          {
+            "priority": "high",
+            "status": "Resolved",
+            "ticket_count": 3
+          },
+          {
+            "priority": "low",
+            "status": "Closed",
+            "ticket_count": 2771
+          },
+          {
+            "priority": "low",
+            "status": "Open",
+            "ticket_count": 530
+          },
+          {
+            "priority": "low",
+            "status": "Overdue",
+            "ticket_count": 854
+          },
+          {
+            "priority": "low",
+            "status": "Pending",
+            "ticket_count": 1
+          },
+          {
+            "priority": "low",
+            "status": "Reopened",
+            "ticket_count": 385
+          },
+          {
+            "priority": "low",
+            "status": "Resolved",
+            "ticket_count": 1
+          },
+          {
+            "priority": "medium",
+            "status": "Closed",
+            "ticket_count": 5115
+          },
+          {
+            "priority": "medium",
+            "status": "Open",
+            "ticket_count": 1033
+          },
+          {
+            "priority": "medium",
+            "status": "Overdue",
+            "ticket_count": 1603
+          },
+          {
+            "priority": "medium",
+            "status": "Pending",
+            "ticket_count": 4
+          },
+          {
+            "priority": "medium",
+            "status": "Reopened",
+            "ticket_count": 753
+          },
+          {
+            "priority": "medium",
+            "status": "Resolved",
+            "ticket_count": 8
+          },
+          {
+            "priority": "urgent",
+            "status": "Closed",
+            "ticket_count": 501
+          },
+          {
+            "priority": "urgent",
+            "status": "Open",
+            "ticket_count": 88
+          },
+          {
+            "priority": "urgent",
+            "status": "Overdue",
+            "ticket_count": 143
+          },
+          {
+            "priority": "urgent",
+            "status": "Reopened",
+            "ticket_count": 71
+          },
+          {
+            "priority": "urgent",
+            "status": "Resolved",
+            "ticket_count": 8
+          }
+        ],
+        "attempts": [
+          {
+            "raw": "```json\n{\"tool\": \"run_sql\", \"sql\": \"SELECT priority, status, COUNT(*) AS ticket_count FROM rpt.tickets GROUP BY priority, status ORDER BY priority ASC, status ASC;\"}\n```",
+            "call": {
+              "kind": "run_sql",
+              "sql": "SELECT priority, status, COUNT(*) AS ticket_count FROM rpt.tickets GROUP BY priority, status ORDER BY priority ASC, status ASC"
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "time_status": "all_time",
+        "tool": "run_sql",
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": null,
+          "goal": "Get a breakdown of ticket counts by priority and status",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "breakdown",
+          "depends_on": []
+        }
+      }
+    ],
+    "domain_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"standard\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": null,\n      \"goal\": \"Get a breakdown of ticket counts by priority and status\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"answer_type\": \"breakdown\",\n      \"depends_on\": []\n    }\n  ]\n}\n```",
+    "plan": {
+      "kind": "plan",
+      "depth": "standard",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": null,
+          "goal": "Get a breakdown of ticket counts by priority and status",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "breakdown",
+          "depends_on": []
+        }
+      ]
+    },
+    "facts": "RESULT: 22 group(s)\ngroup_by: group\ntotal_ticket_count: 20037\n  high / Closed: 3719\n  high / Open: 672\n  high / Overdue: 1225\n  high / Reopened: 549\n  high / Resolved: 3\n  ... 17 more groups not listed",
+    "grounded": true,
+    "briefing_raw": "Across all time, there are **20,037** total tickets distributed across 22 groups. A breakdown of these tickets by priority and status shows that for the **high** priority segment, there are **3,719** Closed tickets, **1,225** Overdue tickets, **672** Open tickets, and **549** Reopened tickets, with **3** Resolved tickets."
+  }
+}

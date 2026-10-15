@@ -1,0 +1,34 @@
+{
+  "version": "0.1.0",
+  "logging": {
+    "level": "info",
+    "file": "logs/ur-signaling-sip-smoke.log"
+  },
+  "redis": {
+    "pubsub": {
+      "host": "10.180.2.106",
+      "port": 6379,
+      "password": "ppR3d15@2106"
+    },
+    "store": {
+      "host": "10.180.2.109",
+      "port": 6379,
+      "password": "ppR3d15@2109"
+    },
+    "pubsub_channel": "InterrogatorEventPREPRO",
+    "pbx_alive_ttl_sec": 30,
+    "call_live_ttl_sec": 3600
+  },
+  "pbx": {
+    "snapshot_path": "data/pbx_snapshot_sip_smoke.json",
+    "allowed_ips": ["10.180.1.75", "10.180.2.70"]
+  },
+  "sip": {
+    "udp_listen": "192.168.13.190:5060",
+    "tcp_listen": "192.168.13.190:5060",
+    "tls_listen": "192.168.13.190:5061",
+    "wss_listen": "192.168.13.190:57344",
+    "certificate_dir": "certs/sofia",
+    "contact_wss_host": "192.168.13.190"
+  }
+}

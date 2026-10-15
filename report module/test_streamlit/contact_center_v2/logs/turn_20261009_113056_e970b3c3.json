@@ -1,0 +1,60 @@
+{
+  "turn_id": "e970b3c3",
+  "timestamp": "2026-10-09T06:00:56.297292+00:00",
+  "question": "what is the overall average handling time for last 7 days",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1016,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Average handling time for the past 7 days</strong></p><p>The average handling time for the past 7 days (UTC) was <strong>59.45 minutes</strong>.</p><p>Would you like to see this average broken down by channel?</p>",
+  "card": "card: kpi r1",
+  "facts": "result_id: r1\nwindow: past 7 days (UTC)\nkpi: avg_handle_time\ncertified: true\nunit: minutes\ntask_goal: Calculate the average handling time for all conversations.\nanswer_type: number\nrow_count: 1\nrow 1: avg_handle_time=59.45",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1016,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "what is the overall average handling time for last 7 days",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants the overall average handling time for the last 7 days.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Calculate the average handling time for all conversations.",
+          "time": "last 7 days",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "avg_handle_time",
+        "row_count": 1
+      }
+    ],
+    "facts": "result_id: r1\nwindow: past 7 days (UTC)\nkpi: avg_handle_time\ncertified: true\nunit: minutes\ntask_goal: Calculate the average handling time for all conversations.\nanswer_type: number\nrow_count: 1\nrow 1: avg_handle_time=59.45",
+    "grounded": true,
+    "card": "card: kpi r1"
+  },
+  "error": null
+}

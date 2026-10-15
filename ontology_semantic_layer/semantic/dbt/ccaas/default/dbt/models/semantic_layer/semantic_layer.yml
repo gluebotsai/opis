@@ -1,0 +1,1107 @@
+semantic_models:
+
+# ==========================================
+# Conversations
+# ==========================================
+  - name: conversations
+    model: ref('mart_conversations')
+    defaults:
+      agg_time_dimension: created_at
+    entities:
+      - name: conversation
+        type: primary
+        expr: conversation_id
+      - name: queue
+        type: foreign
+        expr: queue_id
+      - name: agent
+        type: foreign
+        expr: assigned_agent_id
+      - name: organization
+        type: foreign
+        expr: organization_id
+      - name: contact
+        type: foreign
+        expr: contact_id
+    dimensions:
+      - name: organization_id
+        type: categorical
+        expr: organization_id
+      - name: created_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: channel
+        type: categorical
+      - name: direction
+        type: categorical
+      - name: queue_name
+        type: categorical
+      - name: assigned_agent_name
+        type: categorical
+      - name: status
+        type: categorical
+      - name: lifecycle_state
+        type: categorical
+      - name: sla_status
+        type: categorical
+      - name: disposition_code
+        type: categorical
+      - name: resolution_code
+        type: categorical
+      - name: priority
+        type: categorical
+      - name: had_handoff
+        type: categorical
+      - name: is_ai_only_completed
+        type: categorical
+      - name: is_handled
+        type: categorical
+      - name: is_resolved
+        type: categorical
+      - name: is_open
+        type: categorical
+      - name: resolved_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: closed_at
+        type: time
+        type_params:
+          time_granularity: day
+    measures:
+      - name: conversation_count
+        agg: count
+        expr: conversation_id
+      - name: unique_contact_count
+        agg: count_distinct
+        expr: contact_id
+      - name: handoff_conversation_count
+        agg: count
+        expr: conversation_id
+      - name: handled_conversation_count
+        agg: count
+        expr: "CASE WHEN is_handled = true THEN conversation_id END"
+      # NOTE: bucketed by created_at (model default). Counts conversations
+      # CREATED in the window that are now resolved — not conversations
+      # RESOLVED in the window. Use resolved_conversation_count_by_resolved_at
+      # for a true "resolved in this window" number.
+      - name: resolved_conversation_count
+        agg: count
+        expr: "CASE WHEN is_resolved = true THEN conversation_id END"
+      # bucketed by the actual resolved_at column — use this for any
+      # "resolved last N days / this week" style query.
+      - name: resolved_conversation_count_by_resolved_at
+        agg: count
+        expr: "CASE WHEN is_resolved = true THEN conversation_id END"
+        agg_time_dimension: resolved_at
+      - name: avg_speed_of_answer_seconds
+        agg: average
+        expr: speed_of_answer_seconds
+      - name: avg_first_response_seconds
+        agg: average
+        expr: first_response_seconds
+
+# ==========================================
+# Conversation Assignments (also canonical AHT source)
+# ==========================================
+  - name: conversation_assignments
+    model: ref('mart_conversation_assignments')
+    defaults:
+      agg_time_dimension: offered_at
+    entities:
+      - name: assignment
+        type: primary
+        expr: assignment_id
+      - name: conversation
+        type: foreign
+        expr: conversation_id
+      - name: agent
+        type: foreign
+        expr: agent_id
+      - name: queue
+        type: foreign
+        expr: queue_id
+      - name: organization        # NEW — shared join path for ratio/bundle metrics
+        type: foreign
+        expr: organization_id
+    dimensions:
+      - name: organization_id
+        type: categorical
+        expr: organization_id
+      - name: offered_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: channel
+        type: categorical
+      - name: direction
+        type: categorical
+      - name: queue_name
+        type: categorical
+      - name: agent_name
+        type: categorical
+      - name: state
+        type: categorical
+      - name: reason
+        type: categorical
+      - name: is_completed_leg
+        type: categorical
+    measures:
+      - name: assignment_count
+        agg: count
+        expr: assignment_id
+      - name: human_handle_seconds_sum
+        agg: sum
+        expr: human_handle_seconds
+      - name: completed_leg_count
+        agg: count
+        expr: "CASE WHEN is_completed_leg = true THEN assignment_id END"
+
+# ==========================================
+# SLA State
+# ==========================================
+  - name: conversation_sla_state
+    model: ref('mart_conversation_sla_state')
+    defaults:
+      agg_time_dimension: updated_at
+    entities:
+      - name: sla_state
+        type: primary
+        expr: sla_state_id
+      - name: conversation
+        type: foreign
+        expr: conversation_id
+      - name: queue                    # NEW
+        type: foreign                  # NEW
+        expr: queue_id                 # NEW
+      - name: organization             # NEW — shared join path for ratio/bundle metrics
+        type: foreign
+        expr: organization_id
+    dimensions:
+      - name: organization_id
+        type: categorical
+        expr: organization_id
+      - name: updated_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: channel
+        type: categorical
+      - name: direction
+        type: categorical
+      - name: queue_name
+        type: categorical
+      - name: priority
+        type: categorical
+    measures:
+      - name: sla_state_count
+        agg: count
+        expr: sla_state_id
+      - name: breached_count
+        agg: sum
+        expr: "CASE WHEN breached_at IS NOT NULL THEN 1 ELSE 0 END"
+
+# ==========================================
+# Agents (operational CCaaS profile — has display name)
+# ==========================================
+  - name: agents
+    model: ref('mart_agents')
+    defaults:
+      agg_time_dimension: created_at
+    entities:
+      - name: agent
+        type: primary
+        expr: agent_id
+      - name: organization
+        type: foreign
+        expr: organization_id
+    dimensions:
+      - name: organization_id
+        type: categorical
+        expr: organization_id
+      - name: created_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: status
+        type: categorical
+      - name: agent_name
+        type: categorical
+    measures:
+      - name: agent_count
+        agg: count
+        expr: agent_id
+
+# ==========================================
+# Agent Tasks
+# ==========================================
+  - name: agent_tasks
+    model: ref('mart_agent_tasks')
+    defaults:
+      agg_time_dimension: created_at
+    entities:
+      - name: task
+        type: primary
+        expr: task_id
+      - name: assigned_user
+        type: foreign
+        expr: assigned_user_id
+      - name: organization        # NEW — shared join path for ratio/bundle metrics
+        type: foreign
+        expr: organization_id
+    dimensions:
+      - name: organization_id
+        type: categorical
+        expr: organization_id
+      - name: created_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: task_type
+        type: categorical
+      - name: status
+        type: categorical
+      - name: priority
+        type: categorical
+      - name: channel
+        type: categorical
+    measures:
+      - name: task_count
+        agg: count
+        expr: task_id
+      - name: distinct_agents_with_tasks
+        agg: count_distinct
+        expr: assigned_user_id
+
+# ==========================================
+# Conversation Dispositions
+# ==========================================
+  - name: conversation_dispositions
+    model: ref('mart_conversation_dispositions')
+    defaults:
+      agg_time_dimension: applied_at
+    entities:
+      - name: disposition_entry
+        type: primary
+        expr: disposition_entry_id
+      - name: conversation
+        type: foreign
+        expr: conversation_id
+      - name: agent
+        type: foreign
+        expr: agent_id
+      - name: disposition
+        type: foreign
+        expr: disposition_id
+      - name: organization        # NEW — shared join path for ratio/bundle metrics
+        type: foreign
+        expr: organization_id
+    dimensions:
+      - name: organization_id
+        type: categorical
+        expr: organization_id
+      - name: applied_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: resolution_code
+        type: categorical
+      - name: is_final
+        type: categorical
+    measures:
+      - name: disposition_entry_count
+        agg: count
+        expr: disposition_entry_id
+
+# ==========================================
+# Dispositions (lookup — now exposes human-readable label)
+# ==========================================
+  - name: dispositions
+    model: ref('mart_dispositions')
+    entities:
+      - name: disposition
+        type: primary
+        expr: disposition_id
+      - name: organization        # NEW — shared join path for ratio/bundle metrics
+        type: foreign
+        expr: organization_id
+    dimensions:
+      - name: organization_id
+        type: categorical
+        expr: organization_id
+      - name: label
+        type: categorical
+      - name: category
+        type: categorical
+      - name: outcome
+        type: categorical
+      - name: is_active
+        type: categorical
+
+# ==========================================
+# Conversation Transfers
+# ==========================================
+  - name: conversation_transfers
+    model: ref('mart_conversation_transfers')
+    defaults:
+      agg_time_dimension: requested_at
+    entities:
+      - name: transfer
+        type: primary
+        expr: transfer_id
+      - name: conversation
+        type: foreign
+        expr: conversation_id
+      - name: organization        # NEW — shared join path for ratio/bundle metrics
+        type: foreign
+        expr: organization_id
+    dimensions:
+      - name: organization_id
+        type: categorical
+        expr: organization_id
+      - name: requested_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: state
+        type: categorical
+      - name: resolution_code
+        type: categorical
+    measures:
+      - name: transfer_count
+        agg: count
+        expr: transfer_id
+
+# ==========================================
+# Setup Users (human agent/employee directory)
+# ==========================================
+  - name: setup_users
+    model: ref('mart_setup_users')
+    defaults:
+      agg_time_dimension: created_at
+    entities:
+      - name: user
+        type: primary
+        expr: user_id
+      - name: team
+        type: foreign
+        expr: team_id
+      - name: organization
+        type: foreign
+        expr: organization_id
+    dimensions:
+      - name: organization_id
+        type: categorical
+        expr: organization_id
+      - name: created_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: status
+        type: categorical
+      - name: primary_language
+        type: categorical
+      - name: user_name
+        type: categorical
+    measures:
+      - name: user_count
+        agg: count
+        expr: user_id
+
+# ==========================================
+# Real Queues (setup_ccaas_queues)
+# ==========================================
+  - name: setup_ccaas_queues
+    model: ref('mart_setup_ccaas_queues')
+    defaults:
+      agg_time_dimension: created_at
+    entities:
+      - name: queue
+        type: primary
+        expr: queue_id
+      - name: team
+        type: foreign
+        expr: team_id
+      - name: organization
+        type: foreign
+        expr: organization_id
+    dimensions:
+      - name: organization_id
+        type: categorical
+        expr: organization_id
+      - name: created_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: status
+        type: categorical
+      - name: queue_name
+        type: categorical
+    measures:
+      - name: queue_count
+        agg: count
+        expr: queue_id
+
+# ==========================================
+# Queue-Agent Assignments (capacity/skills)
+# ==========================================
+  - name: setup_ccaas_queue_agents
+    model: ref('mart_setup_ccaas_queue_agents')
+    defaults:
+      agg_time_dimension: created_at
+    entities:
+      - name: queue_agent
+        type: primary
+        expr: queue_agent_id
+      - name: queue
+        type: foreign
+        expr: queue_id
+      - name: user
+        type: foreign
+        expr: user_id
+      - name: organization        # NEW — shared join path for ratio/bundle metrics
+        type: foreign
+        expr: organization_id
+    dimensions:
+      - name: organization_id
+        type: categorical
+        expr: organization_id
+      - name: created_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: shift_type
+        type: categorical
+      - name: call_type
+        type: categorical
+      - name: handles_calls
+        type: categorical
+      - name: handles_email
+        type: categorical
+      - name: handles_chat
+        type: categorical
+      - name: handles_whatsapp
+        type: categorical
+    measures:
+      - name: queue_agent_count
+        agg: count
+        expr: queue_agent_id
+
+# ==========================================
+# Teams
+# ==========================================
+  - name: setup_teams
+    model: ref('mart_setup_teams')
+    defaults:
+      agg_time_dimension: created_at
+    entities:
+      - name: team
+        type: primary
+        expr: team_id
+      - name: organization
+        type: foreign
+        expr: organization_id
+    dimensions:
+      - name: organization_id
+        type: categorical
+        expr: organization_id
+      - name: created_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: status
+        type: categorical
+      - name: team_name
+        type: categorical
+    measures:
+      - name: team_count
+        agg: count
+        expr: team_id
+
+# ==========================================
+# Conversation Durations consolidated directly into conversations semantic model
+# ==========================================
+
+# ==========================================
+# Agent Capacity (occupancy — capacity-based proxy)
+# ==========================================
+  - name: agent_capacity
+    model: ref('mart_agent_capacity')
+    defaults:
+      agg_time_dimension: updated_at
+    entities:
+      - name: capacity
+        type: primary
+        expr: capacity_id
+      - name: agent
+        type: foreign
+        expr: agent_id
+      - name: organization        # NEW — shared join path for ratio/bundle metrics
+        type: foreign
+        expr: organization_id
+    dimensions:
+      - name: organization_id
+        type: categorical
+        expr: organization_id
+      - name: updated_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: channel
+        type: categorical
+    measures:
+      - name: total_active_count
+        agg: sum
+        expr: active_count
+      - name: total_max_concurrency
+        agg: sum
+        expr: max_concurrency
+
+# ==========================================
+# Agent Presence History (occupancy — presence-based proxy)
+# ==========================================
+  - name: agent_presence_history
+    model: ref('mart_agent_presence_history')
+    defaults:
+      agg_time_dimension: started_at
+    entities:
+      - name: presence_event
+        type: primary
+        expr: presence_event_id
+      - name: agent
+        type: foreign
+        expr: agent_id
+      - name: organization        # NEW — shared join path for ratio/bundle metrics
+        type: foreign
+        expr: organization_id
+    dimensions:
+      - name: organization_id
+        type: categorical
+        expr: organization_id
+      - name: started_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: new_state
+        type: categorical
+      - name: is_handling_or_wrap
+        type: categorical
+      - name: is_logged_in_eligible
+        type: categorical
+    measures:
+      - name: presence_interval_seconds_sum
+        agg: sum
+        expr: interval_seconds
+
+# ==========================================
+# Copilot Turns (agent-assist suggestion proxy)
+# ==========================================
+  - name: copilot_turns
+    model: ref('mart_copilot_turns')
+    defaults:
+      agg_time_dimension: created_at
+    entities:
+      - name: suggestion
+        type: primary
+        expr: suggestion_id
+      - name: conversation
+        type: foreign
+        expr: conversation_id
+      - name: organization        # NEW — shared join path for ratio/bundle metrics
+        type: foreign
+        expr: organization_id
+    dimensions:
+      - name: organization_id
+        type: categorical
+        expr: organization_id
+      - name: created_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: suggestion_disposition
+        type: categorical
+      - name: skill_key
+        type: categorical
+    measures:
+      - name: suggestion_count
+        agg: count
+        expr: suggestion_id
+
+# ==========================================
+# Copilot Skill Executions (tool execution proxy)
+# ==========================================
+  - name: copilot_skill_executions
+    model: ref('mart_copilot_skill_executions')
+    defaults:
+      agg_time_dimension: created_at
+    entities:
+      - name: execution
+        type: primary
+        expr: execution_id
+      - name: conversation
+        type: foreign
+        expr: conversation_id
+      - name: organization        # NEW — shared join path for ratio/bundle metrics
+        type: foreign
+        expr: organization_id
+    dimensions:
+      - name: organization_id
+        type: categorical
+        expr: organization_id
+      - name: created_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: execution_status
+        type: categorical
+      - name: tool_key
+        type: categorical
+    measures:
+      - name: execution_count
+        agg: count
+        expr: execution_id
+
+
+metrics:
+  # ---------- Volume ----------
+  - name: total_conversations
+    label: "Total Conversations"
+    type: simple
+    type_params:
+      measure: conversation_count
+
+  - name: handled_volume
+    label: "Handled Conversations"
+    description: "Total conversations handled by human agents or completed by an AI bot."
+    type: simple
+    type_params:
+      measure: handled_conversation_count
+
+  - name: resolved_conversations_count
+    label: "Resolved Conversations Count"
+    description: "Total conversations resolved."
+    type: simple
+    type_params:
+      measure: resolved_conversation_count
+
+  - name: resolution_rate
+    label: "Resolution Rate"
+    description: "Proportion of total conversations that reached a resolved status."
+    type: ratio
+    type_params:
+      numerator: resolved_conversations_count
+      denominator: total_conversations
+
+  - name: webchat_volume
+    label: "Webchat Volume"
+    type: simple
+    type_params:
+      measure: conversation_count
+    filter: |
+      {{ Dimension('conversation__channel') }} = 'webchat'
+      
+  - name: call_volume
+    label: "Call Volume"
+    description: "Voice channel volume (staging normalizes call/voice to voice)."
+    type: simple
+    type_params:
+      measure: conversation_count
+    filter: |
+      {{ Dimension('conversation__channel') }} = 'voice'
+
+  - name: chat_volume
+    label: "Chat Volume (all non-voice channels)"
+    type: simple
+    type_params:
+      measure: conversation_count
+    filter: |
+      {{ Dimension('conversation__channel') }} != 'voice'
+
+  - name: email_volume
+    label: "Email Volume"
+    type: simple
+    type_params:
+      measure: conversation_count
+    filter: |
+      {{ Dimension('conversation__channel') }} = 'email'
+
+  - name: instagram_volume
+    label: "Instagram Volume"
+    type: simple
+    type_params:
+      measure: conversation_count
+    filter: |
+      {{ Dimension('conversation__channel') }} = 'instagram'
+
+  - name: whatsapp_volume
+    label: "WhatsApp Volume"
+    type: simple
+    type_params:
+      measure: conversation_count
+    filter: |
+      {{ Dimension('conversation__channel') }} = 'whatsapp'
+
+  - name: facebook_volume
+    label: "Facebook Volume"
+    type: simple
+    type_params:
+      measure: conversation_count
+    filter: |
+      {{ Dimension('conversation__channel') }} = 'facebook'
+
+  - name: social_media_volume
+    label: "Social Media Volume"
+    type: simple
+    type_params:
+      measure: conversation_count
+    filter: |
+      {{ Dimension('conversation__channel') }} IN ('whatsapp', 'instagram', 'facebook')
+  - name: unique_contacts_handled
+    label: "Unique Contacts Handled"
+    type: simple
+    type_params:
+      measure: unique_contact_count
+
+  - name: open_conversations
+    label: "Open Conversations"
+    description: "Queue-depth snapshot: not-yet-terminal (status not in resolved/closed). Org-scoped — includes unassigned queued conversations."
+    type: simple
+    type_params:
+      measure: conversation_count
+    filter: |
+      {{ Dimension('conversation__is_open') }} = true
+
+  # ---------- SLA ----------
+  - name: breached_sla_count
+    label: "SLA Breaches"
+    type: simple
+    type_params:
+      measure: breached_count
+
+  - name: total_sla_states
+    label: "Total SLA Tracked Conversations"
+    type: simple
+    type_params:
+      measure: sla_state_count
+
+  - name: sla_breach_rate
+    label: "SLA Breach Rate"
+    type: ratio
+    type_params:
+      numerator: breached_sla_count
+      denominator: total_sla_states
+
+  # ---------- Agents (operational + configured) ----------
+  - name: total_agents
+    label: "Total Agents"
+    type: simple
+    type_params:
+      measure: agent_count
+
+  - name: active_agents
+    label: "Active Agents"
+    type: simple
+    type_params:
+      measure: agent_count
+    filter: |
+      {{ Dimension('agent__status') }} = 'active'
+
+  - name: total_agents_setup
+    label: "Total Configured Agents"
+    type: simple
+    type_params:
+      measure: user_count
+
+  - name: active_agents_setup
+    label: "Active Configured Agents"
+    type: simple
+    type_params:
+      measure: user_count
+    filter: |
+      {{ Dimension('user__status') }} = 'active'
+
+  # ---------- Tasks ----------
+  - name: open_agent_tasks
+    label: "Open Agent Tasks"
+    type: simple
+    type_params:
+      measure: task_count
+    filter: |
+      {{ Dimension('task__status') }} = 'open'
+
+  - name: callback_tasks
+    label: "Callback Tasks"
+    type: simple
+    type_params:
+      measure: task_count
+    filter: |
+      {{ Dimension('task__task_type') }} = 'callback'
+
+  - name: follow_up_tasks
+    label: "Follow-up Tasks"
+    type: simple
+    type_params:
+      measure: task_count
+    filter: |
+      {{ Dimension('task__task_type') }} = 'follow_up'
+
+  - name: suggestion_tasks
+    label: "Suggestion Tasks"
+    type: simple
+    type_params:
+      measure: task_count
+    filter: |
+      {{ Dimension('task__task_type') }} = 'suggestion'
+
+  - name: agents_assigned_callback
+    label: "Agents Assigned to Callback Tasks"
+    type: simple
+    type_params:
+      measure: distinct_agents_with_tasks
+    filter: |
+      {{ Dimension('task__task_type') }} = 'callback'
+
+  # ---------- Transfers / Handover (kept BOTH definitions, per decision) ----------
+  - name: total_transfers
+    label: "Total Conversation Transfers"
+    type: simple
+    type_params:
+      measure: transfer_count
+
+  - name: handover_rate
+    label: "Handover Rate (transfer-based)"
+    description: "Proportion of conversations that were transferred at least once (queue/agent transfer events)."
+    type: ratio
+    type_params:
+      numerator: total_transfers
+      denominator: total_conversations
+
+  - name: handoff_conversations
+    label: "Conversations with AI-to-Human Handoff"
+    type: simple
+    type_params:
+      measure: handoff_conversation_count
+    filter: |
+      {{ Dimension('conversation__had_handoff') }} = true
+
+  - name: ai_handover_rate
+    label: "AI-to-Human Handover Rate (handoff_reason-based)"
+    description: "Proportion of conversations with a non-null handoff_reason. Proxy — no dedicated HandoverEvent table exists."
+    type: ratio
+    type_params:
+      numerator: handoff_conversations
+      denominator: total_conversations
+
+  - name: ai_only_completed_conversations
+    label: "AI-Only Completed Conversations"
+    type: simple
+    type_params:
+      measure: conversation_count
+    filter: |
+      {{ Dimension('conversation__is_ai_only_completed') }} = true
+
+  - name: ai_containment_rate
+    label: "AI Containment Rate"
+    description: "Proxy: conversations that reached a terminal state with no human ever assigned and no handoff ever requested, over all conversations. lifecycle_state cannot be used (always 'ended' in prod)."
+    type: ratio
+    type_params:
+      numerator: ai_only_completed_conversations
+      denominator: total_conversations
+
+  # ---------- Dispositions ----------
+  - name: resolved_dispositions
+    label: "Resolved Conversations"
+    description: "is_final is always true in prod (no-op as a filter) — use resolution_code, which has real variation."
+    type: simple
+    type_params:
+      measure: disposition_entry_count
+    filter: |
+      {{ Dimension('disposition_entry__resolution_code') }} = 'resolved'
+
+  # ---------- Setup / config ----------
+  - name: total_queues_configured
+    label: "Total Configured Queues"
+    type: simple
+    type_params:
+      measure: queue_count
+
+  - name: total_queue_agent_assignments
+    label: "Total Queue-Agent Assignments"
+    type: simple
+    type_params:
+      measure: queue_agent_count
+
+  - name: total_teams
+    label: "Total Teams"
+    type: simple
+    type_params:
+      measure: team_count
+
+  # ---------- Speed / durations ----------
+  - name: average_speed_of_answer
+    label: "Average Speed of Answer (seconds)"
+    description: "Average time between a conversation entering the queue and being assigned to an agent."
+    type: simple
+    type_params:
+      measure: avg_speed_of_answer_seconds
+
+  - name: average_first_response_time
+    label: "Average First Response Time (seconds)"
+    description: "Average time between conversation creation and first response."
+    type: simple
+    type_params:
+      measure: avg_first_response_seconds
+
+  - name: human_handle_seconds_sum
+    label: "Total Human Handle Seconds"
+    type: simple
+    type_params:
+      measure: human_handle_seconds_sum
+
+  - name: completed_leg_count
+    label: "Completed Assignment Legs"
+    type: simple
+    type_params:
+      measure: completed_leg_count
+
+  - name: average_handle_time
+    label: "Average Handle Time (seconds)"
+    description: "Canonical AHT: per human leg, accepted_at -> ended_at on conversation_assignments (agreed definition)."
+    type: derived
+    type_params:
+      expr: "human_handle_seconds_sum / nullif(completed_leg_count, 0)"
+      metrics:
+        - name: human_handle_seconds_sum
+        - name: completed_leg_count
+
+  # ---------- Occupancy (BOTH bases, per decision) ----------
+  - name: total_active_agent_count
+    label: "Total Active Agent Count"
+    type: simple
+    type_params:
+      measure: total_active_count
+
+  - name: total_agent_capacity
+    label: "Total Agent Capacity"
+    type: simple
+    type_params:
+      measure: total_max_concurrency
+
+  - name: human_agent_occupancy_rate_capacity
+    label: "Human Agent Occupancy Rate (capacity-based)"
+    description: "Real-time snapshot: active_count / max_concurrency from agent_capacity."
+    type: ratio
+    type_params:
+      numerator: total_active_agent_count
+      denominator: total_agent_capacity
+
+  - name: handling_or_wrap_seconds
+    label: "Handling/Wrap Seconds"
+    type: simple
+    type_params:
+      measure: presence_interval_seconds_sum
+    filter: |
+      {{ Dimension('presence_event__is_handling_or_wrap') }} = true
+
+  - name: logged_in_eligible_seconds
+    label: "Logged-In Eligible Seconds"
+    type: simple
+    type_params:
+      measure: presence_interval_seconds_sum
+    filter: |
+      {{ Dimension('presence_event__is_logged_in_eligible') }} = true
+
+  - name: human_agent_occupancy_rate_presence
+    label: "Human Agent Occupancy Rate (presence-based)"
+    description: "Time-based: (busy + after_contact_work seconds) / (all non-offline seconds), from agent_presence_history."
+    type: ratio
+    type_params:
+      numerator: handling_or_wrap_seconds
+      denominator: logged_in_eligible_seconds
+
+  # ---------- Missed contact (assignment-based, existing definition kept) ----------
+  - name: missed_assignments
+    label: "Missed Assignments"
+    type: simple
+    type_params:
+      measure: assignment_count
+    filter: |
+      {{ Dimension('assignment__state') }} IN ('rejected', 'expired')
+
+  - name: total_assignments
+    label: "Total Assignments"
+    type: simple
+    type_params:
+      measure: assignment_count
+
+  - name: missed_contact_rate
+    label: "Missed Contact Rate"
+    description: "Proportion of assignment attempts that were rejected or expired rather than accepted."
+    type: ratio
+    type_params:
+      numerator: missed_assignments
+      denominator: total_assignments
+
+  # ---------- Copilot / tool execution (new) ----------
+  - name: tool_executions_total
+    label: "Total Tool Executions"
+    type: simple
+    type_params:
+      measure: execution_count
+    filter: |
+      {{ Dimension('execution__execution_status') }} IN ('succeeded', 'failed', 'cancelled')
+
+  - name: tool_executions_succeeded
+    label: "Successful Tool Executions"
+    type: simple
+    type_params:
+      measure: execution_count
+    filter: |
+      {{ Dimension('execution__execution_status') }} = 'succeeded'
+
+  - name: tool_success_rate
+    label: "Tool Execution Success Rate"
+    description: "Proxy over copilot_skill_executions. Confirm execution_status distinct values in prod before trusting this."
+    type: ratio
+    type_params:
+      numerator: tool_executions_succeeded
+      denominator: tool_executions_total
+
+  - name: agent_assist_suggestions_total
+    label: "Total Agent-Assist Suggestions"
+    type: simple
+    type_params:
+      measure: suggestion_count
+
+  - name: agent_assist_accepted_or_modified
+    label: "Agent-Assist Accepted or Modified"
+    type: simple
+    type_params:
+      measure: suggestion_count
+    filter: |
+      {{ Dimension('suggestion__suggestion_disposition') }} IN ('accepted', 'modified')
+
+  - name: agent_assist_modified
+    label: "Agent-Assist Modified"
+    type: simple
+    type_params:
+      measure: suggestion_count
+    filter: |
+      {{ Dimension('suggestion__suggestion_disposition') }} = 'modified'
+
+  - name: agent_assist_adoption_rate
+    label: "Agent Assist Adoption Rate"
+    description: "Proxy: (accepted + modified) / all suggestions. Disposition inferred from `accepted` boolean + text diff."
+    type: ratio
+    type_params:
+      numerator: agent_assist_accepted_or_modified
+      denominator: agent_assist_suggestions_total
+
+  - name: agent_assist_modification_rate
+    label: "Agent Assist Modification Rate"
+    description: "Proxy: modified / (accepted + modified)."
+    type: ratio
+    type_params:
+      numerator: agent_assist_modified
+      denominator: agent_assist_accepted_or_modified

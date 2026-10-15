@@ -1,0 +1,59 @@
+version: 1
+# Canonical Cypher few-shot examples for kg_analytics_executor.
+# Org isolation is structural. Do NOT filter by organization_id.
+
+examples:
+  - id: ticket_routed_to_queue
+    goal: "Show ticket #104 with its queue"
+    cypher: |
+      MATCH (t:Ticket)-[:ROUTED_TO]->(q:SupportQueue)
+      WHERE t.ticket_number = $ticket_number OR t.ticket_number = '#' + $ticket_number
+      RETURN t.ticket_number AS ticket_number, t.status AS status, q.queue_name AS queue
+      LIMIT 1
+
+  - id: note_written_by
+    goal: "Who wrote notes on ticket 104?"
+    cypher: |
+      MATCH (t:Ticket)-[:HAS]->(n:Note)-[:WRITTEN_BY]->(a:SupportAgent)
+      WHERE t.ticket_number = $ticket_number OR t.ticket_number = '#' + $ticket_number
+      RETURN coalesce(a.display_name, n.author_name) AS author,
+             t.ticket_number AS ticket_number,
+             n.created_at AS note_at
+      ORDER BY n.created_at DESC
+      LIMIT 50
+
+  - id: staffing_member_of
+    goal: "Who is staffing the Billing queue?"
+    cypher: |
+      MATCH (a:SupportAgent)-[:MEMBER_OF]->(q:SupportQueue)
+      WHERE q.queue_name = $queue_name
+      RETURN q.queue_name AS queue, coalesce(a.display_name, a.support_email) AS agent, a.role AS role
+      LIMIT 50
+
+  - id: staffing_all_queues
+    goal: "Who is staffing the queues?"
+    cypher: |
+      MATCH (a:SupportAgent)-[:MEMBER_OF]->(q:SupportQueue)
+      RETURN q.queue_name AS queue, coalesce(a.display_name, a.support_email) AS agent, a.role AS role
+      ORDER BY q.queue_name, agent
+      LIMIT 50
+
+  - id: contact_ticket_history
+    goal: "Ticket history for this customer"
+    cypher: |
+      MATCH (c:Contact)-[:HAS]->(h:TicketHistory)
+      WHERE c.customer_name = $customer_name
+      RETURN h.ticket_number AS ticket_number, h.status AS status, h.created_at AS created_at
+      ORDER BY h.created_at DESC
+      LIMIT 50
+
+  - id: why_breakdown_by_queue
+    goal: "Why are tickets piling up? Break it down by queue."
+    cypher: |
+      MATCH (t:Ticket)
+      WHERE t.created_at >= datetime($start) AND t.created_at < datetime($end)
+      OPTIONAL MATCH (t)-[:ROUTED_TO]->(q:SupportQueue)
+      RETURN coalesce(q.queue_name, t.queue_name) AS queue,
+             COUNT(t) AS ticket_count
+      ORDER BY ticket_count DESC
+      LIMIT 20

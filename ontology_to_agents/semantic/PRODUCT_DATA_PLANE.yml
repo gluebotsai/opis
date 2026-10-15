@@ -1,0 +1,62 @@
+# Product data plane — how tenants, people, and products share Postgres
+#
+# Live event store for web tracking is ClickHouse, not a Postgres schema.
+# CDP copies identity/event facts into cdp.* for the rest of the suite.
+
+tenant:
+  org_table: accounts.organizations
+  org_key: id                          # referenced as organization_id everywhere
+  staff_table: accounts.setup_users    # tenant's humans who log into products
+  role_table: accounts.setup_roles
+  user_role_link: accounts.setup_user_product_access  # user_id + product_id → role_id → setup_roles.id
+  org_products_table: accounts.active_products        # org-purchased SKUs (onboarding)
+  channel_configs_table: accounts.setup_channel_configs  # configured channels per product
+
+customer:
+  profile_table: cdp.customer_profile
+  identity_table: cdp.identity_keys
+  key: cdp_id                          # referenced across products
+  events_table: cdp.customer_events    # includes web-tracking facts pushed from ClickHouse
+  webtracking_identity_filter:
+    table: cdp.identity_keys
+    column: source_system
+    value: webtracking
+
+postgres_schemas:
+  accounts:   { role: platform, products: [all] }
+  cdp:        { role: customer_spine, products: [cdp, webtracking_via_push] }
+  ccass:      { role: product, products: [contact_centre] }
+  ticketing:  { role: product, products: [ticketing], note: "May be entitled under CCaaS" }
+  crm:        { role: product, products: [crm] }
+  campaign:   { role: product, products: [campaign], note: "May be entitled under CRM" }
+  inventory:  { role: catalog, products: [crm] }
+
+not_in_postgres:
+  web_tracking: ClickHouse (SDK events). dbt webtracking_models assume a web_tracking schema that is not this Postgres.
+
+commercial_nesting:
+  # Entitlement, not a second Customer type and not extra schemas.
+  - CCaaS bundle may include Ticketing
+  - CRM bundle may include Campaign
+  - CRM suite may include CCaaS, Ticketing, Campaign, CDP, web tracking
+  - Graph/ontology still uses one Customer (cdp_id) and one org (organization_id)
+
+inspect:
+  script: scripts/inspect_pg_schemas.py
+  env: .env   # pg_host pg_port pg_user pg_pass pg_db — never commit
+  last_run:
+    org_pk: accounts.organizations.id   # bigint; other tables use organization_id
+    org_row_count: 5
+    postgres_has_web_tracking_schema: false
+    identity_source_system_top:
+      [csv, cdp_core, crm, shopify, webtracking, cdc, hubspot, webchat, rrweb, ticketing]
+    table_counts:
+      accounts: 94
+      cdp: 69
+      ccass: 67
+      crm: 69
+      ticketing: 40
+      campaign: 32
+      inventory: 1
+      platform: 28
+    also_present: [campaign_marts, crm_marts, ccass_marts_aiccaas, ticketing_staging, cdp_gov, routing, cvm]

@@ -1,0 +1,108 @@
+presets:
+  camp.super:
+    agent: Campaign Hub Super Agent
+    level: L1
+    modules:
+    - cdp
+    - identity
+    - crm_account
+    - campaign_core
+    - campaign_template
+    - campaign_ops
+    usecase: Route campaign skills — create, contacts, monitoring, templates, reports.
+    prompt:
+      full_ontology: true
+      full_definitions: true
+      include_module_index: true
+      include_specialist_catalog: true
+      metrics_mode: none
+      metrics: []
+      actions:
+      - route_to_specialist
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - Route to specialists; do not run their field workflows.
+      - KPI / how-many → camp.reports or camp.reporting_mas workers, not Super.
+      route_table:
+      - Create campaign → camp.create
+      - Audience / contacts → camp.contacts
+      - Monitoring → camp.monitoring
+      - Reports → camp.reports
+      - Templates / WA → camp.templates
+  camp.monitoring:
+    agent: Campaign Monitoring Agent
+    level: L3
+    modules:
+    - campaign_core
+    - campaign_ops
+    - metrics_campaign
+    usecase: Delivery monitoring, suppression, and engagement ops via ask_semantic.
+    prompt:
+      classes:
+      - Campaign
+      - MessageDelivery
+      - AudienceSegment
+      actions:
+      - ask_semantic
+      - ask_ontology
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+  camp.templates:
+    agent: Campaign Template Agent
+    level: L3
+    modules:
+    - campaign_core
+    - campaign_template
+    usecase: Template library metrics and WhatsApp approval workflow.
+    prompt:
+      classes:
+      - MessageTemplate
+      - Campaign
+      actions:
+      - ask_semantic
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+  camp.reports:
+    agent: Campaign Reports Agent
+    level: L3
+    modules:
+    - campaign_core
+    - campaign_ops
+    - cdp
+    usecase: Delivery, engagement, web attribution metrics via ask_semantic.
+    prompt:
+      classes:
+      - Campaign
+      - MessageDelivery
+      - PerformanceReport
+      actions:
+      - ask_semantic
+      - ask_ontology
+      metrics_mode: headlines
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+  camp.reporting_mas:
+    agent: Campaign Reporting MAS
+    level: platform
+    modules:
+    - cdp
+    - identity
+    - crm_account
+    - campaign_core
+    - campaign_template
+    - campaign_ops
+    usecase: MAS catalog for KG, MetricFlow, and SQL-agent setup — not staff-chat routing.
+    prompt:
+      full_ontology: true
+      full_definitions: true
+      include_module_index: true
+      metrics_mode: full
+      metrics: []
+      actions:
+      - ask_semantic
+      - ask_ontology
+      - generate_report
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - MAS catalog / KG / MetricFlow / SQL-agent setup — not staff-chat routing.
+      - Distinct from camp.reports (runtime KPI worker; headlines only).

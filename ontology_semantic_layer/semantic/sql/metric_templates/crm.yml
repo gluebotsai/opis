@@ -1,0 +1,991 @@
+metrics:
+  account_volume:
+    product: crm
+    result_column: account_volume
+    time_column: created_at
+    table: mart_companies
+    sql: 'SELECT COUNT(DISTINCT company_id)::bigint AS account_volume
+
+      FROM crm_marts.mart_companies
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  active_arr:
+    product: crm
+    result_column: active_arr
+    time_column: starts_at
+    table: mart_contracts
+    sql: 'SELECT SUM(arr) AS active_arr
+
+      FROM crm_marts.mart_contracts
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  average_closed_deal:
+    product: crm
+    result_column: average_closed_deal
+    time_column: period_date
+    table: mart_deal_daily_summary
+    sql: 'SELECT AVG(closed_deal_count)::float AS average_closed_deal
+
+      FROM crm_marts.mart_deal_daily_summary
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  average_contact_volume:
+    product: crm
+    result_column: average_contact_volume
+    time_column: period_date
+    table: mart_contact_daily_summary
+    sql: 'SELECT AVG(contact_count)::float AS average_contact_volume
+
+      FROM crm_marts.mart_contact_daily_summary
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  average_customer_contact_count:
+    product: crm
+    result_column: average_customer_contact_count
+    time_column: period_date
+    table: mart_contact_daily_summary
+    sql: 'SELECT AVG(customer_count)::float AS average_customer_contact_count
+
+      FROM crm_marts.mart_contact_daily_summary
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  average_customer_conversion_rate:
+    product: crm
+    result_column: average_customer_conversion_rate
+    time_column: period_date
+    table: mart_contact_daily_summary
+    sql: 'SELECT AVG(daily_customer_conversion_rate)::float AS average_customer_conversion_rate
+
+      FROM crm_marts.mart_contact_daily_summary
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  average_deal_lost:
+    product: crm
+    result_column: average_deal_lost
+    time_column: period_date
+    table: mart_deal_daily_summary
+    sql: 'SELECT AVG(lost_deal_count)::float AS average_deal_lost
+
+      FROM crm_marts.mart_deal_daily_summary
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  average_deal_value:
+    product: crm
+    result_column: average_deal_value
+    time_column: created_at
+    table: mart_deals
+    sql: 'SELECT ((SELECT SUM(case when is_won then amount else 0 end) FROM crm_marts.mart_deals
+      WHERE organization_id = %s{{extra_where}}) / nullif((SELECT COUNT(*) FILTER
+      (WHERE is_won)::bigint FROM crm_marts.mart_deals WHERE organization_id = %s{{extra_where}}),
+      0))::float AS average_deal_value
+
+      '
+    default_zero: true
+  average_deal_volume:
+    product: crm
+    result_column: average_deal_volume
+    time_column: period_date
+    table: mart_deal_daily_summary
+    sql: 'SELECT AVG(deal_count)::float AS average_deal_volume
+
+      FROM crm_marts.mart_deal_daily_summary
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  average_deal_won_rate:
+    product: crm
+    result_column: average_deal_won_rate
+    time_column: period_date
+    table: mart_deal_daily_summary
+    sql: 'SELECT AVG(daily_win_rate)::float AS average_deal_won_rate
+
+      FROM crm_marts.mart_deal_daily_summary
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  average_deals_won:
+    product: crm
+    result_column: average_deals_won
+    time_column: period_date
+    table: mart_deal_daily_summary
+    sql: 'SELECT AVG(won_deal_count)::float AS average_deals_won
+
+      FROM crm_marts.mart_deal_daily_summary
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  average_distinct_product_sold_count:
+    product: crm
+    result_column: average_distinct_product_sold_count
+    time_column: period_date
+    table: mart_order_line_daily_summary
+    sql: 'SELECT AVG(distinct_products_sold)::float AS average_distinct_product_sold_count
+
+      FROM crm_marts.mart_order_line_daily_summary
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  average_eligible_lead_count:
+    product: crm
+    result_column: average_eligible_lead_count
+    time_column: period_date
+    table: mart_contact_daily_summary
+    sql: 'SELECT AVG(eligible_lead_count)::float AS average_eligible_lead_count
+
+      FROM crm_marts.mart_contact_daily_summary
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  average_loss_rate:
+    product: crm
+    result_column: average_loss_rate
+    time_column: period_date
+    table: mart_deal_daily_summary
+    sql: 'SELECT AVG(daily_loss_rate)::float AS average_loss_rate
+
+      FROM crm_marts.mart_deal_daily_summary
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  average_mql_contact_count:
+    product: crm
+    result_column: average_mql_contact_count
+    time_column: period_date
+    table: mart_contact_daily_summary
+    sql: 'SELECT AVG(mql_proxy_count)::float AS average_mql_contact_count
+
+      FROM crm_marts.mart_contact_daily_summary
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  average_mql_rate:
+    product: crm
+    result_column: average_mql_rate
+    time_column: period_date
+    table: mart_contact_daily_summary
+    sql: 'SELECT AVG(daily_mql_rate)::float AS average_mql_rate
+
+      FROM crm_marts.mart_contact_daily_summary
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  average_new_lead_volume:
+    product: crm
+    result_column: average_new_lead_volume
+    time_column: period_date
+    table: mart_contact_daily_summary
+    sql: 'SELECT AVG(new_lead_count)::float AS average_new_lead_volume
+
+      FROM crm_marts.mart_contact_daily_summary
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  average_open_pipeline_value:
+    product: crm
+    result_column: average_open_pipeline_value
+    time_column: period_date
+    table: mart_deal_daily_summary
+    sql: 'SELECT AVG(open_pipeline_amount)::float AS average_open_pipeline_value
+
+      FROM crm_marts.mart_deal_daily_summary
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  average_order_value:
+    product: crm
+    result_column: average_order_value
+    time_column: created_at
+    table: mart_orders
+    sql: 'SELECT ((SELECT SUM(total) FROM crm_marts.mart_orders WHERE organization_id
+      = %s{{extra_where}}) / nullif((SELECT COUNT(DISTINCT order_id)::bigint FROM
+      crm_marts.mart_orders WHERE organization_id = %s{{extra_where}}), 0))::float
+      AS average_order_value
+
+      '
+    default_zero: true
+  average_product_revenue:
+    product: crm
+    result_column: average_product_revenue
+    time_column: period_date
+    table: mart_order_line_daily_summary
+    sql: 'SELECT AVG(order_line_revenue_sum)::float AS average_product_revenue
+
+      FROM crm_marts.mart_order_line_daily_summary
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  average_proposal_acceptance_rate:
+    product: crm
+    result_column: average_proposal_acceptance_rate
+    time_column: period_date
+    table: mart_proposal_daily_summary
+    sql: 'SELECT AVG(daily_proposal_acceptance_rate)::float AS average_proposal_acceptance_rate
+
+      FROM crm_marts.mart_proposal_daily_summary
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  average_proposal_accepted:
+    product: crm
+    result_column: average_proposal_accepted
+    time_column: period_date
+    table: mart_proposal_daily_summary
+    sql: 'SELECT AVG(proposal_accepted_count)::float AS average_proposal_accepted
+
+      FROM crm_marts.mart_proposal_daily_summary
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  average_proposal_sent:
+    product: crm
+    result_column: average_proposal_sent
+    time_column: period_date
+    table: mart_proposal_daily_summary
+    sql: 'SELECT AVG(proposal_sent_count)::float AS average_proposal_sent
+
+      FROM crm_marts.mart_proposal_daily_summary
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  average_sales_cycle_days:
+    product: crm
+    result_column: average_sales_cycle_days
+    time_column: created_at
+    table: mart_deals
+    sql: 'SELECT ((SELECT SUM(sales_cycle_days) FROM crm_marts.mart_deals WHERE organization_id
+      = %s{{extra_where}}) / nullif((SELECT COUNT(*) FILTER (WHERE is_won)::bigint
+      FROM crm_marts.mart_deals WHERE organization_id = %s{{extra_where}}), 0))::float
+      AS average_sales_cycle_days
+
+      '
+    default_zero: true
+  average_selling_price:
+    product: crm
+    result_column: average_selling_price
+    time_column: created_at
+    table: mart_order_lines
+    sql: 'SELECT ((SELECT SUM(line_amount) FROM crm_marts.mart_order_lines WHERE organization_id
+      = %s{{extra_where}}) / nullif((SELECT SUM(quantity) FROM crm_marts.mart_order_lines
+      WHERE organization_id = %s{{extra_where}}), 0))::float AS average_selling_price
+
+      '
+    default_zero: true
+  average_units_sold:
+    product: crm
+    result_column: average_units_sold
+    time_column: period_date
+    table: mart_order_line_daily_summary
+    sql: 'SELECT AVG(units_sold_sum)::float AS average_units_sold
+
+      FROM crm_marts.mart_order_line_daily_summary
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  average_win_rate_of_the_agent:
+    product: crm
+    result_column: average_win_rate_of_the_agent
+    time_column: period_date
+    table: mart_deal_owner_daily_summary
+    sql: 'SELECT AVG(daily_agent_win_rate)::float AS average_win_rate_of_the_agent
+
+      FROM crm_marts.mart_deal_owner_daily_summary
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  closed_deals_metric:
+    product: crm
+    result_column: closed_deals_metric
+    time_column: created_at
+    table: mart_deals
+    sql: 'SELECT COUNT(*) FILTER (WHERE is_closed)::bigint AS closed_deals_metric
+
+      FROM crm_marts.mart_deals
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  completed_deal_activities_metric:
+    product: crm
+    result_column: completed_deal_activities_metric
+    time_column: created_at
+    table: mart_deal_activities
+    sql: 'SELECT COUNT(*) FILTER (WHERE is_completed)::bigint AS completed_deal_activities_metric
+
+      FROM crm_marts.mart_deal_activities
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  contact_activity_volume:
+    product: crm
+    result_column: contact_activity_volume
+    time_column: created_at
+    table: mart_contact_activities
+    sql: 'SELECT COUNT(DISTINCT contact_activity_id)::bigint AS contact_activity_volume
+
+      FROM crm_marts.mart_contact_activities
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  contact_volume:
+    product: crm
+    result_column: contact_volume
+    time_column: created_at
+    table: mart_contacts
+    sql: 'SELECT COUNT(DISTINCT contact_id)::bigint AS contact_volume
+
+      FROM crm_marts.mart_contacts
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  contacts_with_orders_metric:
+    product: crm
+    result_column: contacts_with_orders_metric
+    time_column: first_order_at
+    table: mart_contact_order_summary
+    sql: 'SELECT COUNT(DISTINCT contact_id)::bigint AS contacts_with_orders_metric
+
+      FROM crm_marts.mart_contact_order_summary
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  contract_renewal_rate:
+    product: crm
+    result_column: contract_renewal_rate
+    time_column: starts_at
+    table: mart_contracts
+    sql: "SELECT\n  (COUNT(*) FILTER (WHERE is_renewed)::bigint)::float\n  / nullIf((COUNT(DISTINCT\
+      \ contract_id)::bigint), 0) AS contract_renewal_rate\nFROM crm_marts.mart_contracts\n\
+      WHERE organization_id = %s{{extra_where}}\n"
+    default_zero: true
+  contract_volume:
+    product: crm
+    result_column: contract_volume
+    time_column: starts_at
+    table: mart_contracts
+    sql: 'SELECT COUNT(DISTINCT contract_id)::bigint AS contract_volume
+
+      FROM crm_marts.mart_contracts
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  contracts_due_for_renewal:
+    product: crm
+    result_column: contracts_due_for_renewal
+    time_column: starts_at
+    table: mart_contracts
+    sql: 'SELECT COUNT(*) FILTER (WHERE is_renewal_due_90d)::bigint AS contracts_due_for_renewal
+
+      FROM crm_marts.mart_contracts
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  customer_contact_count:
+    product: crm
+    result_column: customer_contact_count
+    time_column: created_at
+    table: mart_contacts
+    sql: 'SELECT COUNT(*) FILTER (WHERE lifecycle_stage = ''customer'')::bigint AS
+      customer_contact_count
+
+      FROM crm_marts.mart_contacts
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  customer_conversion_rate:
+    product: crm
+    result_column: customer_conversion_rate
+    time_column: created_at
+    table: mart_contacts
+    sql: "SELECT\n  (COUNT(*) FILTER (WHERE lifecycle_stage = 'customer')::bigint)::float\n\
+      \  / nullIf((COUNT(*) FILTER (WHERE lifecycle_stage in ('lead','mql','prospect','customer','subscriber'))::bigint),\
+      \ 0) AS customer_conversion_rate\nFROM crm_marts.mart_contacts\nWHERE organization_id\
+      \ = %s{{extra_where}}\n"
+    default_zero: true
+  customer_lifetime_value:
+    product: crm
+    result_column: customer_lifetime_value
+    time_column: first_order_at
+    table: mart_contact_order_summary
+    sql: 'SELECT ((SELECT SUM(lifetime_order_value) FROM crm_marts.mart_contact_order_summary
+      WHERE organization_id = %s{{extra_where}}) / nullif((SELECT COUNT(DISTINCT contact_id)::bigint
+      FROM crm_marts.mart_contact_order_summary WHERE organization_id = %s{{extra_where}}),
+      0))::float AS customer_lifetime_value
+
+      '
+    default_zero: true
+  days_sales_outstanding:
+    product: crm
+    result_column: days_sales_outstanding
+    time_column: issue_date
+    table: mart_invoices
+    sql: 'SELECT ((SELECT SUM(days_to_pay) FROM crm_marts.mart_invoices WHERE organization_id
+      = %s{{extra_where}}) / nullif((SELECT COUNT(*) FILTER (WHERE is_paid)::bigint
+      FROM crm_marts.mart_invoices WHERE organization_id = %s{{extra_where}}), 0))::float
+      AS days_sales_outstanding
+
+      '
+    default_zero: true
+  days_to_pay_total:
+    product: crm
+    result_column: days_to_pay_total
+    time_column: issue_date
+    table: mart_invoices
+    sql: 'SELECT SUM(days_to_pay) AS days_to_pay_total
+
+      FROM crm_marts.mart_invoices
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  deal_activity_completion_rate:
+    product: crm
+    result_column: deal_activity_completion_rate
+    time_column: created_at
+    table: mart_deal_activities
+    sql: "SELECT\n  (COUNT(*) FILTER (WHERE is_completed)::bigint)::float\n  / nullIf((COUNT(DISTINCT\
+      \ deal_activity_id)::bigint), 0) AS deal_activity_completion_rate\nFROM crm_marts.mart_deal_activities\n\
+      WHERE organization_id = %s{{extra_where}}\n"
+    default_zero: true
+  deal_activity_volume:
+    product: crm
+    result_column: deal_activity_volume
+    time_column: created_at
+    table: mart_deal_activities
+    sql: 'SELECT COUNT(DISTINCT deal_activity_id)::bigint AS deal_activity_volume
+
+      FROM crm_marts.mart_deal_activities
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  deal_volume:
+    product: crm
+    result_column: deal_volume
+    time_column: created_at
+    table: mart_deals
+    sql: 'SELECT COUNT(DISTINCT deal_id)::bigint AS deal_volume
+
+      FROM crm_marts.mart_deals
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  deals_with_quote_metric:
+    product: crm
+    result_column: deals_with_quote_metric
+    time_column: created_at
+    table: mart_quotes
+    sql: 'SELECT COUNT(DISTINCT deal_id)::bigint AS deals_with_quote_metric
+
+      FROM crm_marts.mart_quotes
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  distinct_products_sold_count:
+    product: crm
+    result_column: distinct_products_sold_count
+    time_column: created_at
+    table: mart_order_lines
+    sql: 'SELECT COUNT(DISTINCT product_id)::bigint AS distinct_products_sold_count
+
+      FROM crm_marts.mart_order_lines
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  eligible_lead_contact_count:
+    product: crm
+    result_column: eligible_lead_contact_count
+    time_column: created_at
+    table: mart_contacts
+    sql: 'SELECT COUNT(*) FILTER (WHERE lifecycle_stage in (''lead'',''mql'',''prospect'',''customer''))::bigint
+      AS eligible_lead_contact_count
+
+      FROM crm_marts.mart_contacts
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  franchise_node_volume:
+    product: crm
+    result_column: franchise_node_volume
+    time_column: created_at
+    table: mart_companies
+    sql: 'SELECT COUNT(*) FILTER (WHERE is_franchise_node)::bigint AS franchise_node_volume
+
+      FROM crm_marts.mart_companies
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  funnel_eligible_contact_count:
+    product: crm
+    result_column: funnel_eligible_contact_count
+    time_column: created_at
+    table: mart_contacts
+    sql: 'SELECT COUNT(*) FILTER (WHERE lifecycle_stage in (''lead'',''mql'',''prospect'',''customer'',''subscriber''))::bigint
+      AS funnel_eligible_contact_count
+
+      FROM crm_marts.mart_contacts
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  invoice_outstanding_amount:
+    product: crm
+    result_column: invoice_outstanding_amount
+    time_column: issue_date
+    table: mart_invoices
+    sql: 'SELECT SUM(case when is_outstanding then total else 0 end) AS invoice_outstanding_amount
+
+      FROM crm_marts.mart_invoices
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  invoiced_product_revenue:
+    product: crm
+    result_column: invoiced_product_revenue
+    time_column: created_at
+    table: mart_invoice_lines
+    sql: 'SELECT SUM(line_amount) AS invoiced_product_revenue
+
+      FROM crm_marts.mart_invoice_lines
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  lifetime_order_value_total:
+    product: crm
+    result_column: lifetime_order_value_total
+    time_column: first_order_at
+    table: mart_contact_order_summary
+    sql: 'SELECT SUM(lifetime_order_value) AS lifetime_order_value_total
+
+      FROM crm_marts.mart_contact_order_summary
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  loss_rate:
+    product: crm
+    result_column: loss_rate
+    time_column: created_at
+    table: mart_deals
+    sql: "SELECT\n  (COUNT(*) FILTER (WHERE is_lost)::bigint)::float\n  / nullIf((COUNT(*)\
+      \ FILTER (WHERE is_closed)::bigint), 0) AS loss_rate\nFROM crm_marts.mart_deals\n\
+      WHERE organization_id = %s{{extra_where}}\n"
+    default_zero: true
+  lost_deal_amount_total:
+    product: crm
+    result_column: lost_deal_amount_total
+    time_column: created_at
+    table: mart_deals
+    sql: 'SELECT SUM(case when is_lost then amount else 0 end) AS lost_deal_amount_total
+
+      FROM crm_marts.mart_deals
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  lost_deals_metric:
+    product: crm
+    result_column: lost_deals_metric
+    time_column: created_at
+    table: mart_deals
+    sql: 'SELECT COUNT(*) FILTER (WHERE is_lost)::bigint AS lost_deals_metric
+
+      FROM crm_marts.mart_deals
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  mql_contact_count:
+    product: crm
+    result_column: mql_contact_count
+    time_column: created_at
+    table: mart_contacts
+    sql: 'SELECT COUNT(*) FILTER (WHERE is_mql_proxy)::bigint AS mql_contact_count
+
+      FROM crm_marts.mart_contacts
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  mql_rate:
+    product: crm
+    result_column: mql_rate
+    time_column: created_at
+    table: mart_contacts
+    sql: "SELECT\n  (COUNT(*) FILTER (WHERE is_mql_proxy)::bigint)::float\n  / nullIf((COUNT(*)\
+      \ FILTER (WHERE lifecycle_stage in ('lead','mql','prospect','customer'))::bigint),\
+      \ 0) AS mql_rate\nFROM crm_marts.mart_contacts\nWHERE organization_id = %s{{extra_where}}\n"
+    default_zero: true
+  new_lead_volume:
+    product: crm
+    result_column: new_lead_volume
+    time_column: created_at
+    table: mart_contacts
+    sql: 'SELECT COUNT(*) FILTER (WHERE lifecycle_stage in (''lead'',''subscriber''))::bigint
+      AS new_lead_volume
+
+      FROM crm_marts.mart_contacts
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  open_pipeline_value:
+    product: crm
+    result_column: open_pipeline_value
+    time_column: created_at
+    table: mart_deals
+    sql: 'SELECT SUM(case when is_open then amount else 0 end) AS open_pipeline_value
+
+      FROM crm_marts.mart_deals
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  open_task_volume:
+    product: crm
+    result_column: open_task_volume
+    time_column: created_at
+    table: mart_contact_activities
+    sql: 'SELECT COUNT(*) FILTER (WHERE is_task and not is_completed)::bigint AS open_task_volume
+
+      FROM crm_marts.mart_contact_activities
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  order_gmv:
+    product: crm
+    result_column: order_gmv
+    time_column: created_at
+    table: mart_orders
+    sql: 'SELECT SUM(total) AS order_gmv
+
+      FROM crm_marts.mart_orders
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  order_volume:
+    product: crm
+    result_column: order_volume
+    time_column: created_at
+    table: mart_orders
+    sql: 'SELECT COUNT(DISTINCT order_id)::bigint AS order_volume
+
+      FROM crm_marts.mart_orders
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  paid_invoices_metric:
+    product: crm
+    result_column: paid_invoices_metric
+    time_column: issue_date
+    table: mart_invoices
+    sql: 'SELECT COUNT(*) FILTER (WHERE is_paid)::bigint AS paid_invoices_metric
+
+      FROM crm_marts.mart_invoices
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  pipeline_coverage_ratio:
+    product: crm
+    result_column: pipeline_coverage_ratio
+    time_column: created_at
+    table: mart_deals
+    sql: 'SELECT ((SELECT SUM(case when is_open then amount else 0 end) FROM crm_marts.mart_deals
+      WHERE organization_id = %s{{extra_where}}) / nullif((SELECT SUM(case when is_won
+      then amount else 0 end) FROM crm_marts.mart_deals WHERE organization_id = %s{{extra_where}}),
+      0))::float AS pipeline_coverage_ratio
+
+      '
+    default_zero: true
+  product_revenue:
+    product: crm
+    result_column: product_revenue
+    time_column: created_at
+    table: mart_order_lines
+    sql: 'SELECT SUM(line_amount) AS product_revenue
+
+      FROM crm_marts.mart_order_lines
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  product_revenue_total:
+    product: crm
+    result_column: product_revenue_total
+    time_column: created_at
+    table: mart_order_lines
+    sql: 'SELECT SUM(line_amount) AS product_revenue_total
+
+      FROM crm_marts.mart_order_lines
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  proposal_acceptance_rate:
+    product: crm
+    result_column: proposal_acceptance_rate
+    time_column: created_at
+    table: mart_proposals
+    sql: "SELECT\n  (COUNT(*) FILTER (WHERE is_accepted)::bigint)::float\n  / nullIf((COUNT(*)\
+      \ FILTER (WHERE is_sent)::bigint), 0) AS proposal_acceptance_rate\nFROM crm_marts.mart_proposals\n\
+      WHERE organization_id = %s{{extra_where}}\n"
+    default_zero: true
+  proposal_accepted_metric:
+    product: crm
+    result_column: proposal_accepted_metric
+    time_column: created_at
+    table: mart_proposals
+    sql: 'SELECT COUNT(*) FILTER (WHERE is_accepted)::bigint AS proposal_accepted_metric
+
+      FROM crm_marts.mart_proposals
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  proposal_sent_metric:
+    product: crm
+    result_column: proposal_sent_metric
+    time_column: created_at
+    table: mart_proposals
+    sql: 'SELECT COUNT(*) FILTER (WHERE is_sent)::bigint AS proposal_sent_metric
+
+      FROM crm_marts.mart_proposals
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  quote_to_close_rate:
+    product: crm
+    result_column: quote_to_close_rate
+    time_column: created_at
+    table: mart_quotes
+    sql: "SELECT\n  (COUNT(DISTINCT case when is_accepted and deal_is_won then deal_id\
+      \ end)::bigint)::float\n  / nullIf((COUNT(DISTINCT deal_id)::bigint), 0) AS\
+      \ quote_to_close_rate\nFROM crm_marts.mart_quotes\nWHERE organization_id = %s{{extra_where}}\n"
+    default_zero: true
+  quoted_product_revenue:
+    product: crm
+    result_column: quoted_product_revenue
+    time_column: created_at
+    table: mart_quote_lines
+    sql: 'SELECT SUM(line_amount) AS quoted_product_revenue
+
+      FROM crm_marts.mart_quote_lines
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  renewed_contracts_metric:
+    product: crm
+    result_column: renewed_contracts_metric
+    time_column: starts_at
+    table: mart_contracts
+    sql: 'SELECT COUNT(*) FILTER (WHERE is_renewed)::bigint AS renewed_contracts_metric
+
+      FROM crm_marts.mart_contracts
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  repeat_customers_metric:
+    product: crm
+    result_column: repeat_customers_metric
+    time_column: first_order_at
+    table: mart_contact_order_summary
+    sql: 'SELECT COUNT(DISTINCT case when is_repeat_customer then contact_id end)::bigint
+      AS repeat_customers_metric
+
+      FROM crm_marts.mart_contact_order_summary
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  repurchase_rate:
+    product: crm
+    result_column: repurchase_rate
+    time_column: first_order_at
+    table: mart_contact_order_summary
+    sql: "SELECT\n  (COUNT(DISTINCT case when is_repeat_customer then contact_id end)::bigint)::float\n\
+      \  / nullIf((COUNT(DISTINCT contact_id)::bigint), 0) AS repurchase_rate\nFROM\
+      \ crm_marts.mart_contact_order_summary\nWHERE organization_id = %s{{extra_where}}\n"
+    default_zero: true
+  sales_agent_win_rate:
+    product: crm
+    result_column: sales_agent_win_rate
+    time_column: created_at
+    table: mart_deals
+    sql: "SELECT\n  (COUNT(*) FILTER (WHERE is_won)::bigint)::float\n  / nullIf((COUNT(*)\
+      \ FILTER (WHERE is_closed)::bigint), 0) AS sales_agent_win_rate\nFROM crm_marts.mart_deals\n\
+      WHERE organization_id = %s{{extra_where}}\n"
+    default_zero: true
+  sales_cycle_days_total:
+    product: crm
+    result_column: sales_cycle_days_total
+    time_column: created_at
+    table: mart_deals
+    sql: 'SELECT SUM(sales_cycle_days) AS sales_cycle_days_total
+
+      FROM crm_marts.mart_deals
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  total_account_locations:
+    product: crm
+    result_column: total_account_locations
+    time_column: created_at
+    table: mart_companies
+    sql: 'SELECT SUM(location_count) AS total_account_locations
+
+      FROM crm_marts.mart_companies
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  units_sold:
+    product: crm
+    result_column: units_sold
+    time_column: created_at
+    table: mart_order_lines
+    sql: 'SELECT SUM(quantity) AS units_sold
+
+      FROM crm_marts.mart_order_lines
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  won_deal_amount_total:
+    product: crm
+    result_column: won_deal_amount_total
+    time_column: created_at
+    table: mart_deals
+    sql: 'SELECT SUM(case when is_won then amount else 0 end) AS won_deal_amount_total
+
+      FROM crm_marts.mart_deals
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  won_deal_rate:
+    product: crm
+    result_column: won_deal_rate
+    time_column: created_at
+    table: mart_deals
+    sql: "SELECT\n  (COUNT(*) FILTER (WHERE is_won)::bigint)::float\n  / nullIf((COUNT(*)\
+      \ FILTER (WHERE is_closed)::bigint), 0) AS won_deal_rate\nFROM crm_marts.mart_deals\n\
+      WHERE organization_id = %s{{extra_where}}\n"
+    default_zero: true
+  won_deals_for_avg:
+    product: crm
+    result_column: won_deals_for_avg
+    time_column: created_at
+    table: mart_deals
+    sql: 'SELECT COUNT(*) FILTER (WHERE is_won)::bigint AS won_deals_for_avg
+
+      FROM crm_marts.mart_deals
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  won_deals_metric:
+    product: crm
+    result_column: won_deals_metric
+    time_column: created_at
+    table: mart_deals
+    sql: 'SELECT COUNT(*) FILTER (WHERE is_won)::bigint AS won_deals_metric
+
+      FROM crm_marts.mart_deals
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  won_deals_with_accepted_quote_metric:
+    product: crm
+    result_column: won_deals_with_accepted_quote_metric
+    time_column: created_at
+    table: mart_quotes
+    sql: 'SELECT COUNT(DISTINCT case when is_accepted and deal_is_won then deal_id
+      end)::bigint AS won_deals_with_accepted_quote_metric
+
+      FROM crm_marts.mart_quotes
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true

@@ -1,0 +1,21 @@
+version: 2
+
+models:
+  - name: stg_accounts_organizations
+    columns:
+      - name: organization_id
+        tests: [unique, not_null]
+
+  - name: stg_accounts_setup_users
+    columns:
+      - name: user_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: stg_accounts_setup_teams
+    columns:
+      - name: team_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]

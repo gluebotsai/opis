@@ -1,0 +1,70 @@
+version: 1
+# Graph-native jobs only. Certified SQL KPIs stay in product/kpis.yml.
+
+measures:
+  ticket_neighborhood:
+    label: Ticket neighborhood
+    family: graph_path
+    aggregation: path
+    default_time_column: created_at
+    allowed_date_columns: [created_at, resolved_at, updated_at, due_at]
+    allowed_scope_levels: [org, own, created_by_me, queue, agent, resolver]
+    allowed_dimensions: []
+    hops: [queue, agent, resolver, sla, note]
+    definition: Ticket plus optional ROUTED_TO, ASSIGNED_TO, RESOLVED_BY, GOVERNED_BY, HAS Note.
+
+  why_breakdown:
+    label: Why breakdown
+    family: graph_why
+    aggregation: count
+    requires_group_by: true
+    default_time_column: created_at
+    allowed_date_columns: [created_at, resolved_at, updated_at, due_at]
+    allowed_scope_levels: [org, own, created_by_me, queue, agent, resolver]
+    allowed_dimensions: [queue, agent, resolver, status, priority, channel, category, customer, created_by]
+    definition: Count tickets grouped by a dimension, using graph hops for queue and agent names.
+
+  assignment_path:
+    label: Assignment path
+    family: graph_path
+    aggregation: path
+    default_time_column: created_at
+    allowed_date_columns: [created_at, updated_at]
+    allowed_scope_levels: [org, own, created_by_me, queue, agent, resolver]
+    allowed_dimensions: [queue, agent]
+    hops: [queue, agent, resolver, sla, note]
+    definition: Ticket to SupportQueue (ROUTED_TO) and SupportAgent (ASSIGNED_TO).
+
+  staffing_path:
+    label: Queue staffing
+    family: graph_path
+    aggregation: path
+    grain: queue
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, queue]
+    allowed_dimensions: []
+    hops: [staff]
+    definition: SupportAgent to SupportQueue via MEMBER_OF. Named queue optional; omit the name for org-wide roster.
+
+  note_path:
+    label: Note path
+    family: graph_path
+    aggregation: path
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, created_by_me, queue, agent, resolver]
+    allowed_dimensions: []
+    hops: [note, author]
+    definition: Ticket to notes (HAS) and note author (WRITTEN_BY).
+
+  customer_path:
+    label: Customer path
+    family: graph_path
+    aggregation: path
+    default_time_column: created_at
+    allowed_date_columns: [created_at]
+    allowed_scope_levels: [org, own, created_by_me, queue, agent, resolver]
+    allowed_dimensions: [customer]
+    hops: [customer]
+    definition: Ticket to Contact via raised_by; Contact HAS TicketHistory.

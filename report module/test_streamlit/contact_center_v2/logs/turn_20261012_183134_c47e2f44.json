@@ -1,0 +1,62 @@
+{
+  "turn_id": "c47e2f44",
+  "timestamp": "2026-10-12T13:01:34.569719+00:00",
+  "question": "Which queues have the longest waiting time?",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1036,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Queues with the longest average waiting time</strong></p>\n<p>For all time, the queues ranked by average waiting time are:</p>\n<ul>\n<li><strong>Testing</strong>: <strong>19.71 minutes</strong> (based on 3 conversations)</li>\n<li><strong>Support Queue</strong>: <strong>0.00 minutes</strong> (based on 51 conversations)</li>\n</ul>\n<p>The queues <strong>None</strong> and <strong>Sales</strong> have no speed-of-answer reading.</p>\n<p>Would you like to see the reasons why customers in the Testing queue are waiting longer?</p>",
+  "card": "card: table r1",
+  "facts": "result_id: r1\nwindow: all time\nkpi: asa\ncertified: true\nunit: minutes\ntask_goal: Rank queues by average waiting time.\nanswer_type: number\nrow_count: 4\nrow 1: queue=None; asa=None; asa_n=0\nrow 2: queue=Testing; asa=19.71; asa_n=3\nrow 3: queue=Support Queue; asa=0.00; asa_n=51\nrow 4: queue=Sales; asa=None; asa_n=0",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1036,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "Which queues have the longest waiting time?",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants to identify which queues have the highest average waiting time.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Rank queues by average waiting time.",
+          "time": "all time",
+          "scope": "org",
+          "slice": [
+            "queue"
+          ],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "asa",
+        "row_count": 4
+      }
+    ],
+    "facts": "result_id: r1\nwindow: all time\nkpi: asa\ncertified: true\nunit: minutes\ntask_goal: Rank queues by average waiting time.\nanswer_type: number\nrow_count: 4\nrow 1: queue=None; asa=None; asa_n=0\nrow 2: queue=Testing; asa=19.71; asa_n=3\nrow 3: queue=Support Queue; asa=0.00; asa_n=51\nrow 4: queue=Sales; asa=None; asa_n=0",
+    "grounded": true,
+    "card": "card: table r1"
+  },
+  "error": null
+}

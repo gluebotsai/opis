@@ -1,0 +1,26 @@
+Section,Status,Module Name,Feature Overview,Feature / Pending Feature,Implemented
+Implemented modules,Implemented,Dashboard,Campaign / ops overview + analytics chat,"KPI overview; live/past/scheduled counts; open/click/delivery style metrics; reports chat (query_analytics); period filters",Yes
+Implemented modules,Implemented,Audience / Contacts,Audience CRM + chat create/update,"Contact list/detail; single & bulk create; Hub create-contact; contacts MAS",Yes
+Implemented modules,Implemented,Create Campaign,Chat-led campaign build → launch,"Meta/channels/audience; template gen; gallery/images; launch now/schedule",Yes
+Implemented modules,Partial,Templates / Compliance,Channel templates + future regulatory coach,"Template gen/edit/coach",Yes for gen/edit; regulatory advisor Planned
+Implemented modules,Implemented,Gallery / Images,Org gallery + AI image flows,"Gallery bootstrap/pick; generate/refine; media APIs",Yes
+Implemented modules,Implemented,Monitoring,Live campaign ops,"Live/scheduled/past lists; detail; monitor chat",Yes
+Implemented modules,Implemented,Recovery / Ops,Pause/resume/stop / A-B,"Recovery tools; Hub stop/resume; A/B auto-winner cron",Yes
+Implemented modules,Implemented,Launch Scheduling,Timed & on-demand launch,"Scheduler executor; workers; calendar",Yes
+Implemented modules,Implemented,Forms / Events,Form design + public submit,"Events editor; forms agent; /f/:slug; tracking hooks",Yes
+Implemented modules,Implemented,WhatsApp,Meta approval + send / fix,"Approved/rejected flows; social-service workers",Yes
+Implemented modules,Implemented,Template Library,Reuse library → campaign,"Library browse/use; library_run",Yes
+Implemented modules,Implemented,On-demand,Autonomous create + send,"SPA on-demand; Hub on-demand-send / temp-audience-and-send",Yes
+Implemented modules,Implemented,Recommendations,AI recommendation board,"Generate → recommendation run",Yes
+Implemented modules,Implemented,Hub A2A,Spoke for Worktual Hub,"Card + OAuth + ~10 skills; /a2a/ live",Yes
+Implemented modules,Implemented,SFT Agent Catalog,Synthetic-data agent export,"/internal/v1/agents*; key auth; :8005 host-published for discovery",Yes
+Pending backlog,Pending,Templates,Improve template quality / edit UX,"Template improvement (coach quality, inline edit, better regenerate/refine); unify template library + coach where still thin",No
+Pending backlog,Pending,Templates / Compliance,Content policy before send,"template_regulatory_advisor (planned, not built)",No
+Pending backlog,Pending,Audience / Running campaigns,Filters after launch,"Dynamic filter apply for running campaigns (live re-filter / re-segment; today filters are largely a snapshot at save, not live CDP)",No
+Pending backlog,Pending,Configuration,Org send / channel setup,"Configuration gaps (email Mode B / DNS paste ops path; config UX completeness for senders/domains/channels)",No
+Pending backlog,Pending,Contacts,Preference-aware send,"Contact channel preferences (productize WIP filtering from engagement)",No
+Pending backlog,Partial,Web Tracking,Click/open → partner,"Partner landing / SDK wt cutover + short-links/cookies (joint)",Partial
+Pending backlog,Pending,Gallery / Media,Deploy hardening,"Public media URL / repair stale localhost gallery images",No
+Pending backlog,Pending,SFT / FT quality,Catalog already live,"Richer gold sampleConversations across executors",No
+Pending backlog,Pending,Agent platform,Topology roadmap,"P3–P5 (HTTP agents / MCP / orchestrator envelope)",No
+Pending backlog,Pending,Ops / Security,SFT port open,"Firewall allowlist for :8005 (scheduler IP only)",No

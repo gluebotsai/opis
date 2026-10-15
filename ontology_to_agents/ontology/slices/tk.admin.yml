@@ -1,0 +1,80 @@
+slice_id: tk.admin
+agent: Admin Specialist
+modules:
+- core
+- identity
+- ticket
+- tk_admin
+- performance
+classes:
+- Party
+- Person
+- Organization
+- Contact
+- Agent
+- Consent
+- Preference
+- Channel
+- Event
+- WorkItem
+- Location
+- Identity
+- ContactProfile
+- Contact
+- ContactDraft
+- ContactSkill
+- Ticket
+- SLA
+- Note
+- TicketDraft
+- TicketPriorityDef
+- TicketStatusDef
+- Anomaly
+- PerformanceReport
+relations:
+- Person works_for Organization
+- Contact has_consent Consent
+- Contact has_preference Preference
+- Contact belongs_to Organization
+- Agent works_for Organization
+- Identity identifies Party
+- Contact resolves_to Contact
+- Contact has_skill ContactSkill
+- Ticket raised_by Contact
+- Ticket belongs_to Organization
+- Ticket related_to Conversation
+- Ticket has_sla SLA
+- Ticket assigned_to Agent
+- Ticket resolved_by Agent
+- Ticket owned_by_team Team
+- Contact has Ticket
+- Note of Ticket
+- Ticket classified_by TicketPriorityDef
+- Ticket classified_by TicketStatusDef
+- Anomaly about Queue
+- Anomaly triggers HubRequest
+- PerformanceReport about Agent
+actions:
+- action.identify
+- action.route_to_specialist
+- action.list_contacts
+- action.get_contact
+- action.stage_contact_draft
+- action.create_contact
+- action.update_contact
+- action.contact_enrich
+- action.merge_contacts
+- action.create_ticket
+- action.get_ticket_status
+- action.verify_contact_for_ticket
+- action.reassign_ticket
+- action.escalate_ticket
+- action.enrich_ticket
+- action.create_priority
+- action.create_status
+- action.ask_semantic
+- action.ask_ontology
+- action.generate_report
+- action.investigate_anomaly
+metric_ids: []
+note: Legal slice (tools/policy). Inject pack.as_prompt() compact, not this file.

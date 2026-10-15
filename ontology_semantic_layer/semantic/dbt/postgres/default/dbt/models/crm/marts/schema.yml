@@ -1,0 +1,119 @@
+version: 2
+
+models:
+  - name: mart_deals
+    description: "Core marts model for CRM deals, pipeline amounts, stages, and sales cycle performance."
+    columns:
+      - name: deal_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: mart_contacts
+    description: "Core marts model for CRM contact profiles overlaid on CDP records with lead scoring."
+    columns:
+      - name: contact_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: mart_quotes
+    description: "Quotes mart joined with parent deal stage and owner details."
+    columns:
+      - name: quote_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: mart_proposals
+    description: "Proposals mart joined with parent deal details."
+    columns:
+      - name: proposal_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: mart_orders
+    description: "Sales orders mart across B2B, B2C, and B2B2C business motions."
+    columns:
+      - name: order_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: mart_invoices
+    description: "Invoices mart with outstanding/paid status and payment collection duration."
+    columns:
+      - name: invoice_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: mart_order_lines
+    description: "Order line items joined with product catalog for SKU/category GMV analysis."
+    columns:
+      - name: order_line_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: mart_quote_lines
+    description: "Quote line items joined with product catalog."
+    columns:
+      - name: quote_line_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: mart_invoice_lines
+    description: "Invoice line items joined with product catalog."
+    columns:
+      - name: invoice_line_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: mart_companies
+    description: "B2B client companies, franchises, and total location rollups."
+    columns:
+      - name: company_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: mart_contracts
+    description: "Contract mart with ARR, expiry, and 90-day renewal status."
+    columns:
+      - name: contract_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: mart_deal_activities
+    description: "Deal-related sales activities, tasks, and completion tracking."
+    columns:
+      - name: deal_activity_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: mart_contact_activities
+    description: "Contact-level sales activities, outreach, and tasks."
+    columns:
+      - name: contact_activity_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: mart_contact_campaign_engagement
+    description: "CRM contact profile joined to campaign engagement signals."
+    meta:
+      grain: contact
+      purpose: Cross-spoke contact × campaign engagement for ad hoc SQL only.
+      tenant_column: organization_id
+      sql_agent_only: true
+    columns:
+      - name: contact_id
+        tests: [not_null]
+      - name: organization_id
+        tests: [not_null]

@@ -1,0 +1,31 @@
+version: 1
+description: >
+  DQL craft adapted from icartsh sql-expert. DDL/DML/index/migration
+  sections are excluded. Loaded as a skill reference, not as a router.
+
+rules:
+  - SELECT/WITH only. Single statement. No WITH RECURSIVE.
+  - Never SELECT *. Name every column.
+  - Exploratory results must LIMIT. Executor still wraps preview + total_matched_rows.
+  - Explicit JOIN ... ON. Never comma FROM.
+  - Filter each side before joining when possible (date/status on the fact table first).
+  - Do not use SELECT DISTINCT to hide join fan-out. Use EXISTS or DISTINCT ON (conversation_id).
+  - Latest child rows: DISTINCT ON (conversation_id) ... ORDER BY conversation_id, applied_at DESC.
+  - IS NULL / IS NOT NULL. Never = NULL.
+  - Keep indexed time columns sargable: range compare, not DATE(col) or EXTRACT on the column in WHERE.
+  - No correlated SELECT COUNT(*) in the select list. JOIN + GROUP BY or a CTE.
+  - Match types: bigint ids are numbers, not quoted strings.
+  - COALESCE on SUM/AVG display when empty groups matter.
+  - EXISTS when the question is only "any", COUNT when the question is "how many".
+  - Window functions for ranks and running totals, not Python loops.
+  - Do not SELECT PII columns listed on table cards (body, emails, phones, visitor_id).
+  - Prefer CTEs to name multi-join steps.
+  - GROUP BY every non-aggregated selected column.
+  - ORDER BY the metric descending unless the question is a time series.
+
+forbidden_from_sql_expert:
+  - CREATE/ALTER/DROP/INDEX
+  - INSERT/UPDATE/DELETE/UPSERT
+  - transactions BEGIN/COMMIT
+  - EXPLAIN ANALYZE as a default path
+  - migrations and schema design

@@ -1,0 +1,62 @@
+{
+  "turn_id": "3f91940b",
+  "timestamp": "2026-10-09T10:11:35.172567+00:00",
+  "question": "which agent having the more cast score?",
+  "identity": {
+    "organization_id": 1012,
+    "user_id": 1016,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Highest CSAT Score</strong></p>\n<p>The agent with the highest CSAT score for all time is <strong>Booxoo Admin</strong> with a score of <strong>46.06</strong>.</p>\n<p>Would you like to see the CSAT scores for all agents?</p>",
+  "card": "card: table r1",
+  "facts": "result_id: r1\nwindow: all time\ncertified: false\ntask_goal: Find the agent with the highest CSAT score.\nanswer_type: number\nrow_count: 1\nrow 1: agent_name=Booxoo Admin; avg_csat=46.0632911392405063",
+  "trace": {
+    "identity": {
+      "organization_id": 1012,
+      "user_id": 1016,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "which agent having the more cast score?",
+    "plan": {
+      "kind": "plan",
+      "understanding": "Identify the agent with the highest CSAT score.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Find the agent with the highest CSAT score.",
+          "time": "all time",
+          "scope": "admin",
+          "slice": [
+            "agent"
+          ],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": false,
+        "kpi_id": null,
+        "row_count": 1
+      }
+    ],
+    "facts": "result_id: r1\nwindow: all time\ncertified: false\ntask_goal: Find the agent with the highest CSAT score.\nanswer_type: number\nrow_count: 1\nrow 1: agent_name=Booxoo Admin; avg_csat=46.0632911392405063",
+    "grounded": true,
+    "card": "card: table r1"
+  },
+  "error": null
+}

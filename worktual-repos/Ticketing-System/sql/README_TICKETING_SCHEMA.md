@@ -1,0 +1,18 @@
+-- Reference DDL for the ticketing schema (US spelling: organization_id).
+-- Runtime source of truth is src/server/bootstrapTicketing.ts — it creates
+-- schema `ticketing` and all tables/columns IF NOT EXISTS on app start.
+-- Never run DROP against other schemas.
+
+-- Example:
+--   CREATE SCHEMA IF NOT EXISTS ticketing;
+--   SET search_path TO ticketing;
+--
+-- Tables: organizations, users, contact_profile, agent_queues, tickets,
+-- ticket_notes, kb_articles, activity_logs, notifications,
+-- dashboard_metrics, agent_queue_members, user_sessions, user_login_events
+--
+-- Hub/spoke: person SoR = cdp.customer_profile; products = inventory.products;
+-- orders = cdp.orders. See docs/ticketing-hub-spoke-ownership.md
+-- Migration: sql/013_contact_profile_hub_spoke.sql
+-- Removed local catalog: sql/014_drop_ticketing_products.sql (use inventory.products)
+-- Person columns off contact_profile: sql/015_contact_profile_drop_person_columns.sql

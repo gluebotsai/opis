@@ -1,0 +1,147 @@
+version: 1
+source_tables:
+  - ccass.conversations
+  - ccass.conversation_dispositions
+  - ccass.dispositions
+default_filters:
+  - organization_id = :org
+  - Dashboard org questions: COALESCE(assigned_at, resolved_at, ended_at, created_at) >= :start AND < :end
+  - My Performance may add assigned_user_id = :me and assigned_at when measuring one agent's handle time
+metrics:
+  - id: conversations_handled
+    label: Conversations handled
+    description: >
+      Count of handled conversations in the period. Also use for call count when
+      filtered to channel = 'voice' (or all channels if the user did not specify calls).
+    formula_hint: >
+      COUNT(*) FILTER (WHERE status IN ('resolved','closed') OR ended_at IS NOT NULL)
+    tables: [ccass.conversations]
+    dimensions: [channel, day]
+    chart_hints: [kpi, bar]
+    example_questions:
+      - how many did I handle
+      - handled volume
+      - conversations handled
+      - call count
+      - how many calls
+      - last three days
+  - id: resolution_rate
+    label: Resolution rate
+    description: Percentage (0–100) of handled conversations that have resolved_at set
+    unit: percentage_points
+    formula_hint: >
+      100.0 * COUNT(*) FILTER (WHERE resolved_at IS NOT NULL)
+      / NULLIF(COUNT(*) FILTER (WHERE status IN ('resolved','closed') OR ended_at IS NOT NULL), 0)
+    tables: [ccass.conversations]
+    chart_hints: [kpi]
+    example_questions:
+      - resolution rate
+      - how many did I resolve
+  - id: avg_handle_time
+    label: Average handle time
+    description: Average seconds from assigned_at to resolved_at or ended_at
+    formula_hint: >
+      AVG(EXTRACT(EPOCH FROM (COALESCE(resolved_at, ended_at) - assigned_at)))
+      FILTER (WHERE assigned_at IS NOT NULL AND COALESCE(resolved_at, ended_at) IS NOT NULL)
+    tables: [ccass.conversations]
+    chart_hints: [kpi, line]
+    example_questions:
+      - average handle time
+      - how long am I taking
+  - id: avg_first_response
+    label: Average first response time
+    description: >
+      Average seconds from assigned_at to first_response_at. Null when no
+      conversations in the period have both timestamps (display as — , not 0s).
+      A 0s display with a positive sample is a rounded mean under 0.5 seconds.
+    formula_hint: >
+      AVG(EXTRACT(EPOCH FROM (first_response_at - assigned_at)))
+      FILTER (WHERE first_response_at IS NOT NULL AND assigned_at IS NOT NULL)
+    tables: [ccass.conversations]
+    chart_hints: [kpi]
+    example_questions:
+      - first response time
+      - how fast do I reply
+  - id: response_sla_60s
+    label: First-Reply SLA
+    aliases:
+      - First-Reply SLA
+      - response SLA
+      - first reply SLA
+    description: >
+      Percentage (0–100) of first replies within 60 seconds of assignment.
+      Same number as the Reports First-Reply SLA card. Composition is
+      withinSlaCount / firstResponseCount. Empty sample is — not 0%.
+      "Why is this rate X%?" is that composition plus which channel/handler
+      rows missed, not a generic definition and not ontology.
+    unit: percentage_points
+    formula_hint: >
+      100.0 * COUNT(*) FILTER (
+        WHERE first_response_at IS NOT NULL AND assigned_at IS NOT NULL
+          AND EXTRACT(EPOCH FROM (first_response_at - assigned_at)) <= 60
+      ) / NULLIF(COUNT(*) FILTER (WHERE first_response_at IS NOT NULL), 0)
+    tables: [ccass.conversations]
+    chart_hints: [kpi]
+    example_questions:
+      - SLA
+      - First-Reply SLA
+      - response SLA
+      - within 60 seconds
+  - id: transfers
+    label: Transfers
+    description: Conversations with transferred_at set
+    formula_hint: COUNT(*) FILTER (WHERE transferred_at IS NOT NULL)
+    tables: [ccass.conversations]
+    chart_hints: [kpi]
+    example_questions:
+      - transfers
+      - how many transferred
+  - id: channel_mix
+    label: Channel mix
+    aliases:
+      - AI channel mix
+      - support agent channel mix
+      - channel mix
+    description: >
+      Handled or assigned volume broken down by channel. On the admin
+      dashboard, AI channel mix and support agent channel mix are handler
+      slices of the same volume (not separate products). Canonical name is
+      channel mix; never treat a typo such as "channel ix" as a new metric.
+    formula_hint: COUNT(*) GROUP BY channel
+    tables: [ccass.conversations]
+    dimensions: [channel]
+    chart_hints: [pie, bar]
+    example_questions:
+      - channel mix
+      - AI channel mix
+      - support agent channel mix
+      - breakdown by channel
+      - webchat vs email
+  - id: daily_handled_trend
+    label: Daily handled trend
+    description: Handled conversations per day
+    formula_hint: >
+      COUNT(*) FILTER (WHERE status IN ('resolved','closed') OR ended_at IS NOT NULL)
+      GROUP BY DATE_TRUNC('day', assigned_at)
+    tables: [ccass.conversations]
+    dimensions: [day]
+    chart_hints: [line, bar]
+    example_questions:
+      - daily trend
+      - handled over time
+      - performance trend
+  - id: disposition_mix
+    label: Disposition mix
+    description: Latest disposition label counts for completed conversations
+    formula_hint: >
+      Join latest conversation_dispositions (ORDER BY applied_at DESC LIMIT 1)
+      to dispositions.label; COUNT(*) GROUP BY label
+    tables:
+      - ccass.conversations
+      - ccass.conversation_dispositions
+      - ccass.dispositions
+    dimensions: [disposition]
+    chart_hints: [pie, bar]
+    example_questions:
+      - disposition mix
+      - how did I close conversations

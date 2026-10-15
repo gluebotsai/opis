@@ -1,0 +1,12 @@
+{
+  "name": "a2a-server",
+  "private": true,
+  "scripts": {
+    "dev": "UV_CACHE_DIR=.uv-cache A2A_ENABLED=true A2A_ALLOW_DEV_AUTH=true LOG_DIR=logs uv run uvicorn cc_a2a.main:app --reload --app-dir src --host 0.0.0.0 --port 8020",
+    "start": "UV_CACHE_DIR=.uv-cache A2A_ENABLED=true A2A_ALLOW_DEV_AUTH=true LOG_DIR=logs uv run uvicorn cc_a2a.main:app --app-dir src --host 0.0.0.0 --port 8020",
+    "sync": "UV_CACHE_DIR=.uv-cache uv sync --all-extras",
+    "test": "UV_CACHE_DIR=.uv-cache uv run pytest",
+    "lint": "UV_CACHE_DIR=.uv-cache uv run ruff check .",
+    "format": "UV_CACHE_DIR=.uv-cache uv run ruff format ."
+  }
+}

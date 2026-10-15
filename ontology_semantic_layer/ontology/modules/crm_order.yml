@@ -1,0 +1,43 @@
+# CRM orders, invoices, products
+module: crm_order
+layer: domain
+depends_on: [core, crm_deal, crm_quote]
+owned_by_spoke: crm
+usecase: Order fulfillment and invoicing after quote acceptance.
+
+classes:
+  - id: Order
+    definition: Sales order / purchase.
+    properties: [number, status, total]
+    relations:
+      forContact: Contact
+      hasLines: OrderLine
+
+  - id: Invoice
+    definition: Bill for an order or contract.
+    properties: [number, status, dueDate, outstanding]
+    relations:
+      of: Order
+
+  - id: Product
+    definition: Catalog SKU from inventory.products.
+    properties: [name, sku, unitOfMeasure]
+
+relations:
+  - { from: Order, type: FOR_CONTACT, to: Contact }
+
+actions:
+  - id: action.create_order
+    operates_on: [Order]
+    requires: [userConfirmed]
+
+metric_ids:
+  - order_volume
+  - order_gmv
+  - average_order_value
+  - repurchase_rate
+  - customer_lifetime_value
+  - invoice_outstanding_amount
+  - days_sales_outstanding
+  - units_sold
+  - product_revenue

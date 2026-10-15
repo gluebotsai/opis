@@ -1,0 +1,188 @@
+# Few-Shot Dynamic Cypher and Template Routing Examples for CRM B2B Knowledge Graph
+
+examples:
+  - question: "Why were our deals lost this quarter?"
+    intent: "root_cause_deal_loss"
+    reasoning: "User is asking for the root cause of lost deals. Route to the certified template deal_root_cause_loss or generate Cypher aggregating lost_reason."
+    output:
+      tool: "cypher"
+      template: "deal_root_cause_loss"
+      params: {}
+
+  - question: "Which deals are at risk of stalling or slipping out of the forecast?"
+    intent: "forecast_risk_and_stall"
+    reasoning: "User is investigating deal risk and pipeline stall reasons flagged by auditor. Use deal_forecast_risk_and_stall."
+    output:
+      tool: "cypher"
+      template: "deal_forecast_risk_and_stall"
+      params: {}
+
+  - question: "What is our current active pipeline by stage and weighted value?"
+    intent: "pipeline_health_breakdown"
+    reasoning: "User wants to inspect open pipeline stages with stage weights. Use certified template open_pipeline_health."
+    output:
+      tool: "cypher"
+      template: "open_pipeline_health"
+      params: {}
+
+  - question: "Which deals were won and what was their value?"
+    intent: "won_deals_overview"
+    reasoning: "User asks for deals that were won. Deals with stage = 'closed_won' are won deals. Use certified template won_deals_overview."
+    output:
+      tool: "cypher"
+      template: "won_deals_overview"
+      params: {}
+
+  - question: "How many open opportunities are there in total?"
+    intent: "open_deals_overview"
+    reasoning: "User asks for total open opportunities in the pipeline across qualification, discover, propose, and negotiate stages. Use open_deals_overview."
+    output:
+      tool: "cypher"
+      template: "open_deals_overview"
+      params: {}
+
+  - question: "Why is Lokesh deal at risk or omitted?"
+    intent: "deal_forecast_risk_and_stall"
+    reasoning: "User is asking why a specific deal ('Lokesh') is at risk or omitted. Use certified template deal_forecast_risk_and_stall with deal_title parameter."
+    output:
+      tool: "cypher"
+      template: "deal_forecast_risk_and_stall"
+      params:
+        deal_title: "Lokesh"
+
+  - question: "Tell me about the company orange and its deals"
+    intent: "customer_account_commercial_summary"
+    reasoning: "User wants commercial summary and deals for company Orange. Use certified template customer_account_commercial_summary with company_name parameter."
+    output:
+      tool: "cypher"
+      template: "customer_account_commercial_summary"
+      params:
+        company_name: "orange"
+
+  - question: "Walk the commercial path for deal 'E2E Expansion — platform'"
+    intent: "commercial_path_walk"
+    reasoning: "User wants to traverse the B2B commercial hops from Deal to Quote, Order, Invoice, and Contract. Use deal_commercial_path_walk."
+    output:
+      tool: "cypher"
+      template: "deal_commercial_path_walk"
+      params:
+        deal_title: "E2E Expansion"
+
+  - question: "Show me all overdue invoices and why they are delayed"
+    intent: "overdue_invoices_risk"
+    reasoning: "User asks for overdue invoices and escalation reasons. Use overdue_invoice_aging_and_risk."
+    output:
+      tool: "cypher"
+      template: "overdue_invoice_aging_and_risk"
+      params: {}
+
+  - question: "What is the quota attainment percentage for sales rep 1000?"
+    intent: "unsupported_quota_attainment"
+    reasoning: "The CRM database schema does not store rep quota targets. Per zero-hardcoding and honest engineering directives, refuse with unsupported_request."
+    output:
+      tool: "unsupported_request"
+      reason: "Monthly or quarterly quota targets per sales rep are not stored in the CRM schema. The system cannot compute quota attainment without rep target amounts."
+
+  - question: "How much time did our won deals spend in the propose stage?"
+    intent: "unsupported_time_in_stage"
+    reasoning: "Stage history transitions are not recorded in the CRM database; only current stage is tracked. Refuse honestly as unsupported_request."
+    output:
+      tool: "unsupported_request"
+      reason: "Deal stage transition history is not stored in the database; only current stage is tracked. Time spent in each stage cannot be computed."
+
+  - question: "What is our won reason mix for closed won deals?"
+    intent: "unsupported_won_reason"
+    reasoning: "The schema contains lost_reason for closed_lost deals, but does not have a won_reason column for closed_won deals. Refuse honestly as unsupported_request."
+    output:
+      tool: "unsupported_request"
+      reason: "The database stores lost_reason for closed_lost deals, but does not track a won_reason column for closed_won deals."
+
+  - question: "Show lead status distribution across all active contacts"
+    intent: "lead_status_mix"
+    reasoning: "User is asking for contact profile lead status breakdown. Use lead_status_mix."
+    output:
+      tool: "cypher"
+      template: "lead_status_mix"
+      params: {}
+
+  - question: "List the unassigned leads waiting in the pool"
+    intent: "unassigned_leads"
+    reasoning: "User is an admin/manager asking for leads with owner_user_id null. Use unassigned_leads_pool."
+    output:
+      tool: "cypher"
+      template: "unassigned_leads_pool"
+      params: {}
+
+  - question: "How many deals are in the previous month?"
+    intent: "deals_by_period_or_month"
+    reasoning: "User is asking for deals in the previous month. Deals have created_at and closed_at timestamps. Use certified template deals_by_period_or_month."
+    output:
+      tool: "cypher"
+      template: "deals_by_period_or_month"
+      params: {}
+
+  - question: "why day created more deals?"
+    intent: "deals_by_day_or_date"
+    reasoning: "User asks which day had more deals created. Deals have created_at timestamps. Use certified template deals_by_day_or_date to rank deal creation by day."
+    output:
+      tool: "cypher"
+      template: "deals_by_day_or_date"
+      params: {}
+
+  - question: "Which day created the most deals?"
+    intent: "deals_by_day_or_date"
+    reasoning: "User is asking for the day/date with the highest volume of deals created. Use certified template deals_by_day_or_date."
+    output:
+      tool: "cypher"
+      template: "deals_by_day_or_date"
+      params: {}
+
+  - question: "how many deals created in September 26th ?"
+    intent: "deals_by_day_or_date"
+    reasoning: "User is asking for deals created on a specific calendar date (September 26, 2026). Use certified template deals_by_day_or_date with target_date parameter."
+    output:
+      tool: "cypher"
+      template: "deals_by_day_or_date"
+      params:
+        target_date: "2026-09-26"
+
+  - question: "why did our deals fail?"
+    intent: "root_cause_deal_loss"
+    reasoning: "User is asking why deals failed or fell through, which refers to closed-lost deals. Map to deal_root_cause_loss."
+    output:
+      tool: "cypher"
+      template: "deal_root_cause_loss"
+      params: {}
+
+  - question: "which sales are in danger of slipping?"
+    intent: "forecast_risk_and_stall"
+    reasoning: "User asks which sales/deals are in danger or slipping, referring to deals flagged with forecast risk. Map to deal_forecast_risk_and_stall."
+    output:
+      tool: "cypher"
+      template: "deal_forecast_risk_and_stall"
+      params: {}
+
+  - question: "show me unpaid bills that are late"
+    intent: "overdue_invoices_risk"
+    reasoning: "User asks for unpaid bills that are late, which maps to overdue invoices. Map to overdue_invoice_aging_and_risk."
+    output:
+      tool: "cypher"
+      template: "overdue_invoice_aging_and_risk"
+      params: {}
+
+  - question: "what prospects do not have an owner yet?"
+    intent: "unassigned_leads"
+    reasoning: "User asks for prospects/leads without an assigned owner. Map to unassigned_leads_pool."
+    output:
+      tool: "cypher"
+      template: "unassigned_leads_pool"
+      params: {}
+
+  - question: "which agreements are currently active?"
+    intent: "contract_arr_and_renewals"
+    reasoning: "User asks for currently active agreements or customer contracts. Map to contract_arr_and_renewals."
+    output:
+      tool: "cypher"
+      template: "contract_arr_and_renewals"
+      params: {}
+

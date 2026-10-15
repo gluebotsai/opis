@@ -1,0 +1,26 @@
+name: ccass.conversation_messages
+alias: m
+schema: ccass
+grain: message
+purpose: Messages on a conversation. Aggregate in SQL. Never SELECT body for org-wide reports.
+aliases: [messages, replies]
+time_columns: [created_at, delivered_at, sent_at]
+pii: [body]
+blocked_select: [body]
+indexes:
+  - [conversation_id, created_at]
+columns:
+  - { name: id, type: bigint, pk: true, description: Message id }
+  - { name: organization_id, type: bigint, description: Tenant id }
+  - { name: conversation_id, type: bigint, fk: ccass.conversations.id, description: Parent conversation }
+  - { name: sender_type, type: text, values: [customer, agent, bot, system], description: Who sent the message }
+  - { name: direction, type: text, values: [inbound, outbound], description: Message direction }
+  - { name: visibility, type: text, values: [customer, internal], description: Visibility }
+  - { name: body, type: text, description: Message text. PII. Blocked in report SELECT. }
+  - { name: delivery_state, type: text, description: Delivery state }
+  - { name: created_at, type: timestamptz, description: Created }
+  - { name: message_type, type: text, values: [text, image, file], description: Payload type }
+sample_rows:
+  - { id: 9001, conversation_id: 101, sender_type: customer, direction: inbound, created_at: "2026-09-07T10:01:50Z" }
+  - { id: 9002, conversation_id: 101, sender_type: agent, direction: outbound, created_at: "2026-09-07T10:02:18Z" }
+  - { id: 9003, conversation_id: 102, sender_type: bot, direction: outbound, created_at: "2026-09-07T11:00:05Z" }

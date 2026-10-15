@@ -1,0 +1,295 @@
+/**
+ * Reseller portal — dashboard + directory tables + detail.
+ * Mirrors partner chrome; canvas #F4F4F6 · surfaces #FFFFFF · border #C9C9CF.
+ */
+
+.app-shell--reseller .app-content:has(.reseller-dashboard-page),
+.app-shell--reseller .app-content:has(.reseller-leads-page),
+.app-shell--reseller .app-content:has(.reseller-renewals-page),
+.app-shell--reseller .app-content:has(.reseller-invoices-page) {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.app-shell--reseller .app-content:has(.reseller-dashboard-page) > .customer-portal-context,
+.app-shell--reseller .app-content:has(.reseller-leads-page) > .customer-portal-context,
+.app-shell--reseller .app-content:has(.reseller-renewals-page) > .customer-portal-context,
+.app-shell--reseller .app-content:has(.reseller-invoices-page) > .customer-portal-context {
+  flex: 0 0 auto;
+  margin-bottom: 16px;
+}
+
+.app-shell--reseller .customer-portal-role-badge.is-reseller {
+  background: #ffffff;
+  border-color: #c9c9cf;
+  color: #3f3f49;
+}
+
+.admin-users-page.reseller-dashboard-page,
+.admin-users-page.reseller-leads-page,
+.admin-users-page.reseller-renewals-page,
+.admin-users-page.reseller-invoices-page {
+  --au-canvas: #f4f4f6;
+  background: #f4f4f6;
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+}
+
+.reseller-dashboard-page__header,
+.reseller-leads-page__header,
+.reseller-renewals-page__header,
+.reseller-invoices-page__header {
+  align-items: flex-start;
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.reseller-dashboard-page__header .admin-users-page__subtitle,
+.reseller-leads-page__header .admin-users-page__subtitle,
+.reseller-renewals-page__header .admin-users-page__subtitle,
+.reseller-invoices-page__header .admin-users-page__subtitle {
+  max-width: 640px;
+}
+
+.reseller-dashboard-page .admin-users-kpi-grid.reseller-dashboard-kpi {
+  flex: 0 0 auto;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  height: max-content;
+  max-width: 960px;
+}
+
+.reseller-dashboard-page .admin-users-kpi-card__icon.reseller-dashboard-kpi__icon--active {
+  background: color-mix(in srgb, #098f6a 12%, #ffffff);
+  color: #098f6a;
+}
+
+.reseller-dashboard-page .admin-users-kpi-card__icon.reseller-dashboard-kpi__icon--renewals {
+  background: color-mix(in srgb, #e0b73a 14%, #ffffff);
+  color: #e0b73a;
+}
+
+.reseller-dashboard-page .admin-users-kpi-card__icon.reseller-dashboard-kpi__icon--total {
+  background: color-mix(in srgb, #3a3fe0 12%, #ffffff);
+  color: #3a3fe0;
+}
+
+.reseller-dashboard-panel,
+.reseller-leads-panel,
+.reseller-renewals-panel,
+.reseller-invoices-panel {
+  min-height: 0;
+}
+
+/* Recent leads — data columns only; do not use admin sticky 56px Actions column */
+.reseller-dashboard-page .reseller-dashboard-panel .admin-users-panel__section-header,
+.reseller-dashboard-page .reseller-dashboard-panel .admin-users-panel__table-wrap {
+  padding-inline: 20px;
+}
+
+.reseller-dashboard-page .reseller-dashboard-table th:nth-child(1),
+.reseller-dashboard-page .reseller-dashboard-table td:nth-child(1) {
+  width: 32%;
+}
+
+.reseller-dashboard-page .reseller-dashboard-table th:nth-child(2),
+.reseller-dashboard-page .reseller-dashboard-table td:nth-child(2) {
+  width: 24%;
+}
+
+.reseller-dashboard-page .reseller-dashboard-table th:nth-child(3),
+.reseller-dashboard-page .reseller-dashboard-table td:nth-child(3) {
+  width: 20%;
+}
+
+.reseller-dashboard-page .reseller-dashboard-table th:nth-child(4),
+.reseller-dashboard-page .reseller-dashboard-table td:nth-child(4) {
+  width: 24%;
+}
+
+.reseller-dashboard-page .admin-users-table.reseller-dashboard-table th:last-child,
+.reseller-dashboard-page .admin-users-table.reseller-dashboard-table td:last-child {
+  box-shadow: none;
+  max-width: none;
+  min-width: 7rem;
+  overflow: hidden;
+  position: static;
+  right: auto;
+  text-overflow: ellipsis;
+  width: 24%;
+  z-index: auto;
+}
+
+.reseller-dashboard-view-all {
+  min-height: 40px;
+}
+
+.reseller-table__company {
+  color: #0b0b10;
+  display: block;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reseller-table__tenant {
+  font-variant-numeric: tabular-nums;
+}
+
+.reseller-leads-table__actions {
+  align-items: center;
+  display: inline-flex;
+  gap: 12px;
+  justify-content: flex-end;
+  white-space: nowrap;
+}
+
+.reseller-leads-table__action {
+  background: transparent;
+  border: 0;
+  color: #5f1fb0;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0;
+  text-decoration: none;
+}
+
+.reseller-leads-table__action:hover {
+  text-decoration: underline;
+}
+
+.reseller-leads-table__action--danger {
+  color: #b42318;
+}
+
+.reseller-empty-state {
+  align-content: center;
+  align-items: center;
+  display: grid;
+  flex: 1 1 auto;
+  gap: 12px;
+  grid-auto-rows: max-content;
+  justify-items: center;
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.reseller-empty-state h3 {
+  color: #0b0b10;
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.reseller-empty-state p {
+  color: #5e5e69;
+  font-size: 14px;
+  margin: 0;
+  max-width: 360px;
+}
+
+.reseller-empty-state svg {
+  color: #5e5e69;
+}
+
+.reseller-empty-state .primary-button,
+.reseller-empty-state .secondary-button {
+  align-items: center;
+  display: inline-flex;
+  gap: 8px;
+  min-height: 40px;
+}
+
+.reseller-leads-page .admin-users-panel__search,
+.reseller-renewals-page .admin-users-panel__search,
+.reseller-invoices-page .admin-users-panel__search {
+  background: #ffffff;
+  min-width: min(280px, 100%);
+}
+
+.reseller-pill {
+  border-radius: 999px;
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  max-width: 100%;
+  overflow: hidden;
+  padding: 4px 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reseller-pill--active,
+.reseller-pill--paid {
+  background: color-mix(in srgb, #098f6a 12%, #ffffff);
+  color: #098f6a;
+}
+
+.reseller-pill--pending,
+.reseller-pill--due {
+  background: color-mix(in srgb, #e0b73a 14%, #ffffff);
+  color: #866300;
+}
+
+.reseller-pill--rejected,
+.reseller-pill--failed {
+  background: color-mix(in srgb, #e06e3a 12%, #ffffff);
+  color: #e06e3a;
+}
+
+.reseller-pill--muted {
+  background: color-mix(in srgb, #808080 10%, #ffffff);
+  color: #5e5e69;
+}
+
+.reseller-pill--info {
+  background: color-mix(in srgb, #3a9ee0 12%, #ffffff);
+  color: #1869d3;
+}
+
+@media (max-width: 900px) {
+  .reseller-dashboard-page .admin-users-kpi-grid.reseller-dashboard-kpi {
+    grid-template-columns: 1fr;
+    max-width: none;
+  }
+}
+
+@media (max-width: 1280px), (max-height: 720px) {
+  .reseller-leads-page .reseller-leads-table th:nth-child(2),
+  .reseller-leads-page .reseller-leads-table td:nth-child(2),
+  .reseller-leads-page .reseller-leads-table th:nth-child(5),
+  .reseller-leads-page .reseller-leads-table td:nth-child(5),
+  .reseller-renewals-page .reseller-renewals-table th:nth-child(2),
+  .reseller-renewals-page .reseller-renewals-table td:nth-child(2),
+  .reseller-invoices-page .reseller-invoices-table th:nth-child(2),
+  .reseller-invoices-page .reseller-invoices-table td:nth-child(2) {
+    display: none;
+  }
+}
+
+@media (max-height: 720px) {
+  .reseller-empty-state {
+    padding: 32px 16px;
+  }
+
+  .reseller-dashboard-page__header .admin-users-page__subtitle,
+  .reseller-leads-page__header .admin-users-page__subtitle,
+  .reseller-renewals-page__header .admin-users-page__subtitle,
+  .reseller-invoices-page__header .admin-users-page__subtitle {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+}

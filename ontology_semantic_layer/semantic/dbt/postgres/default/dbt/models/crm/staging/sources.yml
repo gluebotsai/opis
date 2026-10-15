@@ -1,0 +1,26 @@
+version: 2
+
+sources:
+  - name: crm
+    schema: crm
+    tables:
+      - name: contact_profiles
+      - name: deals
+      - name: quotes
+      - name: proposals
+      - name: sales_orders
+      - name: invoices
+      - name: quote_lines
+      - name: order_lines
+      - name: invoice_lines
+      - name: companies
+      - name: company_locations
+      - name: contracts
+      - name: deal_activities
+      - name: contact_activities
+      - name: lead_scoring_jobs
+
+  - name: inventory
+    schema: inventory
+    tables:
+      - name: products

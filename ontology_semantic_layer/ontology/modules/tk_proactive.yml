@@ -1,0 +1,40 @@
+# Ticketing proactive + ASGA — mas-agents-guide.md Level B (events/timers, not chat).
+module: tk_proactive
+layer: product
+depends_on: [core, ticket, tk_kb]
+owned_by_spoke: ticketing
+source:
+  semantic: semantic/dbt/ticketing/default/dbt/models/semantic_layer/semantic_layer.yml
+usecase: >
+  Background intake (DSSA deflect via KB, TCAA capture), routing, SLA risk.
+  ASGA gates autonomous vs Approvals vs recommend-only.
+
+classes:
+  - id: Suggestion
+    definition: Suggested ticket action awaiting ASGA or human approval.
+    properties: [kind, autonomous]
+    relations:
+      about: Ticket
+
+  - id: Approval
+    definition: Safety gate — run now, confirm, recommend only, or reject.
+    classified_by: [asga.outcome]
+    relations:
+      of: Suggestion
+
+relations:
+  - { from: Suggestion, type: about, to: Ticket }
+  - { from: Approval, type: of, to: Suggestion }
+
+actions:
+  - id: action.deflect_intake
+    operates_on: [KnowledgeArticle]
+    definition: DSSA — search published KB before creating a ticket.
+  - id: action.capture_ticket
+    operates_on: [Ticket]
+    definition: TCAA — create from inbound when deflection fails.
+  - id: action.asga_gate
+    operates_on: [Approval]
+    definition: Classify proactive action as autonomous, confirm, recommend, or reject.
+
+metric_ids: [sla_at_risk_tickets_metric, unanswered_tickets_metric]

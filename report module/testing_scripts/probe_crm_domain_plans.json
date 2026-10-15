@@ -1,0 +1,240 @@
+[
+  {
+    "role": "admin",
+    "q": "how many leads are there?",
+    "tasks": [
+      {
+        "executor": "sql",
+        "kpi": "lead_count",
+        "dimension": null,
+        "status_filter": null,
+        "goal": "Count all active leads"
+      }
+    ],
+    "raw_ok": true
+  },
+  {
+    "role": "admin",
+    "q": "how many contacted leads does yaswanth have compared to other agents?",
+    "tasks": [
+      {
+        "executor": "sql",
+        "kpi": "lead_count",
+        "dimension": "owner",
+        "status_filter": "contacted",
+        "goal": "Count contacted leads by owner to compare yaswanth against other agents"
+      }
+    ],
+    "raw_ok": true
+  },
+  {
+    "role": "admin",
+    "q": "list unassigned leads",
+    "tasks": [
+      {
+        "executor": "sql",
+        "kpi": "unassigned_leads",
+        "dimension": null,
+        "status_filter": null,
+        "goal": "List all unassigned leads"
+      }
+    ],
+    "raw_ok": true
+  },
+  {
+    "role": "sales_manager",
+    "q": "how many open deals do we have?",
+    "tasks": [
+      {
+        "executor": "sql",
+        "kpi": "active_opportunities",
+        "dimension": null,
+        "status_filter": null,
+        "goal": "Count all open deals"
+      }
+    ],
+    "raw_ok": true
+  },
+  {
+    "role": "sales_rep",
+    "q": "what is our revenue",
+    "tasks": [
+      {
+        "executor": "sql",
+        "kpi": "won_revenue",
+        "dimension": null,
+        "status_filter": null,
+        "goal": "Calculate total won revenue for the user"
+      }
+    ],
+    "raw_ok": true
+  },
+  {
+    "role": "finance",
+    "q": "what is our revenue",
+    "tasks": [
+      {
+        "executor": "sql",
+        "kpi": "collected_revenue",
+        "dimension": null,
+        "status_filter": null,
+        "goal": "Calculate total collected revenue"
+      }
+    ],
+    "raw_ok": true
+  },
+  {
+    "role": "admin",
+    "q": "what is our revenue",
+    "tasks": [
+      {
+        "executor": "sql",
+        "kpi": "won_revenue",
+        "dimension": null,
+        "status_filter": null,
+        "goal": "Calculate total booked revenue"
+      },
+      {
+        "executor": "sql",
+        "kpi": "collected_revenue",
+        "dimension": null,
+        "status_filter": null,
+        "goal": "Calculate total collected revenue from invoices"
+      }
+    ],
+    "raw_ok": true
+  },
+  {
+    "role": "admin",
+    "q": "what is raghuram total pipeline value",
+    "tasks": [
+      {
+        "executor": "sql",
+        "kpi": "total_pipeline",
+        "dimension": null,
+        "status_filter": null,
+        "goal": "Total pipeline value for Raghuram"
+      }
+    ],
+    "raw_ok": true
+  },
+  {
+    "role": "admin",
+    "q": "who has the highest win rate",
+    "tasks": [
+      {
+        "executor": "sql",
+        "kpi": "win_rate",
+        "dimension": "owner",
+        "status_filter": null,
+        "goal": "Calculate win rate by owner to find the highest"
+      }
+    ],
+    "raw_ok": true
+  },
+  {
+    "role": "admin",
+    "q": "show me quotes that are still open",
+    "tasks": [
+      {
+        "executor": "sql",
+        "kpi": null,
+        "dimension": null,
+        "status_filter": null,
+        "goal": "List all open quotes"
+      }
+    ],
+    "raw_ok": true
+  },
+  {
+    "role": "admin",
+    "q": "how much is outstanding on invoices",
+    "tasks": [
+      {
+        "executor": "sql",
+        "kpi": "invoice_outstanding",
+        "dimension": null,
+        "status_filter": null,
+        "goal": "Calculate the total amount of outstanding invoices"
+      }
+    ],
+    "raw_ok": true
+  },
+  {
+    "role": "admin",
+    "q": "how many calls and meetings were logged this month",
+    "tasks": [
+      {
+        "executor": "sql",
+        "kpi": "activity_volume",
+        "dimension": null,
+        "status_filter": null,
+        "goal": "Count calls and meetings logged this month"
+      }
+    ],
+    "raw_ok": true
+  },
+  {
+    "role": "admin",
+    "q": "why did we lose deals last month",
+    "tasks": [
+      {
+        "executor": "sql",
+        "kpi": "lost_deal_count",
+        "dimension": null,
+        "status_filter": null,
+        "goal": "Count lost deals from last month"
+      },
+      {
+        "executor": "kg",
+        "kpi": null,
+        "dimension": null,
+        "status_filter": null,
+        "goal": "Analyze lost reasons and commercial paths for deals lost last month"
+      }
+    ],
+    "raw_ok": true
+  },
+  {
+    "role": "admin",
+    "q": "360 on Orange",
+    "tasks": [
+      {
+        "executor": "kg",
+        "kpi": null,
+        "dimension": null,
+        "status_filter": null,
+        "goal": "Provide a 360 view of the company 'Orange' including commercial path, account relationships, and contact BANT"
+      }
+    ],
+    "raw_ok": true
+  },
+  {
+    "role": "admin",
+    "q": "average discount on quotes",
+    "tasks": [
+      {
+        "executor": "sql",
+        "kpi": "average_discount",
+        "dimension": null,
+        "status_filter": null,
+        "goal": "Calculate the average discount on all quotes"
+      }
+    ],
+    "raw_ok": true
+  },
+  {
+    "role": "admin",
+    "q": "how many tasks are still open",
+    "tasks": [
+      {
+        "executor": "sql",
+        "kpi": "open_task_count",
+        "dimension": null,
+        "status_filter": null,
+        "goal": "Count all open tasks"
+      }
+    ],
+    "raw_ok": true
+  }
+]

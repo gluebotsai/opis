@@ -1,0 +1,929 @@
+/**
+ * Admin — Product pricing (`/admin/pricing`)
+ * Config/rates composition: header + product rail + one white form panel.
+ * No KPI row. Canvas #F4F4F6; panel #FFFFFF; borders #C9C9CF.
+ * Sole source of truth — do not reintroduce rules in styles.css.
+ */
+
+.admin-pricing-page {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  gap: 24px;
+  min-height: 0;
+  padding-bottom: 0;
+}
+
+.admin-pricing-page.has-unsaved {
+  padding-bottom: 88px;
+}
+
+.admin-pricing-page__header {
+  align-items: flex-start;
+  display: flex;
+  flex: 0 0 auto;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.admin-pricing-page__header h1 {
+  color: #0b0b10;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 28px;
+  margin: 0;
+}
+
+.admin-pricing-page__subtitle {
+  color: #3f3f49;
+  font-size: 14px;
+  line-height: 20px;
+  margin: 8px 0 0;
+  max-width: 640px;
+}
+
+.admin-pricing-page__meta {
+  color: #5e5e69;
+  display: block;
+  font-size: 12px;
+  line-height: 16px;
+  margin-top: 8px;
+  max-width: 520px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-pricing-page__header .primary-button {
+  flex: 0 0 auto;
+  min-height: 40px;
+}
+
+.admin-pricing-layout {
+  align-items: stretch;
+  display: grid;
+  flex: 1 1 auto;
+  gap: 16px;
+  grid-template-columns: 200px minmax(0, 1fr);
+  min-height: 0;
+}
+
+/* Product rail — quiet links, not card buttons */
+.admin-pricing-nav {
+  align-content: start;
+  align-self: start;
+  display: grid;
+  gap: 16px;
+  max-height: calc(100dvh - 160px);
+  overflow-y: auto;
+  position: sticky;
+  scrollbar-width: thin;
+  top: 0;
+}
+
+.admin-pricing-nav__group {
+  display: grid;
+  gap: 2px;
+}
+
+.admin-pricing-nav__label {
+  color: #5e5e69;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  margin: 0 0 6px;
+  text-transform: uppercase;
+}
+
+.admin-pricing-nav__divider {
+  background: #c9c9cf;
+  height: 1px;
+  margin: 4px 0;
+}
+
+.admin-pricing-nav__item {
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: #3f3f49;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  padding: 10px 12px;
+  text-align: left;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.admin-pricing-nav__item:hover {
+  background: #e2e2e6;
+  color: #0b0b10;
+}
+
+.admin-pricing-nav__item.is-active {
+  background: #ffffff;
+  border: 1px solid #c9c9cf;
+  color: #0b0b10;
+  font-weight: 600;
+  padding: 9px 11px;
+}
+
+/* Main form panel — only flex-grow surface */
+.admin-pricing-panel {
+  background: #ffffff;
+  border: 1px solid #c9c9cf;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0;
+}
+
+.admin-pricing-panel__header {
+  align-items: flex-start;
+  border-bottom: 1px solid #c9c9cf;
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: space-between;
+  padding: 16px 20px;
+}
+
+.admin-pricing-panel__header h2 {
+  color: #0b0b10;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 24px;
+  margin: 0;
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-pricing-panel__lede {
+  color: #5e5e69;
+  font-size: 13px;
+  line-height: 18px;
+  margin: 4px 0 0;
+}
+
+.admin-pricing-panel__note {
+  background: #f4f4f6;
+  border: 1px solid #c9c9cf;
+  border-radius: 8px;
+  color: #5e5e69;
+  font-size: 13px;
+  line-height: 18px;
+  margin: 0;
+  padding: 12px 14px;
+}
+
+.admin-pricing-panel__toolbar {
+  align-items: flex-end;
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.admin-pricing-panel__toolbar .admin-pricing-field {
+  margin: 0;
+  min-width: min(240px, 100%);
+  max-width: min(320px, 100%);
+}
+
+.admin-pricing-panel__toolbar .admin-pricing-field span {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.admin-pricing-panel__toolbar .admin-pricing-field input {
+  min-height: 40px;
+  overflow: hidden;
+  padding: 8px 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-pricing-panel__body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
+  overflow: auto;
+  padding: 16px 20px 20px;
+}
+
+/* Per-product form stack — shared gap across CC / CRM / CDP / Campaign / VM / Ticketing / Regions */
+.admin-pricing-product {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.admin-pricing-page__loading {
+  color: #5e5e69;
+  font-size: 14px;
+  margin: 0;
+}
+
+/* Region select — equal L/R inset + custom chevron (tokens for light/dark) */
+.admin-pricing-region-select {
+  display: grid;
+  gap: 6px;
+  min-width: 160px;
+}
+
+.admin-pricing-region-select > span {
+  color: var(--text-caption);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.admin-pricing-region-select select {
+  -webkit-appearance: none;
+  appearance: none;
+  background-color: var(--bg-surface);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%237E7E88' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-position: right 16px center;
+  background-repeat: no-repeat;
+  background-size: 16px 16px;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  min-height: 40px;
+  min-width: 160px;
+  padding: 0 48px 0 16px;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.admin-pricing-region-select select:hover:not(:disabled) {
+  background-color: var(--bg-subtle);
+  border-color: var(--border-strong);
+}
+
+.admin-pricing-region-select select:focus,
+.admin-pricing-region-select select:focus-visible {
+  background-color: var(--bg-surface);
+  border-color: #5f1fb0;
+  box-shadow: 0 0 0 3px color-mix(in srgb, #5f1fb0 18%, transparent);
+  outline: none;
+}
+
+/* Segmented subtabs (not floating black pills) */
+.admin-pricing-subtabs {
+  background: #f4f4f6;
+  border: 1px solid #c9c9cf;
+  border-radius: 8px;
+  display: inline-flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 2px;
+  width: fit-content;
+}
+
+.admin-pricing-subtabs__item {
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: #3f3f49;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 20px;
+  padding: 8px 12px;
+}
+
+.admin-pricing-subtabs__item:hover {
+  color: #0b0b10;
+}
+
+.admin-pricing-subtabs__item.is-active {
+  background: #0b0b10;
+  border-color: transparent;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+/* Flat sections — white bordered, no nested grey card fill */
+.admin-pricing-section {
+  background: #ffffff;
+  border: 1px solid #c9c9cf;
+  border-radius: 12px;
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+}
+
+.admin-pricing-section--one-time {
+  background: #fffefa;
+  border-color: #c9c9cf;
+}
+
+.admin-pricing-section__head {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.admin-pricing-section h3 {
+  color: #0b0b10;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+  margin: 0;
+}
+
+.admin-pricing-section__desc {
+  color: #5e5e69;
+  font-size: 13px;
+  line-height: 18px;
+  margin: 0;
+}
+
+.admin-pricing-section__grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.admin-pricing-section__grid > .admin-pricing-table-wrap,
+.admin-pricing-section__grid > .admin-pricing-plan-fee,
+.admin-pricing-section__grid > .admin-pricing-add-row,
+.admin-pricing-section__grid > .admin-pricing-add-row__error,
+.admin-pricing-section__grid > .admin-plan-addons,
+.admin-pricing-section__grid > .admin-plan-addons__block,
+.admin-pricing-section__grid > .admin-pricing-hint,
+.admin-pricing-section__grid > .admin-pricing-empty,
+.admin-pricing-section__grid > .admin-pricing-field--full,
+.admin-pricing-section__grid > .checkbox-field,
+.admin-pricing-section__grid > .form-grid {
+  grid-column: 1 / -1;
+}
+
+/* Lone metric fields (e.g. Additional users) stay content-sized, not half-stretched */
+.admin-pricing-section__grid > .admin-pricing-field:only-child {
+  grid-column: 1 / -1;
+  max-width: 280px;
+}
+
+.admin-pricing-empty {
+  color: #5e5e69;
+  font-size: 13px;
+  line-height: 18px;
+  margin: 0;
+}
+
+.admin-pricing-pill {
+  background: color-mix(in srgb, #e0b73a 18%, #ffffff);
+  border-radius: 999px;
+  color: #866300;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 4px 8px;
+  text-transform: uppercase;
+}
+
+.admin-pricing-field {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.admin-pricing-field > span:first-child {
+  align-items: center;
+  color: #5e5e69;
+  display: inline-flex;
+  flex-wrap: wrap;
+  font-size: 12px;
+  font-weight: 500;
+  gap: 4px;
+  line-height: 16px;
+}
+
+.admin-pricing-field input {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 14px;
+  min-height: 40px;
+  padding: 8px 12px;
+  width: 100%;
+}
+
+.admin-pricing-field input:focus {
+  border-color: #5f1fb0;
+  box-shadow: 0 0 0 3px color-mix(in srgb, #5f1fb0 18%, transparent);
+  outline: none;
+}
+
+.admin-pricing-field--numeric input {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.admin-pricing-field__required {
+  color: #c73e32;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.admin-pricing-field.is-invalid input,
+.admin-pricing-field.is-invalid select {
+  border-color: #db4437;
+  box-shadow: 0 0 0 3px color-mix(in srgb, #db4437 16%, transparent);
+}
+
+.admin-pricing-field__error,
+.admin-pricing-add-row__error {
+  color: #c73e32;
+  font-size: 12px;
+  line-height: 16px;
+  margin: 0;
+}
+
+.admin-pricing-hint {
+  color: #5e5e69;
+  font-size: 13px;
+  line-height: 18px;
+  margin: 0;
+}
+
+.admin-pricing-plan-fee {
+  align-items: end;
+  background: #fffefa;
+  border: 1px solid #c9c9cf;
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  grid-column: 1 / -1;
+  grid-template-columns: minmax(0, 1fr) minmax(140px, 220px);
+  padding: 12px 14px;
+}
+
+.admin-pricing-plan-fee__label {
+  align-items: center;
+  color: #5e5e69;
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 13px;
+  gap: 8px;
+  line-height: 18px;
+  padding-bottom: 8px;
+}
+
+.admin-pricing-plan-fee .admin-pricing-field {
+  margin: 0;
+}
+
+.admin-pricing-add-row {
+  grid-column: 1 / -1;
+}
+
+.admin-pricing-add-row__trigger {
+  align-items: center;
+  display: inline-flex;
+  gap: 6px;
+  min-height: 40px;
+}
+
+.admin-pricing-add-row--expanded {
+  background: #ffffff;
+  border: 1px dashed #c9c9cf;
+  border-radius: 10px;
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.admin-pricing-add-row__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.admin-pricing-add-row__actions .primary-button,
+.admin-pricing-add-row__actions .secondary-button {
+  min-height: 40px;
+}
+
+/* Tables — sticky thead; no row hover (action-only) */
+.admin-pricing-table-wrap {
+  border: 1px solid #c9c9cf;
+  border-radius: 8px;
+  overflow: auto;
+}
+
+.admin-pricing-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 720px;
+  table-layout: fixed;
+  width: 100%;
+}
+
+.admin-pricing-table th,
+.admin-pricing-table td {
+  border-bottom: 1px solid #e2e2e6;
+  border-right: 1px solid #e2e2e6;
+  padding: 10px 12px;
+  vertical-align: top;
+}
+
+.admin-pricing-table th:last-child,
+.admin-pricing-table td:last-child {
+  border-right: none;
+}
+
+.admin-pricing-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.admin-pricing-table th {
+  background: var(--bg-subtle);
+  color: var(--text-caption);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.admin-pricing-table__plan {
+  color: #0b0b10;
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: none;
+}
+
+.admin-pricing-table__plan-sub {
+  color: #5e5e69;
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+.admin-pricing-table__plan-meta {
+  color: #7e7e88;
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  margin-top: 6px;
+  text-transform: none;
+}
+
+.admin-pricing-table__tier {
+  color: #0b0b10;
+  font-size: 13px;
+  font-weight: 600;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-pricing-table__muted {
+  color: #5e5e69;
+  font-size: 13px;
+}
+
+.admin-pricing-table__actions-col {
+  width: 64px;
+}
+
+.admin-pricing-table__actions {
+  text-align: center;
+  vertical-align: middle;
+}
+
+.admin-pricing-table__input {
+  background: #ffffff;
+  border: 1px solid #c9c9cf;
+  border-radius: 8px;
+  color: #0b0b10;
+  font-size: 13px;
+  min-height: 36px;
+  padding: 6px 10px;
+  width: 100%;
+}
+
+.admin-pricing-table__input:focus {
+  border-color: #5f1fb0;
+  box-shadow: 0 0 0 3px color-mix(in srgb, #5f1fb0 18%, transparent);
+  outline: none;
+}
+
+.admin-pricing-table__input--price {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.admin-pricing-table__delete {
+  color: #e06e3a;
+  height: 32px;
+  width: 32px;
+}
+
+.admin-pricing-table__delete:hover {
+  background: color-mix(in srgb, #e06e3a 12%, #ffffff);
+}
+
+/* Config defaults — sticky Item col; compact qty | rate */
+.admin-pricing-table--config-defaults th:first-child,
+.admin-pricing-table--config-defaults td:first-child {
+  background: var(--bg-surface);
+  left: 0;
+  position: sticky;
+  z-index: 2;
+}
+
+.admin-pricing-table--config-defaults th:first-child {
+  background: var(--bg-subtle);
+  z-index: 3;
+}
+
+.admin-config-default-item {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.admin-config-default-item > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-config-default-cell {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 1fr 1fr;
+  min-width: 0;
+}
+
+.admin-config-default-cell__field {
+  display: contents;
+}
+
+.admin-config-default-cell__field > span {
+  display: none;
+}
+
+.admin-pricing-table--config-defaults .admin-pricing-table__input--price {
+  max-width: 100%;
+  min-width: 0;
+  width: 100%;
+}
+
+.admin-pricing-table--modules {
+  min-width: 560px;
+}
+
+.admin-pricing-table--slabs {
+  min-width: 640px;
+}
+
+.admin-pricing-table--slabs th:first-child,
+.admin-pricing-table--slabs td:first-child {
+  background: var(--bg-surface);
+  left: 0;
+  position: sticky;
+  z-index: 2;
+}
+
+.admin-pricing-table--slabs th:first-child {
+  background: var(--bg-subtle);
+  z-index: 3;
+}
+
+.admin-pricing-table--regions {
+  min-width: 480px;
+}
+
+.admin-pricing-table--regions .admin-pricing-table__input--price {
+  max-width: 120px;
+  text-align: left;
+}
+
+.admin-plan-addons {
+  display: grid;
+  gap: 16px;
+}
+
+.admin-plan-addons__block {
+  background: #ffffff;
+  border: 1px solid #c9c9cf;
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  padding: 14px 16px;
+}
+
+.admin-plan-addons__block > strong {
+  color: #0b0b10;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.admin-plan-channel-list {
+  display: grid;
+  gap: 12px;
+}
+
+.admin-plan-channel-card {
+  background: #ffffff;
+  border: 1px solid #c9c9cf;
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  padding: 12px 14px;
+}
+
+.admin-plan-channel-card__header {
+  align-items: flex-end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+}
+
+.admin-plan-channel-card__header .admin-pricing-field {
+  flex: 1 1 200px;
+  margin: 0;
+  min-width: 160px;
+}
+
+.admin-pricing-page .checkbox-field {
+  align-items: center;
+  color: #0b0b10;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 14px;
+  gap: 8px;
+  line-height: 20px;
+}
+
+.admin-pricing-page .form-grid.two-col {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* Unsaved bar */
+.admin-pricing-savebar {
+  align-items: center;
+  background: #ffffff;
+  border-top: 1px solid #c9c9cf;
+  bottom: 0;
+  box-shadow: 0 -4px 16px rgba(11, 11, 16, 0.06);
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  left: var(--sidebar-width, 0);
+  padding: 12px 24px;
+  position: fixed;
+  right: 0;
+  z-index: 90;
+}
+
+.admin-pricing-savebar__indicator {
+  align-items: center;
+  color: #3f3f49;
+  display: flex;
+  font-size: 14px;
+  font-weight: 500;
+  gap: 10px;
+}
+
+.admin-pricing-savebar__dot {
+  background: #e0b73a;
+  border-radius: 999px;
+  display: inline-block;
+  flex: 0 0 auto;
+  height: 8px;
+  width: 8px;
+}
+
+.admin-pricing-savebar__actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.admin-pricing-savebar__actions .primary-button,
+.admin-pricing-savebar__actions .secondary-button {
+  min-height: 40px;
+}
+
+@media (max-width: 1280px) {
+  .admin-pricing-savebar {
+    left: 0;
+  }
+}
+
+@media (max-width: 1023px) {
+  .admin-pricing-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-pricing-nav {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 8px;
+    max-height: none;
+    overflow-x: auto;
+    overflow-y: visible;
+    padding-bottom: 2px;
+    position: static;
+  }
+
+  .admin-pricing-nav__group {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 4px;
+  }
+
+  .admin-pricing-nav__label,
+  .admin-pricing-nav__divider {
+    display: none;
+  }
+
+  .admin-pricing-nav__item {
+    white-space: nowrap;
+  }
+
+  .admin-pricing-nav__item.is-active {
+    padding: 9px 11px;
+  }
+
+  .admin-pricing-section__grid,
+  .admin-pricing-page .form-grid.two-col {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-pricing-plan-fee {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-pricing-savebar {
+    left: 0;
+    padding: 12px 16px;
+  }
+}
+
+@media (max-height: 720px) {
+  .admin-pricing-page {
+    gap: 16px;
+  }
+
+  .admin-pricing-page__subtitle {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+    overflow: hidden;
+  }
+
+  .admin-pricing-page__meta {
+    display: none;
+  }
+
+  .admin-pricing-panel__header {
+    padding: 12px 16px;
+  }
+
+  .admin-pricing-panel__lede {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+    overflow: hidden;
+  }
+
+  .admin-pricing-panel__body {
+    padding: 12px 16px 16px;
+  }
+
+  .admin-pricing-nav__item {
+    padding: 8px 10px;
+  }
+}

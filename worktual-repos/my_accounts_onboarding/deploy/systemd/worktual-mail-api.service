@@ -1,0 +1,21 @@
+[Unit]
+Description=Worktual Accounts Mail API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=@@DEPLOY_USER@@
+Group=@@DEPLOY_USER@@
+WorkingDirectory=@@DEPLOY_ROOT@@/current
+# database.env has only DATABASE_URL (safe for systemd). Full .env is loaded by Node dotenv for mail creds.
+EnvironmentFile=-@@DEPLOY_ROOT@@/shared/database.env
+Environment=SERVE_FRONTEND=true
+ExecStart=@@NODE_BIN@@ server/index.js
+Restart=on-failure
+RestartSec=5
+StandardOutput=append:@@DEPLOY_ROOT@@/logs/mail-api.log
+StandardError=append:@@DEPLOY_ROOT@@/logs/mail-api.log
+
+[Install]
+WantedBy=multi-user.target

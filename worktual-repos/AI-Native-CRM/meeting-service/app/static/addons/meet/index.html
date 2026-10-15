@@ -1,0 +1,1839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <title>Sales Assist</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+      background: #fff;
+      color: #111;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+      padding: 1.15rem 1.15rem 1rem;
+      border-bottom: 1px solid #eee;
+    }
+    header img {
+      width: 72px;
+      height: 72px;
+      border-radius: 18px;
+      background: #000;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+    header h1 { margin: 0; font-size: 1.35rem; font-weight: 700; }
+    header p { margin: 0.2rem 0 0; color: #667; font-size: 0.92rem; }
+    #who, #status, #meetUrlWrap { display: none !important; }
+    #authGate {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.25rem 1.15rem 1.5rem;
+      text-align: center;
+      gap: 0.65rem;
+    }
+    #authGate[hidden] { display: none !important; }
+    #authGate p { margin: 0; color: #667; font-size: 0.88rem; max-width: 18rem; line-height: 1.45; }
+    #authError { margin: 0; color: #b91c1c; font-size: 0.82rem; max-width: 18rem; }
+    #gsi { padding: 0.35rem 0 0; min-height: 44px; }
+    #gsi:empty { display: none; }
+    body.signed-in #authGate { display: none !important; }
+    body:not(.signed-in) #dashboard,
+    body:not(.signed-in) #askPage,
+    body:not(.signed-in) footer { display: none !important; }
+    #thread {
+      flex: 1;
+      overflow: auto;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      min-height: 0;
+    }
+    .empty {
+      margin: auto;
+      text-align: center;
+      color: #667;
+      max-width: 18rem;
+    }
+    .empty img {
+      width: 112px;
+      height: 112px;
+      border-radius: 28px;
+      background: #000;
+      object-fit: cover;
+      margin: 0 auto 0.85rem;
+      display: block;
+    }
+    .empty strong { display: block; color: #111; font-size: 1.25rem; margin-bottom: 0.3rem; }
+    .msg {
+      max-width: 92%;
+      border-radius: 14px;
+      padding: 0.75rem 0.85rem;
+      background: #f6f7fb;
+      border: 1px solid #e7e9f2;
+      color: #111;
+      font-size: 0.88rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+    .msg.you {
+      align-self: flex-end;
+      background: #eef2ff;
+      border-color: #dfe5ff;
+      color: #111;
+    }
+    .msg.coach {
+      align-self: stretch;
+      max-width: 100%;
+      background: transparent;
+      border: 0;
+      border-radius: 0;
+      padding: 0.15rem 0.1rem;
+      color: #111;
+    }
+    .msg.coach .tag { display: none; }
+    .msg.coach .time { text-align: left; }
+    .nba {
+      align-self: stretch;
+      margin: 0.15rem 0 0.7rem;
+      border: 1px solid #e6e6ea;
+      border-radius: 12px;
+      background: #f7f7f8;
+      padding: 0.75rem 0.85rem 0.8rem;
+    }
+    .nba .kicker {
+      margin: 0;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #6b7280;
+    }
+    .nba .detail {
+      margin: 0.4rem 0 0;
+      font-size: 0.88rem;
+      line-height: 1.45;
+      color: #111;
+    }
+    .nba button {
+      margin-top: 0.7rem;
+      border: 0;
+      border-radius: 10px;
+      background: #111;
+      color: #fff;
+      font: inherit;
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 0.48rem 0.9rem;
+      cursor: pointer;
+    }
+    .nba button:disabled { opacity: 0.55; cursor: default; }
+    .nba .err {
+      margin: 0.45rem 0 0;
+      font-size: 0.75rem;
+      color: #b91c1c;
+    }
+    .msg .who {
+      display: block;
+      color: #525a78;
+      font-size: 0.7rem;
+      font-weight: 700;
+      margin-bottom: 0.3rem;
+    }
+    .msg .time {
+      color: #777;
+      font-size: 0.64rem;
+      margin-top: 0.35rem;
+      text-align: right;
+    }
+    footer { padding: 0.9rem 1.1rem 1.15rem; border-top: 1px solid #eee; }
+    .composer {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      background: #f4f4f5;
+      border-radius: 999px;
+      padding: 0.45rem 0.45rem 0.45rem 1.05rem;
+    }
+    .composer input {
+      flex: 1;
+      border: 0;
+      background: transparent;
+      color: #111;
+      font: inherit;
+      font-size: 1rem;
+      outline: none;
+    }
+    .composer button {
+      width: 44px;
+      height: 44px;
+      border: 0;
+      border-radius: 50%;
+      background: #111;
+      color: #fff;
+      font-size: 1.15rem;
+      cursor: pointer;
+    }
+    .composer button:disabled { opacity: 0.4; cursor: not-allowed; }
+    .disclaimer { margin: 0.45rem 0.15rem 0; font-size: 0.68rem; color: #99a; }
+    .dash-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.85rem 1rem 0.75rem;
+      border-bottom: 1px solid #ececf2;
+    }
+    .dash-title-row { display: flex; align-items: center; gap: 0.45rem; }
+    .dash-header h2 { margin: 0; font-size: 1.05rem; font-weight: 700; color: #111; }
+    .dash-sub { margin: 0.2rem 0 0; color: #6b7280; font-size: 0.78rem; line-height: 1.35; }
+    .live-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0.65rem;
+      border-radius: 999px;
+      background: #ecfdf5;
+      color: #047857;
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+    .live-pill i {
+      width: 0.45rem;
+      height: 0.45rem;
+      border-radius: 50%;
+      background: #10b981;
+      display: inline-block;
+    }
+    .contact-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      flex-shrink: 0;
+      border: 0;
+      background: #eef2ff;
+      color: #3730a3;
+      font: inherit;
+      font-size: 0.78rem;
+      font-weight: 650;
+      cursor: pointer;
+      padding: 0.45rem 0.7rem;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+    .contact-btn svg { width: 0.95rem; height: 0.95rem; }
+    body.contact-view footer { display: none; }
+    #contactPage {
+      flex: 1;
+      min-height: 0;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #contactPage.visible { display: flex; }
+    .contact-body { flex: 1; overflow: auto; padding: 0.75rem 0.75rem 1.2rem; background: #f6f7fb; }
+    .contact-empty { margin: 1.5rem 1rem; color: #667; font-size: 0.88rem; }
+    .c-card {
+      background: #fff;
+      border: 1px solid #ececf3;
+      border-radius: 16px;
+      padding: 0.85rem 0.9rem;
+      margin-bottom: 0.7rem;
+      color: #111;
+    }
+    .c-hero { display: flex; gap: 0.75rem; align-items: flex-start; }
+    .c-avatar {
+      width: 42px; height: 42px; border-radius: 50%;
+      background: #6d28d9; color: #fff; display: flex; align-items: center; justify-content: center;
+      font-weight: 700; flex-shrink: 0;
+    }
+    .c-name { margin: 0; font-size: 1rem; font-weight: 700; }
+    .c-badge {
+      display: inline-block; margin-left: 0.35rem; padding: 0.1rem 0.45rem;
+      border-radius: 999px; background: #ecfdf5; color: #047857;
+      font-size: 0.68rem; font-weight: 700; vertical-align: middle;
+    }
+    .c-meta { margin: 0.2rem 0 0; color: #4b5563; font-size: 0.78rem; }
+    .c-section-title {
+      display: flex; align-items: center; gap: 0.4rem;
+      margin: 0 0 0.65rem; font-size: 0.92rem; font-weight: 700;
+    }
+    .c-kv { display: grid; grid-template-columns: 7.2rem 1fr; gap: 0.35rem 0.6rem; font-size: 0.84rem; }
+    .c-kv span { color: #6b7280; }
+    .c-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.45rem; }
+    .c-metric { background: #f8f7ff; border-radius: 12px; padding: 0.55rem 0.45rem 0.5rem; }
+    .c-metric b { display: block; font-size: 1.15rem; }
+    .c-metric em { display: block; font-style: normal; color: #6b7280; font-size: 0.68rem; margin-bottom: 0.15rem; }
+    .c-bar { height: 4px; border-radius: 999px; background: #e5e7eb; margin-top: 0.35rem; overflow: hidden; }
+    .c-bar i { display: block; height: 100%; border-radius: 999px; }
+    .c-summary { background: #f5f3ff; border-color: #e9e5ff; }
+    .c-summary p { margin: 0; font-size: 0.84rem; line-height: 1.45; white-space: pre-wrap; }
+    .c-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.7rem; }
+    .c-chips span {
+      background: #fff; border-radius: 999px; padding: 0.2rem 0.5rem;
+      font-size: 0.68rem; color: #374151;
+    }
+    .contact-btn[hidden] { display: none; }
+    #dashboard {
+      flex: 1;
+      overflow: hidden;
+      padding: 0;
+      display: none;
+      flex-direction: column;
+      min-height: 0;
+    }
+    #dashboard.visible { display: flex; }
+    #askPage {
+      flex: 1;
+      min-height: 0;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #askPage.visible { display: flex; }
+    #askThread {
+      flex: 1;
+      overflow: auto;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      min-height: 0;
+    }
+    .ask-header {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      padding: 0.65rem 1rem 0.45rem;
+      border-bottom: 1px solid #eee;
+    }
+    .ask-header h2 { margin: 0; font-size: 1rem; font-weight: 700; }
+    .back-btn {
+      border: 0;
+      background: transparent;
+      color: #111;
+      font: inherit;
+      font-size: 0.88rem;
+      font-weight: 600;
+      padding: 0.25rem 0.15rem;
+      cursor: pointer;
+    }
+    #askPage #thread { display: flex; flex: 1; }
+    .dash-section h3 {
+      margin: 0 0 0.45rem;
+      font-size: 0.92rem;
+      font-weight: 700;
+    }
+    .dash-section p, .dash-section li {
+      margin: 0;
+      font-size: 0.82rem;
+      line-height: 1.45;
+      color: #333;
+    }
+    .dash-section ul { margin: 0; padding-left: 1rem; }
+    .heard-strip {
+      background: #f4f4f5;
+      border-radius: 12px;
+      padding: 0.55rem 0.75rem;
+      font-size: 0.78rem;
+      color: #444;
+    }
+    .tone-label {
+      margin: 0 0 0.25rem;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .tone-label.positive { color: #047857; }
+    .tone-label.negative { color: #be123c; }
+    .tone-label.confused { color: #b45309; }
+    .rec-icon.tone-positive { background: #ecfdf5; }
+    .rec-icon.tone-negative { background: #fff1f2; }
+    .rec-icon.tone-confused { background: #fffbeb; }
+    .rec-icon .tone-dot {
+      width: 0.55rem;
+      height: 0.55rem;
+      border-radius: 50%;
+      display: block;
+    }
+    .rec-icon.tone-positive .tone-dot { background: #10b981; }
+    .rec-icon.tone-negative .tone-dot { background: #f43f5e; }
+    .rec-icon.tone-confused .tone-dot { background: #f59e0b; }
+    .rec-row { display: flex; gap: 0.55rem; align-items: flex-start; }
+    .rec-row[hidden] { display: none !important; }
+    .rec-icon {
+      width: 1.5rem;
+      height: 1.5rem;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 0.1rem;
+    }
+    .composer.dark { background: #f4f5fa; border: 1px solid #e2e4ee; }
+    .composer.dark input { color: #111; }
+    .composer.dark input::placeholder { color: #737789; }
+    .composer.dark button { background: #667eea; }
+    .dash-muted { color: #667; font-size: 0.82rem; }
+    .dash-error { margin: 0.5rem 1rem 0; color: #b91c1c; font-size: 0.82rem; }
+    #crmLogin { display: grid; gap: 0.55rem; width: min(280px, 100%); text-align: left; }
+    #crmLogin[hidden] { display: none; }
+    #crmLogin label { display: grid; gap: 0.2rem; font-size: 0.78rem; color: #444; }
+    #crmLogin input { font: inherit; font-size: 0.95rem; padding: 0.55rem 0.65rem; border: 1px solid #d5d7e2; border-radius: 8px; }
+    #crmLogin button { font: inherit; font-size: 0.95rem; padding: 0.6rem 0.8rem; border: 0; border-radius: 8px; background: #111; color: #fff; cursor: pointer; }
+    #authChecking { margin: 0; color: #667; font-size: 0.82rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="/addons/meet/worktual-logo.png" alt="Worktual" />
+    <div>
+      <h1>Sales Assist</h1>
+      <p>Live coaching for customer calls</p>
+    </div>
+  </header>
+  <p id="who"></p>
+  <p id="status"></p>
+  <section id="authGate" aria-label="Sign in">
+    <img src="/addons/meet/worktual-logo.png" alt="" width="96" height="96" style="border-radius:24px;background:#000;object-fit:cover" />
+    <strong style="font-size:1.15rem">Sign in to Worktual Assist</strong>
+    <p>Use your CRM account. If this browser’s Google account is already connected in Configuration, coaching opens without a password.</p>
+    <p id="authChecking">Checking your connected Google account…</p>
+    <form id="crmLogin" hidden>
+      <label>Email<input id="crmEmail" type="email" autocomplete="username" required /></label>
+      <label>Password<input id="crmPassword" type="password" autocomplete="current-password" required /></label>
+      <button id="crmLoginSubmit" type="submit">Sign in</button>
+    </form>
+    <div id="gsi" hidden></div>
+    <p id="authError" hidden></p>
+  </section>
+  <div id="meetUrlWrap"><input id="url" /></div>
+  <main id="dashboard" aria-live="polite">
+    <div class="dash-header">
+      <div>
+        <div class="dash-title-row">
+          <h2 id="dashTitle">Sales Assist</h2>
+        </div>
+        <p id="dashSub" class="dash-sub">Coaching for this call.</p>
+        <p id="signedIn" class="dash-muted" hidden></p>
+      </div>
+      <button id="viewContact" class="contact-btn" type="button" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5 19.2c1.4-3 3.8-4.5 7-4.5s5.6 1.5 7 4.5"/></svg>
+        View contact
+      </button>
+    </div>
+    <p id="dashError" class="dash-error" hidden></p>
+  <div id="thread">
+    <div class="empty" id="empty">
+      <img src="/addons/meet/worktual-logo.png" alt="" />
+        <strong>Sales Assist</strong>
+        The conversation and live coaching will appear here as people speak.
+    </div>
+  </div>
+    <div id="heardStrip" class="heard-strip" hidden></div>
+    <button id="markCustomer" type="button" hidden style="margin:8px 16px 0;font:inherit;font-size:13px;">This speaker is the customer</button>
+    <div id="markCustomerPicker" hidden style="margin:8px 16px 0;font:inherit;font-size:13px;">
+      <p style="margin:0 0 4px;opacity:.75;">Who is this speaker?</p>
+      <div id="markCustomerPickerButtons" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+    </div>
+  </main>
+  <main id="contactPage">
+    <div class="ask-header">
+      <button type="button" class="back-btn" id="backFromContact" aria-label="Back to live assist">← Live</button>
+    </div>
+    <div id="contactBody" class="contact-body"></div>
+  </main>
+  <main id="askPage">
+    <div class="ask-header">
+      <button type="button" class="back-btn" id="backLive" aria-label="Back to live assist">← Live</button>
+      <h2>Ask</h2>
+    </div>
+    <div id="askThread">
+      <div class="empty" id="askEmpty">
+        <img src="/addons/meet/worktual-logo.png" alt="" />
+        <strong>Ask Assist</strong>
+        Type a question about the lead, product, or deal. Live coaching stays on the previous screen.
+      </div>
+    </div>
+  </main>
+  <footer>
+    <form id="askForm" class="composer dark">
+      <input id="query" placeholder="Ask about lead, product" autocomplete="off" />
+      <button id="ask" type="submit" aria-label="Send">↑</button>
+    </form>
+    <p class="disclaimer">Worktual Assist can make mistakes. Verify important information.</p>
+  </footer>
+  <script src="/addons/meet/internal-panel.js"></script>
+  <script src="https://www.gstatic.com/meetjs/addons/1.1.0/meet.addons.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    function browserTimeZone() {
+      try {
+        return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+      } catch (_) {
+        return "UTC";
+      }
+    }
+    let sessionToken = "";
+    let googleClientId = "";
+    let cloudProjectNumber = "";
+    let meetingUrl = "";
+    let crmSessionId = "";
+    let panelToken = "";
+    let assistSessionId = "";
+    let heardSpeakerKey = "";
+    let heardSpeakerName = "";
+    let markPromptSpeakerKey = "";
+    const unknownPromptedAt = new Map();
+    const UNKNOWN_PROMPT_COOLDOWN_MS = 60_000;
+    let liveEventsPath = "";
+    let liveEs = null;
+    let syncTimer = null;
+    let bootstrapTimer = null;
+    let bootstrapAttempts = 0;
+    let liveCoachReady = false;
+    let sseErrorShown = false;
+    let signedInEmail = "";
+    let currentContactId = "";
+    let currentContactCard = null;
+    let loadedHistorySessionId = "";
+    // Bounded "mark this speaker as" options for this meeting — the
+    // contact plus any guest emails outside the org's internal domains.
+    let currentCustomerPool = [];
+    const recentMessageKeys = new Map();
+    const recentSpokenText = new Map();
+    let currentView = "dash";
+    const ASSIST_STORE_KEY = "worktual_meet_assist_session";
+
+    function saveAssistSession(token, expiresInSec, email) {
+      try {
+        const ttl = Math.max(60, Number(expiresInSec) || 3600);
+        const exp = Date.now() + ttl * 1000 - 60_000;
+        sessionStorage.setItem(
+          ASSIST_STORE_KEY,
+          JSON.stringify({ token, exp, email: email || "" }),
+        );
+      } catch (_) {}
+    }
+
+    function loadAssistSession() {
+      try {
+        const raw = sessionStorage.getItem(ASSIST_STORE_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (!parsed || !parsed.token || Date.now() > Number(parsed.exp || 0)) {
+          sessionStorage.removeItem(ASSIST_STORE_KEY);
+          return null;
+        }
+        return parsed;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    function clearAssistSessionStore() {
+      try {
+        sessionStorage.removeItem(ASSIST_STORE_KEY);
+      } catch (_) {}
+    }
+
+    /** Meet appends base64 protobuf ?meet_sdk=…; field 4 is the Cloud project number. */
+    function readVarint(bytes, pos) {
+      let result = 0n;
+      let shift = 0n;
+      while (pos < bytes.length) {
+        const b = bytes[pos++];
+        result |= BigInt(b & 0x7f) << shift;
+        if ((b & 0x80) === 0) break;
+        shift += 7n;
+      }
+      return [result, pos];
+    }
+
+    function cloudProjectFromMeetSdkUrl() {
+      try {
+        const raw = new URL(window.location.href).searchParams.get("meet_sdk");
+        if (!raw) return "";
+        const bytes = Uint8Array.from(atob(raw), (c) => c.charCodeAt(0));
+        let i = 0;
+        while (i < bytes.length) {
+          const [tag, next] = readVarint(bytes, i);
+          i = next;
+          const field = Number(tag >> 3n);
+          const wire = Number(tag & 7n);
+          if (wire === 0) {
+            const [val, after] = readVarint(bytes, i);
+            i = after;
+            if (field === 4) return String(val);
+          } else if (wire === 2) {
+            const [len, afterLen] = readVarint(bytes, i);
+            i = afterLen;
+            const slice = bytes.subarray(i, i + Number(len));
+            i += Number(len);
+            if (field === 4) return new TextDecoder().decode(slice);
+          } else {
+            break;
+          }
+        }
+      } catch (e) {
+        console.warn("Worktual Assist: could not parse meet_sdk", e);
+      }
+      return "";
+    }
+
+    function setStatus(_html) {}
+    function addMsg(who, text, cls, tag, at, threadId, afterEl) {
+      const body = String(text || "").trim();
+      if (!body) return;
+      const thread = $(threadId || "thread");
+      if (!thread) return;
+      const stamp = Number(at) || Date.now();
+      const key = [thread.id, cls || "", who || "", body].join("|");
+      if (recentMessageKeys.has(key)) return;
+      if (cls === "you" && thread.id !== "askThread") {
+        const spokenKey = body.toLowerCase();
+        if (recentSpokenText.has(spokenKey)) return;
+        recentSpokenText.set(spokenKey, Date.now());
+      }
+      recentMessageKeys.set(key, Date.now());
+      const empty = thread.querySelector(".empty");
+      if (empty) empty.remove();
+      const d = document.createElement("div");
+      d.className = "msg" + (cls ? " " + cls : "");
+      if (cls === "coach") {
+        d.innerHTML = "<div class='body'></div><div class='time'></div>";
+      } else {
+        d.innerHTML = "<div class='who'></div><div class='body'></div><div class='time'></div>";
+        d.querySelector(".who").textContent = who || "Meeting";
+      }
+      d.querySelector(".body").textContent = body;
+      if (cls === "you") d.setAttribute("data-at", String(stamp));
+      d.querySelector(".time").textContent = new Date(stamp).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      if (afterEl && afterEl.parentNode === thread) {
+        thread.insertBefore(d, afterEl.nextSibling);
+      } else {
+        thread.appendChild(d);
+      }
+      thread.scrollTop = thread.scrollHeight;
+      return d;
+    }
+
+    function resetConversation(sessionId) {
+      if (loadedHistorySessionId === sessionId) return;
+      loadedHistorySessionId = sessionId;
+      recentMessageKeys.clear();
+      recentSpokenText.clear();
+      const thread = $("thread");
+      if (thread) thread.innerHTML = "";
+    }
+
+    function hideChromeHeader() {
+      const topHeader = document.querySelector("body > header");
+      if (topHeader) topHeader.style.display = "none";
+    }
+
+    function setSignedInUi(on) {
+      document.body.classList.toggle("signed-in", Boolean(on));
+      const gate = $("authGate");
+      if (gate) gate.hidden = Boolean(on);
+    }
+
+    function revealCrmLogin(message) {
+      if (sessionToken) return;
+      const checking = $("authChecking");
+      if (checking) checking.hidden = true;
+      const form = $("crmLogin");
+      if (form) form.hidden = false;
+      if (message) setAuthError(message);
+      else setAuthError("");
+    }
+
+    function setAuthError(text) {
+      const el = $("authError");
+      if (!el) return;
+      const msg = String(text || "").trim();
+      if (!msg) {
+        el.hidden = true;
+        el.textContent = "";
+        return;
+      }
+      el.hidden = false;
+      el.textContent = msg;
+    }
+
+    function showAuthGate(message) {
+      currentView = "auth";
+      setSignedInUi(false);
+      hideChromeHeader();
+      const dash = $("dashboard");
+      const askPage = $("askPage");
+      const contactPage = $("contactPage");
+      if (dash) dash.classList.remove("visible");
+      if (askPage) askPage.classList.remove("visible");
+      if (contactPage) contactPage.classList.remove("visible");
+      document.body.classList.remove("contact-view");
+      if (message) setAuthError(message);
+    }
+
+    function showDashboard() {
+      if (!sessionToken) {
+        showAuthGate();
+        return;
+      }
+      currentView = "dash";
+      document.body.classList.add("live-dash");
+      document.body.classList.remove("ask-view");
+      document.body.classList.remove("contact-view");
+      setSignedInUi(true);
+      const dash = $("dashboard");
+      const askPage = $("askPage");
+      const contactPage = $("contactPage");
+      hideChromeHeader();
+      if (dash) dash.classList.add("visible");
+      if (askPage) askPage.classList.remove("visible");
+      if (contactPage) contactPage.classList.remove("visible");
+    }
+
+    function showContactPage() {
+      if (!sessionToken || !currentContactId) return;
+      currentView = "contact";
+      document.body.classList.remove("live-dash");
+      document.body.classList.remove("ask-view");
+      document.body.classList.add("contact-view");
+      const dash = $("dashboard");
+      const askPage = $("askPage");
+      const contactPage = $("contactPage");
+      hideChromeHeader();
+      if (dash) dash.classList.remove("visible");
+      if (askPage) askPage.classList.remove("visible");
+      if (contactPage) contactPage.classList.add("visible");
+      const body = $("contactBody");
+      if (!body) return;
+      renderContactCard(body, currentContactCard || {});
+    }
+
+    function el(tag, className, text) {
+      const node = document.createElement(tag);
+      if (className) node.className = className;
+      if (text != null) node.textContent = text;
+      return node;
+    }
+
+    function leadLabel(status) {
+      const raw = String(status || "").trim().replace(/_/g, " ");
+      if (!raw) return "";
+      const titled = raw.replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+      return /lead$/i.test(titled) ? titled : titled + " Lead";
+    }
+
+    function metric(label, value, color) {
+      const box = el("div", "c-metric");
+      box.appendChild(el("em", "", label));
+      const n = value == null || value === "" ? null : Number(value);
+      box.appendChild(el("b", "", n == null || Number.isNaN(n) ? "—" : String(Math.round(n))));
+      const bar = el("div", "c-bar");
+      const fill = document.createElement("i");
+      fill.style.width = n == null || Number.isNaN(n) ? "0%" : Math.max(0, Math.min(100, n)) + "%";
+      fill.style.background = color;
+      bar.appendChild(fill);
+      box.appendChild(bar);
+      return box;
+    }
+
+    function renderContactCard(body, card) {
+      body.innerHTML = "";
+      const name = String(card.name || "").trim();
+      const email = String(card.email || "").trim();
+      const company = String(card.company || "").trim();
+      const title = String(card.title || "").trim();
+      const industry = String(card.industry || "").trim();
+      const source = String(card.leadSource || "").trim();
+      const status = leadLabel(card.leadStatus);
+      const summary = String(card.summary || "").trim();
+      if (!name && !email && !summary) {
+        body.appendChild(el("p", "contact-empty", "No contact details are available for this meeting."));
+        return;
+      }
+
+      const hero = el("section", "c-card c-hero");
+      hero.appendChild(el("div", "c-avatar", (name || "?").slice(0, 1).toUpperCase()));
+      const who = el("div");
+      const nameRow = el("p", "c-name", name || "Contact");
+      if (status) nameRow.appendChild(el("span", "c-badge", "+ " + status));
+      who.appendChild(nameRow);
+      if (email) who.appendChild(el("p", "c-meta", email));
+      if (company) who.appendChild(el("p", "c-meta", company + " (account)"));
+      hero.appendChild(who);
+      body.appendChild(hero);
+
+      const details = el("section", "c-card");
+      details.appendChild(el("h3", "c-section-title", "Contact Details"));
+      const kv = el("div", "c-kv");
+      [["Name", name || "—"], ["Company", company || "—"], ["Email", email || "—"]].forEach(function (row) {
+        kv.appendChild(el("span", "", row[0]));
+        kv.appendChild(el("div", "", row[1]));
+      });
+      details.appendChild(kv);
+      body.appendChild(details);
+
+      const engage = el("section", "c-card");
+      engage.appendChild(el("h3", "c-section-title", "Engagement"));
+      const metrics = el("div", "c-metrics");
+      metrics.appendChild(metric("Score", card.score, "#7c3aed"));
+      metrics.appendChild(metric("Fit", card.fitScore, "#10b981"));
+      metrics.appendChild(metric("Intent", card.intentScore, "#3b82f6"));
+      engage.appendChild(metrics);
+      body.appendChild(engage);
+
+      const info = el("section", "c-card");
+      info.appendChild(el("h3", "c-section-title", "Key Information"));
+      const infoKv = el("div", "c-kv");
+      [
+        ["Industry", industry || "Not specified"],
+        ["Job Title", title || "Not specified"],
+        ["Reason for Entry", source || "Unknown"],
+      ].forEach(function (row) {
+        infoKv.appendChild(el("span", "", row[0]));
+        infoKv.appendChild(el("div", "", row[1]));
+      });
+      info.appendChild(infoKv);
+      body.appendChild(info);
+
+      if (summary) {
+        const block = el("section", "c-card c-summary");
+        block.appendChild(el("h3", "c-section-title", "Summary"));
+        block.appendChild(el("p", "", summary));
+        const chips = el("div", "c-chips");
+        [status, industry || "No Industry", title || "No Title", source || "Unknown Reason"]
+          .filter(Boolean)
+          .forEach(function (chip) { chips.appendChild(el("span", "", chip)); });
+        block.appendChild(chips);
+        body.appendChild(block);
+      }
+    }
+
+    function showAskPage() {
+      if (!sessionToken) {
+        showAuthGate();
+        return;
+      }
+      currentView = "ask";
+      document.body.classList.remove("live-dash");
+      document.body.classList.remove("contact-view");
+      document.body.classList.add("ask-view");
+      setSignedInUi(true);
+      const dash = $("dashboard");
+      const askPage = $("askPage");
+      const contactPage = $("contactPage");
+      hideChromeHeader();
+      if (dash) dash.classList.remove("visible");
+      if (askPage) askPage.classList.add("visible");
+      if (contactPage) contactPage.classList.remove("visible");
+      const q = $("query");
+      if (q) q.focus();
+      const thread = $("askThread");
+      if (thread) thread.scrollTop = thread.scrollHeight;
+    }
+
+    function hideMarkCustomerUi() {
+      const mark = $("markCustomer");
+      if (mark) mark.hidden = true;
+      const picker = $("markCustomerPicker");
+      if (picker) picker.hidden = true;
+      markPromptSpeakerKey = "";
+    }
+
+    // Final identity fallback. Exact known emails stay distinct; an uninvited
+    // customer colleague gets a channel-scoped customer-side lock and never
+    // steals the primary contact's email.
+    function showMarkCustomerUi() {
+      const mark = $("markCustomer");
+      const picker = $("markCustomerPicker");
+      if (mark) mark.hidden = true;
+      if (!picker) return;
+      const holder = $("markCustomerPickerButtons");
+      if (holder) {
+        holder.innerHTML = "";
+        currentCustomerPool.forEach((person) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.textContent =
+            "This is " + (person.name || person.email) + " (" + person.email + ")";
+          btn.style.font = "inherit";
+          btn.style.fontSize = "13px";
+          btn.onclick = () => markChannelAsEmail(person.email, btn);
+          holder.appendChild(btn);
+        });
+        const guest = document.createElement("button");
+        guest.type = "button";
+        guest.textContent = "Different customer team member";
+        guest.style.font = "inherit";
+        guest.style.fontSize = "13px";
+        guest.onclick = () => markChannelAsCustomerSide(guest);
+        holder.appendChild(guest);
+      }
+      markPromptSpeakerKey = heardSpeakerKey;
+      picker.hidden = false;
+    }
+
+    function markChannelAsEmail(email, buttonEl) {
+      if (!assistSessionId || !heardSpeakerKey || !panelToken) return;
+      if (buttonEl) buttonEl.disabled = true;
+      const body = {
+        speakerKey: heardSpeakerKey,
+        displayName: heardSpeakerName,
+      };
+      if (email) body.email = email;
+      return fetch(
+        "/api/meeting-assist/sessions/" + encodeURIComponent(assistSessionId) + "/channel-email",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + panelToken,
+          },
+          body: JSON.stringify(body),
+        },
+      )
+        .then((r) => {
+          if (!r.ok) throw new Error("mark failed");
+          hideMarkCustomerUi();
+        })
+        .catch(() => {
+          if (buttonEl) buttonEl.disabled = false;
+        });
+    }
+
+    function markChannelAsCustomerSide(buttonEl) {
+      if (!assistSessionId || !heardSpeakerKey || !panelToken) return;
+      if (buttonEl) buttonEl.disabled = true;
+      return fetch(
+        "/api/meeting-assist/sessions/" + encodeURIComponent(assistSessionId) + "/channel-email",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + panelToken,
+          },
+          body: JSON.stringify({
+            speakerKey: heardSpeakerKey,
+            displayName: heardSpeakerName,
+            customerSideGuest: true,
+          }),
+        },
+      )
+        .then((r) => {
+          if (!r.ok) throw new Error("mark failed");
+          hideMarkCustomerUi();
+        })
+        .catch(() => {
+          if (buttonEl) buttonEl.disabled = false;
+        });
+    }
+
+    function spokenTokens(text) {
+      return String(text || "")
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, " ")
+        .split(/\s+/)
+        .filter(function (word) { return word.length > 0; });
+    }
+
+    /** Draft and final Whisper passes of one sentence share almost every word. */
+    function isUtteranceRevision(prev, next) {
+      const left = spokenTokens(prev);
+      const right = spokenTokens(next);
+      if (left.length < 4 || right.length < 4) return false;
+      const leftSet = {};
+      const rightSet = {};
+      left.forEach(function (word) { leftSet[word] = true; });
+      right.forEach(function (word) { rightSet[word] = true; });
+      let shared = 0;
+      let leftSize = 0;
+      let rightSize = 0;
+      Object.keys(leftSet).forEach(function (word) {
+        leftSize += 1;
+        if (rightSet[word]) shared += 1;
+      });
+      Object.keys(rightSet).forEach(function () { rightSize += 1; });
+      const smaller = Math.min(leftSize, rightSize);
+      return smaller > 0 && shared / smaller >= 0.85;
+    }
+
+    /**
+     * A second pass of the same sentence replaces the bubble already on
+     * screen. A shorter draft never overwrites the finished line.
+     */
+    function reviseLastSpoken(who, text, extra) {
+      const thread = $("thread");
+      if (!thread) return false;
+      const bubbles = thread.querySelectorAll(".msg.you");
+      const last = bubbles[bubbles.length - 1];
+      if (!last) return false;
+      const whoEl = last.querySelector(".who");
+      const bodyEl = last.querySelector(".body");
+      if (!whoEl || !bodyEl) return false;
+      if (whoEl.textContent.trim().toLowerCase() !== String(who || "").trim().toLowerCase()) {
+        return false;
+      }
+      const prevAt = Number(last.getAttribute("data-at") || 0);
+      const stamp = Number(extra && extra.at) || Date.now();
+      if (prevAt && stamp - prevAt > 20000) return false;
+      const prev = bodyEl.textContent.trim();
+      if (!isUtteranceRevision(prev, text)) return false;
+      const incomingDraft = Boolean(extra && extra.completed === false);
+      if ((incomingDraft || !(extra && extra.completed === true)) && text.length < prev.length) {
+        recentSpokenText.set(text.toLowerCase(), Date.now());
+        return true;
+      }
+      bodyEl.textContent = text;
+      last.setAttribute("data-at", String(stamp));
+      const timeEl = last.querySelector(".time");
+      if (timeEl) {
+        timeEl.textContent = new Date(stamp).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      }
+      recentSpokenText.set(prev.toLowerCase(), Date.now());
+      recentSpokenText.set(text.toLowerCase(), Date.now());
+      recentMessageKeys.set(["thread", "you", who || "", text].join("|"), Date.now());
+      return true;
+    }
+
+    function showHeard(speaker, text, extra) {
+      const role = extra && extra.attendeeRole;
+      // Host/internal lines stay hidden. An unknown channel is intentionally
+      // shown without coaching so the rep can bind that stable channel to an
+      // exact customer email from the bounded meeting pool. Previously both
+      // the API and this guard discarded unknown lines, making the identity
+      // picker impossible to reach precisely when automatic elimination was
+      // ambiguous.
+      if (role && role !== "customer" && role !== "other" && role !== "unknown") {
+        hideMarkCustomerUi();
+        return;
+      }
+      const raw = (speaker || "").trim();
+      const who =
+        !raw || /^speaker$/i.test(raw) || /^unknown$/i.test(raw) ? "Guest" : raw;
+      const snippet = String(text || "").trim().slice(0, 120);
+      if (!snippet) return;
+      if (currentView === "dash") showDashboard();
+      if (!reviseLastSpoken(who, snippet, extra)) {
+        addMsg(who, snippet, "you", null, extra && extra.at);
+      }
+      const key = (extra && extra.speakerKey) || "";
+      if (key) {
+        heardSpeakerKey = key;
+        heardSpeakerName = raw;
+      }
+      if (role === "customer" || role === "other" || !key) {
+        hideMarkCustomerUi();
+        return;
+      }
+      if (role === "unknown") {
+        const now = Date.now();
+        const lastPrompted = Number(unknownPromptedAt.get(key) || 0);
+        if (now - lastPrompted >= UNKNOWN_PROMPT_COOLDOWN_MS) {
+          unknownPromptedAt.set(key, now);
+          showMarkCustomerUi();
+        } else if (markPromptSpeakerKey !== key) {
+          hideMarkCustomerUi();
+        }
+      }
+    }
+
+    function bestRecommendation(result) {
+      if (!result) return "";
+      const track = result.talkTrack ? String(result.talkTrack).trim() : "";
+      if (track) return track;
+      const sug = (result.suggestions || []).find(function (s) {
+        return s && s.text && String(s.text).trim();
+      });
+      return sug ? String(sug.text).trim() : "";
+    }
+
+    function hasAssistContent(result) {
+      if (!result || typeof result !== "object") return false;
+      const rec = bestRecommendation(result);
+      const action = executableAction(result);
+      const ctx = result.conversationContext || {};
+      const infoPairs = [
+        ["Background", ctx.backgroundOneLine],
+        ["Last discussion", ctx.lastDiscussionSummary],
+        ["They said then", ctx.theirPositionThen],
+        ["They say now", ctx.theirFocusNow],
+        ["What changed", ctx.whatChanged],
+      ].filter(function (row) {
+        return row[1] && String(row[1]).trim();
+      });
+      const hint = result.sentimentCoachHint
+        ? String(result.sentimentCoachHint).trim()
+        : "";
+      const sent = String(result.sentiment || "").toLowerCase();
+      const showTone =
+        hint &&
+        (sent === "positive" ||
+          sent === "negative" ||
+          sent === "confused");
+      return Boolean(rec || action || infoPairs.length || showTone);
+    }
+
+    let meetingIsInternal = false;
+
+    function markInternalMeeting() {
+      meetingIsInternal = true;
+      const title = $("dashTitle");
+      if (title) title.textContent = "Internal meeting assistant";
+      const contact = $("viewContact");
+      if (contact) contact.hidden = true;
+    }
+
+    function renderInternalResult(view, at) {
+      meetingIsInternal = true;
+      const title = $("dashTitle");
+      if (title) title.textContent = "Internal meeting assistant";
+      if (view.heard) {
+        const parts = view.heard.split(":");
+        const who = (parts.shift() || "").trim();
+        addMsg(who || "Meeting", parts.join(":").trim(), "you", null, at);
+      }
+      if (view.body) {
+        addMsg(
+          "Worktual Assist",
+          view.body,
+          "coach",
+          view.title,
+          at ? at + 1 : null,
+        );
+      }
+    }
+
+    function executableAction(result) {
+      const action = result && result.action;
+      if (!action || typeof action !== "object") return null;
+      const kind = String(action.kind || "").trim();
+      const detail = String(action.detail || "").trim();
+      const allowed = {
+        schedule_meeting: "Schedule meeting",
+        call: "Create call",
+        send_case_study: "Send case study",
+        involve_presales: "Involve presales",
+        send_follow_up: "Send follow-up",
+        task: "Create task",
+      };
+      if (!allowed[kind] || !detail) return null;
+      if (kind === "schedule_meeting" && !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(String(action.whenLocal || ""))) {
+        return null;
+      }
+      return {
+        kind: kind,
+        label: String(action.label || "").trim() || allowed[kind],
+        detail: detail,
+        whenLocal: action.whenLocal || null,
+        durationMinutes: action.durationMinutes || null,
+        subject: action.subject || null,
+        body: action.body || null,
+      };
+    }
+
+    function actionKey(action) {
+      return [action.kind, action.whenLocal || "", action.subject || "", action.detail].join("|");
+    }
+
+    function doneLabel(kind) {
+      if (kind === "schedule_meeting") return "Scheduled";
+      if (kind === "send_case_study" || kind === "send_follow_up") return "Sent";
+      return "Created";
+    }
+
+    function renderActionCard(action, afterEl) {
+      const thread = $("thread");
+      if (!thread || !action) return;
+      const key = actionKey(action);
+      if (thread.querySelector("[data-action-key='" + CSS.escape(key) + "']")) return;
+      const card = document.createElement("div");
+      card.className = "nba";
+      card.setAttribute("data-action-key", key);
+      const kicker = document.createElement("p");
+      kicker.className = "kicker";
+      kicker.textContent = "Next best action";
+      const detail = document.createElement("p");
+      detail.className = "detail";
+      detail.textContent = action.detail;
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = action.label;
+      const err = document.createElement("p");
+      err.className = "err";
+      err.hidden = true;
+      button.addEventListener("click", function () {
+        if (button.disabled) return;
+        button.disabled = true;
+        button.textContent = "Working…";
+        err.hidden = true;
+        const zone = browserTimeZone();
+        api("/v1/assist/execute-action", {
+          method: "POST",
+          body: JSON.stringify({
+            meeting_url: meetingUrl,
+            time_zone: zone,
+            action: action,
+          }),
+        })
+          .then(function (out) {
+            button.textContent = doneLabel(action.kind);
+          })
+          .catch(function (error) {
+            button.disabled = false;
+            button.textContent = action.label;
+            err.hidden = false;
+            err.textContent = (error && error.message) || "Could not run that action.";
+          });
+      });
+      card.appendChild(kicker);
+      card.appendChild(detail);
+      card.appendChild(button);
+      card.appendChild(err);
+      if (afterEl && afterEl.parentNode === thread) {
+        thread.insertBefore(card, afterEl.nextSibling);
+      } else {
+        thread.appendChild(card);
+      }
+      thread.scrollTop = thread.scrollHeight;
+    }
+
+    function customerAssistText(result) {
+      const lines = [];
+      const rec = bestRecommendation(result);
+      if (rec) lines.push(rec);
+      if (result.sentimentCoachHint) {
+        lines.push("Tone: " + String(result.sentimentCoachHint).trim());
+      }
+      return lines.filter(Boolean).join("\n\n");
+    }
+
+    function renderAssistResult(result, at) {
+      if (!result) return;
+      if (meetingIsInternal && !result.internal) return;
+      if (result.internal && window.WorktualInternalPanel) {
+        const view = window.WorktualInternalPanel.view(result);
+        if (view) {
+          if (currentView === "dash") showDashboard();
+          renderInternalResult(view, at);
+          return;
+        }
+      }
+      const text = customerAssistText(result);
+      const action = executableAction(result);
+      if (!text && !action) return;
+      if (currentView === "dash") showDashboard();
+      const asked = result.query ? String(result.query).trim().slice(0, 120) : "";
+      const thread = $("thread");
+      let afterEl = null;
+      if (thread && asked) {
+        const bubbles = thread.querySelectorAll(".msg.you");
+        for (let i = bubbles.length - 1; i >= 0; i--) {
+          const body = bubbles[i].querySelector(".body");
+          if (body && body.textContent.trim().toLowerCase() === asked.toLowerCase()) {
+            afterEl = bubbles[i];
+            break;
+          }
+        }
+        if (!afterEl) afterEl = addMsg("Customer", asked, "you", null, at);
+      }
+      let coachEl = afterEl;
+      if (text) {
+        coachEl = addMsg(
+          "Worktual Assist",
+          text,
+          "coach",
+          "Live coaching",
+          at ? at + 1 : null,
+          "thread",
+          afterEl,
+        ) || afterEl;
+      }
+      if (action) renderActionCard(action, coachEl);
+    }
+
+    function replayChatHistory(rows) {
+      (Array.isArray(rows) ? rows : []).forEach(function (entry) {
+        const event = entry && entry.event;
+        if (!event) return;
+        if (event.type === "chunk" && event.text) {
+          showHeard(event.speaker, event.text, Object.assign({}, event, { at: entry.at }));
+        } else if (event.type === "assist" && event.result) {
+          renderAssistResult(event.result, entry.at);
+        }
+      });
+    }
+
+    /**
+     * Bootstrap status used to be written into #thread, which lives inside
+     * #askPage — hidden (display:none) until the user opens Ask. That made a
+     * slow/retrying bootstrap look like a totally blank panel (just header +
+     * composer), with zero feedback. Use the always-visible #dashError slot
+     * instead, and show the dashboard shell immediately (see showDashboard()
+     * call at the bottom) so this is visible right away.
+     */
+    function setBootstrapStatus(text) {
+      const msg = String(text || "").trim();
+      if (!msg) return;
+      if (!sessionToken) {
+        setAuthError(msg);
+        return;
+      }
+      const el = $("dashError");
+      if (!el) return;
+      el.hidden = false;
+      el.textContent = msg;
+    }
+    function clearBootstrapStatus() {
+      const el = $("dashError");
+      if (el) el.hidden = true;
+    }
+
+    function connectLiveEvents(eventsPath, token) {
+      if (liveEs) {
+        liveEs.close();
+        liveEs = null;
+      }
+      if (!eventsPath || !token) return;
+      liveEventsPath = eventsPath;
+      const sep = eventsPath.indexOf("?") >= 0 ? "&" : "?";
+      const url = eventsPath + sep + "token=" + encodeURIComponent(token);
+      liveEs = new EventSource(url);
+      liveEs.addEventListener("ready", (ev) => {
+        liveCoachReady = true;
+        sseErrorShown = false;
+        clearBootstrapStatus();
+        showDashboard();
+        // SSE is confirmed delivering — back sync-live off from 2s to 8s so
+        // this panel stops adding steady load to the shared CRM Postgres
+        // pool. onerror below snaps it back to fast if SSE drops.
+        setSyncInterval(8000);
+        try {
+          const data = JSON.parse(ev.data || "{}");
+          if (data.meetingKind === "internal") {
+            markInternalMeeting();
+          } else if (hasAssistContent(data.lastSuggestions)) {
+            renderAssistResult(data.lastSuggestions);
+          }
+          if (data.lastHeard && data.lastHeard.text) {
+            showHeard(data.lastHeard.speaker, data.lastHeard.text);
+          }
+        } catch (_) {}
+      });
+      liveEs.addEventListener("live", (ev) => {
+        try {
+          const data = JSON.parse(ev.data);
+          if (data.type === "chunk" && data.text) {
+            showHeard(data.speaker, data.text, data);
+            return;
+          }
+          if (data.type === "assist" && data.result) {
+            clearBootstrapStatus();
+            renderAssistResult(data.result);
+          }
+        } catch (_) {}
+      });
+      liveEs.onerror = () => {
+        liveCoachReady = false;
+        setSyncInterval(2000);
+        if (!sseErrorShown) {
+          sseErrorShown = true;
+          setBootstrapStatus("Live coach stream disconnected — falling back to polling.");
+        }
+      };
+    }
+
+    let syncPullFn = null;
+    let syncIntervalMs = 2000;
+
+    /** Restart the sync-live poll at a new cadence (no-op if unchanged / not running). */
+    function setSyncInterval(ms) {
+      if (syncIntervalMs === ms) return;
+      syncIntervalMs = ms;
+      if (syncTimer && syncPullFn) {
+        clearInterval(syncTimer);
+        syncTimer = setInterval(syncPullFn, syncIntervalMs);
+      }
+    }
+
+    function startLiveSync() {
+      if (syncTimer) clearInterval(syncTimer);
+      syncPullFn = () => {
+        if (!sessionToken || !meetingUrl) return;
+        api("/v1/assist/sync-live", {
+          method: "POST",
+          body: JSON.stringify({
+            meeting_url: meetingUrl,
+            time_zone: browserTimeZone(),
+          }),
+        })
+          .then((out) => {
+            if (out && out.meeting_kind === "internal") markInternalMeeting();
+            if (out && out.last_heard && out.last_heard.text) {
+              showHeard(out.last_heard.speaker, out.last_heard.text);
+            }
+            if (out && !meetingIsInternal && hasAssistContent(out.last_suggestions)) {
+              renderAssistResult(out.last_suggestions);
+            }
+          })
+          .catch((e) => {
+            console.warn("Worktual Assist: sync-live", e);
+          });
+      };
+      syncPullFn();
+      syncTimer = setInterval(syncPullFn, syncIntervalMs);
+    }
+
+    async function bootstrapLiveCoach() {
+      if (!sessionToken || !meetingUrl) return;
+      try {
+        const out = await api("/v1/assist/meet-bootstrap", {
+          method: "POST",
+          body: JSON.stringify({
+            meeting_url: meetingUrl,
+            time_zone: browserTimeZone(),
+          }),
+        });
+        crmSessionId = out.session_id || "";
+        panelToken = out.panel_token || "";
+        assistSessionId = out.session_id || assistSessionId;
+        resetConversation(out.session_id || "");
+        currentContactId = out.contact_id || "";
+        currentContactCard = out.contact_card || null;
+        if (currentContactCard && !currentContactCard.name && out.contact_name) {
+          currentContactCard.name = out.contact_name;
+        }
+        currentCustomerPool = Array.isArray(out.customer_pool) ? out.customer_pool : [];
+        meetingIsInternal = out.meeting_kind === "internal";
+        const contactButton = $("viewContact");
+        if (contactButton) {
+          contactButton.hidden = meetingIsInternal || !currentContactId;
+        }
+        if (meetingIsInternal) markInternalMeeting();
+        else {
+          const title = $("dashTitle");
+          if (title) title.textContent = "Sales Assist";
+        }
+        replayChatHistory(out.chat_history);
+        const hasHistory = Array.isArray(out.chat_history) && out.chat_history.length > 0;
+        if (!hasHistory) {
+          addMsg(
+            "Worktual Assist",
+            meetingIsInternal
+              ? "I’m listening. When an official asks a question, I’ll help the right person answer and check the reply against CRM facts."
+              : "I’m listening. Customer questions and live coaching will appear here as the conversation unfolds.",
+            "coach",
+            "Live assist",
+          );
+        }
+        const hadRetried = bootstrapAttempts > 0;
+        bootstrapAttempts = 0;
+        if (out.events_path && panelToken) {
+          clearBootstrapStatus();
+          showDashboard();
+          connectLiveEvents(out.events_path, panelToken);
+          startLiveSync();
+          if (!hasHistory && out.last_heard && out.last_heard.text) {
+            showHeard(out.last_heard.speaker, out.last_heard.text);
+          }
+          if (!hasHistory && !meetingIsInternal && hasAssistContent(out.last_suggestions)) {
+            renderAssistResult(out.last_suggestions);
+          }
+        } else {
+          setBootstrapStatus("Live coach: missing session token. Try signing in again.");
+        }
+      } catch (e) {
+        console.warn("Worktual Assist: live coach bootstrap", e);
+        bootstrapAttempts += 1;
+        const msg = e.message || "bootstrap failed";
+        const friendly =
+          msg.includes("No CRM assist session")
+            ? "No CRM session for this Meet link. Schedule the meeting in CRM and admit Worktual Notetaker first."
+            : msg;
+        if (bootstrapAttempts <= 8) {
+          setBootstrapStatus(
+            "Live coach: " + friendly + " Retrying… (" + bootstrapAttempts + "/8)",
+          );
+          setTimeout(() => scheduleBootstrap(), 4000);
+        } else {
+          setBootstrapStatus("Live coach unavailable: " + friendly);
+        }
+      }
+    }
+
+    function scheduleBootstrap() {
+      if (bootstrapTimer) clearTimeout(bootstrapTimer);
+      bootstrapTimer = setTimeout(() => { void bootstrapLiveCoach(); }, 400);
+    }
+
+    async function api(path, opts = {}) {
+      const headers = { "Content-Type": "application/json", ...(opts.headers || {}) };
+      if (sessionToken) headers.Authorization = "Bearer " + sessionToken;
+      const r = await fetch(path, { ...opts, headers });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        const msg =
+          (typeof data.detail === "string" && data.detail) ||
+          (typeof data.message === "string" && data.message) ||
+          (typeof data.error === "string" && data.error) ||
+          String(r.status);
+        const err = new Error(msg);
+        err.status = r.status;
+        throw err;
+      }
+      return data;
+    }
+
+    function meetCodeOf(value) {
+      const raw = String(value || "").trim().toLowerCase();
+      const fromUrl = raw.match(/meet\.google\.com\/([a-z0-9-]+)/);
+      const candidate = (fromUrl && fromUrl[1]) || raw;
+      if (!candidate || candidate === "lookup") return "";
+      // Use the full Meet path (xxx-xxxx-xxx or xxxx-xxxx-xxx). Do not search
+      // for a 3-4-3 substring inside a longer code — that drops a letter
+      // (vcsp-kdoe-xjw → vcp-kdoe-xjw) and binds Assist to the wrong meeting.
+      if (/^[a-z0-9]{3,4}-[a-z0-9]{4}-[a-z0-9]{3}$/.test(candidate)) {
+        return candidate;
+      }
+      const nested = candidate.match(/\b([a-z0-9]{3,4}-[a-z0-9]{4}-[a-z0-9]{3})\b/);
+      return nested ? nested[1] : "";
+    }
+    function setMeetingUrl(value) {
+      const code = meetCodeOf(value);
+      meetingUrl = code ? "https://meet.google.com/" + code : String(value || "").trim();
+    }
+
+    async function lookup() {
+      if (!sessionToken || !meetingUrl) return;
+      try {
+        await api("/v1/meetings/lookup?meeting_url=" + encodeURIComponent(meetingUrl));
+      } catch (_) {}
+    }
+
+    async function send(intent, text) {
+      const query = (text || "").trim();
+      if (!query) return;
+      if (!sessionToken) {
+        addMsg("Assist", "Sign in with your CRM account to start.");
+        return;
+      }
+      if (!meetingUrl) {
+        addMsg("Assist", "Open this panel from Google Meet.");
+        return;
+      }
+      showAskPage();
+      addMsg("You", query, "you", null, null, "askThread");
+      $("ask").disabled = true;
+      try {
+        const out = await api("/v1/assist/ask", {
+          method: "POST",
+          body: JSON.stringify({
+            meeting_url: meetingUrl,
+            query,
+            intent,
+            time_zone: browserTimeZone(),
+          }),
+        });
+        addMsg(
+          "Worktual Assist",
+          out.reply || out.talkTrack || "(empty reply)",
+          "coach",
+          null,
+          null,
+          "askThread",
+        );
+      } catch (e) {
+        const msg = e.message || "ask failed";
+        addMsg(
+          "Worktual Assist",
+          msg === "no in-flight meeting for this URL"
+            ? "The notetaker is not in this meeting yet."
+            : msg,
+          "coach",
+          null,
+          null,
+          "askThread",
+        );
+      } finally {
+        $("ask").disabled = false;
+        const q = $("query");
+        if (q) q.focus();
+      }
+    }
+
+    async function applyAssistSession(out) {
+      sessionToken = out.token || "";
+      if (!sessionToken) {
+        throw new Error("Assist session did not return a token.");
+      }
+      saveAssistSession(
+        sessionToken,
+        out.expires_in,
+        (out.user && out.user.email) || "",
+      );
+      signedInEmail = (out.user && out.user.email) || signedInEmail;
+      setAuthError("");
+      setSignedInUi(true);
+      showDashboard();
+      await lookup();
+      scheduleBootstrap();
+    }
+
+    async function startSession(googleIdToken) {
+      const token = (googleIdToken || "").trim();
+      if (!token) {
+        revealCrmLogin("");
+        return;
+      }
+      try {
+      const out = await api("/v1/assist/session", {
+        method: "POST",
+          body: JSON.stringify({ google_id_token: token }),
+        });
+        await applyAssistSession(out);
+      } catch (e) {
+        if ((e && e.message) === "crm_login_required") {
+          revealCrmLogin("");
+          return;
+        }
+        revealCrmLogin(e.message || "Sign-in failed");
+      }
+    }
+
+    async function startPasswordSession(email, password) {
+      const out = await api("/v1/assist/session/login", {
+        method: "POST",
+        body: JSON.stringify({ email, password }),
+      });
+      await applyAssistSession(out);
+    }
+
+    async function restoreStoredAssistSession() {
+      const cached = loadAssistSession();
+      if (!cached || !cached.token) return false;
+      sessionToken = cached.token;
+      signedInEmail = cached.email || "";
+      try {
+      await lookup();
+        setAuthError("");
+        setSignedInUi(true);
+        showDashboard();
+        scheduleBootstrap();
+        return true;
+      } catch (e) {
+        clearAssistSessionStore();
+        sessionToken = "";
+        return false;
+      }
+    }
+
+    function initGoogle() {
+      if (!googleClientId || !window.google || !google.accounts || !google.accounts.id) {
+        revealCrmLogin("");
+        return;
+      }
+      let settled = false;
+      const finish = (message) => {
+        if (settled || sessionToken) return;
+        settled = true;
+        revealCrmLogin(message || "");
+      };
+      google.accounts.id.initialize({
+        client_id: googleClientId,
+        callback: (resp) => {
+          settled = true;
+          startSession(resp && resp.credential);
+        },
+        auto_select: true,
+        cancel_on_tap_outside: false,
+        itp_support: true,
+      });
+      google.accounts.id.prompt((notification) => {
+        const skipped =
+          (notification.isNotDisplayed && notification.isNotDisplayed()) ||
+          (notification.isSkippedMoment && notification.isSkippedMoment());
+        const dismissed =
+          notification.isDismissedMoment &&
+          notification.isDismissedMoment() &&
+          notification.getDismissedReason &&
+          notification.getDismissedReason() !== "credential_returned";
+        if (skipped || dismissed) finish("");
+      });
+      setTimeout(() => finish(""), 4000);
+    }
+
+    async function initMeetSidePanel(projectNumber) {
+      const num = String(projectNumber || "").trim();
+      if (!num) return;
+        const meet = window.meet && window.meet.addon;
+      if (!meet) {
+        console.warn("Worktual Assist: Meet add-ons SDK not loaded");
+        return;
+      }
+      if (!window.__worktualMeetAddonSidePanelPromise) {
+        window.__worktualMeetAddonSidePanelPromise = (async () => {
+          const session = await meet.createAddonSession({ cloudProjectNumber: num });
+          return session.createSidePanelClient();
+        })();
+      }
+      try {
+        const client = await window.__worktualMeetAddonSidePanelPromise;
+          const info = await client.getMeetingInfo();
+        const raw =
+          (info &&
+            (info.meetingCode ||
+              info.meetingCodeUsedToJoin ||
+              info.meetingId)) ||
+          "";
+          setMeetingUrl(raw);
+        if (sessionToken) scheduleBootstrap();
+      } catch (e) {
+        window.__worktualMeetAddonSidePanelPromise = undefined;
+        console.error("Worktual Assist: Meet SDK init failed", e);
+        }
+      if (!meetingUrl) {
+        $("url").onchange = () => {
+          setMeetingUrl($("url").value);
+          lookup();
+        };
+      }
+    }
+
+    const crmLogin = $("crmLogin");
+    if (crmLogin) crmLogin.onsubmit = (e) => {
+      e.preventDefault();
+      const email = ($("crmEmail") && $("crmEmail").value || "").trim();
+      const password = ($("crmPassword") && $("crmPassword").value) || "";
+      const button = $("crmLoginSubmit");
+      if (button) button.disabled = true;
+      setAuthError("");
+      startPasswordSession(email, password)
+        .catch((err) => {
+          setAuthError(err.message || "Sign-in failed");
+        })
+        .finally(() => {
+          if (button) button.disabled = false;
+          const passwordInput = $("crmPassword");
+          if (passwordInput) passwordInput.value = "";
+        });
+    };
+
+    const markCustomer = $("markCustomer");
+    if (markCustomer) markCustomer.onclick = () => {
+      markChannelAsCustomerSide(markCustomer);
+    };
+
+    const viewContact = $("viewContact");
+    if (viewContact) viewContact.onclick = () => showContactPage();
+    const backFromContact = $("backFromContact");
+    if (backFromContact) backFromContact.onclick = () => showDashboard();
+
+    $("askForm").onsubmit = (e) => {
+      e.preventDefault();
+      const q = $("query").value.trim();
+      $("query").value = "";
+      send("ask", q);
+    };
+    $("query").addEventListener("focus", () => {
+      if (sessionToken) showAskPage();
+    });
+    const backLive = $("backLive");
+    if (backLive) backLive.onclick = () => showDashboard();
+
+    // Chrome can freeze this iframe's JS (timers + queued EventSource messages)
+    // when the Meet side panel is hidden/backgrounded for a while. Nothing fires
+    // live during that window even though the CRM backend keeps ingesting and
+    // computing coaching. On regaining visibility: pull the latest state once
+    // right away, and revive the SSE stream if it silently died while frozen.
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState !== "visible") return;
+      if (syncPullFn) syncPullFn();
+      const dead = !liveEs || liveEs.readyState === EventSource.CLOSED;
+      if (dead && liveEventsPath && panelToken) {
+        connectLiveEvents(liveEventsPath, panelToken);
+      }
+    });
+
+    (async () => {
+      showAuthGate();
+
+      // Meet keeps showing "Loading…" until createAddonSession() succeeds — do not
+      // block that on the config fetch (ngrok/proxy hop can be slow or flaky).
+      cloudProjectNumber = cloudProjectFromMeetSdkUrl();
+      if (cloudProjectNumber) void initMeetSidePanel(cloudProjectNumber);
+
+      try {
+        const cfg = await fetch("/addons/meet/config").then((r) => r.json());
+        googleClientId = cfg.google_client_id || "";
+        const cfgProject = String(cfg.cloud_project_number || "").trim();
+        if (!cloudProjectNumber && cfgProject) {
+          cloudProjectNumber = cfgProject;
+          void initMeetSidePanel(cloudProjectNumber);
+        } else if (cfgProject && cloudProjectNumber && cfgProject !== cloudProjectNumber) {
+          console.warn(
+            "Worktual Assist: GOOGLE_ADDON_CLOUD_PROJECT_NUMBER (" +
+              cfgProject +
+              ") does not match Meet meet_sdk (" +
+              cloudProjectNumber +
+              "). Using meet_sdk value.",
+          );
+        }
+      } catch (e) {
+        console.warn("Worktual Assist: config fetch failed", e);
+        setAuthError(
+          "Could not reach meeting-service (/addons/meet/config). Start meeting-service on :8030 and check your HTTPS tunnel.",
+        );
+      }
+
+      if (!cloudProjectNumber) {
+        setAuthError(
+          "Meet add-on project number missing — set GOOGLE_ADDON_CLOUD_PROJECT_NUMBER in meeting-service/.env.",
+        );
+      }
+
+      const restored = await restoreStoredAssistSession();
+      if (restored) return;
+      showAuthGate();
+      if (!googleClientId) {
+        revealCrmLogin("");
+        return;
+      }
+      if (window.google && google.accounts) initGoogle();
+      else {
+        const t = setInterval(() => {
+          if (window.google && google.accounts) {
+            clearInterval(t);
+            initGoogle();
+          }
+        }, 200);
+        setTimeout(() => {
+          clearInterval(t);
+          if (!sessionToken) revealCrmLogin("");
+        }, 8000);
+      }
+    })();
+  </script>
+</body>
+</html>

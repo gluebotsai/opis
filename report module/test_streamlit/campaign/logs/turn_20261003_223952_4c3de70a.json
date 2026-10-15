@@ -1,0 +1,116 @@
+{
+  "turn_id": "4c3de70a",
+  "timestamp": "2026-10-03T17:09:52.959648+00:00",
+  "question": "how many audience are there based on the campaign",
+  "identity": {
+    "organization_id": 1000,
+    "user_id": 1000,
+    "branch_id": 1000,
+    "role": "admin"
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma",
+    "dsn_set": true
+  },
+  "answer": "There are **44** campaigns with audience selections. Each of the listed campaigns, such as Meet Lola, Festive First Look 2026, ReturnVisitNurture, Early Festive Preview, and Festive Early Access '26, has **2** audiences selected.",
+  "facts": "window: overall (no date filter, UTC)\nRESULT: 44 group(s)\ngroup_by: campaign\n  campaign=Meet Lola | audience_selected=2\n  campaign=Festive First Look 2026 | audience_selected=2\n  campaign=ReturnVisitNurture | audience_selected=2\n  campaign=Early Festive Preview | audience_selected=2\n  campaign=Festive Early Access '26 | audience_selected=2\n  ... 39 more groups not listed",
+  "trace": {
+    "identity": {
+      "organization_id": 1000,
+      "user_id": 1000,
+      "branch_id": 1000,
+      "role": "admin",
+      "scope_label": "All branch campaigns",
+      "timezone": "UTC"
+    },
+    "question": "how many audience are there based on the campaign",
+    "supervisor": {
+      "kind": "route",
+      "target": "domain"
+    },
+    "supervisor_raw": "```json\n{\"kind\": \"route\", \"target\": \"domain\"}\n```",
+    "interpret_raw": "```json\n{\n  \"kind\": \"interpret\",\n  \"need\": \"Determine the total number of unique audiences associated with campaigns.\",\n  \"object\": \"list-row\",\n  \"metric_family\": \"count\",\n  \"slice\": \"\",\n  \"time\": \"all time\",\n  \"scope_words\": \"all branch campaigns\",\n  \"echo\": \"How many audiences are there based on the campaign?\",\n  \"ask_user\": \"\"\n}\n```",
+    "interpret": {
+      "kind": "interpret",
+      "need": "Determine the total number of unique audiences associated with campaigns.",
+      "object": "list-row",
+      "metric_family": "count",
+      "slice": "",
+      "time": "all time",
+      "scope_words": "all branch campaigns",
+      "echo": "How many audiences are there based on the campaign?",
+      "ask_user": ""
+    },
+    "retrieved_kpis": [
+      "monitor_preview",
+      "audience_selected",
+      "campaigns_ran",
+      "contact_unsubscribed",
+      "messages_bounced",
+      "messages_delivered",
+      "messages_failed",
+      "messages_sent"
+    ],
+    "task_results": [
+      {
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "audience_selected",
+          "goal": "List the audience size for each campaign",
+          "time": "all time",
+          "scope": "org",
+          "dimensions": [
+            "campaign"
+          ],
+          "answer_type": "list",
+          "depends_on": []
+        },
+        "status": "ok",
+        "error_type": null,
+        "error": null,
+        "kpi_id": "audience_selected",
+        "store": "sql",
+        "sql": "SELECT\n    campaigns.name AS campaign,\n    COALESCE(SUM(campaigns.audience_count),0)::bigint AS audience_selected\n\nFROM (\nSELECT\n  c.id,\n  c.organization_id,\n  c.branch_id,\n  c.name,\n  c.description,\n  c.status,\n  c.starts_at,\n  c.ends_at,\n  c.source_channel,\n  c.created_by_user_id,\n  c.created_at,\n  c.updated_at,\n  c.goal,\n  c.objective,\n  c.session_id,\n  c.audience_summary,\n  c.audience_count,\n  c.launch_plan,\n  c.launch_local_date,\n  c.launch_local_time,\n  c.timezone\nFROM campaign.campaigns c\nWHERE c.organization_id = 1000\n  AND c.branch_id = 1000\n\n) campaigns\nWHERE TRUE\n  AND TRUE\n  AND TRUE\n  AND TRUE\n\nGROUP BY campaigns.name ORDER BY 2 DESC NULLS LAST\n\n",
+        "row_count": 44,
+        "time_echo": "overall (no date filter, UTC)"
+      }
+    ],
+    "plan": {
+      "kind": "plan",
+      "understanding": {
+        "need": "Determine the total number of unique audiences associated with campaigns.",
+        "object": "list-row",
+        "metric_family": "count",
+        "slice": "",
+        "time": "all time",
+        "scope_words": "all branch campaigns",
+        "echo": "How many audiences are there based on the campaign?",
+        "ask_user": ""
+      },
+      "depth": "quick",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "audience_selected",
+          "goal": "List the audience size for each campaign",
+          "time": "all time",
+          "scope": "org",
+          "dimensions": [
+            "campaign"
+          ],
+          "answer_type": "list",
+          "depends_on": []
+        }
+      ]
+    },
+    "plan_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"understanding\": {\n    \"need\": \"Determine the total number of unique audiences associated with campaigns.\",\n    \"object\": \"list-row\",\n    \"metric_family\": \"count\",\n    \"slice\": \"\",\n    \"time\": \"all time\",\n    \"scope_words\": \"all branch campaigns\",\n    \"echo\": \"How many audiences are there based on the campaign?\",\n    \"ask_user\": \"\"\n  },\n  \"depth\": \"quick\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"audience_selected\",\n      \"goal\": \"List the audience size for each campaign\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"dimensions\": [\n        \"campaign\"\n      ],\n      \"answer_type\": \"list\",\n      \"depends_on\": []\n    }\n  ]\n}\n```",
+    "facts": "window: overall (no date filter, UTC)\nRESULT: 44 group(s)\ngroup_by: campaign\n  campaign=Meet Lola | audience_selected=2\n  campaign=Festive First Look 2026 | audience_selected=2\n  campaign=ReturnVisitNurture | audience_selected=2\n  campaign=Early Festive Preview | audience_selected=2\n  campaign=Festive Early Access '26 | audience_selected=2\n  ... 39 more groups not listed",
+    "loop_errors": [],
+    "briefing_raw": "Here is a sample of the audiences selected for your campaigns:\n\n*   Meet Lola: **2**\n*   Festive First Look 2026: **2**\n*   ReturnVisitNurture: **2**\n*   Early Festive Preview: **2**\n*   Festive Early Access '26: **2**\n\n(Showing 5 of 44 campaigns)",
+    "grounded": true
+  },
+  "error": null
+}

@@ -1,0 +1,2504 @@
+version: 1
+product: webtracking
+metrics:
+  average_order_value:
+    label: Average Order Value
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for average order value.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  average_session_duration:
+    label: Average Session Duration
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - session_id
+    - visitor_id
+    - user_id
+    - wt_campaign_id
+    - wt_contact_id
+    - device
+    - browser
+    - browser_version
+    - platform
+    - country
+    - city
+    - region
+    - utm_source
+    - utm_medium
+    - utm_campaign
+    - utm_term
+    - utm_content
+    - referrer
+    - referrer_domain
+    - entry_page
+    - exit_page
+    - is_bounce_flag
+    - is_engaged_flag
+    - is_first_session_flag
+    - has_rage_clicks
+    - has_dead_clicks
+    - has_deep_scroll
+    - has_conversion
+    - has_purchase
+    - has_checkout_start
+    - has_cart_add
+    - has_product_view
+    - has_form_start
+    - has_form_submit
+    - has_search
+    - has_error
+    - is_campaign_attributed
+    - is_identified
+    when: Period aggregate for average session duration.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  avg_cls:
+    label: Avg Cls
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - event_id
+    - page_view_id
+    - session_id
+    - visitor_id
+    - metric_name
+    - rating
+    - page_path
+    - device
+    when: Period aggregate for avg cls.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  avg_fcp_ms:
+    label: Avg Fcp Ms
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - event_id
+    - page_view_id
+    - session_id
+    - visitor_id
+    - metric_name
+    - rating
+    - page_path
+    - device
+    when: Period aggregate for avg fcp ms.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  avg_inp_ms:
+    label: Avg Inp Ms
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - event_id
+    - page_view_id
+    - session_id
+    - visitor_id
+    - metric_name
+    - rating
+    - page_path
+    - device
+    when: Period aggregate for avg inp ms.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  avg_lcp_ms:
+    label: Avg Lcp Ms
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - event_id
+    - page_view_id
+    - session_id
+    - visitor_id
+    - metric_name
+    - rating
+    - page_path
+    - device
+    when: Period aggregate for avg lcp ms.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  avg_scroll_depth:
+    label: Avg Scroll Depth
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - page_view_id
+    - session_id
+    - visitor_id
+    - page_path
+    - page_title
+    - referrer
+    - device
+    - country
+    - utm_source
+    - utm_medium
+    - utm_campaign
+    when: Period aggregate for avg scroll depth.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  avg_time_on_page_seconds:
+    label: Avg Time On Page Seconds
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - page_view_id
+    - session_id
+    - visitor_id
+    - page_path
+    - page_title
+    - referrer
+    - device
+    - country
+    - utm_source
+    - utm_medium
+    - utm_campaign
+    when: Period aggregate for avg time on page seconds.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  avg_ttfb_ms:
+    label: Avg Ttfb Ms
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - event_id
+    - page_view_id
+    - session_id
+    - visitor_id
+    - metric_name
+    - rating
+    - page_path
+    - device
+    when: Period aggregate for avg ttfb ms.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  bounce_count:
+    label: Bounce Count
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - session_id
+    - visitor_id
+    - user_id
+    - wt_campaign_id
+    - wt_contact_id
+    - device
+    - browser
+    - browser_version
+    - platform
+    - country
+    - city
+    - region
+    - utm_source
+    - utm_medium
+    - utm_campaign
+    - utm_term
+    - utm_content
+    - referrer
+    - referrer_domain
+    - entry_page
+    - exit_page
+    - is_bounce_flag
+    - is_engaged_flag
+    - is_first_session_flag
+    - has_rage_clicks
+    - has_dead_clicks
+    - has_deep_scroll
+    - has_conversion
+    - has_purchase
+    - has_checkout_start
+    - has_cart_add
+    - has_product_view
+    - has_form_start
+    - has_form_submit
+    - has_search
+    - has_error
+    - is_campaign_attributed
+    - is_identified
+    when: Period aggregate for bounce count.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  bounce_rate:
+    label: Bounce Rate
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - session_id
+    - visitor_id
+    - user_id
+    - wt_campaign_id
+    - wt_contact_id
+    - device
+    - browser
+    - browser_version
+    - platform
+    - country
+    - city
+    - region
+    - utm_source
+    - utm_medium
+    - utm_campaign
+    - utm_term
+    - utm_content
+    - referrer
+    - referrer_domain
+    - entry_page
+    - exit_page
+    - is_bounce_flag
+    - is_engaged_flag
+    - is_first_session_flag
+    - has_rage_clicks
+    - has_dead_clicks
+    - has_deep_scroll
+    - has_conversion
+    - has_purchase
+    - has_checkout_start
+    - has_cart_add
+    - has_product_view
+    - has_form_start
+    - has_form_submit
+    - has_search
+    - has_error
+    - is_campaign_attributed
+    - is_identified
+    when: Period aggregate for bounce rate.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  campaign_attributed_session_rate:
+    label: Attributed Session Rate
+    kind: count
+    scope: org
+    dims:
+    - utm_campaign
+    - landing_page
+    when: Web sessions attributed to campaigns in a period.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  campaign_attributed_sessions:
+    label: Campaign Attributed Sessions
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - session_id
+    - visitor_id
+    - user_id
+    - wt_campaign_id
+    - wt_contact_id
+    - device
+    - browser
+    - browser_version
+    - platform
+    - country
+    - city
+    - region
+    - utm_source
+    - utm_medium
+    - utm_campaign
+    - utm_term
+    - utm_content
+    - referrer
+    - referrer_domain
+    - entry_page
+    - exit_page
+    - is_bounce_flag
+    - is_engaged_flag
+    - is_first_session_flag
+    - has_rage_clicks
+    - has_dead_clicks
+    - has_deep_scroll
+    - has_conversion
+    - has_purchase
+    - has_checkout_start
+    - has_cart_add
+    - has_product_view
+    - has_form_start
+    - has_form_submit
+    - has_search
+    - has_error
+    - is_campaign_attributed
+    - is_identified
+    when: Period aggregate for campaign attributed sessions.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  cart_add_count:
+    label: Cart Add Count
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - conversion_id
+    - product_id
+    - page_view_id
+    - session_id
+    - visitor_id
+    - conversion_type
+    - currency
+    - utm_source
+    - utm_campaign
+    - device
+    - country
+    when: Period aggregate for cart add count.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  cart_add_rate:
+    label: Cart Add Rate
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - session_id
+    - visitor_id
+    - user_id
+    - wt_campaign_id
+    - wt_contact_id
+    - device
+    - browser
+    - browser_version
+    - platform
+    - country
+    - city
+    - region
+    - utm_source
+    - utm_medium
+    - utm_campaign
+    - utm_term
+    - utm_content
+    - referrer
+    - referrer_domain
+    - entry_page
+    - exit_page
+    - is_bounce_flag
+    - is_engaged_flag
+    - is_first_session_flag
+    - has_rage_clicks
+    - has_dead_clicks
+    - has_deep_scroll
+    - has_conversion
+    - has_purchase
+    - has_checkout_start
+    - has_cart_add
+    - has_product_view
+    - has_form_start
+    - has_form_submit
+    - has_search
+    - has_error
+    - is_campaign_attributed
+    - is_identified
+    when: Period aggregate for cart add rate.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  checkout_conversion_rate:
+    label: Checkout Conversion Rate
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - conversion_id
+    - product_id
+    - page_view_id
+    - session_id
+    - visitor_id
+    - conversion_type
+    - currency
+    - utm_source
+    - utm_campaign
+    - device
+    - country
+    when: Period aggregate for checkout conversion rate.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  checkout_start_count:
+    label: Checkout Start Count
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - conversion_id
+    - product_id
+    - page_view_id
+    - session_id
+    - visitor_id
+    - conversion_type
+    - currency
+    - utm_source
+    - utm_campaign
+    - device
+    - country
+    when: Period aggregate for checkout start count.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  checkout_start_rate:
+    label: Checkout Start Rate
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - session_id
+    - visitor_id
+    - user_id
+    - wt_campaign_id
+    - wt_contact_id
+    - device
+    - browser
+    - browser_version
+    - platform
+    - country
+    - city
+    - region
+    - utm_source
+    - utm_medium
+    - utm_campaign
+    - utm_term
+    - utm_content
+    - referrer
+    - referrer_domain
+    - entry_page
+    - exit_page
+    - is_bounce_flag
+    - is_engaged_flag
+    - is_first_session_flag
+    - has_rage_clicks
+    - has_dead_clicks
+    - has_deep_scroll
+    - has_conversion
+    - has_purchase
+    - has_checkout_start
+    - has_cart_add
+    - has_product_view
+    - has_form_start
+    - has_form_submit
+    - has_search
+    - has_error
+    - is_campaign_attributed
+    - is_identified
+    when: Period aggregate for checkout start rate.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  clicks_per_session:
+    label: Clicks Per Session
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - event_id
+    - page_view_id
+    - session_id
+    - visitor_id
+    - event_type
+    - element
+    - element_type
+    - element_text
+    - page_path
+    - device
+    - country
+    - reason
+    when: Period aggregate for clicks per session.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  consent_action_count:
+    label: Consent Action Count
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - event_id
+    - session_id
+    - visitor_id
+    - action
+    - cookie_name
+    - page_path
+    when: Period aggregate for consent action count.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  conversion_rate:
+    label: Conversion Rate
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - session_id
+    - visitor_id
+    - user_id
+    - wt_campaign_id
+    - wt_contact_id
+    - device
+    - browser
+    - browser_version
+    - platform
+    - country
+    - city
+    - region
+    - utm_source
+    - utm_medium
+    - utm_campaign
+    - utm_term
+    - utm_content
+    - referrer
+    - referrer_domain
+    - entry_page
+    - exit_page
+    - is_bounce_flag
+    - is_engaged_flag
+    - is_first_session_flag
+    - has_rage_clicks
+    - has_dead_clicks
+    - has_deep_scroll
+    - has_conversion
+    - has_purchase
+    - has_checkout_start
+    - has_cart_add
+    - has_product_view
+    - has_form_start
+    - has_form_submit
+    - has_search
+    - has_error
+    - is_campaign_attributed
+    - is_identified
+    when: Period aggregate for conversion rate.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  custom_event_session_count:
+    label: Custom Event Session Count
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - event_id
+    - page_view_id
+    - session_id
+    - visitor_id
+    - event_name
+    - device
+    - country
+    when: Period aggregate for custom event session count.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  custom_event_session_rate:
+    label: Custom Event Session Rate
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - session_id
+    - visitor_id
+    - user_id
+    - wt_campaign_id
+    - wt_contact_id
+    - device
+    - browser
+    - browser_version
+    - platform
+    - country
+    - city
+    - region
+    - utm_source
+    - utm_medium
+    - utm_campaign
+    - utm_term
+    - utm_content
+    - referrer
+    - referrer_domain
+    - entry_page
+    - exit_page
+    - is_bounce_flag
+    - is_engaged_flag
+    - is_first_session_flag
+    - has_rage_clicks
+    - has_dead_clicks
+    - has_deep_scroll
+    - has_conversion
+    - has_purchase
+    - has_checkout_start
+    - has_cart_add
+    - has_product_view
+    - has_form_start
+    - has_form_submit
+    - has_search
+    - has_error
+    - is_campaign_attributed
+    - is_identified
+    when: Period aggregate for custom event session rate.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  dead_click_rate:
+    label: Dead Click Rate
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - event_id
+    - page_view_id
+    - session_id
+    - visitor_id
+    - event_type
+    - element
+    - element_type
+    - element_text
+    - page_path
+    - device
+    - country
+    - reason
+    when: Period aggregate for dead click rate.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  dead_click_session_count:
+    label: Sessions with Dead Clicks
+    kind: count
+    scope: org
+    dims: &id001
+    - website_id
+    - session_id
+    - visitor_id
+    - user_id
+    - device
+    - browser
+    - platform
+    - country
+    - city
+    - region
+    - utm_source
+    - utm_medium
+    - utm_campaign
+    - referrer_domain
+    - entry_page
+    - exit_page
+    - is_bounce_flag
+    - is_online_flag
+    when: Sessions with at least one dead click.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  dead_clicks:
+    label: Dead Clicks
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - event_id
+    - page_view_id
+    - session_id
+    - visitor_id
+    - event_type
+    - element
+    - element_type
+    - element_text
+    - page_path
+    - device
+    - country
+    - reason
+    when: Period aggregate for dead clicks.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  distinct_custom_event_types:
+    label: Distinct Custom Event Types
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - event_id
+    - page_view_id
+    - session_id
+    - visitor_id
+    - event_name
+    - device
+    - country
+    when: Period aggregate for distinct custom event types.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  engaged_session_count:
+    label: Engaged Session Count
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - session_id
+    - visitor_id
+    - user_id
+    - wt_campaign_id
+    - wt_contact_id
+    - device
+    - browser
+    - browser_version
+    - platform
+    - country
+    - city
+    - region
+    - utm_source
+    - utm_medium
+    - utm_campaign
+    - utm_term
+    - utm_content
+    - referrer
+    - referrer_domain
+    - entry_page
+    - exit_page
+    - is_bounce_flag
+    - is_engaged_flag
+    - is_first_session_flag
+    - has_rage_clicks
+    - has_dead_clicks
+    - has_deep_scroll
+    - has_conversion
+    - has_purchase
+    - has_checkout_start
+    - has_cart_add
+    - has_product_view
+    - has_form_start
+    - has_form_submit
+    - has_search
+    - has_error
+    - is_campaign_attributed
+    - is_identified
+    when: Period aggregate for engaged session count.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  engagement_rate:
+    label: Engagement Rate
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - session_id
+    - visitor_id
+    - user_id
+    - wt_campaign_id
+    - wt_contact_id
+    - device
+    - browser
+    - browser_version
+    - platform
+    - country
+    - city
+    - region
+    - utm_source
+    - utm_medium
+    - utm_campaign
+    - utm_term
+    - utm_content
+    - referrer
+    - referrer_domain
+    - entry_page
+    - exit_page
+    - is_bounce_flag
+    - is_engaged_flag
+    - is_first_session_flag
+    - has_rage_clicks
+    - has_dead_clicks
+    - has_deep_scroll
+    - has_conversion
+    - has_purchase
+    - has_checkout_start
+    - has_cart_add
+    - has_product_view
+    - has_form_start
+    - has_form_submit
+    - has_search
+    - has_error
+    - is_campaign_attributed
+    - is_identified
+    when: Period aggregate for engagement rate.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  error_count:
+    label: Error Count
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - event_id
+    - page_view_id
+    - session_id
+    - visitor_id
+    - error_type
+    - message
+    - page_path
+    - device
+    - browser
+    when: Period aggregate for error count.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  error_session_count:
+    label: Error Session Count
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - session_id
+    - visitor_id
+    - user_id
+    - wt_campaign_id
+    - wt_contact_id
+    - device
+    - browser
+    - browser_version
+    - platform
+    - country
+    - city
+    - region
+    - utm_source
+    - utm_medium
+    - utm_campaign
+    - utm_term
+    - utm_content
+    - referrer
+    - referrer_domain
+    - entry_page
+    - exit_page
+    - is_bounce_flag
+    - is_engaged_flag
+    - is_first_session_flag
+    - has_rage_clicks
+    - has_dead_clicks
+    - has_deep_scroll
+    - has_conversion
+    - has_purchase
+    - has_checkout_start
+    - has_cart_add
+    - has_product_view
+    - has_form_start
+    - has_form_submit
+    - has_search
+    - has_error
+    - is_campaign_attributed
+    - is_identified
+    when: Period aggregate for error session count.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  error_session_rate:
+    label: Error Session Rate
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - session_id
+    - visitor_id
+    - user_id
+    - wt_campaign_id
+    - wt_contact_id
+    - device
+    - browser
+    - browser_version
+    - platform
+    - country
+    - city
+    - region
+    - utm_source
+    - utm_medium
+    - utm_campaign
+    - utm_term
+    - utm_content
+    - referrer
+    - referrer_domain
+    - entry_page
+    - exit_page
+    - is_bounce_flag
+    - is_engaged_flag
+    - is_first_session_flag
+    - has_rage_clicks
+    - has_dead_clicks
+    - has_deep_scroll
+    - has_conversion
+    - has_purchase
+    - has_checkout_start
+    - has_cart_add
+    - has_product_view
+    - has_form_start
+    - has_form_submit
+    - has_search
+    - has_error
+    - is_campaign_attributed
+    - is_identified
+    when: Period aggregate for error session rate.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  events_per_session:
+    label: Events Per Session
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - session_id
+    - visitor_id
+    - user_id
+    - wt_campaign_id
+    - wt_contact_id
+    - device
+    - browser
+    - browser_version
+    - platform
+    - country
+    - city
+    - region
+    - utm_source
+    - utm_medium
+    - utm_campaign
+    - utm_term
+    - utm_content
+    - referrer
+    - referrer_domain
+    - entry_page
+    - exit_page
+    - is_bounce_flag
+    - is_engaged_flag
+    - is_first_session_flag
+    - has_rage_clicks
+    - has_dead_clicks
+    - has_deep_scroll
+    - has_conversion
+    - has_purchase
+    - has_checkout_start
+    - has_cart_add
+    - has_product_view
+    - has_form_start
+    - has_form_submit
+    - has_search
+    - has_error
+    - is_campaign_attributed
+    - is_identified
+    when: Period aggregate for events per session.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  form_abandon_rate:
+    label: Form Abandon Rate
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - event_id
+    - form_id
+    - page_view_id
+    - session_id
+    - visitor_id
+    - event_type
+    - form_name
+    - field_name
+    - page_path
+    - device
+    - country
+    when: Period aggregate for form abandon rate.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  form_abandons:
+    label: Form Abandons
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - event_id
+    - form_id
+    - page_view_id
+    - session_id
+    - visitor_id
+    - event_type
+    - form_name
+    - field_name
+    - page_path
+    - device
+    - country
+    when: Period aggregate for form abandons.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  form_failures:
+    label: Form Failures
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - event_id
+    - form_id
+    - page_view_id
+    - session_id
+    - visitor_id
+    - event_type
+    - form_name
+    - field_name
+    - page_path
+    - device
+    - country
+    when: Period aggregate for form failures.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  form_starts:
+    label: Form Starts
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - event_id
+    - form_id
+    - page_view_id
+    - session_id
+    - visitor_id
+    - event_type
+    - form_name
+    - field_name
+    - page_path
+    - device
+    - country
+    when: Period aggregate for form starts.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  form_submit_rate:
+    label: Form Submit Rate
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - event_id
+    - form_id
+    - page_view_id
+    - session_id
+    - visitor_id
+    - event_type
+    - form_name
+    - field_name
+    - page_path
+    - device
+    - country
+    when: Period aggregate for form submit rate.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  form_submits:
+    label: Form Submits
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - event_id
+    - form_id
+    - page_view_id
+    - session_id
+    - visitor_id
+    - event_type
+    - form_name
+    - field_name
+    - page_path
+    - device
+    - country
+    when: Period aggregate for form submits.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  form_success_rate:
+    label: Form Success Rate
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - event_id
+    - form_id
+    - page_view_id
+    - session_id
+    - visitor_id
+    - event_type
+    - form_name
+    - field_name
+    - page_path
+    - device
+    - country
+    when: Period aggregate for form success rate.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  form_successes:
+    label: Form Successes
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - event_id
+    - form_id
+    - page_view_id
+    - session_id
+    - visitor_id
+    - event_type
+    - form_name
+    - field_name
+    - page_path
+    - device
+    - country
+    when: Period aggregate for form successes.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  form_views:
+    label: Form Views
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - event_id
+    - form_id
+    - page_view_id
+    - session_id
+    - visitor_id
+    - event_type
+    - form_name
+    - field_name
+    - page_path
+    - device
+    - country
+    when: Period aggregate for form views.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  identified_session_count:
+    label: Identified Session Count
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - session_id
+    - visitor_id
+    - user_id
+    - wt_campaign_id
+    - wt_contact_id
+    - device
+    - browser
+    - browser_version
+    - platform
+    - country
+    - city
+    - region
+    - utm_source
+    - utm_medium
+    - utm_campaign
+    - utm_term
+    - utm_content
+    - referrer
+    - referrer_domain
+    - entry_page
+    - exit_page
+    - is_bounce_flag
+    - is_engaged_flag
+    - is_first_session_flag
+    - has_rage_clicks
+    - has_dead_clicks
+    - has_deep_scroll
+    - has_conversion
+    - has_purchase
+    - has_checkout_start
+    - has_cart_add
+    - has_product_view
+    - has_form_start
+    - has_form_submit
+    - has_search
+    - has_error
+    - is_campaign_attributed
+    - is_identified
+    when: Period aggregate for identified session count.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  identified_session_rate:
+    label: Identified Session Rate
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - session_id
+    - visitor_id
+    - user_id
+    - wt_campaign_id
+    - wt_contact_id
+    - device
+    - browser
+    - browser_version
+    - platform
+    - country
+    - city
+    - region
+    - utm_source
+    - utm_medium
+    - utm_campaign
+    - utm_term
+    - utm_content
+    - referrer
+    - referrer_domain
+    - entry_page
+    - exit_page
+    - is_bounce_flag
+    - is_engaged_flag
+    - is_first_session_flag
+    - has_rage_clicks
+    - has_dead_clicks
+    - has_deep_scroll
+    - has_conversion
+    - has_purchase
+    - has_checkout_start
+    - has_cart_add
+    - has_product_view
+    - has_form_start
+    - has_form_submit
+    - has_search
+    - has_error
+    - is_campaign_attributed
+    - is_identified
+    when: Period aggregate for identified session rate.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  identified_visitor_count:
+    label: Identified Visitor Count
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - visitor_id
+    - user_id
+    - anonymous_id
+    - country
+    - is_identified_flag
+    - is_returning_visitor
+    when: Period aggregate for identified visitor count.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  landing_page_conversion_rate:
+    label: Landing Page Conversion Rate
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - session_id
+    - visitor_id
+    - user_id
+    - wt_campaign_id
+    - wt_contact_id
+    - device
+    - browser
+    - browser_version
+    - platform
+    - country
+    - city
+    - region
+    - utm_source
+    - utm_medium
+    - utm_campaign
+    - utm_term
+    - utm_content
+    - referrer
+    - referrer_domain
+    - entry_page
+    - exit_page
+    - is_bounce_flag
+    - is_engaged_flag
+    - is_first_session_flag
+    - has_rage_clicks
+    - has_dead_clicks
+    - has_deep_scroll
+    - has_conversion
+    - has_purchase
+    - has_checkout_start
+    - has_cart_add
+    - has_product_view
+    - has_form_start
+    - has_form_submit
+    - has_search
+    - has_error
+    - is_campaign_attributed
+    - is_identified
+    when: Period aggregate for landing page conversion rate.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  lifetime_new_visitor_count:
+    label: Lifetime New Visitor Count
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - visitor_id
+    - user_id
+    - anonymous_id
+    - country
+    - is_identified_flag
+    - is_returning_visitor
+    when: Period aggregate for lifetime new visitor count.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  lifetime_returning_visitor_count:
+    label: Lifetime Returning Visitor Count
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - visitor_id
+    - user_id
+    - anonymous_id
+    - country
+    - is_identified_flag
+    - is_returning_visitor
+    when: Period aggregate for lifetime returning visitor count.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  new_visitor_count:
+    label: New Visitor Count
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - session_id
+    - visitor_id
+    - user_id
+    - wt_campaign_id
+    - wt_contact_id
+    - device
+    - browser
+    - browser_version
+    - platform
+    - country
+    - city
+    - region
+    - utm_source
+    - utm_medium
+    - utm_campaign
+    - utm_term
+    - utm_content
+    - referrer
+    - referrer_domain
+    - entry_page
+    - exit_page
+    - is_bounce_flag
+    - is_engaged_flag
+    - is_first_session_flag
+    - has_rage_clicks
+    - has_dead_clicks
+    - has_deep_scroll
+    - has_conversion
+    - has_purchase
+    - has_checkout_start
+    - has_cart_add
+    - has_product_view
+    - has_form_start
+    - has_form_submit
+    - has_search
+    - has_error
+    - is_campaign_attributed
+    - is_identified
+    when: Period aggregate for new visitor count.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  new_visitor_rate:
+    label: New Visitor Rate
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - visitor_id
+    - user_id
+    - anonymous_id
+    - country
+    - is_identified_flag
+    - is_returning_visitor
+    when: Period aggregate for new visitor rate.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  online_visitors:
+    label: Online Visitors
+    kind: count
+    scope: org
+    dims: *id001
+    when: Distinct visitors active in the last 5 minutes.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  page_views:
+    label: Page Views
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - page_view_id
+    - session_id
+    - visitor_id
+    - page_path
+    - page_title
+    - referrer
+    - device
+    - country
+    - utm_source
+    - utm_medium
+    - utm_campaign
+    when: Period aggregate for page views.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  pages_per_session:
+    label: Pages Per Session
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - session_id
+    - visitor_id
+    - user_id
+    - wt_campaign_id
+    - wt_contact_id
+    - device
+    - browser
+    - browser_version
+    - platform
+    - country
+    - city
+    - region
+    - utm_source
+    - utm_medium
+    - utm_campaign
+    - utm_term
+    - utm_content
+    - referrer
+    - referrer_domain
+    - entry_page
+    - exit_page
+    - is_bounce_flag
+    - is_engaged_flag
+    - is_first_session_flag
+    - has_rage_clicks
+    - has_dead_clicks
+    - has_deep_scroll
+    - has_conversion
+    - has_purchase
+    - has_checkout_start
+    - has_cart_add
+    - has_product_view
+    - has_form_start
+    - has_form_submit
+    - has_search
+    - has_error
+    - is_campaign_attributed
+    - is_identified
+    when: Period aggregate for pages per session.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  performance_event_count:
+    label: Performance Event Count
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - event_id
+    - page_view_id
+    - session_id
+    - visitor_id
+    - metric_name
+    - rating
+    - page_path
+    - device
+    when: Period aggregate for performance event count.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  poor_vitals_event_count:
+    label: Poor Vitals Event Count
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - event_id
+    - page_view_id
+    - session_id
+    - visitor_id
+    - metric_name
+    - rating
+    - page_path
+    - device
+    when: Period aggregate for poor vitals event count.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  poor_vitals_rate:
+    label: Poor Vitals Rate
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - event_id
+    - page_view_id
+    - session_id
+    - visitor_id
+    - metric_name
+    - rating
+    - page_path
+    - device
+    when: Period aggregate for poor vitals rate.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  product_interaction_count:
+    label: Product Interaction Count
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - interaction_id
+    - product_id
+    - product_sku
+    - product_name
+    - product_category
+    - product_brand
+    - currency
+    - section
+    - device
+    - country
+    when: Period aggregate for product interaction count.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  product_view_rate:
+    label: Product View Rate
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - session_id
+    - visitor_id
+    - user_id
+    - wt_campaign_id
+    - wt_contact_id
+    - device
+    - browser
+    - browser_version
+    - platform
+    - country
+    - city
+    - region
+    - utm_source
+    - utm_medium
+    - utm_campaign
+    - utm_term
+    - utm_content
+    - referrer
+    - referrer_domain
+    - entry_page
+    - exit_page
+    - is_bounce_flag
+    - is_engaged_flag
+    - is_first_session_flag
+    - has_rage_clicks
+    - has_dead_clicks
+    - has_deep_scroll
+    - has_conversion
+    - has_purchase
+    - has_checkout_start
+    - has_cart_add
+    - has_product_view
+    - has_form_start
+    - has_form_submit
+    - has_search
+    - has_error
+    - is_campaign_attributed
+    - is_identified
+    when: Period aggregate for product view rate.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  purchase_count:
+    label: Purchase Count
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - conversion_id
+    - product_id
+    - page_view_id
+    - session_id
+    - visitor_id
+    - conversion_type
+    - currency
+    - utm_source
+    - utm_campaign
+    - device
+    - country
+    when: Period aggregate for purchase count.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  rage_click_rate:
+    label: Rage Click Rate
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - session_id
+    - visitor_id
+    - user_id
+    - wt_campaign_id
+    - wt_contact_id
+    - device
+    - browser
+    - browser_version
+    - platform
+    - country
+    - city
+    - region
+    - utm_source
+    - utm_medium
+    - utm_campaign
+    - utm_term
+    - utm_content
+    - referrer
+    - referrer_domain
+    - entry_page
+    - exit_page
+    - is_bounce_flag
+    - is_engaged_flag
+    - is_first_session_flag
+    - has_rage_clicks
+    - has_dead_clicks
+    - has_deep_scroll
+    - has_conversion
+    - has_purchase
+    - has_checkout_start
+    - has_cart_add
+    - has_product_view
+    - has_form_start
+    - has_form_submit
+    - has_search
+    - has_error
+    - is_campaign_attributed
+    - is_identified
+    when: Period aggregate for rage click rate.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  rage_click_session_count:
+    label: Rage Click Session Count
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - session_id
+    - visitor_id
+    - user_id
+    - wt_campaign_id
+    - wt_contact_id
+    - device
+    - browser
+    - browser_version
+    - platform
+    - country
+    - city
+    - region
+    - utm_source
+    - utm_medium
+    - utm_campaign
+    - utm_term
+    - utm_content
+    - referrer
+    - referrer_domain
+    - entry_page
+    - exit_page
+    - is_bounce_flag
+    - is_engaged_flag
+    - is_first_session_flag
+    - has_rage_clicks
+    - has_dead_clicks
+    - has_deep_scroll
+    - has_conversion
+    - has_purchase
+    - has_checkout_start
+    - has_cart_add
+    - has_product_view
+    - has_form_start
+    - has_form_submit
+    - has_search
+    - has_error
+    - is_campaign_attributed
+    - is_identified
+    when: Period aggregate for rage click session count.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  rage_clicks:
+    label: Rage Clicks
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - event_id
+    - page_view_id
+    - session_id
+    - visitor_id
+    - event_type
+    - element
+    - element_type
+    - element_text
+    - page_path
+    - device
+    - country
+    - reason
+    when: Period aggregate for rage clicks.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  returning_visitor_count:
+    label: Returning Visitor Count
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - session_id
+    - visitor_id
+    - user_id
+    - wt_campaign_id
+    - wt_contact_id
+    - device
+    - browser
+    - browser_version
+    - platform
+    - country
+    - city
+    - region
+    - utm_source
+    - utm_medium
+    - utm_campaign
+    - utm_term
+    - utm_content
+    - referrer
+    - referrer_domain
+    - entry_page
+    - exit_page
+    - is_bounce_flag
+    - is_engaged_flag
+    - is_first_session_flag
+    - has_rage_clicks
+    - has_dead_clicks
+    - has_deep_scroll
+    - has_conversion
+    - has_purchase
+    - has_checkout_start
+    - has_cart_add
+    - has_product_view
+    - has_form_start
+    - has_form_submit
+    - has_search
+    - has_error
+    - is_campaign_attributed
+    - is_identified
+    when: Period aggregate for returning visitor count.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  returning_visitor_rate:
+    label: Returning Visitor Rate
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - visitor_id
+    - user_id
+    - anonymous_id
+    - country
+    - is_identified_flag
+    - is_returning_visitor
+    when: Period aggregate for returning visitor rate.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  scroll_engagement_rate:
+    label: Scroll Engagement Rate
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - session_id
+    - visitor_id
+    - user_id
+    - wt_campaign_id
+    - wt_contact_id
+    - device
+    - browser
+    - browser_version
+    - platform
+    - country
+    - city
+    - region
+    - utm_source
+    - utm_medium
+    - utm_campaign
+    - utm_term
+    - utm_content
+    - referrer
+    - referrer_domain
+    - entry_page
+    - exit_page
+    - is_bounce_flag
+    - is_engaged_flag
+    - is_first_session_flag
+    - has_rage_clicks
+    - has_dead_clicks
+    - has_deep_scroll
+    - has_conversion
+    - has_purchase
+    - has_checkout_start
+    - has_cart_add
+    - has_product_view
+    - has_form_start
+    - has_form_submit
+    - has_search
+    - has_error
+    - is_campaign_attributed
+    - is_identified
+    when: Period aggregate for scroll engagement rate.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  search_session_count:
+    label: Search Session Count
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - session_id
+    - visitor_id
+    - user_id
+    - wt_campaign_id
+    - wt_contact_id
+    - device
+    - browser
+    - browser_version
+    - platform
+    - country
+    - city
+    - region
+    - utm_source
+    - utm_medium
+    - utm_campaign
+    - utm_term
+    - utm_content
+    - referrer
+    - referrer_domain
+    - entry_page
+    - exit_page
+    - is_bounce_flag
+    - is_engaged_flag
+    - is_first_session_flag
+    - has_rage_clicks
+    - has_dead_clicks
+    - has_deep_scroll
+    - has_conversion
+    - has_purchase
+    - has_checkout_start
+    - has_cart_add
+    - has_product_view
+    - has_form_start
+    - has_form_submit
+    - has_search
+    - has_error
+    - is_campaign_attributed
+    - is_identified
+    when: Period aggregate for search session count.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  search_usage_rate:
+    label: Search Usage Rate
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - session_id
+    - visitor_id
+    - user_id
+    - wt_campaign_id
+    - wt_contact_id
+    - device
+    - browser
+    - browser_version
+    - platform
+    - country
+    - city
+    - region
+    - utm_source
+    - utm_medium
+    - utm_campaign
+    - utm_term
+    - utm_content
+    - referrer
+    - referrer_domain
+    - entry_page
+    - exit_page
+    - is_bounce_flag
+    - is_engaged_flag
+    - is_first_session_flag
+    - has_rage_clicks
+    - has_dead_clicks
+    - has_deep_scroll
+    - has_conversion
+    - has_purchase
+    - has_checkout_start
+    - has_cart_add
+    - has_product_view
+    - has_form_start
+    - has_form_submit
+    - has_search
+    - has_error
+    - is_campaign_attributed
+    - is_identified
+    when: Period aggregate for search usage rate.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  sessions_with_cart_add:
+    label: Sessions With Cart Add
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - session_id
+    - visitor_id
+    - user_id
+    - wt_campaign_id
+    - wt_contact_id
+    - device
+    - browser
+    - browser_version
+    - platform
+    - country
+    - city
+    - region
+    - utm_source
+    - utm_medium
+    - utm_campaign
+    - utm_term
+    - utm_content
+    - referrer
+    - referrer_domain
+    - entry_page
+    - exit_page
+    - is_bounce_flag
+    - is_engaged_flag
+    - is_first_session_flag
+    - has_rage_clicks
+    - has_dead_clicks
+    - has_deep_scroll
+    - has_conversion
+    - has_purchase
+    - has_checkout_start
+    - has_cart_add
+    - has_product_view
+    - has_form_start
+    - has_form_submit
+    - has_search
+    - has_error
+    - is_campaign_attributed
+    - is_identified
+    when: Period aggregate for sessions with cart add.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  sessions_with_checkout_start:
+    label: Sessions With Checkout Start
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - session_id
+    - visitor_id
+    - user_id
+    - wt_campaign_id
+    - wt_contact_id
+    - device
+    - browser
+    - browser_version
+    - platform
+    - country
+    - city
+    - region
+    - utm_source
+    - utm_medium
+    - utm_campaign
+    - utm_term
+    - utm_content
+    - referrer
+    - referrer_domain
+    - entry_page
+    - exit_page
+    - is_bounce_flag
+    - is_engaged_flag
+    - is_first_session_flag
+    - has_rage_clicks
+    - has_dead_clicks
+    - has_deep_scroll
+    - has_conversion
+    - has_purchase
+    - has_checkout_start
+    - has_cart_add
+    - has_product_view
+    - has_form_start
+    - has_form_submit
+    - has_search
+    - has_error
+    - is_campaign_attributed
+    - is_identified
+    when: Period aggregate for sessions with checkout start.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  sessions_with_conversions:
+    label: Sessions With Conversions
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - session_id
+    - visitor_id
+    - user_id
+    - wt_campaign_id
+    - wt_contact_id
+    - device
+    - browser
+    - browser_version
+    - platform
+    - country
+    - city
+    - region
+    - utm_source
+    - utm_medium
+    - utm_campaign
+    - utm_term
+    - utm_content
+    - referrer
+    - referrer_domain
+    - entry_page
+    - exit_page
+    - is_bounce_flag
+    - is_engaged_flag
+    - is_first_session_flag
+    - has_rage_clicks
+    - has_dead_clicks
+    - has_deep_scroll
+    - has_conversion
+    - has_purchase
+    - has_checkout_start
+    - has_cart_add
+    - has_product_view
+    - has_form_start
+    - has_form_submit
+    - has_search
+    - has_error
+    - is_campaign_attributed
+    - is_identified
+    when: Period aggregate for sessions with conversions.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  sessions_with_deep_scroll:
+    label: Sessions With Deep Scroll
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - session_id
+    - visitor_id
+    - user_id
+    - wt_campaign_id
+    - wt_contact_id
+    - device
+    - browser
+    - browser_version
+    - platform
+    - country
+    - city
+    - region
+    - utm_source
+    - utm_medium
+    - utm_campaign
+    - utm_term
+    - utm_content
+    - referrer
+    - referrer_domain
+    - entry_page
+    - exit_page
+    - is_bounce_flag
+    - is_engaged_flag
+    - is_first_session_flag
+    - has_rage_clicks
+    - has_dead_clicks
+    - has_deep_scroll
+    - has_conversion
+    - has_purchase
+    - has_checkout_start
+    - has_cart_add
+    - has_product_view
+    - has_form_start
+    - has_form_submit
+    - has_search
+    - has_error
+    - is_campaign_attributed
+    - is_identified
+    when: Period aggregate for sessions with deep scroll.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  sessions_with_product_views:
+    label: Sessions With Product Views
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - session_id
+    - visitor_id
+    - user_id
+    - wt_campaign_id
+    - wt_contact_id
+    - device
+    - browser
+    - browser_version
+    - platform
+    - country
+    - city
+    - region
+    - utm_source
+    - utm_medium
+    - utm_campaign
+    - utm_term
+    - utm_content
+    - referrer
+    - referrer_domain
+    - entry_page
+    - exit_page
+    - is_bounce_flag
+    - is_engaged_flag
+    - is_first_session_flag
+    - has_rage_clicks
+    - has_dead_clicks
+    - has_deep_scroll
+    - has_conversion
+    - has_purchase
+    - has_checkout_start
+    - has_cart_add
+    - has_product_view
+    - has_form_start
+    - has_form_submit
+    - has_search
+    - has_error
+    - is_campaign_attributed
+    - is_identified
+    when: Period aggregate for sessions with product views.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  signup_count:
+    label: Signup Count
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - conversion_id
+    - product_id
+    - page_view_id
+    - session_id
+    - visitor_id
+    - conversion_type
+    - currency
+    - utm_source
+    - utm_campaign
+    - device
+    - country
+    when: Period aggregate for signup count.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  total_clicks:
+    label: Total Clicks
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - event_id
+    - page_view_id
+    - session_id
+    - visitor_id
+    - event_type
+    - element
+    - element_type
+    - element_text
+    - page_path
+    - device
+    - country
+    - reason
+    when: Period aggregate for total clicks.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  total_conversion_value:
+    label: Total Conversion Value
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - session_id
+    - visitor_id
+    - conversion_type
+    - currency
+    - device
+    - country
+    when: Sum of conversion event value (alias of total_revenue).
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  total_conversions:
+    label: Total Conversions
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - conversion_id
+    - product_id
+    - page_view_id
+    - session_id
+    - visitor_id
+    - conversion_type
+    - currency
+    - utm_source
+    - utm_campaign
+    - device
+    - country
+    when: Period aggregate for total conversions.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  total_custom_events:
+    label: Total Custom Events
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - event_id
+    - page_view_id
+    - session_id
+    - visitor_id
+    - event_name
+    - device
+    - country
+    when: Period aggregate for total custom events.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  total_events:
+    label: Total Events
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - event_id
+    - page_view_id
+    - session_id
+    - visitor_id
+    - event_type
+    - element
+    - element_type
+    - element_text
+    - page_path
+    - device
+    - country
+    - reason
+    when: Period aggregate for total events.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  total_revenue:
+    label: Total Revenue
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - conversion_id
+    - product_id
+    - page_view_id
+    - session_id
+    - visitor_id
+    - conversion_type
+    - currency
+    - utm_source
+    - utm_campaign
+    - device
+    - country
+    when: Period aggregate for total revenue.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  tracking_consent_denied_count:
+    label: Tracking Consent Denied Count
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - event_id
+    - session_id
+    - visitor_id
+    - action
+    - cookie_name
+    - page_path
+    when: Period aggregate for tracking consent denied count.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  tracking_consent_grant_rate:
+    label: Tracking Consent Grant Rate
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - event_id
+    - session_id
+    - visitor_id
+    - action
+    - cookie_name
+    - page_path
+    when: Period aggregate for tracking consent grant rate.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  tracking_consent_granted_count:
+    label: Tracking Consent Granted Count
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - event_id
+    - session_id
+    - visitor_id
+    - action
+    - cookie_name
+    - page_path
+    when: Period aggregate for tracking consent granted count.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  unique_visitors:
+    label: Unique Visitors
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - visitor_id
+    - user_id
+    - anonymous_id
+    - country
+    - is_identified_flag
+    - is_returning_visitor
+    when: Period aggregate for unique visitors.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  visitor_identification_rate:
+    label: Visitor Identification Rate
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - visitor_id
+    - user_id
+    - anonymous_id
+    - country
+    - is_identified_flag
+    - is_returning_visitor
+    when: Period aggregate for visitor identification rate.
+    requires_skus:
+    - web-tracking
+    min_role: agent
+  web_session_volume:
+    label: Web Session Volume
+    kind: count
+    scope: org
+    dims:
+    - website_id
+    - session_id
+    - visitor_id
+    - user_id
+    - wt_campaign_id
+    - wt_contact_id
+    - device
+    - browser
+    - browser_version
+    - platform
+    - country
+    - city
+    - region
+    - utm_source
+    - utm_medium
+    - utm_campaign
+    - utm_term
+    - utm_content
+    - referrer
+    - referrer_domain
+    - entry_page
+    - exit_page
+    - is_bounce_flag
+    - is_engaged_flag
+    - is_first_session_flag
+    - has_rage_clicks
+    - has_dead_clicks
+    - has_deep_scroll
+    - has_conversion
+    - has_purchase
+    - has_checkout_start
+    - has_cart_add
+    - has_product_view
+    - has_form_start
+    - has_form_submit
+    - has_search
+    - has_error
+    - is_campaign_attributed
+    - is_identified
+    when: Period aggregate for web session volume.
+    requires_skus:
+    - web-tracking
+    min_role: agent

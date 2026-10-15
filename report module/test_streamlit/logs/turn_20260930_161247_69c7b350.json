@@ -1,0 +1,150 @@
+{
+  "turn_id": "69c7b350",
+  "timestamp": "2026-09-30T10:42:42.450946+00:00",
+  "question": "how many tickets are there",
+  "context": {
+    "product": "ticketing",
+    "org_id": 1003,
+    "user_id": 1028,
+    "role": "admin",
+    "queue_ids": [
+      1018,
+      1019,
+      1020,
+      1021,
+      1022,
+      1024,
+      1026,
+      1027,
+      1028,
+      1029,
+      1031,
+      1059,
+      1068
+    ],
+    "llm_model": "worktual-gemma"
+  },
+  "events": [
+    {
+      "timestamp": "2026-09-30T10:42:42.501379+00:00",
+      "type": "message",
+      "role": "system",
+      "agent": "domain_agent",
+      "content": "# reports_analytics_domain\n\n## runtime metadata\n- version: 2.1.0\n- layer: domain\n- execution_mode: llm\n\n## role\nYou are the Lead Analyst for ticketing reports and analytics. You plan and synthesize\nbriefings for the **CEO** and executive stakeholders. You do not query databases or write raw SQL/Cypher directly.\nExecutors (`sql_analytics_executor`, `kg_analytics_executor`) run your tasks and return\nstructured facts. You synthesize the CEO's final answer directly from those facts.\n\n## goal\nAccurately interpret the user's intent, decompose complex natural language questions into 1 to 4 clean, purposeful tasks, and synthesize returned facts into explanatory, high-value business insights with root cause analysis.\n\n---\n\n## query understanding & intent resolution\n\nBefore formulating a plan, resolve the user's question into precise operational concepts:\n\n### 1. Status & Lifecycle Semantics\n- **\"Open tickets\"**: Tickets actively waiting for work -> `status = 'Open'` (or `is_status_open = true`).\n- **\"Generic pending\" / \"Outstanding\" / \"Unresolved\"**: Any ticket not yet completed -> `status NOT IN ('Closed', 'Resolved')` (or `is_pending_generic = true`).\n- **\"Pending\" (Explicit/Literal)**: Specifically parked or waiting on customer -> `status = 'Pending'` (or `is_status_pending_literal = true`).\n- **\"Overdue\"**: Missed due SLA -> `status = 'Overdue'` (or `is_status_overdue = true`).\n- **\"Resolved\"**: Successfully resolved -> `status = 'Resolved'` (or `is_status_resolved = true`).\n- **\"Closed\"**: Terminated -> `status = 'Closed'` (or `is_status_closed = true`).\n- **\"Reopened\"**: Resolved/closed then reopened -> `status = 'Reopened'` (or `is_status_reopened = true`).\n\n### 2. Ticket Number Lookup\n- Users may supply ticket numbers as `\"104\"`, `\"#104\"`, `\"G5\"`, `\"#G5\"`, or `\"ticket #104\"`.\n- When asking for ticket lookups, always instruct the executor to match both forms: `ticket_number IN ('#104', '104')` or `ticket_number ILIKE '%104%'`.\n\n### 3. Contact, People & Role Semantics\n- **Resolver (L2)**: `resolver_name`, `resolver_id`.\n  - When the user's role is `resolver`, \"my tickets\" / \"tickets to resolve\" / \"assigned to me\" refers to **`resolver_id`** (never `assignee_id`).\n  - Resolvers can query their own queues (`rpt.queues` / `rpt.queue_members`) and tickets where they are the resolver.\n- **Assignee (L1 Agent)**: `assignee_name`, `assignee_id` (NULL = unassigned).\n  - When the user's role is `agent`, \"my tickets\" refers to `assignee_id = :user_id`.\n  - \"Tickets for other agents\": `assignee_id != :user_id AND assignee_id IS NOT NULL`.\n- **Creator**: `created_by_name`, `created_by_id`.\n  - \"Tickets created by me\": `created_by_id = :user_id`.\n- **Unassigned Tickets**: `assignee_id IS NULL` on `rpt.tickets`.\n- **Customers & Customer Search**: `rpt.customers` (for listing/finding customer accounts: `name`, `email`, `phone`, `company`, `status`) and customer fields on `rpt.tickets`. Note: `rpt.customers` is accessible by Admin and Agent.\n\n### 4. Teams, Queues & Staffing Resolution\n- **\"Teams\" = \"Queues\"**: In this domain, \"teams\", \"groups\", and \"departments\" refer to **`rpt.queues`** and **`rpt.queue_members`**.\n- **\"List teams\" / \"Find teams by name <Name>\"**:\n  - Target `rpt.queues` (e.g. `WHERE queue_name ILIKE '%<Name>%'`).\n- **\"Show members of team <Name> / Who is in this team?\"**:\n  - Target `rpt.agents a JOIN rpt.queue_members qm ON qm.user_id = a.id JOIN rpt.queues q ON q.id = qm.queue_id WHERE q.queue_name ILIKE '%<Name>%'`.\n- **\"My teams\" / \"What teams am I assigned to?\"**:\n  - Target `rpt.queues` (automatically scoped for Agent and Resolver).\n\n### 5. Metadata Listings (Statuses, Priorities, Channels, Categories)\n- When users ask to \"list all statuses\", \"list all priorities\", \"list categories\", or \"list channels\", plan a query using `SELECT DISTINCT <column> FROM rpt.tickets`.\n\n### 6. Name, Text & Partial Search Rules (`ILIKE '%...%'`)\n- Whenever filtering by names, queues, customer emails, or subjects, ALWAYS specify case-insensitive partial matching (`ILIKE '%<term>%'`) to prevent missed records due to casing or partial search terms (e.g. `customer_name ILIKE '%john%'`, `queue_name ILIKE '%billing%'`, `assignee_name ILIKE '%smith%'`).\n\n---\n\n## planning rules\n\n### depth\n- `quick`: A single KPI metric, total count, or single entity lookup (1 task).\n- `standard`: A comparison, ranking, or dimensional breakdown (1 to 2 tasks).\n- `deep`: Multi-step investigation combining volume/rate with graph relationships or multi-dimensional breakdown for \"Why\" root-cause questions (up to 4 tasks).\n\n### routing: sql vs kg\n- **sql**: Certified KPI metrics, ticket lists, rankings, rosters (who exists), status counts, queue memberships, duration/score filters, and **all calendar volume (month/week/day)**.\n- **kg**: Relationship hops, neighborhoods, queue staffing (`staffing_path`), note authors (`note_path`), customer contact paths (`customer_path`), and why/driver breakdowns by **queue, agent, resolver, status, priority, channel, category** (never month/week/day).\n### 7. Multi-Turn Context Isolation\n- Treat each question as an independent inquiry unless the user explicitly uses follow-up/anaphoric phrasing (e.g., \"of those\", \"break them down\", \"why\", \"who are they\", \"filter by\").\n- Do NOT carry over restrictive timeframes or filters from prior conversation turns unless the user explicitly refers to them.\n\n---\n\n## planning rules\n\n### depth\n- `quick`: A single KPI metric, total count, or single entity lookup (1 task).\n- `standard`: A comparison, ranking, or dimensional breakdown (1 to 2 tasks).\n- `deep`: Multi-step investigation combining volume/rate with graph relationships or multi-dimensional breakdown for \"Why\" root-cause questions (up to 4 tasks).\n\n### routing: sql vs kg\n- **sql**: Certified KPI metrics, ticket lists, rankings, rosters (who exists), status counts, queue memberships, duration/score filters, and **all calendar volume (month/week/day)**.\n- **kg**: Relationship hops, neighborhoods, queue staffing (`staffing_path`), note authors (`note_path`), customer contact paths (`customer_path`), and why/driver breakdowns by **queue, agent, resolver, status, priority, channel, category** (never month/week/day).\n- If the user asks for volume by month, week, or day, ALWAYS use `sql`, even if they say \"in the graph\".\n- If the user asks both a certified KPI and a relationship driver, create two separate tasks.\n\n### time & scope handling\n- **time**: Emit natural language words (e.g., `\"all time\"`, `\"this month\"`, `\"last week\"`, `\"yesterday\"`, `\"August 2026\"`). **NEVER compute ISO timestamps.** Python resolves words into UTC bounds.\n  - **CRITICAL DEFAULT TIME RULE**: When the user's question does NOT explicitly mention a specific timeframe (e.g. \"how many tickets\", \"show open tickets\", \"breakdown by status\", \"list my tickets\", \"total tickets\"), ALWAYS default to `\"all time\"`.\n  - Only emit bounded time expressions (e.g. `\"this month\"`, `\"today\"`, `\"yesterday\"`, `\"last 7 days\"`, `\"September 2026\"`) when the user explicitly requests a time period.\n- **scope**: Emit the scope level: `\"org\"`, `\"own\"`, `\"created_by_me\"`, `\"queue\"`, `\"agent\"`, `\"resolver\"`.\n  - admin: default `\"org\"`.\n  - agent: default `\"own\"` (tickets where `assignee_id` is user) or `\"queue\"` (tickets in user's queues) or `\"created_by_me\"`.\n  - resolver: default `\"own\"` (tickets where `resolver_id` is user). Resolvers see their own tickets and own queues.\n\n### certified kpi vs free sql\n- If the question asks for a named certified KPI without custom multi-table filtering, set the `\"kpi\"` field on the task. Certified KPI IDs:\n  - **Volume**: `ticket_count`, `avg_tickets_per_day`, `avg_open_ticket_age`, `days_since_last_ticket`\n  - **Flow & Resolution**: `resolution_rate`, `assignment_rate`, `reopen_count`, `reopen_rate`, `escalation_rate`, `reassignment_rate`\n  - **SLA & Performance**: `avg_first_response_time`, `avg_resolution_time`, `avg_resolution_variance_vs_sla`, `first_response_sla_compliance`, `resolution_sla_compliance`, `sla_breach_rate`, `first_response_at_risk_count`, `resolution_at_risk_count`, `no_sla_count`, `queues_at_risk`, `average_overdue_hours`\n  - **Satisfaction**: `avg_csat`, `csat_response_rate`, `csat_distribution_rate`\n  - **Audience & Workforce**: `total_users`, `active_agents`, `customers_served`, `accounts_served`, `active_customers`, `total_customers`, `queue_count`, `queue_coverage`, `distinct_agents_in_queues`, `distinct_queues_covered`\n  - **Knowledge & Notes**: `note_count`, `escalation_count`, `reassignment_count`, `kb_article_count`, `kb_views`\n  - **AI & Notifications**: `recommendation_count`, `recommendation_acceptance_rate`, `approval_count`, `approval_rate`, `unread_notifications`\n- If the question asks for arbitrary ticket rows, specific customer/agent fields, custom breakdowns, rankings, or rosters, leave `\"kpi\": null` and use `executor: \"sql\"`.\n\n### task output format\n```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"quick|standard|deep\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql|kg\",\n      \"kpi\": \"ticket_count\",\n      \"goal\": \"Count tickets across all time\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"answer_type\": \"kpi|list|breakdown|ranking|graph_why\",\n      \"depends_on\": []\n    }\n  ]\n}\n```\n\n---\n\n## error and re-plan handling (max 2 attempts)\nIf you receive a message starting with `REPLAN_REQUEST`:\n- Inspect `error_type` and `error` in the message.\n- If a certified KPI template could not satisfy the filters, switch to a free SQL task (`\"kpi\": null`) with an explicit goal and specific `rpt.*` views.\n- You have at most **2 total attempts**. Change the plan significantly to resolve the reported error.\n\n---\n\n## answer synthesis (executive briefing)\nWhen executors return fact blocks (`RESULT: ...`):\n1. **Lead with the Primary Finding & Explicit Time Horizon**: State the direct answer and exact metric along with the explicit time horizon in the very first sentence using **bold** markdown (e.g. \"Across all time, there are **20,026** total tickets...\" or \"For September 2026 (this month), there are **10,359** tickets...\").\n2. **Contextual & Root Cause Depth**: Explain *why* the numbers are what they are. Highlight drivers (e.g. queue concentration, reassignment spikes, specific staffing bottlenecks).\n3. **Exact Figures Only**: Every figure mentioned must originate from the fact block. Never guess, extrapolate, or invent metrics.\n4. **Actionable Operational Insights**: For SLA breaches, backlog increases, or low CSAT, clearly state the top contributing queues or categories.\n5. **Zero Records Clarification**: If rows are empty, state clearly that zero matching records were found for that scope and timeframe.\n6. **Tone & Style**: Clean, executive prose. Do NOT include markdown headers like \"Narrative\", \"Analysis\", or internal tool names.\n",
+      "metadata": {}
+    },
+    {
+      "timestamp": "2026-09-30T10:42:42.501406+00:00",
+      "type": "message",
+      "role": "user",
+      "agent": "domain_agent",
+      "content": "Identity: role=admin, org_id=1003, user_id=1028, queues=[1018, 1019, 1020, 1021, 1022, 1024, 1026, 1027, 1028, 1029, 1031, 1059, 1068]\n\nQuestion: how many tickets are there",
+      "metadata": {}
+    },
+    {
+      "timestamp": "2026-09-30T10:42:43.813713+00:00",
+      "type": "message",
+      "role": "assistant",
+      "agent": "domain_agent",
+      "content": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"quick\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"ticket_count\",\n      \"goal\": \"Count the total number of tickets across all time\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"answer_type\": \"kpi\",\n      \"depends_on\": []\n    }\n  ]\n}\n```",
+      "metadata": {}
+    },
+    {
+      "timestamp": "2026-09-30T10:42:43.813799+00:00",
+      "type": "tool_call",
+      "agent": "domain_agent",
+      "tool_name": "plan_tasks",
+      "arguments": {
+        "kind": "plan",
+        "depth": "quick",
+        "tasks": [
+          {
+            "id": "t1",
+            "executor": "sql",
+            "kpi": "ticket_count",
+            "goal": "Count the total number of tickets across all time",
+            "time": "all time",
+            "scope": "org",
+            "answer_type": "kpi",
+            "depends_on": []
+          }
+        ]
+      },
+      "result": null
+    },
+    {
+      "timestamp": "2026-09-30T10:42:43.815515+00:00",
+      "type": "tool_call",
+      "agent": "certified_kpi_executor",
+      "tool_name": "run_kpi",
+      "arguments": {
+        "kpi_id": "ticket_count",
+        "scope": "org",
+        "time": "overall (no date filter, UTC)",
+        "dimension": null,
+        "filter": null
+      },
+      "result": null
+    },
+    {
+      "timestamp": "2026-09-30T10:42:45.432583+00:00",
+      "type": "guard",
+      "guard_type": "KPI_Template_Slots",
+      "input_query": "ticket_count",
+      "output_query": "WITH base_ticket AS (\n-- Shared ticket grain. Python inlines this as the base_ticket CTE body.\n-- No aggregations. Status rules use tickets.status only. Never is_terminal.\nSELECT\n    t.id AS ticket_id,\n    t.organization_id,\n    t.ticket_number,\n    t.status,\n    t.priority,\n    t.channel,\n    t.category,\n    t.customer_id,\n    t.customer_name,\n    t.assignee_id,\n    t.assignee_name,\n    t.resolver_id,\n    t.resolver_name,\n    t.queue_id,\n    t.queue_name,\n    t.created_by_id,\n    t.created_by_name,\n    t.due_at,\n    t.first_response_at,\n    t.resolved_at,\n    t.csat_score,\n    t.csat_rated_at,\n    t.created_at,\n    t.updated_at,\n    sp.resolution_hours AS sla_resolution_hours,\n    sp.first_response_hours AS sla_first_response_hours,\n    EXTRACT(EPOCH FROM (t.resolved_at - t.created_at)) / 3600.0 AS resolution_hours,\n    EXTRACT(EPOCH FROM (t.first_response_at - t.created_at)) / 3600.0 AS first_response_hours,\n    EXTRACT(EPOCH FROM (t.resolved_at - t.due_at)) / 3600.0 AS resolution_variance_hours,\n    EXTRACT(EPOCH FROM (COALESCE(t.resolved_at, NOW()) - t.due_at)) / 3600.0 AS overdue_hours_so_far,\n    (t.status = 'Open') AS is_status_open,\n    (t.status = 'Pending') AS is_status_pending_literal,\n    (t.status = 'Reopened') AS is_status_reopened,\n    (t.status = 'Overdue') AS is_status_overdue,\n    (t.status = 'Resolved') AS is_status_resolved,\n    (t.status = 'Closed') AS is_status_closed,\n    (t.status NOT IN ('Closed', 'Resolved')) AS is_pending_generic,\n    (t.assignee_id IS NULL) AS is_unassigned,\n    (t.priority = 'high') AS is_high_priority,\n    (t.due_at IS NOT NULL) AS has_resolution_due,\n    (sp.first_response_hours IS NOT NULL) AS has_first_response_policy,\n    (\n        t.resolved_at IS NOT NULL\n        AND t.due_at IS NOT NULL\n        AND t.resolved_at <= t.due_at\n    ) AS resolution_sla_met,\n    (\n        t.due_at IS NOT NULL\n        AND (\n            (t.resolved_at IS NOT NULL AND t.resolved_at > t.due_at)\n            OR (\n                t.status NOT IN ('Closed', 'Resolved')\n                AND NOW() > t.due_at\n            )\n            OR (\n                t.status IN ('Closed', 'Resolved')\n                AND t.resolved_at IS NULL\n                AND NOW() > t.due_at\n            )\n        )\n    ) AS resolution_sla_missed,\n    (\n        t.due_at IS NOT NULL\n        AND t.status NOT IN ('Closed', 'Resolved')\n        AND NOW() <= t.due_at\n        AND EXTRACT(EPOCH FROM (t.due_at - NOW()))\n            <= 0.20 * EXTRACT(EPOCH FROM (t.due_at - t.created_at))\n        AND EXTRACT(EPOCH FROM (t.due_at - t.created_at)) > 0\n    ) AS resolution_at_risk,\n    (t.due_at IS NULL) AS resolution_no_sla,\n    (\n        t.first_response_at IS NOT NULL\n        AND sp.first_response_hours IS NOT NULL\n        AND t.first_response_at <= t.created_at + (sp.first_response_hours * INTERVAL '1 hour')\n    ) AS first_response_sla_met,\n    (\n        sp.first_response_hours IS NOT NULL\n        AND (\n            (\n                t.first_response_at IS NOT NULL\n                AND t.first_response_at > t.created_at + (sp.first_response_hours * INTERVAL '1 hour')\n            )\n            OR (\n                t.first_response_at IS NULL\n                AND NOW() > t.created_at + (sp.first_response_hours * INTERVAL '1 hour')\n            )\n        )\n    ) AS first_response_sla_missed,\n    (\n        t.first_response_at IS NULL\n        AND sp.first_response_hours IS NOT NULL\n        AND t.status NOT IN ('Closed', 'Resolved')\n        AND NOW() <= t.created_at + (sp.first_response_hours * INTERVAL '1 hour')\n        AND EXTRACT(EPOCH FROM (\n            (t.created_at + (sp.first_response_hours * INTERVAL '1 hour'))\n            - NOW()\n        )) <= 0.20 * (sp.first_response_hours * 3600.0)\n    ) AS first_response_at_risk,\n    (sp.first_response_hours IS NULL) AS first_response_no_sla\nFROM ticketing.tickets t\nLEFT JOIN LATERAL (\n    SELECT sp.resolution_hours, sp.first_response_hours\n    FROM ticketing.sla_policies sp\n    WHERE sp.organization_id = t.organization_id\n      AND sp.priority = t.priority\n      AND sp.active = true\n    ORDER BY sp.id DESC\n    LIMIT 1\n) sp ON true\nWHERE t.organization_id = 1003\n\n)\nSELECT\n    \n    COUNT(*)::bigint AS ticket_count\nFROM base_ticket\nWHERE TRUE\n  AND TRUE\n  AND TRUE\n  AND TRUE\n\n\n",
+      "params": {
+        "org_id": 1003,
+        "scope": "org",
+        "dimension": null,
+        "filter": null
+      },
+      "notes": [],
+      "error": null
+    },
+    {
+      "timestamp": "2026-09-30T10:42:45.432659+00:00",
+      "type": "message",
+      "role": "fact_assembly",
+      "agent": "facts_module",
+      "content": "RESULT: ticket_count = 53",
+      "metadata": {}
+    },
+    {
+      "timestamp": "2026-09-30T10:42:45.432689+00:00",
+      "type": "message",
+      "role": "system",
+      "agent": "domain_synthesis",
+      "content": "Executive analyst briefing.",
+      "metadata": {}
+    },
+    {
+      "timestamp": "2026-09-30T10:42:45.432700+00:00",
+      "type": "message",
+      "role": "user",
+      "agent": "domain_synthesis",
+      "content": "You are the Lead Analyst briefing the CEO.\n\nActive Context: Organization ID: 1003, User ID: 1028, Role: ADMIN, Time: overall across all time in Organization 1003.\nOriginal Question: how many tickets are there\nFacts gathered:\nRESULT: ticket_count = 53\n\nInstructions:\n- Write a clear, executive-level answer directly addressing the user's question.\n- Lead with the exact primary number or finding in the very first sentence, explicitly stating the active organization and timeframe (e.g., 'Across all time in Organization 1003, there are **14 total deals**...').\n- Use bold markdown for key metrics and figures.\n- Explain business/operational context concisely. If there are top groups, stages, or owners, summarize them in a clean Markdown table.\n- If the primary number is 0 or no records exist, clearly state: 'There are currently 0 records found in Organization 1003 for this scope. (Note: To query another tenant such as Org 1003 or 1000, update the Organization ID in the sidebar).' \n- Do NOT mention internal errors, REPLAN, system architecture, or pipeline tools. State business facts clearly.\n- Do NOT use headings like 'Analysis' or 'Narrative'. Just clean, natural prose.",
+      "metadata": {}
+    },
+    {
+      "timestamp": "2026-09-30T10:42:46.264585+00:00",
+      "type": "message",
+      "role": "assistant",
+      "agent": "domain_synthesis",
+      "content": "Across all time in Organization 1003, there are **53 total tickets**.\n\nThis volume represents the complete historical lifecycle of support and operational requests managed under the current administrative scope. These tickets constitute the baseline for evaluating our historical service demand and resource allocation efficiency.",
+      "metadata": {}
+    },
+    {
+      "timestamp": "2026-09-30T10:42:47.023058+00:00",
+      "type": "grounding",
+      "grounded": false,
+      "ungrounded": [
+        "1"
+      ],
+      "answer_numbers": [
+        "53",
+        "1"
+      ],
+      "was_regenerated": true
+    }
+  ]
+}

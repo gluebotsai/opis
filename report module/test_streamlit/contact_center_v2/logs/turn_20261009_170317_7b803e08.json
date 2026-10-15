@@ -1,0 +1,60 @@
+{
+  "turn_id": "7b803e08",
+  "timestamp": "2026-10-09T11:33:17.960059+00:00",
+  "question": "what is the call count of last 7 days",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1016,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Call count for the past 7 days</strong></p>\n<p>There were <strong>212</strong> calls started during the past 7 days (UTC).</p>\n<p>Would you like to see this call count broken down by channel or queue?</p>",
+  "card": "card: kpi r1",
+  "facts": "result_id: r1\nwindow: past 7 days (UTC)\nkpi: call_count\ncertified: true\nunit: conversations\ntask_goal: Count the number of conversations where the channel is call for the last 7 days.\nanswer_type: number\nrow_count: 1\nrow 1: call_count=212",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1016,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "what is the call count of last 7 days",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants to know the total number of calls started in the last 7 days.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Count the number of conversations where the channel is call for the last 7 days.",
+          "time": "last 7 days",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "call_count",
+        "row_count": 1
+      }
+    ],
+    "facts": "result_id: r1\nwindow: past 7 days (UTC)\nkpi: call_count\ncertified: true\nunit: conversations\ntask_goal: Count the number of conversations where the channel is call for the last 7 days.\nanswer_type: number\nrow_count: 1\nrow 1: call_count=212",
+    "grounded": true,
+    "card": "card: kpi r1"
+  },
+  "error": null
+}

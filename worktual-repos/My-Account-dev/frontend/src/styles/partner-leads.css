@@ -1,0 +1,287 @@
+/**
+ * Partner My referrals — directory table chrome.
+ * Reuses admin-users primitives; canvas #F4F4F6 · surfaces #FFFFFF · border #C9C9CF.
+ */
+
+.app-shell--partner .app-content:has(.partner-leads-page) {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.app-shell--partner .app-content:has(.partner-leads-page) > .customer-portal-context {
+  flex: 0 0 auto;
+  margin-bottom: 16px;
+}
+
+.admin-users-page.partner-leads-page {
+  --au-canvas: #f4f4f6;
+  background: #f4f4f6;
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+}
+
+.partner-leads-page__header {
+  align-items: flex-start;
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.partner-leads-page__header .admin-users-page__subtitle {
+  max-width: 640px;
+}
+
+.partner-leads-panel {
+  min-height: 0;
+}
+
+.partner-leads-page .admin-users-panel__search {
+  background: #ffffff;
+  min-width: min(280px, 100%);
+}
+
+.partner-leads-filter {
+  display: block;
+  min-width: 180px;
+}
+
+.partner-leads-filter select {
+  -webkit-appearance: none;
+  appearance: none;
+  background-color: var(--bg-surface);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%237E7E88' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-position: right 16px center;
+  background-repeat: no-repeat;
+  background-size: 16px 16px;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 0.875rem;
+  min-height: 38px;
+  padding: 8px 48px 8px 16px;
+  width: 100%;
+}
+
+.partner-leads-filter select:hover {
+  background-color: var(--bg-subtle);
+  border-color: var(--border-strong);
+}
+
+.partner-leads-filter select:focus,
+.partner-leads-filter select:focus-visible {
+  border-color: #5f1fb0;
+  box-shadow: 0 0 0 3px color-mix(in srgb, #5f1fb0 18%, transparent);
+  outline: none;
+}
+
+.partner-leads-table__company {
+  color: #0b0b10;
+  display: block;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.partner-leads-table__tenant {
+  font-variant-numeric: tabular-nums;
+}
+
+.partner-leads-page .partner-leads-table th:nth-child(1),
+.partner-leads-page .partner-leads-table td:nth-child(1) {
+  width: 18%;
+}
+
+.partner-leads-page .partner-leads-table th:nth-child(2),
+.partner-leads-page .partner-leads-table td:nth-child(2) {
+  width: 11%;
+}
+
+.partner-leads-page .partner-leads-table th:nth-child(3),
+.partner-leads-page .partner-leads-table td:nth-child(3) {
+  width: 13%;
+}
+
+.partner-leads-page .partner-leads-table th:nth-child(4),
+.partner-leads-page .partner-leads-table td:nth-child(4) {
+  width: 11%;
+}
+
+.partner-leads-page .partner-leads-table th:nth-child(5),
+.partner-leads-page .partner-leads-table td:nth-child(5) {
+  width: 14%;
+}
+
+.partner-leads-page .partner-leads-table th:nth-child(6),
+.partner-leads-page .partner-leads-table td:nth-child(6) {
+  width: 13%;
+}
+
+.partner-leads-page .partner-leads-table th:nth-child(7),
+.partner-leads-page .partner-leads-table td:nth-child(7) {
+  width: 11%;
+}
+
+.partner-leads-page .partner-leads-table th:nth-child(8),
+.partner-leads-page .partner-leads-table td:nth-child(8) {
+  text-align: right;
+  width: 9%;
+}
+
+.partner-leads-table__action {
+  background: transparent;
+  border: 0;
+  color: #5f1fb0;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0;
+  text-decoration: none;
+}
+
+.partner-leads-table__actions {
+  align-items: center;
+  display: inline-flex;
+  gap: 12px;
+  justify-content: flex-end;
+  white-space: nowrap;
+}
+
+.partner-leads-table__action--danger {
+  color: #b42318;
+}
+
+.partner-leads-table__action:hover {
+  text-decoration: underline;
+}
+
+.partner-leads-table__action:focus-visible {
+  border-radius: 4px;
+  outline: 2px solid #5f1fb0;
+  outline-offset: 2px;
+}
+
+.partner-leads-table__action-muted {
+  color: #7e7e88;
+}
+
+.partner-leads-pill {
+  border-radius: 999px;
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  max-width: 100%;
+  overflow: hidden;
+  padding: 4px 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.partner-leads-pill--assigned,
+.partner-leads-pill--paid {
+  background: color-mix(in srgb, #098f6a 12%, #ffffff);
+  color: #098f6a;
+}
+
+.partner-leads-pill--unassigned,
+.partner-leads-pill--pending {
+  background: color-mix(in srgb, #e0b73a 14%, #ffffff);
+  color: #866300;
+}
+
+.partner-leads-pill--awaiting {
+  background: color-mix(in srgb, #3a9ee0 12%, #ffffff);
+  color: #1869d3;
+}
+
+.partner-leads-pill--rejected {
+  background: color-mix(in srgb, #e06e3a 12%, #ffffff);
+  color: #e06e3a;
+}
+
+.partner-leads-pill--none {
+  background: color-mix(in srgb, #808080 10%, #ffffff);
+  color: #5e5e69;
+}
+
+.partner-leads-empty-state {
+  align-content: center;
+  align-items: center;
+  display: grid;
+  flex: 1 1 auto;
+  gap: 12px;
+  grid-auto-rows: max-content;
+  justify-items: center;
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.partner-leads-empty-state h3 {
+  color: #0b0b10;
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.partner-leads-empty-state p {
+  color: #5e5e69;
+  font-size: 14px;
+  margin: 0;
+  max-width: 360px;
+}
+
+.partner-leads-empty-state svg {
+  color: #5e5e69;
+}
+
+.partner-leads-empty-state .primary-button,
+.partner-leads-empty-state .secondary-button {
+  align-items: center;
+  display: inline-flex;
+  gap: 8px;
+  min-height: 40px;
+}
+
+.visually-hidden {
+  border: 0;
+  clip: rect(0 0 0 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+@media (max-width: 1280px), (max-height: 720px) {
+  .partner-leads-page .partner-leads-table th:nth-child(2),
+  .partner-leads-page .partner-leads-table td:nth-child(2),
+  .partner-leads-page .partner-leads-table th:nth-child(7),
+  .partner-leads-page .partner-leads-table td:nth-child(7) {
+    display: none;
+  }
+}
+
+@media (max-height: 720px) {
+  .partner-leads-empty-state {
+    padding: 32px 16px;
+  }
+
+  .partner-leads-page__header .admin-users-page__subtitle {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+}

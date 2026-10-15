@@ -1,0 +1,83 @@
+postgres:
+  host: ${PG_HOST}
+  port: ${PG_PORT}
+  database: ${PG_DATABASE}
+  user: ${PG_USER}
+  password: ${PG_PASSWORD}
+  schemas: [accounts, ccaas, cdp, crm, ticketing, campaign, webtrack]
+
+kafka:
+  bootstrap_servers: ${KAFKA_BOOTSTRAP}
+  group_id: cdc-neo4j-sink-v4
+  auto_offset_reset: earliest
+  enable_auto_commit: false        # MUST be false -- offsets are committed by
+                                   # watermark after the Neo4j tx commits (8.6)
+  max_poll_records: 5000           # confluent-kafka: consume(num_messages=...)
+  topic_prefix: cdc           # matches Debezium topic.prefix
+
+neo4j:
+  # Instance map. Every organisation carries an `instance` field even while there
+  # is only one instance. Under ~200 databases per DBMS is fine; thousands is not
+  # a supported operating point, and when that day comes sharding becomes a config
+  # change here rather than a rewrite of provision.py and writer.py.
+  default_instance: instance-1
+  # call_syntax: scoped
+  instances:
+    instance-1:
+      uri: ${NEO4J_URI}
+      user: ${NEO4J_USER}
+      password: ${NEO4J_PASSWORD}
+      # call_syntax: scoped
+      max_connection_pool_size: 50
+      connection_acquisition_timeout: 60
+  # Metadata database holding the immutable prefix assertion and schema version.
+  # Neo4j 5 reserves `system`, so pipeline metadata cannot live there.
+  metadata_database: cdcmeta
+
+database_naming:
+  prefix: org                      # IMMUTABLE after first provision.
+                                   # Asserted at every boot against cdcmeta.
+
+cypher:
+  # legacy -> CALL { WITH n, e ... }   works across Neo4j 5.x, deprecated in 5.23+
+  # scoped -> CALL (n, e) { ... }      Neo4j 5.23+ only, required in 6.x
+  # subquery_syntax: legacy
+  subquery_syntax: scoped
+
+money:
+  # Decimals are stored as integer minor units at the scale declared per property.
+  # Neo4j has no decimal type; float rounds. See README, "How money is stored".
+  emit_scale_property: true        # also writes <name>_scale so the graph is
+                                   # self-describing without the mapping file
+
+# control_plane:
+#   organisations_table: accounts.organizations
+#   organization_id_column: id
+#   tenant_column: tenant_id
+#   tenant_id_column: tenant_id
+#   status_column: lifecycle_status
+#   active_status_values: [active]
+
+control_plane:
+  organisations_table: accounts.organizations
+  organization_id_column: id
+  tenant_id_column: id
+  tenant_column: organization_id
+  status_column: lifecycle_status
+  active_status_values: [active, prospect]
+
+batching:
+  node_batch_size: 10000
+  relationship_batch_size: 5000
+  flush_interval_seconds: 2
+
+retry:
+  deadlock_max_attempts: 5
+  deadlock_backoff_base_ms: 50
+
+quarantine:
+  path: ./quarantine
+
+metrics:
+  port: 9109
+  log_interval_seconds: 60

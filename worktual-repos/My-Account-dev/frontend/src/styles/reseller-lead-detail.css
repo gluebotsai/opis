@@ -1,0 +1,233 @@
+/**
+ * Reseller lead detail — full-width admin chrome (partner referral detail parity).
+ * Profile content-sized; subscriptions panel fills leftover height.
+ * Canvas #F4F4F6 · surfaces #FFFFFF · border #C9C9CF.
+ */
+
+.app-shell--reseller .app-content:has(.reseller-lead-detail-page) {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.app-shell--reseller .app-content:has(.reseller-lead-detail-page) > .customer-portal-context {
+  flex: 0 0 auto;
+  margin-bottom: 16px;
+}
+
+.admin-users-page.reseller-lead-detail-page {
+  --au-canvas: #f4f4f6;
+  background: #f4f4f6;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 24px;
+  min-height: 0;
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  width: 100%;
+}
+
+.reseller-lead-detail-page__header {
+  align-items: flex-start;
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.reseller-lead-detail-page__header .admin-users-page__subtitle {
+  max-width: 720px;
+}
+
+.reseller-lead-detail-page .reseller-detail-panel {
+  flex: 0 0 auto;
+  height: auto;
+  max-width: none;
+  min-height: 0;
+  width: 100%;
+}
+
+/* Only subscriptions (or empty/loading shell) absorbs leftover height */
+.reseller-lead-detail-page .reseller-detail-panel--fill {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.reseller-lead-detail-page .reseller-detail-panel--fill > .admin-users-panel__body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.reseller-lead-detail-page .reseller-detail-panel--fill .admin-users-panel__table-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
+.reseller-detail-back {
+  color: #0b0b10;
+  cursor: pointer;
+  display: inline-block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  text-decoration: none;
+}
+
+.reseller-detail-back:hover {
+  text-decoration: underline;
+}
+
+.reseller-detail-back:focus-visible {
+  border-radius: 4px;
+  outline: 2px solid #5f1fb0;
+  outline-offset: 2px;
+}
+
+.reseller-detail-grid {
+  display: grid;
+  gap: 20px 24px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
+  padding: 20px 24px;
+  width: 100%;
+}
+
+.reseller-detail-grid > div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.reseller-detail-grid dt {
+  color: #5e5e69;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.reseller-detail-grid dd {
+  color: #0b0b10;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reseller-detail-grid__full {
+  grid-column: 1 / -1;
+}
+
+.reseller-detail-grid__full dd {
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}
+
+.reseller-lead-detail-empty {
+  align-content: center;
+  align-items: center;
+  display: grid;
+  flex: 1 1 auto;
+  gap: 12px;
+  grid-auto-rows: max-content;
+  justify-items: center;
+  min-height: 200px;
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.reseller-lead-detail-empty h3 {
+  color: #0b0b10;
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.reseller-lead-detail-empty p {
+  color: #5e5e69;
+  font-size: 0.875rem;
+  margin: 0;
+  max-width: 420px;
+}
+
+.reseller-lead-detail-empty svg {
+  color: #5e5e69;
+}
+
+.reseller-lead-detail-empty .secondary-button {
+  align-items: center;
+  display: inline-flex;
+  gap: 8px;
+  min-height: 40px;
+}
+
+.reseller-lead-detail-page .admin-users-table th:nth-child(1),
+.reseller-lead-detail-page .admin-users-table td:nth-child(1) {
+  width: 44%;
+}
+
+.reseller-lead-detail-page .admin-users-table th:nth-child(2),
+.reseller-lead-detail-page .admin-users-table td:nth-child(2) {
+  width: 28%;
+}
+
+.reseller-lead-detail-page .admin-users-table th:nth-child(3),
+.reseller-lead-detail-page .admin-users-table td:nth-child(3) {
+  width: 28%;
+}
+
+@media (max-width: 900px) {
+  .reseller-detail-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .reseller-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-height: 720px) {
+  .admin-users-page.reseller-lead-detail-page {
+    gap: 20px;
+  }
+
+  .reseller-lead-detail-empty {
+    min-height: 160px;
+    padding: 32px 16px;
+  }
+
+  .reseller-detail-grid {
+    gap: 16px 20px;
+    padding: 16px 20px;
+  }
+
+  .reseller-lead-detail-page__header .admin-users-page__subtitle {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+}
+
+@media (max-height: 600px) {
+  .admin-users-page.reseller-lead-detail-page {
+    gap: 16px;
+  }
+}

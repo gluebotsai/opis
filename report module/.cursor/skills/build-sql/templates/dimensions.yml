@@ -1,0 +1,28 @@
+# Copy to product/dimensions.yml
+# Aliases are per object. Do not map every "status" to one column
+# unless every object truly shares that column.
+
+aliases:
+  deal.status: stage
+  deal.stage: stage
+  invoice.status: invoice_status
+
+dimensions:
+  stage:
+    meaning: "Pipeline stage of a deal. Not invoice status and not lead status."
+    user_phrases: [status, stage, pipeline stage]
+    not_the_same_as: [invoice_status]
+    sql_expr:
+      deal: "deals.stage"
+  invoice_status:
+    meaning: "Payment state of an invoice."
+    user_phrases: [invoice status, paid, unpaid]
+    not_the_same_as: [stage]
+    sql_expr:
+      invoice: "invoices.status"
+  day:
+    meaning: "UTC calendar day of the card's business date column."
+    user_phrases: [day, date]
+    not_the_same_as: [week, month]
+    sql_expr:
+      default: "date_trunc('day', <business_date_column> AT TIME ZONE 'UTC')"

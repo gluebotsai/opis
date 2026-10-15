@@ -1,0 +1,336 @@
+{
+  "question": "why ragu ram has more deals?",
+  "answer": "Raghuram M has 5 deals, followed by Yaswanth MG with 4, Manoj M with 3, and DivyaPrasath RS with 1.\n\n**Deal Count by Owner**\n| Owner | Deal Count |\n| :--- | :--- |\n| Raghuram M | 5 |\n| Yaswanth MG | 4 |\n| Manoj M | 3 |\n| Unassigned | 2 |\n| DivyaPrasath RS | 1 |\n\nRaghuram M's portfolio includes a mix of active pursuits and historical losses, with a total value of $30,000.00 (USD) and \u20b9123,250.00 (INR). His pipeline includes a significant \u20b9123,250.00 (INR) deal for `positron \u2014 gugan s` in the qualification stage and a $15,000.00 (USD) proposal for `CRM` (Mohamed Fazil account). However, he also recorded a $15,000.00 (USD) loss at the Mohamed Fazil account due to pricing.\n\nTo improve forecast accuracy, update the missing quote values for the `Netflix \u2014 Kirti Patidar` deal and review pricing structures for the active `CRM` proposal to avoid repeating previous losses.",
+  "trace": {
+    "question": "why ragu ram has more deals?",
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1015,
+      "role": "admin"
+    },
+    "model": "worktual-gemma",
+    "tasks": [
+      {
+        "status": "ok",
+        "store": "sql",
+        "sql": "WITH rpt_deals AS (\nSELECT src.id, src.organization_id, src.title, src.stage, src.amount, src.currency_code, src.stage_weight, src.weighted_amount, src.company_id, src.company_name, src.company_industry, src.location_id, src.contact_id, src.contact_name, src.contact_email, src.owner_user_id, src.owner_name, src.created_at, src.closed_at, src.close_ts, src.updated_at, src.expected_close_date, src.lost_reason, src.is_open, src.is_won, src.is_lost, src.aging_days, src.forecast_category, src.forecast_reason, src.forecast_flagged FROM (\nSELECT \n  d.id,\n  d.organization_id,\n  d.title,\n  d.stage,\n  COALESCE(d.amount, 0) AS amount,\n  CASE\n    WHEN pq.currency IS NOT NULL AND pq.currency <> 'USD' THEN pq.currency\n    WHEN o.country IS NOT NULL AND o.country <> 'US' AND cc.curr IS NOT NULL THEN cc.curr\n    WHEN pq.currency = 'USD' THEN 'USD'\n    WHEN o.country = 'US' THEN 'USD'\n    ELSE 'USD'\n  END AS currency_code,\n  CASE d.stage\n    WHEN 'qualification' THEN 0.10\n    WHEN 'discover' THEN 0.25\n    WHEN 'propose' THEN 0.50\n    WHEN 'negotiate' THEN 0.75\n    WHEN 'closed_won' THEN 1.00\n    WHEN 'closed_lost' THEN 0.00\n    ELSE 0.00\n  END AS stage_weight,\n  ROUND(COALESCE(d.amount, 0) * (\n    CASE d.stage\n      WHEN 'qualification' THEN 0.10\n      WHEN 'discover' THEN 0.25\n      WHEN 'propose' THEN 0.50\n      WHEN 'negotiate' THEN 0.75\n      WHEN 'closed_won' THEN 1.00\n      WHEN 'closed_lost' THEN 0.00\n      ELSE 0.00\n    END\n  ), 2) AS weighted_amount,\n  d.company_id,\n  c.name AS company_name,\n  c.industry AS company_industry,\n  d.location_id,\n  d.contact_id,\n  COALESCE(d.contact_name, cdp.first_name || ' ' || COALESCE(cdp.last_name, '')) AS contact_name,\n  COALESCE(d.contact_email, id_k.key_value) AS contact_email,\n  d.owner_user_id,\n  su.first_name || ' ' || COALESCE(su.last_name, '') AS owner_name,\n  d.created_at,\n  d.closed_at,\n  COALESCE(d.closed_at, d.created_at) AS close_ts,\n  d.updated_at,\n  d.expected_close_date,\n  d.lost_reason,\n  (d.stage IN ('qualification', 'discover', 'propose', 'negotiate')) AS is_open,\n  (d.stage = 'closed_won') AS is_won,\n  (d.stage = 'closed_lost') AS is_lost,\n  FLOOR(EXTRACT(EPOCH FROM (NOW() - d.created_at))/86400)::integer AS aging_days,\n  d.forecast_category,\n  d.forecast_reason,\n  d.forecast_flagged\nFROM crm.deals d\nLEFT JOIN crm.companies c ON c.id = d.company_id AND c.organization_id = d.organization_id\nLEFT JOIN accounts.setup_users su ON su.id = d.owner_user_id\nLEFT JOIN accounts.organizations o ON o.id = d.organization_id\nLEFT JOIN cdp.customer_profile cdp ON cdp.cdp_id = d.contact_id\nLEFT JOIN LATERAL (\n  SELECT ik.key_value \n  FROM cdp.identity_keys ik \n  WHERE ik.cdp_id = d.contact_id AND ik.key_type = 'email' AND ik.organization_id = d.organization_id \n  ORDER BY ik.created_at ASC \n  LIMIT 1\n) id_k ON TRUE\nLEFT JOIN LATERAL (\n  SELECT q.currency \n  FROM crm.quotes q \n  WHERE q.deal_id = d.id AND q.organization_id = d.organization_id \n  ORDER BY CASE WHEN q.status = 'accepted' THEN 1 WHEN q.status = 'sent' THEN 2 ELSE 3 END, q.updated_at DESC \n  LIMIT 1\n) pq ON TRUE\nLEFT JOIN LATERAL (\n  SELECT CASE o.country \n    WHEN 'India' THEN 'INR' \n    WHEN 'United Kingdom' THEN 'GBP' \n    WHEN 'Germany' THEN 'EUR' \n    WHEN 'Canada' THEN 'CAD' \n    WHEN 'Australia' THEN 'AUD' \n    ELSE 'USD' \n  END AS curr\n) cc ON TRUE\nWHERE d.organization_id = %(_org_id)s\n) src WHERE TRUE\n)\nSELECT COALESCE(CAST(owner_name AS TEXT), 'Unassigned') AS owner, CAST(COUNT(*) AS BIGINT) AS total_opportunities FROM rpt_deals AS deals WHERE TRUE AND TRUE AND TRUE GROUP BY COALESCE(CAST(owner_name AS TEXT), 'Unassigned') ORDER BY 2 DESC NULLS LAST LIMIT 500",
+        "views": [
+          "deals"
+        ],
+        "guard_notes": [
+          "row cap 500 applied"
+        ],
+        "bound_params": {
+          "_org_id": 1003,
+          "_user_id": 1015,
+          "user_id": 1015,
+          "organization_id": 1003,
+          "org_id": 1003,
+          "tenant_id": 1003,
+          "current_user_id": 1015
+        },
+        "rows": [
+          {
+            "owner": "Raghuram M",
+            "total_opportunities": 5
+          },
+          {
+            "owner": "Yaswanth MG",
+            "total_opportunities": 4
+          },
+          {
+            "owner": "Manoj M",
+            "total_opportunities": 3
+          },
+          {
+            "owner": "Unassigned",
+            "total_opportunities": 2
+          },
+          {
+            "owner": "DivyaPrasath RS",
+            "total_opportunities": 1
+          }
+        ],
+        "kpi_id": "total_opportunities",
+        "dimension": "owner",
+        "time_status": "all_time",
+        "attempts": [
+          {
+            "raw": "{\"tool\":\"run_kpi\",\"kpi_id\":\"total_opportunities\",\"dimension\":\"owner\"}",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "total_opportunities",
+              "dimension": "owner"
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "tool": "run_kpi",
+        "requested_kpi": "total_opportunities",
+        "requested_dimension": "owner",
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "total_opportunities",
+          "goal": "Compare deal counts for Raghuram against other owners",
+          "time": "all time",
+          "scope": "org",
+          "dimension": "owner",
+          "answer_type": "breakdown",
+          "depends_on": []
+        }
+      },
+      {
+        "status": "ok",
+        "rows": [
+          {
+            "rep_user_id": 1066,
+            "rep_name": "DivyaPrasath RS",
+            "deal_id": "cmul9ofkg01vvqm0u2khw3xn6",
+            "deal_title": "CRM",
+            "deal_stage": "propose",
+            "account_name": "Open AI",
+            "currency": "USD",
+            "deal_value": 15000.0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-09-28"
+          },
+          {
+            "rep_user_id": 1018,
+            "rep_name": "Manoj M",
+            "deal_id": "cmtn4ovi300a4o40ul729d1ud",
+            "deal_title": "Lakshmi P",
+            "deal_stage": "qualification",
+            "account_name": "Lakshmi P Account",
+            "currency": "INR",
+            "deal_value": 0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-09-04"
+          },
+          {
+            "rep_user_id": 1018,
+            "rep_name": "Manoj M",
+            "deal_id": "cmu1dirbz002k1anxhf42gtz5",
+            "deal_title": "Aspero\u2014 dpzoro Customer",
+            "deal_stage": "discover",
+            "account_name": "Aspero",
+            "currency": "INR",
+            "deal_value": 0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-09-14"
+          },
+          {
+            "rep_user_id": 1018,
+            "rep_name": "Manoj M",
+            "deal_id": "cmu6v7vbu005io50uh7bpe00x",
+            "deal_title": "HCL \u2014 yaswanth M G",
+            "deal_stage": "qualification",
+            "account_name": "positron",
+            "currency": "INR",
+            "deal_value": 0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-09-18"
+          },
+          {
+            "rep_user_id": 1015,
+            "rep_name": "Raghuram M",
+            "deal_id": "cmtlcopyi001p1a9vpooi9rs3",
+            "deal_title": "positron \u2014 gugan s",
+            "deal_stage": "qualification",
+            "account_name": "positron",
+            "currency": "INR",
+            "deal_value": 123250.0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-09-03"
+          },
+          {
+            "rep_user_id": 1015,
+            "rep_name": "Raghuram M",
+            "deal_id": "cmugumk9x004fmo0ubruzr8uq",
+            "deal_title": "Netflix \u2014 Kirti Patidar",
+            "deal_stage": "discover",
+            "account_name": "Netflix",
+            "currency": "INR",
+            "deal_value": 0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-09-25"
+          },
+          {
+            "rep_user_id": 1015,
+            "rep_name": "Raghuram M",
+            "deal_id": "cmtmph11w0025o40ur981z4ig",
+            "deal_title": "Dell \u2014 vighesh s",
+            "deal_stage": "closed_won",
+            "account_name": "Aspero",
+            "currency": "INR",
+            "deal_value": 0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-09-04"
+          },
+          {
+            "rep_user_id": 1015,
+            "rep_name": "Raghuram M",
+            "deal_id": "cmtsms61u00111aimq9lsb7aw",
+            "deal_title": "crm",
+            "deal_stage": "closed_lost",
+            "account_name": "Mohamed Fazil (account)",
+            "currency": "USD",
+            "deal_value": 15000.0,
+            "lost_reason": "Pricing",
+            "forecast_category": null,
+            "created_date": "2026-09-08"
+          },
+          {
+            "rep_user_id": 1015,
+            "rep_name": "Raghuram M",
+            "deal_id": "cmumhu64r01yaqm0up65tavy0",
+            "deal_title": "CRM",
+            "deal_stage": "propose",
+            "account_name": "Mohamed Fazil (account)",
+            "currency": "USD",
+            "deal_value": 15000.0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-09-29"
+          },
+          {
+            "rep_user_id": 1017,
+            "rep_name": "Yaswanth MG",
+            "deal_id": "cmtci1gpm000f1a860hip0f2p",
+            "deal_title": "hexaware \u2014 Hitler hit",
+            "deal_stage": "qualification",
+            "account_name": "hexaware",
+            "currency": "INR",
+            "deal_value": 0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-08-28"
+          },
+          {
+            "rep_user_id": 1017,
+            "rep_name": "Yaswanth MG",
+            "deal_id": "cmucsr2pw001upg0ubbvbzhw8",
+            "deal_title": "Lokesh deal",
+            "deal_stage": "negotiate",
+            "account_name": "orange",
+            "currency": "INR",
+            "deal_value": 0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-09-22"
+          },
+          {
+            "rep_user_id": 1017,
+            "rep_name": "Yaswanth MG",
+            "deal_id": "cmuqjbnjv0018zu5t7tloh0rn",
+            "deal_title": "kavin-crm",
+            "deal_stage": "qualification",
+            "account_name": "Zepto",
+            "currency": "INR",
+            "deal_value": 10000.0,
+            "lost_reason": null,
+            "forecast_category": null,
+            "created_date": "2026-10-02"
+          },
+          {
+            "rep_user_id": 1017,
+            "rep_name": "Yaswanth MG",
+            "deal_id": "cmu28ch7200lbs70uocmqjzrt",
+            "deal_title": "GRT Jewellers \u2014 Nandhu A",
+            "deal_stage": "propose",
+            "account_name": "GRT Jewellers",
+            "currency": "USD",
+            "deal_value": 123.94,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-09-15"
+          },
+          {
+            "rep_user_id": 1028,
+            "rep_name": null,
+            "deal_id": "cmu8k810304kmlb0u4hi6w7a4",
+            "deal_title": "pricing",
+            "deal_stage": "propose",
+            "account_name": "hexaware",
+            "currency": "USD",
+            "deal_value": 0.0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-09-19"
+          },
+          {
+            "rep_user_id": 1028,
+            "rep_name": null,
+            "deal_id": "cmuctclg2005o1ago5703inxa",
+            "deal_title": "crm",
+            "deal_stage": "propose",
+            "account_name": "Lucifer S (account)",
+            "currency": "USD",
+            "deal_value": 15000.0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-09-22"
+          }
+        ],
+        "sql": "MATCH (u:User)\nWHERE ($can_view_all = true OR u.id = $effective_user_id)\n  AND (coalesce($rep_name, '') = '' OR toLower(u.first_name) CONTAINS toLower($rep_name) OR toLower(u.last_name) CONTAINS toLower($rep_name))\nOPTIONAL MATCH (d:Deal) WHERE d.owner_user_id = u.id\nOPTIONAL MATCH (d)-[:HAS]->(q:Quote)\nOPTIONAL MATCH (a:Account {id: d.company_id})\nWITH u, d, a, collect(q) AS quotes\nWITH u, d, a,\n     [q IN quotes WHERE toLower(q.approval_status) = 'approved'][0] AS approved_quote,\n     quotes[0] AS any_quote\nWITH u, d, a,\n     coalesce(approved_quote.currency, any_quote.currency, d.currency, $default_currency, 'INR') AS currency,\n     coalesce(approved_quote.total, any_quote.total, d.amount, 0) AS final_amount\nWHERE d IS NOT NULL\nRETURN u.id AS rep_user_id,\n       u.first_name + ' ' + coalesce(u.last_name, '') AS rep_name,\n       d.id AS deal_id,\n       d.title AS deal_title,\n       d.stage AS deal_stage,\n       coalesce(a.name, 'Unassigned Account') AS account_name,\n       currency,\n       final_amount AS deal_value,\n       d.lost_reason AS lost_reason,\n       d.forecast_category AS forecast_category,\n       toString(date(d.created_at)) AS created_date\nORDER BY rep_name, d.created_at\nLIMIT 25",
+        "tool": "kg",
+        "attempts_made": 1,
+        "kg_notes": "### Deal Portfolio Overview for Raghuram M\n\nRaghuram M manages a portfolio consisting of 5 deals with a total value of $30,000.00 (USD) and \u20b9123,250.00 (INR).\n\n| Metric | Value |\n| :--- | :--- |\n| **Total Deal Value** | **$30,000.00 (USD) / \u20b9123,250.00 (INR)** |\n| **Total Deal Count** | **5** |\n\n### Loss Analysis and Pipeline Composition\n\nThe portfolio shows a mix of active pursuit and historical losses. The deal `crm` (account: Mohamed Fazil (account)) is recorded as `closed_lost` with a value of $15,000.00 (USD), citing **Pricing** as the primary loss reason. \n\nRegarding stalled or zero-value opportunities, the following deals are currently in the pipeline without assigned monetary values:\n* `Netflix \u2014 Kirti Patidar` (Account: Netflix): $0 (Missing quote/lines)\n* `Dell \u2014 vighesh s` (Account: Aspero): $0 (Closed Won, but no value recorded)\n\nActive pipeline items include:\n* `positron \u2014 gugan s` (Account: positron): \u20b9123,250.00 (INR) at the `qualification` stage.\n* `CRM` (Account: Mohamed Fazil (account)): $15,000.00 (USD) at the `propose` stage.\n\n### Commercial Path and Next Steps\n\nBased on the current deal states for Raghuram M, the following actions are supported:\n\n* **Address Pricing Friction:** Review the loss reason for the `crm` deal at Mohamed Fazil (account) to determine if the $15,000.00 (USD) pricing structure can be adjusted for the active `CRM` proposal at the same account.\n* **Data Hygiene for Forecast Accuracy:** Update the quote or line items for the `Netflix \u2014 Kirti Patidar` deal to move it from a $0 value to a projected revenue amount.\n* **Qualification Acceleration:** Prioritize the `positron \u2014 gugan s` deal (\u20b9123,250.00 INR) to move it through the qualification stage into discovery or proposal.",
+        "task": {
+          "id": "t2",
+          "executor": "kg",
+          "kpi": null,
+          "goal": "Analyze lost reasons, forecast stall, and commercial path for deals owned by Raghuram",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "why_breakdown",
+          "depends_on": [
+            "t1"
+          ]
+        }
+      }
+    ],
+    "domain_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"deep\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"total_opportunities\",\n      \"goal\": \"Compare deal counts for Raghuram against other owners\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"dimension\": \"owner\",\n      \"answer_type\": \"breakdown\",\n      \"depends_on\": []\n    },\n    {\n      \"id\": \"t2\",\n      \"executor\": \"kg\",\n      \"kpi\": null,\n      \"goal\": \"Analyze lost reasons, forecast stall, and commercial path for deals owned by Raghuram\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"dimension\": null,\n      \"answer_type\": \"why_breakdown\",\n      \"depends_on\": [\n        \"t1\"\n      ]\n    }\n  ]\n}\n```",
+    "plan": {
+      "kind": "plan",
+      "depth": "deep",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "total_opportunities",
+          "goal": "Compare deal counts for Raghuram against other owners",
+          "time": "all time",
+          "scope": "org",
+          "dimension": "owner",
+          "answer_type": "breakdown",
+          "depends_on": []
+        },
+        {
+          "id": "t2",
+          "executor": "kg",
+          "kpi": null,
+          "goal": "Analyze lost reasons, forecast stall, and commercial path for deals owned by Raghuram",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "why_breakdown",
+          "depends_on": [
+            "t1"
+          ]
+        }
+      ]
+    },
+    "facts": "time_requested: all time\nperiod_applied: overall (no date filter, UTC)\ntime_status: all_time\ncatalog_kpi: total_opportunities\nRESULT: 5 group(s)\ngroup_by: owner\ntotal_total_opportunities: 15\n  Raghuram M: 5\n  Yaswanth MG: 4\n  Manoj M: 3\n  Unassigned: 2\n  DivyaPrasath RS: 1\n\ntime_requested: all time\ntime_status: kg\nRESULT: 15 group(s)\ngroup_by: group\ntotal_deal_value: 193373.94\n  1066 / DivyaPrasath RS / cmul9ofkg01vvqm0u2khw3xn6 / CRM / propose / Open AI / USD / None / omitted / 2026-09-28: 15000.0\n  1018 / Manoj M / cmtn4ovi300a4o40ul729d1ud / Lakshmi P / qualification / Lakshmi P Account / INR / None / omitted / 2026-09-04: 0\n  1018 / Manoj M / cmu1dirbz002k1anxhf42gtz5 / Aspero\u2014 dpzoro Customer / discover / Aspero / INR / None / omitted / 2026-09-14: 0\n  1018 / Manoj M / cmu6v7vbu005io50uh7bpe00x / HCL \u2014 yaswanth M G / qualification / positron / INR / None / omitted / 2026-09-18: 0\n  1015 / Raghuram M / cmtlcopyi001p1a9vpooi9rs3 / positron \u2014 gugan s / qualification / positron / INR / None / omitted / 2026-09-03: 123250.0\n  1015 / Raghuram M / cmugumk9x004fmo0ubruzr8uq / Netflix \u2014 Kirti Patidar / discover / Netflix / INR / None / omitted / 2026-09-25: 0\n  1015 / Raghuram M / cmtmph11w0025o40ur981z4ig / Dell \u2014 vighesh s / closed_won / Aspero / INR / None / omitted / 2026-09-04: 0\n  1015 / Raghuram M / cmtsms61u00111aimq9lsb7aw / crm / closed_lost / Mohamed Fazil (account) / USD / Pricing / None / 2026-09-08: 15000.0\n  1015 / Raghuram M / cmumhu64r01yaqm0up65tavy0 / CRM / propose / Mohamed Fazil (account) / USD / None / omitted / 2026-09-29: 15000.0\n  1017 / Yaswanth MG / cmtci1gpm000f1a860hip0f2p / hexaware \u2014 Hitler hit / qualification / hexaware / INR / None / omitted / 2026-08-28: 0\n  1017 / Yaswanth MG / cmucsr2pw001upg0ubbvbzhw8 / Lokesh deal / negotiate / orange / INR / None / omitted / 2026-09-22: 0\n  1017 / Yaswanth MG / cmuqjbnjv0018zu5t7tloh0rn / kavin-crm / qualification / Zepto / INR / None / None / 2026-10-02: 10000.0\n  1017 / Yaswanth MG / cmu28ch7200lbs70uocmqjzrt / GRT Jewellers \u2014 Nandhu A / propose / GRT Jewellers / USD / None / omitted / 2026-09-15: 123.94\n  1028 / None / cmu8k810304kmlb0u4hi6w7a4 / pricing / propose / hexaware / USD / None / omitted / 2026-09-19: 0.0\n  1028 / None / cmuctclg2005o1ago5703inxa / crm / propose / Lucifer S (account) / USD / None / omitted / 2026-09-22: 15000.0\nkg_notes:\n### Deal Portfolio Overview for Raghuram M\n\nRaghuram M manages a portfolio consisting of 5 deals with a total value of $30,000.00 (USD) and \u20b9123,250.00 (INR).\n\n| Metric | Value |\n| :--- | :--- |\n| **Total Deal Value** | **$30,000.00 (USD) / \u20b9123,250.00 (INR)** |\n| **Total Deal Count** | **5** |\n\n### Loss Analysis and Pipeline Composition\n\nThe portfolio shows a mix of active pursuit and historical losses. The deal `crm` (account: Mohamed Fazil (account)) is recorded as `closed_lost` with a value of $15,000.00 (USD), citing **Pricing** as the primary loss reason. \n\nRegarding stalled or zero-value opportunities, the following deals are currently in the pipeline without assigned monetary values:\n* `Netflix \u2014 Kirti Patidar` (Account: Netflix): $0 (Missing quote/lines)\n* `Dell \u2014 vighesh s` (Account: Aspero): $0 (Closed Won, but no value recorded)\n\nActive pipeline items include:\n* `positron \u2014 gugan s` (Account: positron): \u20b9123,250.00 (INR) at the `qualification` stage.\n* `CRM` (Account: Mohamed Fazil (account)): $15,000.00 (USD) at the `propose` stage.\n\n### Commercial Path and Next Steps\n\nBased on the current deal states for Raghuram M, the following actions are supported:\n\n* **Address Pricing Friction:** Review the loss reason for the `crm` deal at Mohamed Fazil (account) to determine if the $15,000.00 (USD) pricing structure can be adjusted for the active `CRM` proposal at the same account.\n* **Data Hygiene for Forecast Accuracy:** Update the quote or line items for the `Netflix \u2014 Kirti Patidar` deal to move it from a $0 value to a projected revenue amount.\n* **Qualification Acceleration:** Prioritize the `positron \u2014 gugan s` deal (\u20b9123,250.00 INR) to move it through the qualification stage into discovery or proposal.",
+    "grounded": true,
+    "briefing_raw": "Raghuram M has 5 deals, followed by Yaswanth MG with 4, Manoj M with 3, and DivyaPrasath RS with 1.\n\n**Deal Count by Owner**\n| Owner | Deal Count |\n| :--- | :--- |\n| Raghuram M | 5 |\n| Yaswanth MG | 4 |\n| Manoj M | 3 |\n| Unassigned | 2 |\n| DivyaPrasath RS | 1 |\n\nRaghuram M's portfolio includes a mix of active pursuits and historical losses, with a total value of $30,000.00 (USD) and \u20b9123,250.00 (INR). His pipeline includes a significant \u20b9123,250.00 (INR) deal for `positron \u2014 gugan s` in the qualification stage and a $15,000.00 (USD) proposal for `CRM` (Mohamed Fazil account). However, he also recorded a $15,000.00 (USD) loss at the Mohamed Fazil account due to pricing.\n\nTo improve forecast accuracy, update the missing quote values for the `Netflix \u2014 Kirti Patidar` deal and review pricing structures for the active `CRM` proposal to avoid repeating previous losses."
+  }
+}

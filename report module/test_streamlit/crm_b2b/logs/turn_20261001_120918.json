@@ -1,0 +1,200 @@
+{
+  "question": "why total pipeline value is 0?",
+  "answer": "### Pipeline Value Summary & Data Integrity Gap\n\nThe total pipeline value is **$0.00** despite the existence of **12 active open deals**. This zero-value state is not caused by a lack of opportunities, but by a systemic absence of the commercial data required to calculate a forecastable pipeline.\n\n| Metric | Value |\n| :--- | :--- |\n| **Open Deal Count** | **12** |\n| **Total Pipeline Value** | **$0.00** |\n| **Primary Root Cause** | **Missing Quote Values & Missing Close Dates** |\n\n### Commercial Diagnosis: Why the Pipeline is Unvalued\n\nThe data reveals a critical breakdown in deal qualification and administrative hygiene across all 12 opportunities. While deals are technically active across Discovery, Qualification, Propose, and Negotiate stages, they contribute zero value to the forecast for the following empirical reasons:\n\n* **Absence of Validated Quote Values:** Every single deal in the pipeline is currently tied to a \"draft\" quote or lacks a quote entirely. Without an approved or finalized quote to anchor the commercial value, the system cannot assign a dollar amount to the opportunity.\n* **Missing Temporal Data (Close Dates):** None of the 12 deals have an \"Expected Close Date\" recorded. In a B2B environment, a deal without a timeline cannot be included in a forecast roll-up, effectively rendering the entire pipeline invisible to revenue projections.\n* **Zero Engagement Signals:** The records indicate \"zero activity\" across these opportunities. This suggests that while deals are being created in the system, they are not being actively managed or progressed through the sales cycle.\n* **Stalled Commercial Paths:** We see deals sitting in high-intent stages without substantive progress. For example, deal `cmuctclg2005o1ago5703inxa` is in the **Propose** stage but remains stuck with a draft quote and no engagement, indicating a breakdown in the transition from proposal to negotiation.\n\n### Tactical Levers to Restore Pipeline Visibility\n\nTo transform these 12 stagnant opportunities into a measurable and actionable pipeline, the following operational steps are required:\n\n* **Mandate Quote Finalization for Forecast Inclusion:** Implement a requirement where deals cannot progress past the 'Qualification' stage unless a quote is attached with a non-zero value. This will immediately resolve the $0 valuation issue.\n* **Enforce Close Date Hygiene:** Require sales representatives to input an \"Expected Close Date\" during the initial 'Discovery' or 'Qualification' phase. A pipeline without dates is merely a list of names; adding dates allows for month-over-month growth analysis.\n* **Audit \"Draft\" Status Stagnation:** Conduct a targeted review of all deals in the 'Propose' and 'Negotiate' stages. Any deal remaining in \"Draft\" status for more than 7 days should be flagged for immediate manager intervention to prevent \"phantom pipeline\" inflation.",
+  "trace": {
+    "question": "why total pipeline value is 0?",
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1015,
+      "role": "admin"
+    },
+    "model": "worktual-gemma",
+    "tasks": [
+      {
+        "status": "ok",
+        "store": "sql",
+        "sql": "WITH rpt_deals AS (\nSELECT src.id, src.organization_id, src.title, src.stage, src.amount, src.currency_code, src.stage_weight, src.weighted_amount, src.company_id, src.company_name, src.company_industry, src.location_id, src.contact_id, src.contact_name, src.contact_email, src.owner_user_id, src.owner_name, src.created_at, src.closed_at, src.close_ts, src.updated_at, src.expected_close_date, src.lost_reason, src.is_open, src.is_won, src.is_lost, src.aging_days, src.forecast_category, src.forecast_reason, src.forecast_flagged FROM (\nSELECT \n  d.id,\n  d.organization_id,\n  d.title,\n  d.stage,\n  COALESCE(d.amount, 0) AS amount,\n  CASE\n    WHEN pq.currency IS NOT NULL AND pq.currency <> 'USD' THEN pq.currency\n    WHEN o.country IS NOT NULL AND o.country <> 'US' AND cc.curr IS NOT NULL THEN cc.curr\n    WHEN pq.currency = 'USD' THEN 'USD'\n    WHEN o.country = 'US' THEN 'USD'\n    ELSE 'USD'\n  END AS currency_code,\n  CASE d.stage\n    WHEN 'qualification' THEN 0.10\n    WHEN 'discover' THEN 0.25\n    WHEN 'propose' THEN 0.50\n    WHEN 'negotiate' THEN 0.75\n    WHEN 'closed_won' THEN 1.00\n    WHEN 'closed_lost' THEN 0.00\n    ELSE 0.00\n  END AS stage_weight,\n  ROUND(COALESCE(d.amount, 0) * (\n    CASE d.stage\n      WHEN 'qualification' THEN 0.10\n      WHEN 'discover' THEN 0.25\n      WHEN 'propose' THEN 0.50\n      WHEN 'negotiate' THEN 0.75\n      WHEN 'closed_won' THEN 1.00\n      WHEN 'closed_lost' THEN 0.00\n      ELSE 0.00\n    END\n  ), 2) AS weighted_amount,\n  d.company_id,\n  c.name AS company_name,\n  c.industry AS company_industry,\n  d.location_id,\n  d.contact_id,\n  COALESCE(d.contact_name, cdp.first_name || ' ' || COALESCE(cdp.last_name, '')) AS contact_name,\n  COALESCE(d.contact_email, id_k.key_value) AS contact_email,\n  d.owner_user_id,\n  su.first_name || ' ' || COALESCE(su.last_name, '') AS owner_name,\n  d.created_at,\n  d.closed_at,\n  COALESCE(d.closed_at, d.created_at) AS close_ts,\n  d.updated_at,\n  d.expected_close_date,\n  d.lost_reason,\n  (d.stage IN ('qualification', 'discover', 'propose', 'negotiate')) AS is_open,\n  (d.stage = 'closed_won') AS is_won,\n  (d.stage = 'closed_lost') AS is_lost,\n  FLOOR(EXTRACT(EPOCH FROM (NOW() - d.created_at))/86400)::integer AS aging_days,\n  d.forecast_category,\n  d.forecast_reason,\n  d.forecast_flagged\nFROM crm.deals d\nLEFT JOIN crm.companies c ON c.id = d.company_id AND c.organization_id = d.organization_id\nLEFT JOIN accounts.setup_users su ON su.id = d.owner_user_id\nLEFT JOIN accounts.organizations o ON o.id = d.organization_id\nLEFT JOIN cdp.customer_profile cdp ON cdp.cdp_id = d.contact_id\nLEFT JOIN LATERAL (\n  SELECT ik.key_value \n  FROM cdp.identity_keys ik \n  WHERE ik.cdp_id = d.contact_id AND ik.key_type = 'email' AND ik.organization_id = d.organization_id \n  ORDER BY ik.created_at ASC \n  LIMIT 1\n) id_k ON TRUE\nLEFT JOIN LATERAL (\n  SELECT q.currency \n  FROM crm.quotes q \n  WHERE q.deal_id = d.id AND q.organization_id = d.organization_id \n  ORDER BY CASE WHEN q.status = 'accepted' THEN 1 WHEN q.status = 'sent' THEN 2 ELSE 3 END, q.updated_at DESC \n  LIMIT 1\n) pq ON TRUE\nLEFT JOIN LATERAL (\n  SELECT CASE o.country \n    WHEN 'India' THEN 'INR' \n    WHEN 'United Kingdom' THEN 'GBP' \n    WHEN 'Germany' THEN 'EUR' \n    WHEN 'Canada' THEN 'CAD' \n    WHEN 'Australia' THEN 'AUD' \n    ELSE 'USD' \n  END AS curr\n) cc ON TRUE\nWHERE d.organization_id = %(_org_id)s\n) src WHERE TRUE\n)\nSELECT CAST(COALESCE(SUM(amount), 0) AS DECIMAL(15, 2)) AS total_pipeline FROM rpt_deals AS deals WHERE is_open = TRUE AND TRUE AND TRUE AND TRUE LIMIT 500",
+        "views": [
+          "deals"
+        ],
+        "guard_notes": [
+          "row cap 500 applied"
+        ],
+        "bound_params": {
+          "_org_id": 1003,
+          "_user_id": 1015,
+          "user_id": 1015,
+          "organization_id": 1003,
+          "org_id": 1003,
+          "tenant_id": 1003,
+          "current_user_id": 1015
+        },
+        "rows": [
+          {
+            "total_pipeline": "0.00"
+          }
+        ],
+        "kpi_id": "total_pipeline",
+        "time_status": "all_time",
+        "attempts": [
+          {
+            "raw": "```json\n{\"tool\":\"run_kpi\",\"kpi_id\":\"total_pipeline\",\"dimension\":null}\n```",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "total_pipeline"
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "tool": "run_kpi",
+        "requested_kpi": "total_pipeline",
+        "requested_dimension": null,
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "total_pipeline",
+          "goal": "Get the current total pipeline value to confirm the zero value",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "kpi",
+          "depends_on": []
+        }
+      },
+      {
+        "status": "ok",
+        "rows": [
+          {
+            "open_deal_count": 12,
+            "total_pipeline_amount": 0,
+            "deal_details": [
+              {
+                "amount": null,
+                "forecast_reason": "The deal has no expected close date, zero activity, and only a draft quote, making it impossible to include in a forecast roll-up. The 'propose' stage is not supported by any evidence of engagement or timeline.",
+                "id": "cmul9ofkg01vvqm0u2khw3xn6",
+                "stage": "propose"
+              },
+              {
+                "amount": null,
+                "forecast_reason": "No expected close date is set and there is zero activity or evidence to support the qualification stage, making it impossible to forecast.",
+                "id": "cmtci1gpm000f1a860hip0f2p",
+                "stage": "qualification"
+              },
+              {
+                "amount": null,
+                "forecast_reason": "The deal is in qualification with no expected close date, zero activity, and only a draft quote, making it unrealistic to include in the current forecast.",
+                "id": "cmtlcopyi001p1a9vpooi9rs3",
+                "stage": "qualification"
+              },
+              {
+                "amount": null,
+                "forecast_reason": "The deal has no expected close date, zero activity, and no evidence of engagement, making it impossible to forecast realistically.",
+                "id": "cmtn4ovi300a4o40ul729d1ud",
+                "stage": "qualification"
+              },
+              {
+                "amount": null,
+                "forecast_reason": "The deal has no expected close date, zero activity, and no evidence of engagement, making it impossible to forecast realistically.",
+                "id": "cmu1dirbz002k1anxhf42gtz5",
+                "stage": "discover"
+              },
+              {
+                "amount": null,
+                "forecast_reason": "The deal is in the propose stage but has no expected close date, zero activity, and only a draft quote, making it unrealistic to include in the current forecast.",
+                "id": "cmu28ch7200lbs70uocmqjzrt",
+                "stage": "propose"
+              },
+              {
+                "amount": null,
+                "forecast_reason": "No expected close date is set and there is zero activity or evidence to support the qualification stage, making it unrealistic for the current forecast.",
+                "id": "cmu6v7vbu005io50uh7bpe00x",
+                "stage": "qualification"
+              },
+              {
+                "amount": null,
+                "forecast_reason": "The deal is in the propose stage but has no expected close date, zero activity, and only a draft quote with no value, making it unrealistic to include in the current forecast.",
+                "id": "cmu8k810304kmlb0u4hi6w7a4",
+                "stage": "propose"
+              },
+              {
+                "amount": null,
+                "forecast_reason": "The deal is in the negotiate stage but has no expected close date, zero activity, and no evidence of engagement, making it unrealistic to include in a forecast.",
+                "id": "cmucsr2pw001upg0ubbvbzhw8",
+                "stage": "negotiate"
+              },
+              {
+                "amount": null,
+                "forecast_reason": "The deal lacks an expected close date and has zero activity or engagement signals, making it impossible to forecast realistically. The quote remains in draft status, indicating no substantive progress toward closing.",
+                "id": "cmuctclg2005o1ago5703inxa",
+                "stage": "propose"
+              },
+              {
+                "amount": null,
+                "forecast_reason": "The deal has no expected close date, no amount, and zero activity or evidence, making it impossible to forecast and unrealistic to include in a pipeline roll-up.",
+                "id": "cmugumk9x004fmo0ubruzr8uq",
+                "stage": "discover"
+              },
+              {
+                "amount": null,
+                "forecast_reason": "The deal is in the 'propose' stage but has no expected close date, zero activity, and only a draft quote, making it unrealistic to include in a forecast roll-up.",
+                "id": "cmumhu64r01yaqm0up65tavy0",
+                "stage": "propose"
+              }
+            ]
+          }
+        ],
+        "sql": "MATCH (d:Deal) WHERE toLower(d.stage) IN ['qualification', 'discover', 'propose', 'negotiate'] RETURN count(d) AS open_deal_count, sum(d.amount) AS total_pipeline_amount, collect({id: d.id, amount: d.amount, stage: d.stage, forecast_reason: d.forecast_reason}) AS deal_details\nLIMIT 100",
+        "tool": "kg",
+        "attempts_made": 1,
+        "kg_notes": "### Pipeline Value Summary & Data Integrity Gap\n\nThe total pipeline value is currently **$0** despite having **12 active open deals**. This zero-value state is not due to a lack of opportunities, but rather a critical absence of commercial data required to calculate a forecastable pipeline.\n\n| Metric | Value |\n| :--- | :--- |\n| **Open Deal Count** | **12** |\n| **Total Pipeline Value** | **$0** |\n| **Primary Issue** | **Missing Quote Values & Missing Close Dates** |\n\n### Commercial Diagnosis: Why the Pipeline is Unvalued\n\nThe data reveals a systemic failure in deal qualification and administrative hygiene. While 12 deals are technically \"open\" across various stages (Discovery, Qualification, Propose, and Negotiate), they contribute zero value to the forecast for the following empirical reasons:\n\n*   **Absence of Approved Quotes:** Every single deal in the pipeline is currently tied to a \"draft\" quote or lacks a quote entirely. Without an approved quote to anchor the deal's commercial value, the system cannot assign a dollar amount to the opportunity.\n*   **Missing Temporal Data (Close Dates):** None of the 12 deals have an \"Expected Close Date\" recorded. In B2B sales, a deal without a timeline is a deal that cannot be forecasted, effectively rendering the pipeline invisible to revenue projections.\n*   **Zero Engagement Signals:** The records indicate \"zero activity\" across these opportunities. This suggests that while deals are being created in the system, they are not being actively managed or progressed through the sales cycle.\n*   **Stalled Commercial Paths:** We see deals sitting in the 'Propose' and 'Negotiate' stages that lack any substantive progress. For example, deal `cmuctclg2005o1ago5703inxa` is in the 'Propose' stage but remains stuck with a draft quote and no engagement, indicating a breakdown in the transition from proposal to negotiation.\n\n### Tactical Levers to Restore Pipeline Visibility\n\nTo transform these 12 stagnant opportunities into a measurable and actionable pipeline, the following operational steps are required:\n\n*   **Mandate Quote Finalization for Forecast Inclusion:** Implement a rule where deals cannot progress past the 'Qualification' stage unless a quote (even a preliminary one) is attached with a non-zero value. This will immediately resolve the $0 valuation issue.\n*   **Enforce Close Date Hygiene:** Require sales representatives to input an \"Expected Close Date\" during the initial 'Discovery' or 'Qualification' phase. A pipeline without dates is merely a list of names; adding dates allows for month-over-month growth analysis.\n*   **Audit \"Draft\" Status Stagnation:** Conduct a targeted review of all deals in the 'Propose' and 'Negotiate' stages. Since these stages should represent high-intent activity, any deal remaining in \"Draft\" status for more than 7 days should be flagged for immediate manager intervention to prevent \"phantom pipeline\" inflation.",
+        "task": {
+          "id": "t2",
+          "executor": "kg",
+          "kpi": null,
+          "goal": "Investigate reasons for zero pipeline: check for missing deal amounts, stalled commercial paths, or lack of active opportunities",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "why_breakdown",
+          "depends_on": [
+            "t1"
+          ]
+        }
+      }
+    ],
+    "domain_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"deep\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"total_pipeline\",\n      \"goal\": \"Get the current total pipeline value to confirm the zero value\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"dimension\": null,\n      \"answer_type\": \"kpi\",\n      \"depends_on\": []\n    },\n    {\n      \"id\": \"t2\",\n      \"executor\": \"kg\",\n      \"kpi\": null,\n      \"goal\": \"Investigate reasons for zero pipeline: check for missing deal amounts, stalled commercial paths, or lack of active opportunities\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"dimension\": null,\n      \"answer_type\": \"why_breakdown\",\n      \"depends_on\": [\n        \"t1\"\n      ]\n    }\n  ]\n}\n```",
+    "plan": {
+      "kind": "plan",
+      "depth": "deep",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "total_pipeline",
+          "goal": "Get the current total pipeline value to confirm the zero value",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "kpi",
+          "depends_on": []
+        },
+        {
+          "id": "t2",
+          "executor": "kg",
+          "kpi": null,
+          "goal": "Investigate reasons for zero pipeline: check for missing deal amounts, stalled commercial paths, or lack of active opportunities",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "why_breakdown",
+          "depends_on": [
+            "t1"
+          ]
+        }
+      ]
+    },
+    "facts": "time_requested: all time\nperiod_applied: overall (no date filter, UTC)\ntime_status: all_time\ncatalog_kpi: total_pipeline\nRESULT: total_pipeline = 0.00\n\ntime_requested: all time\ntime_status: kg\nRESULT: 1 row(s)\ntask_goal: Investigate reasons for zero pipeline: check for missing deal amounts, stalled commercial paths, or lack of active opportunities\n  open_deal_count=12 | total_pipeline_amount=0 | deal_details=[{'amount': None, 'forecast_reason': \"The deal has no expected close date, zero activity, and only a draft quote, making it impossible to include in a forecast roll-up. The 'propose' stage is not supported by any evidence of engagement or timeline.\", 'id': 'cmul9ofkg01vvqm0u2khw3xn6', 'stage': 'propose'}, {'amount': None, 'forecast_reason': 'No expected close date is set and there is zero activity or evidence to support the qualification stage, making it impossible to forecast.', 'id': 'cmtci1gpm000f1a860hip0f2p', 'stage': 'qualification'}, {'amount': None, 'forecast_reason': 'The deal is in qualification with no expected close date, zero activity, and only a draft quote, making it unrealistic to include in the current forecast.', 'id': 'cmtlcopyi001p1a9vpooi9rs3', 'stage': 'qualification'}, {'amount': None, 'forecast_reason': 'The deal has no expected close date, zero activity, and no evidence of engagement, making it impossible to forecast realistically.', 'id': 'cmtn4ovi300a4o40ul729d1ud', 'stage': 'qualification'}, {'amount': None, 'forecast_reason': 'The deal has no expected close date, zero activity, and no evidence of engagement, making it impossible to forecast realistically.', 'id': 'cmu1dirbz002k1anxhf42gtz5', 'stage': 'discover'}, {'amount': None, 'forecast_reason': 'The deal is in the propose stage but has no expected close date, zero activity, and only a draft quote, making it unrealistic to include in the current forecast.', 'id': 'cmu28ch7200lbs70uocmqjzrt', 'stage': 'propose'}, {'amount': None, 'forecast_reason': 'No expected close date is set and there is zero activity or evidence to support the qualification stage, making it unrealistic for the current forecast.', 'id': 'cmu6v7vbu005io50uh7bpe00x', 'stage': 'qualification'}, {'amount': None, 'forecast_reason': 'The deal is in the propose stage but has no expected close date, zero activity, and only a draft quote with no value, making it unrealistic to include in the current forecast.', 'id': 'cmu8k810304kmlb0u4hi6w7a4', 'stage': 'propose'}, {'amount': None, 'forecast_reason': 'The deal is in the negotiate stage but has no expected close date, zero activity, and no evidence of engagement, making it unrealistic to include in a forecast.', 'id': 'cmucsr2pw001upg0ubbvbzhw8', 'stage': 'negotiate'}, {'amount': None, 'forecast_reason': 'The deal lacks an expected close date and has zero activity or engagement signals, making it impossible to forecast realistically. The quote remains in draft status, indicating no substantive progress toward closing.', 'id': 'cmuctclg2005o1ago5703inxa', 'stage': 'propose'}, {'amount': None, 'forecast_reason': 'The deal has no expected close date, no amount, and zero activity or evidence, making it impossible to forecast and unrealistic to include in a pipeline roll-up.', 'id': 'cmugumk9x004fmo0ubruzr8uq', 'stage': 'discover'}, {'amount': None, 'forecast_reason': \"The deal is in the 'propose' stage but has no expected close date, zero activity, and only a draft quote, making it unrealistic to include in a forecast roll-up.\", 'id': 'cmumhu64r01yaqm0up65tavy0', 'stage': 'propose'}]\nkg_notes:\n### Pipeline Value Summary & Data Integrity Gap\n\nThe total pipeline value is currently **$0** despite having **12 active open deals**. This zero-value state is not due to a lack of opportunities, but rather a critical absence of commercial data required to calculate a forecastable pipeline.\n\n| Metric | Value |\n| :--- | :--- |\n| **Open Deal Count** | **12** |\n| **Total Pipeline Value** | **$0** |\n| **Primary Issue** | **Missing Quote Values & Missing Close Dates** |\n\n### Commercial Diagnosis: Why the Pipeline is Unvalued\n\nThe data reveals a systemic failure in deal qualification and administrative hygiene. While 12 deals are technically \"open\" across various stages (Discovery, Qualification, Propose, and Negotiate), they contribute zero value to the forecast for the following empirical reasons:\n\n*   **Absence of Approved Quotes:** Every single deal in the pipeline is currently tied to a \"draft\" quote or lacks a quote entirely. Without an approved quote to anchor the deal's commercial value, the system cannot assign a dollar amount to the opportunity.\n*   **Missing Temporal Data (Close Dates):** None of the 12 deals have an \"Expected Close Date\" recorded. In B2B sales, a deal without a timeline is a deal that cannot be forecasted, effectively rendering the pipeline invisible to revenue projections.\n*   **Zero Engagement Signals:** The records indicate \"zero activity\" across these opportunities. This suggests that while deals are being created in the system, they are not being actively managed or progressed through the sales cycle.\n*   **Stalled Commercial Paths:** We see deals sitting in the 'Propose' and 'Negotiate' stages that lack any substantive progress. For example, deal `cmuctclg2005o1ago5703inxa` is in the 'Propose' stage but remains stuck with a draft quote and no engagement, indicating a breakdown in the transition from proposal to negotiation.\n\n### Tactical Levers to Restore Pipeline Visibility\n\nTo transform these 12 stagnant opportunities into a measurable and actionable pipeline, the following operational steps are required:\n\n*   **Mandate Quote Finalization for Forecast Inclusion:** Implement a rule where deals cannot progress past the 'Qualification' stage unless a quote (even a preliminary one) is attached with a non-zero value. This will immediately resolve the $0 valuation issue.\n*   **Enforce Close Date Hygiene:** Require sales representatives to input an \"Expected Close Date\" during the initial 'Discovery' or 'Qualification' phase. A pipeline without dates is merely a list of names; adding dates allows for month-over-month growth analysis.\n*   **Audit \"Draft\" Status Stagnation:** Conduct a targeted review of all deals in the 'Propose' and 'Negotiate' stages. Since these stages should represent high-intent activity, any deal remaining in \"Draft\" status for more than 7 days should be flagged for immediate manager intervention to prevent \"phantom pipeline\" inflation.",
+    "grounded": true,
+    "briefing_raw": "### Pipeline Value Summary & Data Integrity Gap\n\nThe total pipeline value is **$0.00** despite the existence of **12 active open deals**. This zero-value state is not caused by a lack of opportunities, but by a systemic absence of the commercial data required to calculate a forecastable pipeline.\n\n| Metric | Value |\n| :--- | :--- |\n| **Open Deal Count** | **12** |\n| **Total Pipeline Value** | **$0.00** |\n| **Primary Root Cause** | **Missing Quote Values & Missing Close Dates** |\n\n### Commercial Diagnosis: Why the Pipeline is Unvalued\n\nThe data reveals a critical breakdown in deal qualification and administrative hygiene across all 12 opportunities. While deals are technically active across Discovery, Qualification, Propose, and Negotiate stages, they contribute zero value to the forecast for the following empirical reasons:\n\n* **Absence of Validated Quote Values:** Every single deal in the pipeline is currently tied to a \"draft\" quote or lacks a quote entirely. Without an approved or finalized quote to anchor the commercial value, the system cannot assign a dollar amount to the opportunity.\n* **Missing Temporal Data (Close Dates):** None of the 12 deals have an \"Expected Close Date\" recorded. In a B2B environment, a deal without a timeline cannot be included in a forecast roll-up, effectively rendering the entire pipeline invisible to revenue projections.\n* **Zero Engagement Signals:** The records indicate \"zero activity\" across these opportunities. This suggests that while deals are being created in the system, they are not being actively managed or progressed through the sales cycle.\n* **Stalled Commercial Paths:** We see deals sitting in high-intent stages without substantive progress. For example, deal `cmuctclg2005o1ago5703inxa` is in the **Propose** stage but remains stuck with a draft quote and no engagement, indicating a breakdown in the transition from proposal to negotiation.\n\n### Tactical Levers to Restore Pipeline Visibility\n\nTo transform these 12 stagnant opportunities into a measurable and actionable pipeline, the following operational steps are required:\n\n* **Mandate Quote Finalization for Forecast Inclusion:** Implement a requirement where deals cannot progress past the 'Qualification' stage unless a quote is attached with a non-zero value. This will immediately resolve the $0 valuation issue.\n* **Enforce Close Date Hygiene:** Require sales representatives to input an \"Expected Close Date\" during the initial 'Discovery' or 'Qualification' phase. A pipeline without dates is merely a list of names; adding dates allows for month-over-month growth analysis.\n* **Audit \"Draft\" Status Stagnation:** Conduct a targeted review of all deals in the 'Propose' and 'Negotiate' stages. Any deal remaining in \"Draft\" status for more than 7 days should be flagged for immediate manager intervention to prevent \"phantom pipeline\" inflation."
+  }
+}

@@ -1,0 +1,341 @@
+{
+  "question": "compare this month revenue with last month\n\n",
+  "answer": "This month, booked revenue is $315,000.00 and collected revenue is $270,000.00 (3 invoices). Last month, both booked and collected revenue were $0.00.\n\nA detailed variance analysis of deal stages, quote amounts, and invoice statuses could not be performed because no transaction history or deal records were available in the graph for these periods. You may want to verify that deal and invoice data are syncing correctly from your integrations.",
+  "trace": {
+    "question": "compare this month revenue with last month",
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1015,
+      "role": "admin"
+    },
+    "model": "worktual-gemma",
+    "tasks": [
+      {
+        "status": "ok",
+        "store": "sql",
+        "sql": "WITH rpt_deals AS (\nSELECT src.id, src.organization_id, src.title, src.stage, src.amount, src.currency_code, src.stage_weight, src.weighted_amount, src.company_id, src.company_name, src.company_industry, src.location_id, src.contact_id, src.contact_name, src.contact_email, src.owner_user_id, src.owner_name, src.created_at, src.closed_at, src.close_ts, src.updated_at, src.expected_close_date, src.lost_reason, src.is_open, src.is_won, src.is_lost, src.aging_days, src.forecast_category, src.forecast_reason, src.forecast_flagged FROM (\nSELECT \n  d.id,\n  d.organization_id,\n  d.title,\n  d.stage,\n  COALESCE(d.amount, 0) AS amount,\n  CASE\n    WHEN pq.currency IS NOT NULL AND pq.currency <> 'USD' THEN pq.currency\n    WHEN o.country IS NOT NULL AND o.country <> 'US' AND cc.curr IS NOT NULL THEN cc.curr\n    WHEN pq.currency = 'USD' THEN 'USD'\n    WHEN o.country = 'US' THEN 'USD'\n    ELSE 'USD'\n  END AS currency_code,\n  CASE d.stage\n    WHEN 'qualification' THEN 0.10\n    WHEN 'discover' THEN 0.25\n    WHEN 'propose' THEN 0.50\n    WHEN 'negotiate' THEN 0.75\n    WHEN 'closed_won' THEN 1.00\n    WHEN 'closed_lost' THEN 0.00\n    ELSE 0.00\n  END AS stage_weight,\n  ROUND(COALESCE(d.amount, 0) * (\n    CASE d.stage\n      WHEN 'qualification' THEN 0.10\n      WHEN 'discover' THEN 0.25\n      WHEN 'propose' THEN 0.50\n      WHEN 'negotiate' THEN 0.75\n      WHEN 'closed_won' THEN 1.00\n      WHEN 'closed_lost' THEN 0.00\n      ELSE 0.00\n    END\n  ), 2) AS weighted_amount,\n  d.company_id,\n  c.name AS company_name,\n  c.industry AS company_industry,\n  d.location_id,\n  d.contact_id,\n  COALESCE(d.contact_name, cdp.first_name || ' ' || COALESCE(cdp.last_name, '')) AS contact_name,\n  COALESCE(d.contact_email, id_k.key_value) AS contact_email,\n  d.owner_user_id,\n  su.first_name || ' ' || COALESCE(su.last_name, '') AS owner_name,\n  d.created_at,\n  d.closed_at,\n  COALESCE(d.closed_at, d.created_at) AS close_ts,\n  d.updated_at,\n  d.expected_close_date,\n  d.lost_reason,\n  (d.stage IN ('qualification', 'discover', 'propose', 'negotiate')) AS is_open,\n  (d.stage = 'closed_won') AS is_won,\n  (d.stage = 'closed_lost') AS is_lost,\n  FLOOR(EXTRACT(EPOCH FROM (NOW() - d.created_at))/86400)::integer AS aging_days,\n  d.forecast_category,\n  d.forecast_reason,\n  d.forecast_flagged\nFROM crm.deals d\nLEFT JOIN crm.companies c ON c.id = d.company_id AND c.organization_id = d.organization_id\nLEFT JOIN accounts.setup_users su ON su.id = d.owner_user_id\nLEFT JOIN accounts.organizations o ON o.id = d.organization_id\nLEFT JOIN cdp.customer_profile cdp ON cdp.cdp_id = d.contact_id\nLEFT JOIN LATERAL (\n  SELECT ik.key_value \n  FROM cdp.identity_keys ik \n  WHERE ik.cdp_id = d.contact_id AND ik.key_type = 'email' AND ik.organization_id = d.organization_id \n  ORDER BY ik.created_at ASC \n  LIMIT 1\n) id_k ON TRUE\nLEFT JOIN LATERAL (\n  SELECT q.currency \n  FROM crm.quotes q \n  WHERE q.deal_id = d.id AND q.organization_id = d.organization_id \n  ORDER BY CASE WHEN q.status = 'accepted' THEN 1 WHEN q.status = 'sent' THEN 2 ELSE 3 END, q.updated_at DESC \n  LIMIT 1\n) pq ON TRUE\nLEFT JOIN LATERAL (\n  SELECT CASE o.country \n    WHEN 'India' THEN 'INR' \n    WHEN 'United Kingdom' THEN 'GBP' \n    WHEN 'Germany' THEN 'EUR' \n    WHEN 'Canada' THEN 'CAD' \n    WHEN 'Australia' THEN 'AUD' \n    ELSE 'USD' \n  END AS curr\n) cc ON TRUE\nWHERE d.organization_id = %(_org_id)s\n) src WHERE TRUE\n)\nSELECT CAST(COALESCE(SUM(amount), 0) AS DECIMAL(15, 2)) AS won_revenue FROM rpt_deals AS deals WHERE is_won = TRUE AND TRUE AND close_ts >= %(start)s AND close_ts < %(end)s AND TRUE LIMIT 500",
+        "views": [
+          "deals"
+        ],
+        "guard_notes": [
+          "row cap 500 applied"
+        ],
+        "bound_params": {
+          "_org_id": 1003,
+          "_user_id": 1015,
+          "user_id": 1015,
+          "organization_id": 1003,
+          "org_id": 1003,
+          "tenant_id": 1003,
+          "current_user_id": 1015,
+          "start": "2026-10-01T00:00:00+00:00",
+          "end": "2026-11-01T00:00:00+00:00"
+        },
+        "rows": [
+          {
+            "won_revenue": "315000.00"
+          }
+        ],
+        "kpi_id": "won_revenue",
+        "time_status": "bounded",
+        "attempts": [
+          {
+            "raw": "{\"tool\":\"run_kpi\",\"kpi_id\":\"won_revenue\",\"dimension\":null}",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "won_revenue"
+            }
+          }
+        ],
+        "time_echo": "this month (UTC)",
+        "tool": "run_kpi",
+        "requested_kpi": "won_revenue",
+        "requested_dimension": null,
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "won_revenue",
+          "goal": "Booked closed-won deal amount for this month",
+          "time": "this month",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "kpi",
+          "depends_on": []
+        }
+      },
+      {
+        "status": "ok",
+        "store": "sql",
+        "sql": "WITH rpt_deals AS (\nSELECT src.id, src.organization_id, src.title, src.stage, src.amount, src.currency_code, src.stage_weight, src.weighted_amount, src.company_id, src.company_name, src.company_industry, src.location_id, src.contact_id, src.contact_name, src.contact_email, src.owner_user_id, src.owner_name, src.created_at, src.closed_at, src.close_ts, src.updated_at, src.expected_close_date, src.lost_reason, src.is_open, src.is_won, src.is_lost, src.aging_days, src.forecast_category, src.forecast_reason, src.forecast_flagged FROM (\nSELECT \n  d.id,\n  d.organization_id,\n  d.title,\n  d.stage,\n  COALESCE(d.amount, 0) AS amount,\n  CASE\n    WHEN pq.currency IS NOT NULL AND pq.currency <> 'USD' THEN pq.currency\n    WHEN o.country IS NOT NULL AND o.country <> 'US' AND cc.curr IS NOT NULL THEN cc.curr\n    WHEN pq.currency = 'USD' THEN 'USD'\n    WHEN o.country = 'US' THEN 'USD'\n    ELSE 'USD'\n  END AS currency_code,\n  CASE d.stage\n    WHEN 'qualification' THEN 0.10\n    WHEN 'discover' THEN 0.25\n    WHEN 'propose' THEN 0.50\n    WHEN 'negotiate' THEN 0.75\n    WHEN 'closed_won' THEN 1.00\n    WHEN 'closed_lost' THEN 0.00\n    ELSE 0.00\n  END AS stage_weight,\n  ROUND(COALESCE(d.amount, 0) * (\n    CASE d.stage\n      WHEN 'qualification' THEN 0.10\n      WHEN 'discover' THEN 0.25\n      WHEN 'propose' THEN 0.50\n      WHEN 'negotiate' THEN 0.75\n      WHEN 'closed_won' THEN 1.00\n      WHEN 'closed_lost' THEN 0.00\n      ELSE 0.00\n    END\n  ), 2) AS weighted_amount,\n  d.company_id,\n  c.name AS company_name,\n  c.industry AS company_industry,\n  d.location_id,\n  d.contact_id,\n  COALESCE(d.contact_name, cdp.first_name || ' ' || COALESCE(cdp.last_name, '')) AS contact_name,\n  COALESCE(d.contact_email, id_k.key_value) AS contact_email,\n  d.owner_user_id,\n  su.first_name || ' ' || COALESCE(su.last_name, '') AS owner_name,\n  d.created_at,\n  d.closed_at,\n  COALESCE(d.closed_at, d.created_at) AS close_ts,\n  d.updated_at,\n  d.expected_close_date,\n  d.lost_reason,\n  (d.stage IN ('qualification', 'discover', 'propose', 'negotiate')) AS is_open,\n  (d.stage = 'closed_won') AS is_won,\n  (d.stage = 'closed_lost') AS is_lost,\n  FLOOR(EXTRACT(EPOCH FROM (NOW() - d.created_at))/86400)::integer AS aging_days,\n  d.forecast_category,\n  d.forecast_reason,\n  d.forecast_flagged\nFROM crm.deals d\nLEFT JOIN crm.companies c ON c.id = d.company_id AND c.organization_id = d.organization_id\nLEFT JOIN accounts.setup_users su ON su.id = d.owner_user_id\nLEFT JOIN accounts.organizations o ON o.id = d.organization_id\nLEFT JOIN cdp.customer_profile cdp ON cdp.cdp_id = d.contact_id\nLEFT JOIN LATERAL (\n  SELECT ik.key_value \n  FROM cdp.identity_keys ik \n  WHERE ik.cdp_id = d.contact_id AND ik.key_type = 'email' AND ik.organization_id = d.organization_id \n  ORDER BY ik.created_at ASC \n  LIMIT 1\n) id_k ON TRUE\nLEFT JOIN LATERAL (\n  SELECT q.currency \n  FROM crm.quotes q \n  WHERE q.deal_id = d.id AND q.organization_id = d.organization_id \n  ORDER BY CASE WHEN q.status = 'accepted' THEN 1 WHEN q.status = 'sent' THEN 2 ELSE 3 END, q.updated_at DESC \n  LIMIT 1\n) pq ON TRUE\nLEFT JOIN LATERAL (\n  SELECT CASE o.country \n    WHEN 'India' THEN 'INR' \n    WHEN 'United Kingdom' THEN 'GBP' \n    WHEN 'Germany' THEN 'EUR' \n    WHEN 'Canada' THEN 'CAD' \n    WHEN 'Australia' THEN 'AUD' \n    ELSE 'USD' \n  END AS curr\n) cc ON TRUE\nWHERE d.organization_id = %(_org_id)s\n) src WHERE TRUE\n)\nSELECT CAST(COALESCE(SUM(amount), 0) AS DECIMAL(15, 2)) AS won_revenue FROM rpt_deals AS deals WHERE is_won = TRUE AND TRUE AND close_ts >= %(start)s AND close_ts < %(end)s AND TRUE LIMIT 500",
+        "views": [
+          "deals"
+        ],
+        "guard_notes": [
+          "row cap 500 applied"
+        ],
+        "bound_params": {
+          "_org_id": 1003,
+          "_user_id": 1015,
+          "user_id": 1015,
+          "organization_id": 1003,
+          "org_id": 1003,
+          "tenant_id": 1003,
+          "current_user_id": 1015,
+          "start": "2026-09-01T00:00:00+00:00",
+          "end": "2026-10-01T00:00:00+00:00"
+        },
+        "rows": [
+          {
+            "won_revenue": "0.00"
+          }
+        ],
+        "kpi_id": "won_revenue",
+        "time_status": "bounded",
+        "attempts": [
+          {
+            "raw": "{\"tool\":\"run_kpi\",\"kpi_id\":\"won_revenue\",\"dimension\":null}",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "won_revenue"
+            }
+          }
+        ],
+        "time_echo": "last month (UTC)",
+        "tool": "run_kpi",
+        "requested_kpi": "won_revenue",
+        "requested_dimension": null,
+        "task": {
+          "id": "t2",
+          "executor": "sql",
+          "kpi": "won_revenue",
+          "goal": "Booked closed-won deal amount for last month",
+          "time": "last month",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "kpi",
+          "depends_on": [
+            "t1"
+          ]
+        }
+      },
+      {
+        "status": "ok",
+        "store": "sql",
+        "sql": "WITH rpt_invoices AS (\nSELECT src.id, src.organization_id, src.invoice_number, src.order_id, src.deal_id, src.deal_title, src.company_id, src.company_name, src.status, src.approval_status, src.subtotal, src.discount_amount, src.tax_amount, src.total, src.currency_code, src.due_at, src.paid_at, src.payment_method, src.created_by_user_id, src.owner_user_id, src.owner_name, src.created_at, src.updated_at, src.is_overdue FROM (\nSELECT \n  inv.id,\n  inv.organization_id,\n  inv.number AS invoice_number,\n  inv.order_id,\n  inv.deal_id,\n  d.title AS deal_title,\n  inv.company_id,\n  c.name AS company_name,\n  inv.status,\n  inv.approval_status,\n  COALESCE(inv.total - COALESCE(inv.tax_amount, 0) + COALESCE(inv.discount_amount, 0), inv.total) AS subtotal,\n  COALESCE(inv.discount_amount, 0) AS discount_amount,\n  COALESCE(inv.tax_amount, 0) AS tax_amount,\n  COALESCE(inv.total, 0) AS total,\n  COALESCE(inv.currency, 'USD') AS currency_code,\n  inv.due_at,\n  inv.paid_at,\n  inv.payment_method,\n  inv.created_by_user_id,\n  d.owner_user_id,\n  su.first_name || ' ' || COALESCE(su.last_name, '') AS owner_name,\n  inv.created_at,\n  inv.updated_at,\n  (inv.status = 'overdue' OR (inv.status = 'sent' AND inv.due_at < NOW())) AS is_overdue\nFROM crm.invoices inv\nLEFT JOIN crm.deals d ON d.id = inv.deal_id AND d.organization_id = inv.organization_id\nLEFT JOIN crm.companies c ON c.id = inv.company_id AND c.organization_id = inv.organization_id\nLEFT JOIN accounts.setup_users su ON su.id = d.owner_user_id\nWHERE inv.organization_id = %(_org_id)s\n) src WHERE TRUE\n)\nSELECT CAST(COALESCE(SUM(total), 0) AS DECIMAL(15, 2)) AS collected_revenue, CAST(COUNT(*) AS BIGINT) AS paid_invoice_count FROM rpt_invoices AS invoices WHERE status = 'paid' AND TRUE AND paid_at >= %(start)s AND paid_at < %(end)s AND TRUE LIMIT 500",
+        "views": [
+          "invoices"
+        ],
+        "guard_notes": [
+          "row cap 500 applied"
+        ],
+        "bound_params": {
+          "_org_id": 1003,
+          "_user_id": 1015,
+          "user_id": 1015,
+          "organization_id": 1003,
+          "org_id": 1003,
+          "tenant_id": 1003,
+          "current_user_id": 1015,
+          "start": "2026-10-01T00:00:00+00:00",
+          "end": "2026-11-01T00:00:00+00:00"
+        },
+        "rows": [
+          {
+            "collected_revenue": "270000.00",
+            "paid_invoice_count": 3
+          }
+        ],
+        "kpi_id": "collected_revenue",
+        "time_status": "bounded",
+        "attempts": [
+          {
+            "raw": "{\"tool\":\"run_kpi\",\"kpi_id\":\"collected_revenue\",\"dimension\":null}",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "collected_revenue"
+            }
+          }
+        ],
+        "time_echo": "this month (UTC)",
+        "tool": "run_kpi",
+        "requested_kpi": "collected_revenue",
+        "requested_dimension": null,
+        "task": {
+          "id": "t3",
+          "executor": "sql",
+          "kpi": "collected_revenue",
+          "goal": "Paid invoice receipts for this month",
+          "time": "this month",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "kpi",
+          "depends_on": [
+            "t1",
+            "t2"
+          ]
+        }
+      },
+      {
+        "status": "ok",
+        "store": "sql",
+        "sql": "WITH rpt_invoices AS (\nSELECT src.id, src.organization_id, src.invoice_number, src.order_id, src.deal_id, src.deal_title, src.company_id, src.company_name, src.status, src.approval_status, src.subtotal, src.discount_amount, src.tax_amount, src.total, src.currency_code, src.due_at, src.paid_at, src.payment_method, src.created_by_user_id, src.owner_user_id, src.owner_name, src.created_at, src.updated_at, src.is_overdue FROM (\nSELECT \n  inv.id,\n  inv.organization_id,\n  inv.number AS invoice_number,\n  inv.order_id,\n  inv.deal_id,\n  d.title AS deal_title,\n  inv.company_id,\n  c.name AS company_name,\n  inv.status,\n  inv.approval_status,\n  COALESCE(inv.total - COALESCE(inv.tax_amount, 0) + COALESCE(inv.discount_amount, 0), inv.total) AS subtotal,\n  COALESCE(inv.discount_amount, 0) AS discount_amount,\n  COALESCE(inv.tax_amount, 0) AS tax_amount,\n  COALESCE(inv.total, 0) AS total,\n  COALESCE(inv.currency, 'USD') AS currency_code,\n  inv.due_at,\n  inv.paid_at,\n  inv.payment_method,\n  inv.created_by_user_id,\n  d.owner_user_id,\n  su.first_name || ' ' || COALESCE(su.last_name, '') AS owner_name,\n  inv.created_at,\n  inv.updated_at,\n  (inv.status = 'overdue' OR (inv.status = 'sent' AND inv.due_at < NOW())) AS is_overdue\nFROM crm.invoices inv\nLEFT JOIN crm.deals d ON d.id = inv.deal_id AND d.organization_id = inv.organization_id\nLEFT JOIN crm.companies c ON c.id = inv.company_id AND c.organization_id = inv.organization_id\nLEFT JOIN accounts.setup_users su ON su.id = d.owner_user_id\nWHERE inv.organization_id = %(_org_id)s\n) src WHERE TRUE\n)\nSELECT CAST(COALESCE(SUM(total), 0) AS DECIMAL(15, 2)) AS collected_revenue, CAST(COUNT(*) AS BIGINT) AS paid_invoice_count FROM rpt_invoices AS invoices WHERE status = 'paid' AND TRUE AND paid_at >= %(start)s AND paid_at < %(end)s AND TRUE LIMIT 500",
+        "views": [
+          "invoices"
+        ],
+        "guard_notes": [
+          "row cap 500 applied"
+        ],
+        "bound_params": {
+          "_org_id": 1003,
+          "_user_id": 1015,
+          "user_id": 1015,
+          "organization_id": 1003,
+          "org_id": 1003,
+          "tenant_id": 1003,
+          "current_user_id": 1015,
+          "start": "2026-09-01T00:00:00+00:00",
+          "end": "2026-10-01T00:00:00+00:00"
+        },
+        "rows": [
+          {
+            "collected_revenue": "0.00",
+            "paid_invoice_count": 0
+          }
+        ],
+        "kpi_id": "collected_revenue",
+        "time_status": "bounded",
+        "attempts": [
+          {
+            "raw": "{\"tool\":\"run_kpi\",\"kpi_id\":\"collected_revenue\",\"dimension\":null}",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "collected_revenue"
+            }
+          }
+        ],
+        "time_echo": "last month (UTC)",
+        "tool": "run_kpi",
+        "requested_kpi": "collected_revenue",
+        "requested_dimension": null,
+        "task": {
+          "id": "t4",
+          "executor": "sql",
+          "kpi": "collected_revenue",
+          "goal": "Paid invoice receipts for last month",
+          "time": "last month",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "kpi",
+          "depends_on": [
+            "t1",
+            "t2",
+            "t3"
+          ]
+        }
+      },
+      {
+        "status": "ok",
+        "rows": [
+          {
+            "label": "Execute this Domain graph job with read-only Cypher or a certified template. Do not return unsupported_request when Contact, Deal, Quote, Invoice, or ContactActivity can answer the goal.\nDomain task JSON:\n{\"id\": \"t5\", \"executor\": \"kg\", \"kpi\": null, \"goal\": \"Analyze revenue variance: compare deal stages, quote amounts, and invoice statuses between the two periods\", \"time\": \"this month to last month\", \"scope\": \"org\", \"dimension\": null, \"answer_type\": \"why_breakdown\", \"depends_on\": [\"t4\"]}\nOriginal question (names and context only): compare this month revenue with last month",
+            "value": 0,
+            "unit": "records"
+          }
+        ],
+        "sql": "MATCH (i:Invoice) WHERE i.created_at >= date() - duration('P2M') RETURN coalesce(date(i.created_at).month, 0) AS month, i.status AS status, count(i) AS invoice_count, sum(coalesce(i.total, 0)) AS total_revenue, sum(coalesce(i.total_currency, 'USD')) AS currency_label ORDER BY month DESC\nLIMIT 100",
+        "tool": "kg",
+        "attempts_made": 1,
+        "kg_notes": "### Revenue Variance Analysis\n\nThere are 0 records available to compare deal stages, quote amounts, or invoice statuses between this month and last month.\n\n| Metric | This Month | Last Month | Variance |\n| :--- | :--- | :--- | :--- |\n| **Total Revenue** | **$0** | **$0** | **0** |\n\n### Data Gap Diagnosis\n\nThe current dataset contains no transaction history, active deals, or finalized invoices for the requested periods. Because no records were returned for the comparison of deal stages or quote amounts, a commercial variance analysis cannot be performed. \n\nSpecifically, the following data points are missing:\n*   **Deal Pipeline:** No deal titles or stages are recorded for the current or previous month.\n*   **Quote Values:** No quote amounts are associated with any accounts.\n*   **Invoice Status:** There is no visibility into billed vs. unpaid amounts.\n\n### Recommended Next Steps\n\n*   **Verify Data Ingestion:** Confirm that the CRM and accounting integrations are successfully syncing Deal and Invoice nodes into the graph.\n*   **Audit Time Parameters:** Ensure that the \"this month\" and \"last month\" filters align with the date properties (e.g., `created_at` or `close_date`) stored within the Deal and Invoice entities.\n*   **Check Scope Permissions:** Validate that the organizational scope used for the query has the necessary read permissions to access financial and deal-related nodes.",
+        "task": {
+          "id": "t5",
+          "executor": "kg",
+          "kpi": null,
+          "goal": "Analyze revenue variance: compare deal stages, quote amounts, and invoice statuses between the two periods",
+          "time": "this month to last month",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "why_breakdown",
+          "depends_on": [
+            "t4"
+          ]
+        }
+      }
+    ],
+    "domain_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"deep\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"won_revenue\",\n      \"goal\": \"Booked closed-won deal amount for this month\",\n      \"time\": \"this month\",\n      \"scope\": \"org\",\n      \"dimension\": null,\n      \"answer_type\": \"kpi\",\n      \"depends_on\": []\n    },\n    {\n      \"id\": \"t2\",\n      \"executor\": \"sql\",\n      \"kpi\": \"won_revenue\",\n      \"goal\": \"Booked closed-won deal amount for last month\",\n      \"time\": \"last month\",\n      \"scope\": \"org\",\n      \"dimension\": null,\n      \"answer_type\": \"kpi\",\n      \"depends_on\": [\n        \"t1\"\n      ]\n    },\n    {\n      \"id\": \"t3\",\n      \"executor\": \"sql\",\n      \"kpi\": \"collected_revenue\",\n      \"goal\": \"Paid invoice receipts for this month\",\n      \"time\": \"this month\",\n      \"scope\": \"org\",\n      \"dimension\": null,\n      \"answer_type\": \"kpi\",\n      \"depends_on\": [\n        \"t1\",\n        \"t2\"\n      ]\n    },\n    {\n      \"id\": \"t4\",\n      \"executor\": \"sql\",\n      \"kpi\": \"collected_revenue\",\n      \"goal\": \"Paid invoice receipts for last month\",\n      \"time\": \"last month\",\n      \"scope\": \"org\",\n      \"dimension\": null,\n      \"answer_type\": \"kpi\",\n      \"depends_on\": [\n        \"t1\",\n        \"t2\",\n        \"t3\"\n      ]\n    },\n    {\n      \"id\": \"t5\",\n      \"executor\": \"kg\",\n      \"kpi\": null,\n      \"goal\": \"Analyze revenue variance: compare deal stages, quote amounts, and invoice statuses between the two periods\",\n      \"time\": \"this month to last month\",\n      \"scope\": \"org\",\n      \"dimension\": null,\n      \"answer_type\": \"why_breakdown\",\n      \"depends_on\": [\n        \"t4\"\n      ]\n    }\n  ]\n}\n```",
+    "plan": {
+      "kind": "plan",
+      "depth": "deep",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "won_revenue",
+          "goal": "Booked closed-won deal amount for this month",
+          "time": "this month",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "kpi",
+          "depends_on": []
+        },
+        {
+          "id": "t2",
+          "executor": "sql",
+          "kpi": "won_revenue",
+          "goal": "Booked closed-won deal amount for last month",
+          "time": "last month",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "kpi",
+          "depends_on": [
+            "t1"
+          ]
+        },
+        {
+          "id": "t3",
+          "executor": "sql",
+          "kpi": "collected_revenue",
+          "goal": "Paid invoice receipts for this month",
+          "time": "this month",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "kpi",
+          "depends_on": [
+            "t1",
+            "t2"
+          ]
+        },
+        {
+          "id": "t4",
+          "executor": "sql",
+          "kpi": "collected_revenue",
+          "goal": "Paid invoice receipts for last month",
+          "time": "last month",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "kpi",
+          "depends_on": [
+            "t1",
+            "t2",
+            "t3"
+          ]
+        },
+        {
+          "id": "t5",
+          "executor": "kg",
+          "kpi": null,
+          "goal": "Analyze revenue variance: compare deal stages, quote amounts, and invoice statuses between the two periods",
+          "time": "this month to last month",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "why_breakdown",
+          "depends_on": [
+            "t4"
+          ]
+        }
+      ]
+    },
+    "facts": "time_requested: this month\nperiod_applied: this month (UTC)\ntime_status: bounded\ncatalog_kpi: won_revenue\nRESULT: won_revenue = 315000.00\n\ntime_requested: last month\nperiod_applied: last month (UTC)\ntime_status: bounded\ncatalog_kpi: won_revenue\nRESULT: won_revenue = 0.00\n\ntime_requested: this month\nperiod_applied: this month (UTC)\ntime_status: bounded\ncatalog_kpi: collected_revenue\nRESULT: 1 row(s)\ntask_goal: Paid invoice receipts for this month\n  collected_revenue=270000.00 | paid_invoice_count=3\n\ntime_requested: last month\nperiod_applied: last month (UTC)\ntime_status: bounded\ncatalog_kpi: collected_revenue\nRESULT: 1 row(s)\ntask_goal: Paid invoice receipts for last month\n  collected_revenue=0.00 | paid_invoice_count=0\n\ntime_requested: this month to last month\ntime_status: kg\nRESULT: 1 row(s)\ntask_goal: Analyze revenue variance: compare deal stages, quote amounts, and invoice statuses between the two periods\n  label=Execute this Domain graph job with read-only Cypher or a certified template. Do not return unsupported_request when Contact, Deal, Quote, Invoice, or ContactActivity can answer the goal.\nDomain task JSON:\n{\"id\": \"t5\", \"executor\": \"kg\", \"kpi\": null, \"goal\": \"Analyze revenue variance: compare deal stages, quote amounts, and invoice statuses between the two periods\", \"time\": \"this month to last month\", \"scope\": \"org\", \"dimension\": null, \"answer_type\": \"why_breakdown\", \"depends_on\": [\"t4\"]}\nOriginal question (names and context only): compare this month revenue with last month | value=0 | unit=records\nkg_notes:\n### Revenue Variance Analysis\n\nThere are 0 records available to compare deal stages, quote amounts, or invoice statuses between this month and last month.\n\n| Metric | This Month | Last Month | Variance |\n| :--- | :--- | :--- | :--- |\n| **Total Revenue** | **$0** | **$0** | **0** |\n\n### Data Gap Diagnosis\n\nThe current dataset contains no transaction history, active deals, or finalized invoices for the requested periods. Because no records were returned for the comparison of deal stages or quote amounts, a commercial variance analysis cannot be performed. \n\nSpecifically, the following data points are missing:\n*   **Deal Pipeline:** No deal titles or stages are recorded for the current or previous month.\n*   **Quote Values:** No quote amounts are associated with any accounts.\n*   **Invoice Status:** There is no visibility into billed vs. unpaid amounts.\n\n### Recommended Next Steps\n\n*   **Verify Data Ingestion:** Confirm that the CRM and accounting integrations are successfully syncing Deal and Invoice nodes into the graph.\n*   **Audit Time Parameters:** Ensure that the \"this month\" and \"last month\" filters align with the date properties (e.g., `created_at` or `close_date`) stored within the Deal and Invoice entities.\n*   **Check Scope Permissions:** Validate that the organizational scope used for the query has the necessary read permissions to access financial and deal-related nodes.",
+    "grounded": true,
+    "briefing_raw": "This month, booked revenue is $315,000.00 and collected revenue is $270,000.00 (3 invoices). Last month, both booked and collected revenue were $0.00.\n\nA detailed variance analysis of deal stages, quote amounts, and invoice statuses could not be performed because no transaction history or deal records were available in the graph for these periods. You may want to verify that deal and invoice data are syncing correctly from your integrations."
+  }
+}

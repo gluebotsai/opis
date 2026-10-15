@@ -1,0 +1,136 @@
+# Core mapping -- identical for every organisation. Defines graph IDENTITY.
+#
+# An overlay (org<id>.yaml) may only ADD to this file. It may never declare
+# `key`, `label` or `mode`, because those define identity and identity must not
+# vary per tenant.
+#
+# `properties` accepts two spellings:
+#     - first_name                                  <- pass through
+#     - {name: created_at, type: datetime}          <- annotated
+# Annotation is only required where coercion cannot infer intent: `decimal`
+# columns MUST declare a scale (see README, "How money is stored").
+
+version: 1
+layer: core
+
+# ---------------------------------------------------------------------------
+# Stub labels.
+#
+# Labels that appear as relationship TARGETS but have no node mapping of their
+# own. A relationship clause does `MERGE (t:Tag {tag_id: ...})`, so without a
+# uniqueness constraint on :Tag(tag_id) that MERGE is a full label scan -- the
+# exact cost the constraints exist to eliminate. Declaring them here means
+# provisioning creates their constraints too, and validation can resolve
+# `target_label` against either a node label or a stub label.
+# ---------------------------------------------------------------------------
+stub_labels:
+  Account:
+    key: account_id
+  Tag:
+    key: tag_id
+  Policy:
+    key: policy_id
+  Agent:
+    key: agent_id
+
+tables:
+
+  # -------------------------------------------------------------------------
+  crm.contacts:
+    mode: node
+    product: crm
+    label: Contact
+    key: contact_id
+    properties:
+      - first_name
+      - last_name
+      - email
+      - phone
+      - status
+      - {name: created_at, type: datetime}
+      - {name: updated_at, type: datetime}
+      - {name: lifetime_value, type: decimal, scale: 2, currency_column: lifetime_value_currency}
+    custom_field: custom_data
+    custom_prefix: custom_
+    on_delete: detach
+    relationships:
+      - type: BELONGS_TO
+        direction: out
+        target_label: Account
+        target_key: account_id
+        from_column: account_id
+
+  # -------------------------------------------------------------------------
+  ticketing.tickets:
+    mode: node
+    product: ticketing
+    label: Ticket
+    key: ticket_id
+    properties:
+      - subject
+      - status
+      - priority
+      - {name: created_at, type: datetime}
+      - {name: closed_at, type: datetime}
+    custom_field: custom_data
+    custom_prefix: custom_
+    on_delete: soft
+    relationships:
+      - type: RAISED_BY
+        direction: out
+        target_label: Contact
+        target_key: contact_id
+        from_column: contact_id
+      - type: ASSIGNED_TO
+        direction: out
+        target_label: Agent
+        target_key: agent_id
+        from_column: assigned_agent_id
+
+  # -------------------------------------------------------------------------
+  # Junction table -- creates an edge, never a node.
+  ticketing.ticket_tags:
+    mode: relationship_only
+    product: ticketing
+    from_label: Ticket
+    from_key: ticket_id
+    from_column: ticket_id
+    to_label: Tag
+    to_key: tag_id
+    to_column: tag_id
+    type: TAGGED
+
+  # -------------------------------------------------------------------------
+  # Many rows collapse onto ONE node as individual properties.
+  crm.contact_attributes:
+    mode: properties_on
+    product: crm
+    target_label: Contact
+    target_key: contact_id
+    target_key_column: contact_id
+    key_column: attr_name
+    value_column: attr_value
+    prefix: attr_                 # MANDATORY collision guard
+    on_delete: remove_property
+
+  # -------------------------------------------------------------------------
+  # Gated on a product the sample organisation has NOT purchased.
+  # Exercises the entitlement skip path (acceptance test 8).
+  ccaas.calls:
+    mode: node
+    product: ccaas
+    label: Call
+    key: call_id
+    properties:
+      - direction
+      - disposition
+      - {name: started_at, type: datetime}
+      - {name: duration_seconds, type: integer}
+    on_delete: detach
+    relationships:
+      - type: CALL_WITH
+        direction: out
+        target_label: Contact
+        target_key: contact_id
+        from_column: contact_id
+

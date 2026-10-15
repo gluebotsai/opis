@@ -1,0 +1,362 @@
+/* ==========================================================================
+   Brand portals — icon & surface rules per portal
+   See Docs/brand-guidelines.md
+   ========================================================================== */
+
+/* --- Global icon baseline --- */
+svg.lucide {
+  flex-shrink: 0;
+  stroke: currentColor;
+}
+
+.primary-button svg,
+.alt-button svg,
+.danger-button svg {
+  color: var(--icon-on-dark);
+}
+
+.secondary-button svg,
+.text-button svg {
+  color: inherit;
+}
+
+.icon-button svg {
+  color: inherit;
+}
+
+.field__control svg {
+  color: var(--icon-muted);
+  flex-shrink: 0;
+}
+
+.field__control:focus-within svg {
+  color: var(--icon-on-light);
+}
+
+.field__control .field__control-icon {
+  color: var(--icon-muted);
+}
+
+.field__control:focus-within .field__control-icon {
+  color: var(--icon-on-light);
+}
+
+.field__control .icon-button svg {
+  color: inherit;
+}
+
+/* ==========================================================================
+   1. Login portal (staff + customer)
+   ========================================================================== */
+.login-header svg {
+  color: var(--icon-on-dark);
+}
+
+.login-feature__icon svg {
+  color: var(--icon-on-dark);
+}
+
+.login-trust svg {
+  color: var(--icon-muted);
+}
+
+.login-form .field__control svg {
+  color: var(--icon-muted);
+}
+
+.login-form .primary-button svg {
+  color: var(--icon-on-dark);
+}
+
+/* ==========================================================================
+   2. Sales workspace (default app-shell)
+   ========================================================================== */
+.app-shell:not([class*="app-shell--"]) .sidebar__link svg,
+.app-shell .sidebar:not([class*="sidebar--"]) .sidebar__link svg {
+  color: inherit;
+}
+
+.app-shell .sidebar__link.is-active svg,
+.app-shell .sidebar__link:hover svg {
+  color: var(--icon-on-dark);
+}
+
+.app-shell .sidebar__logout svg {
+  color: inherit;
+}
+
+.app-shell .shell-header__toggle svg {
+  color: var(--icon-on-dark);
+}
+
+/* Product selection & workflow */
+.product-card__icon svg {
+  color: inherit;
+}
+
+.pricing-progress__item > svg,
+.pricing-form__title > svg,
+.form-section-heading > svg {
+  color: var(--icon-on-light);
+}
+
+.workflow-steps__item.is-active svg,
+.onboarding-steps__item.is-active svg {
+  color: var(--icon-on-dark);
+}
+
+/* Lead / sales dashboards */
+.lead-dashboard-panel__heading-icon svg,
+.sales-dashboard-stat-card__icon svg,
+.lead-dashboard-empty-state__icon svg,
+.sales-dashboard-renewals-empty__icon svg,
+.sales-dashboard-table__company-icon svg,
+.leads-table__company-icon svg {
+  color: inherit;
+}
+
+.lead-dashboard-cta .primary-button svg,
+.lead-dashboard-panel .secondary-button svg {
+  color: inherit;
+}
+
+/* Mail */
+.mail-list-pane__compose svg,
+.mail-compose__chrome-title svg,
+.mail-compose__send svg {
+  color: inherit;
+}
+
+.mail-list-pane__refresh svg {
+  color: inherit;
+}
+
+/* Support (sales / sales-admin) */
+.customer-support-shell .page-header h1 svg,
+.customer-support-reply .primary-button svg {
+  color: inherit;
+}
+
+/* ==========================================================================
+   3. Sales admin portal
+   ========================================================================== */
+.app-shell--sales-admin .sidebar__link svg {
+  color: inherit;
+}
+
+.app-shell--sales-admin .sidebar__link.is-active svg,
+.app-shell--sales-admin .sidebar__link:hover svg {
+  color: var(--icon-on-dark);
+}
+
+.sa-dashboard__header svg,
+.sa-dashboard__period svg {
+  color: var(--icon-muted);
+}
+
+.sa-kpi-card__icon svg {
+  color: inherit;
+}
+
+.sa-kpi-card__icon--primary,
+.sa-kpi-card__icon--secondary,
+.sa-kpi-card__icon--info,
+.sa-kpi-card__icon--success {
+  background: var(--color-neutral-100);
+  color: var(--icon-on-light);
+}
+
+.sa-activity-card__icon svg {
+  color: inherit;
+}
+
+.sa-agent-detail-metric__icon svg,
+.sa-agent-detail-leads__icon-btn svg {
+  color: inherit;
+}
+
+.sa-agents-page__period-control svg,
+.sa-agents-panel__sort-control svg {
+  color: var(--icon-muted);
+}
+
+/* ==========================================================================
+   4. Finance portal
+   ========================================================================== */
+.app-shell--finance .sidebar__link svg {
+  color: inherit;
+}
+
+.app-shell--finance .sidebar__link.is-active svg,
+.app-shell--finance .sidebar__link:hover svg {
+  color: var(--icon-on-dark);
+}
+
+.finance-queue-page .secondary-button svg,
+.finance-queue-page .primary-button svg,
+.finance-queue-page .icon-button svg {
+  color: inherit;
+}
+
+.payment-forward-summary svg {
+  color: var(--icon-on-light);
+}
+
+/* ==========================================================================
+   5. Admin portal
+   ========================================================================== */
+.app-shell--admin .sidebar__link svg {
+  color: inherit;
+}
+
+.app-shell--admin .sidebar__link.is-active svg,
+.app-shell--admin .sidebar__link:hover svg {
+  color: var(--icon-on-dark);
+}
+
+.admin-users-kpi-card__icon svg {
+  color: var(--icon-on-dark);
+}
+
+.admin-users-panel__toolbar svg,
+.admin-users-panel__search svg,
+.admin-users-table__sort svg {
+  color: inherit;
+}
+
+.admin-pricing-page .primary-button svg,
+.admin-pricing-page .secondary-button svg {
+  color: inherit;
+}
+
+.admin-pricing-savebar svg {
+  color: inherit;
+}
+
+/* ==========================================================================
+   6. Customer portal
+   ========================================================================== */
+.app-shell--customer .sidebar__link svg {
+  color: inherit;
+}
+
+.app-shell--customer .sidebar__link.is-active svg,
+.app-shell--customer .sidebar__link:hover svg {
+  color: var(--icon-on-dark);
+}
+
+.customer-support-shell .lead-dashboard-panel__heading-icon svg,
+.customer-support-page .primary-button svg,
+.customer-support-page .secondary-button svg,
+.customer-products-actions .primary-button svg,
+.customer-product-card__actions .secondary-button svg {
+  color: inherit;
+}
+
+.customer-support-list__item svg,
+.customer-support-detail svg {
+  color: var(--icon-muted);
+}
+
+/* ==========================================================================
+   Shared modals & confirmations
+   ========================================================================== */
+.confirm-modal__icon svg {
+  color: inherit;
+}
+
+.confirm-modal__close svg {
+  color: inherit;
+}
+
+.confirm-modal__icon--approve svg {
+  color: var(--icon-success);
+}
+
+.confirm-modal__icon--remove svg {
+  color: var(--icon-danger);
+}
+
+/* ==========================================================================
+   7. Shared pages — onboarding, products, leads, mail, modals
+   ========================================================================== */
+.lead-dashboard-page .primary-button svg,
+.lead-dashboard-page .secondary-button svg,
+.sales-dashboard-page .primary-button svg,
+.sales-dashboard-page .secondary-button svg,
+.account-settings-page .primary-button svg,
+.account-settings-page .secondary-button svg,
+.compose-mail-page .primary-button svg,
+.compose-mail-page button svg,
+.mail-page .primary-button svg,
+.mail-page .secondary-button svg,
+.mail-page .icon-button svg,
+.finance-queue-page .primary-button svg,
+.finance-queue-page .secondary-button svg,
+.products-selection-stage .primary-button svg,
+.products-actions .primary-button svg,
+.products-actions .secondary-button svg,
+.products-panel__back svg {
+  color: inherit;
+}
+
+.onboarding-modal__close svg,
+.invoice-review-modal button svg,
+.remove-products-modal button svg,
+.approve-quotation-modal button svg {
+  color: inherit;
+}
+
+.leads-table button svg,
+.leads-table .icon-button svg,
+.sales-dashboard-table button svg {
+  color: inherit;
+}
+
+.pricing-addon-group__chevron,
+.ccaas-collapse-toggle__chevron {
+  color: var(--icon-muted);
+}
+
+.invoice-review-modal__header svg,
+.payment-forward-summary svg {
+  color: var(--icon-on-light);
+}
+
+/* ==========================================================================
+   8. Admin sales oversight (within admin shell)
+   ========================================================================== */
+.admin-sales-page .sa-kpi-card__icon svg,
+.admin-sales-page .primary-button svg,
+.admin-sales-page .secondary-button svg {
+  color: inherit;
+}
+
+/* ==========================================================================
+   9. Customer portal — all sub-pages
+   ========================================================================== */
+.lead-dashboard-page .sales-dashboard-stat-card__icon svg,
+.lead-dashboard-page .lead-dashboard-panel__heading-icon svg,
+.customer-support-page .primary-button svg,
+.customer-support-page .secondary-button svg,
+.customer-support-shell .lead-dashboard-panel__heading-icon svg,
+.customer-products-actions .primary-button svg,
+.customer-product-card__actions .secondary-button svg,
+.customer-purchased-products svg {
+  color: inherit;
+}
+
+/* ==========================================================================
+   10. Global interaction icons
+   ========================================================================== */
+.page-header__actions .primary-button svg,
+.page-header__actions .secondary-button svg,
+.form-error-banner svg,
+.form-success-banner svg {
+  color: inherit;
+}
+
+button[class*="button"] svg,
+a[class*="button"] svg {
+  color: inherit;
+}

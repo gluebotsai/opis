@@ -1,0 +1,795 @@
+presets:
+  tk.super:
+    agent: Ticketing Super Agent
+    level: L1
+    modules:
+    - identity
+    - ticket
+    - tk_team
+    - tk_kb
+    - tk_macro
+    - tk_admin
+    - tk_proactive
+    - knowledge
+    - hub
+    usecase: Route staff chat to Domains. CONTINUE / NEW_TASK / SIDE_QUEST / CANCEL / RESUME. Never collects
+      slots or confirms writes.
+    prompt:
+      full_ontology: true
+      full_definitions: true
+      include_module_index: true
+      include_specialist_catalog: true
+      metrics_mode: none
+      metrics: []
+      actions:
+      - route_to_specialist
+      - spoke_query
+      taxonomy:
+      - ticket.status
+      - ticket.priority
+      - staff.role
+      - ticket.channel
+      relations_only_if_both_ends_in_classes: true
+      # Product guardrails live in ontoYMLs/ticketing.yml business_rules
+      # (compact product prompts do not append prompt.rules).
+      rules: []
+      route_table:
+      - New ticket / intake / KB deflection → intake_deflection_domain
+      - Classify / assign / workload / routing learn → triage_routing_domain
+      - Existing ticket work (list, update, note, resolve) → resolution_lifecycle_domain
+      - KB recommend / similar tickets → knowledge_domain
+      - Teams, KB author, macros, customer read, priorities, analytics route → catalog_administration_domain
+      - Cross-spoke → hub.orchestrator
+  tk.intake_deflection_domain:
+    agent: Intake & Deflection Domain
+    level: L2
+    modules:
+    - core
+    - identity
+    - ticket
+    - knowledge
+    - tk_kb
+    usecase: Plan new-issue intake — file a ticket or deflect with self-service / KB.
+    prompt:
+      actions:
+      - route_to_specialist
+      metrics_mode: none
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - Delegate to ticket_creation_executor or ai_resolution_executor with Skill + task.
+      - Do not collect create-ticket slots or call semantic/SQL.
+      entities:
+      - Ticket
+      - Customer
+      - KnowledgeArticle
+  tk.triage_routing_domain:
+    agent: Triage & Routing Domain
+    level: L2
+    modules:
+    - core
+    - ticket
+    - tk_team
+    usecase: Plan classify → assign, workload briefs, and routing learning.
+    prompt:
+      actions:
+      - route_to_specialist
+      taxonomy:
+      - ticket.priority
+      - ticket.status
+      - staff.role
+      - staff.role
+      metrics_mode: none
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - Delegate to classification_priority_executor, intelligent_assignment_executor, workload_optimization_executor,
+        or root_cause_learning_executor.
+      - Do not file new tickets or query KPIs.
+      entities:
+      - Ticket
+      - Queue
+      - Staff
+  tk.resolution_lifecycle_domain:
+    agent: Resolution Lifecycle Domain
+    level: L2
+    modules:
+    - core
+    - identity
+    - ticket
+    usecase: Plan work on tickets that already exist (not counts).
+    prompt:
+      actions:
+      - route_to_specialist
+      taxonomy:
+      - ticket.priority
+      - ticket.status
+      - staff.role
+      - staff.role
+      - ticket.channel
+      metrics_mode: none
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - Delegate to ticket_lifecycle_executor or resolution-side assist executors.
+      - List/show rows via lifecycle executor SQL — never semantic counts.
+      - Analytics counts → insights_analytics_executor or analytics_audit_query_executor.
+      entities:
+      - Ticket
+      - Note
+      - Queue
+      - Staff
+      - Customer
+      - SLA
+  tk.knowledge_domain:
+    agent: Knowledge Domain
+    level: L2
+    modules:
+    - core
+    - ticket
+    - knowledge
+    - tk_kb
+    usecase: Plan assist-only knowledge on a live ticket (not KB authoring).
+    prompt:
+      actions:
+      - route_to_specialist
+      metrics_mode: none
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - Delegate to resolution_knowledge_executor or similar_ticket_detection_executor.
+      - Do not publish KB articles from this Domain.
+      entities:
+      - Ticket
+      - KnowledgeArticle
+  tk.catalog_administration_domain:
+    agent: Catalog Administration Domain
+    level: L2
+    modules:
+    - core
+    - ticket
+    - tk_team
+    - tk_kb
+    - tk_macro
+    - tk_admin
+    - identity
+    - performance
+    usecase: Plan org catalog, customer read, prefs, inbox, analytics route (not KPI pack on Domain).
+    prompt:
+      actions:
+      - route_to_specialist
+      taxonomy:
+      - ticket.priority
+      - ticket.status
+      metrics_mode: none
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - Delegate to catalog/admin executors; route analytics counts to analytics_audit_query_executor.
+      - No ticket create/update; no customer write in chat.
+      entities:
+      - Queue
+      - KnowledgeArticle
+      - Macro
+      - Customer
+      - CustomerCompany
+      - Ticket
+      - Tenant
+      - Staff
+  tk.ai_resolution_executor:
+    agent: AI Resolution Executor
+    level: L3
+    modules:
+    - knowledge
+    - tk_kb
+    usecase: KB self-service deflection before ticket create (DSSA twin).
+    prompt:
+      actions:
+      - get_organization_knowledge
+      - navigate
+      metrics_mode: none
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - KB search / deflect only — never create_ticket or query KPIs.
+      - When user wants to file, park to ticket_creation_executor.
+      entities:
+      - KnowledgeArticle
+      - Ticket
+  tk.ticket_creation_executor:
+    agent: Ticket Creation Executor
+    level: L3
+    modules:
+    - identity
+    - ticket
+    usecase: Verify customer, enrich, duplicate check, create ticket (TCAA twin).
+    prompt:
+      actions:
+      - identify
+      - create_ticket
+      - enrich_ticket
+      - verify_contact_for_ticket
+      metrics_mode: none
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - Collect customer + issue only; enrich fills subject, priority, team, L1, L2.
+      - List/search for duplicate check via SQL — never semantic counts.
+      - Never classify, assign, or answer KPIs.
+      entities:
+      - Customer
+      - CustomerCompany
+      - Ticket
+      - CustomerIdentity
+  tk.classification_priority_executor:
+    agent: Classification Priority Executor
+    level: L3
+    modules:
+    - ticket
+    usecase: Post-create classify and prioritize (ICPA twin).
+    prompt:
+      actions:
+      - enrich_ticket
+      - get_ticket_status
+      taxonomy:
+      - ticket.priority
+      - ticket.status
+      metrics_mode: none
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - Classify/enrich only — never assign people or query KPIs.
+      entities:
+      - Ticket
+  tk.intelligent_assignment_executor:
+    agent: Intelligent Assignment Executor
+    level: L3
+    modules:
+    - ticket
+    - tk_team
+    usecase: Assign L1 agent and L2 resolver (ITRA twin).
+    prompt:
+      actions:
+      - reassign_ticket
+      - get_ticket_status
+      taxonomy:
+      - staff.role
+      metrics_mode: none
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - Reassign L1/L2 only — never change priority or query KPIs.
+      - Assignee names must match roster tool results.
+      entities:
+      - Ticket
+      - Queue
+      - Staff
+  tk.workload_optimization_executor:
+    agent: Workload Optimization Executor
+    level: L3
+    modules:
+    - ticket
+    - tk_team
+    usecase: Persist workload brief for routing (WLOA twin).
+    prompt:
+      actions:
+      - get_ticket_status
+      metrics_mode: none
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - Read/list workload signals only — never assign tickets or call semantic.
+      entities:
+      - Ticket
+      - Queue
+      - Staff
+  tk.root_cause_learning_executor:
+    agent: Root Cause Learning Executor
+    level: L3
+    modules:
+    - ticket
+    - performance
+    usecase: Routing learning from outcomes via knowledge graph (RCAA twin).
+    prompt:
+      actions:
+      - ask_ontology
+      metrics_mode: none
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - Knowledge graph + structured analytics only — never ask_semantic or mutate tickets.
+      entities:
+      - Ticket
+      - AuditEvent
+  tk.ticket_lifecycle_executor:
+    agent: Ticket Lifecycle Executor
+    level: L3
+    modules:
+    - identity
+    - ticket
+    usecase: List/search/update/note/reassign/escalate/resolve tickets.
+    prompt:
+      actions:
+      - get_ticket_status
+      - reassign_ticket
+      - escalate_ticket
+      - enrich_ticket
+      taxonomy:
+      - ticket.priority
+      - ticket.status
+      - staff.role
+      - ticket.channel
+      metrics_mode: none
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - List/show rows via SQL — never semantic for counts or CSAT KPIs.
+      - Reassign agent vs resolver — never swap the two roles.
+      entities:
+      - Ticket
+      - Note
+      - SLA
+      - Queue
+      - Staff
+      - Customer
+      - CustomerCompany
+      - Email
+  tk.sla_escalation_executor:
+    agent: SLA Escalation Executor
+    level: L3
+    modules:
+    - ticket
+    usecase: Monitor SLA-at-risk and escalate (SEMA twin).
+    prompt:
+      actions:
+      - escalate_ticket
+      - get_ticket_status
+      metrics_mode: none
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - Escalate at-risk tickets only — no analytics KPI queries.
+      entities:
+      - Ticket
+      - SLA
+      - Staff
+      - Queue
+  tk.investigation_summary_executor:
+    agent: Investigation Summary Executor
+    level: L3
+    modules:
+    - ticket
+    usecase: Investigation summaries from ticket context (TSAA twin).
+    prompt:
+      actions:
+      - get_ticket_status
+      metrics_mode: none
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - Read-only ticket/note context — never mutate, assign, or query KPIs.
+      entities:
+      - Ticket
+      - Note
+      - Staff
+  tk.customer_reply_drafting_executor:
+    agent: Customer Reply Drafting Executor
+    level: L3
+    modules:
+    - ticket
+    usecase: Draft customer-facing reply text (CRDA twin).
+    prompt:
+      actions:
+      - get_ticket_status
+      - enrich_ticket
+      metrics_mode: none
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - Draft reply/note only — never send notifications (PNA) or query KPIs.
+      entities:
+      - Ticket
+      - Note
+      - Customer
+      - Staff
+  tk.autonomous_resolution_executor:
+    agent: Autonomous Resolution Executor
+    level: L3
+    modules:
+    - ticket
+    usecase: Propose close/reopen status updates (ARA twin).
+    prompt:
+      actions:
+      - get_ticket_status
+      - enrich_ticket
+      taxonomy:
+      - ticket.status
+      metrics_mode: none
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - Resolve/reopen status only — never reassign, escalate, or run analytics.
+      entities:
+      - Ticket
+  tk.resolution_quality_executor:
+    agent: Resolution Quality Executor
+    level: L3
+    modules:
+    - ticket
+    usecase: Evaluate resolution quality flags (RQA twin).
+    prompt:
+      actions:
+      - get_ticket_status
+      metrics_mode: none
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - Read/flag quality only — no CSAT semantic queries.
+      entities:
+      - Ticket
+      - Note
+  tk.personalized_notification_executor:
+    agent: Personalized Notification Executor
+    level: L3
+    modules:
+    - ticket
+    usecase: Send personalized staff notifications (PNA twin).
+    prompt:
+      actions:
+      - get_ticket_status
+      metrics_mode: none
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - Notify staff only — no inbox CRUD or KPI queries.
+      entities:
+      - Ticket
+      - Notification
+      - Staff
+  tk.insights_analytics_executor:
+    agent: Insights Analytics Executor
+    level: L3
+    nlp_ids:
+    - analytics
+    modules:
+    - ticket
+    - performance
+    usecase: Chat insights — semantic KPIs and knowledge-graph drivers (TIAA twin).
+    prompt:
+      actions:
+      - ask_semantic
+      - ask_ontology
+      - generate_report
+      taxonomy:
+      - ticket.priority
+      - ticket.status
+      - queue.type
+      metrics_mode: headlines
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - Skill analytics-generate-insights — semantic for values, graph for why/drivers.
+      - Never invent counts from list_tickets.
+      - open_tickets_metric is a snapshot — do not use time.grain for open count trends.
+      - 'Created/filed/opened by me maps to metrics tickets_created_by_me. Do not send ticket_volume with dataScope=mine.'
+      - 'dataScope=mine is assigned-to-me (assignee/resolver). Omit dataScope for created-by-me KPIs.'
+      entities:
+      - Ticket
+      - Queue
+      - Staff
+      - SLA
+      - AuditEvent
+  tk.resolution_knowledge_executor:
+    agent: Resolution Knowledge Executor
+    level: L3
+    modules:
+    - ticket
+    - knowledge
+    - tk_kb
+    usecase: Recommend KB articles to resolve a ticket (RKAA twin).
+    prompt:
+      actions:
+      - get_organization_knowledge
+      - get_ticket_status
+      metrics_mode: none
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - Recommend KB from tool results only — no article authoring or semantic counts.
+      entities:
+      - Ticket
+      - KnowledgeArticle
+  tk.similar_ticket_detection_executor:
+    agent: Similar Ticket Detection Executor
+    level: L3
+    modules:
+    - ticket
+    - knowledge
+    usecase: Find similar historical tickets at create (STDA twin).
+    prompt:
+      actions:
+      - get_ticket_status
+      - get_organization_knowledge
+      metrics_mode: none
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - Search similar tickets only — never create tickets or semantic KPI counts.
+      entities:
+      - Ticket
+      - KnowledgeArticle
+      - Customer
+  tk.team_queue_crud_executor:
+    agent: Team Queue CRUD Executor
+    level: L3
+    modules:
+    - tk_team
+    usecase: Teams/queues CRUD and member management.
+    prompt:
+      actions:
+      - create_team
+      - add_team_members
+      metrics_mode: none
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - Team/queue CRUD only — no ticket lifecycle or KPI queries.
+      entities:
+      - Queue
+      - Staff
+  tk.kb_quality_crud_executor:
+    agent: KB Quality CRUD Executor
+    level: L3
+    modules:
+    - knowledge
+    - tk_kb
+    usecase: KB authoring, publish, categories, import/export.
+    prompt:
+      actions:
+      - create_kb_article
+      - manage_kb_category
+      - get_organization_knowledge
+      taxonomy:
+      - knowledge_article.status
+      metrics_mode: none
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - KB CRUD only — no ticket lifecycle mutations.
+      entities:
+      - KnowledgeArticle
+      - Staff
+  tk.macro_crud_executor:
+    agent: Macro CRUD Executor
+    level: L3
+    modules:
+    - tk_macro
+    usecase: Canned reply macros CRUD.
+    prompt:
+      actions:
+      - create_macro
+      - update_macro
+      - delete_macro
+      metrics_mode: none
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - Macro CRUD only — no ticket operations.
+      entities:
+      - Macro
+      - Staff
+  tk.customer_directory_crud_executor:
+    agent: Customer Directory CRUD Executor
+    level: L3
+    modules:
+    - identity
+    usecase: Customer directory read and 360 history.
+    prompt:
+      actions:
+      - list_contacts
+      - get_contact
+      metrics_mode: none
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - Read/search only in chat — never invent 360 rows.
+      entities:
+      - Customer
+      - CustomerCompany
+      - CustomerIdentity
+  tk.priority_status_crud_executor:
+    agent: Priority Status CRUD Executor
+    level: L3
+    modules:
+    - tk_admin
+    usecase: Priority and status catalog CRUD.
+    prompt:
+      actions:
+      - create_priority
+      - create_status
+      taxonomy:
+      - ticket.priority
+      - ticket.status
+      metrics_mode: none
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - Catalog CRUD only — KPI questions route to analytics executors.
+      entities:
+      - Ticket
+      - Tenant
+  tk.org_settings_integrations_executor:
+    agent: Org Settings Integrations Executor
+    level: L3
+    modules:
+    - tk_admin
+    - hub
+    usecase: Org prefs, integrations, widgets, Hub delegation.
+    prompt:
+      actions:
+      - spoke_query
+      metrics_mode: none
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - Org settings and Hub delegate only — no ticket or analytics tools.
+      entities:
+      - Tenant
+  tk.notification_inbox_executor:
+    agent: Notification Inbox Executor
+    level: L3
+    modules:
+    - ticket
+    usecase: Staff notification inbox read, mark read, clear.
+    prompt:
+      actions:
+      - get_ticket_status
+      metrics_mode: none
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - Inbox read/mark only — no PNA send or KPI queries.
+      entities:
+      - Notification
+      - Ticket
+      - Staff
+  tk.analytics_audit_query_executor:
+    agent: Analytics Audit Query Executor
+    level: L3
+    nlp_ids:
+    - analytics
+    modules:
+    - ticket
+    - performance
+    usecase: Primary chat analytics, audit, CSAT, and dashboard metrics.
+    prompt:
+      actions:
+      - ask_semantic
+      - ask_ontology
+      - generate_report
+      taxonomy:
+      - ticket.priority
+      - ticket.status
+      - queue.type
+      metrics_mode: headlines
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - Skill analytics-query / csat-report / audit-query — semantic for KPIs, graph for why.
+      - Send agent as this worker's runtime id — never borrow another agent's id.
+      - open_tickets_metric is a snapshot — do not use time.grain for open count trends.
+      - 'Created/filed/opened by me maps to metrics tickets_created_by_me. Do not send ticket_volume with dataScope=mine.'
+      - 'dataScope=mine is assigned-to-me (assignee/resolver). Omit dataScope for created-by-me KPIs.'
+      entities:
+      - Ticket
+      - Queue
+      - Staff
+      - SLA
+      - AuditEvent
+  tk.automation_rule_crud_executor:
+    agent: Automation Rule CRUD Executor
+    level: L3
+    modules:
+    - tk_admin
+    usecase: Automation rules CRUD for org workflows.
+    prompt:
+      actions:
+      - create_priority
+      metrics_mode: none
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - Automation rule CRUD only — no analytics or ontology tools.
+      entities:
+      - AutomationRule
+      - Ticket
+  tk.reporting:
+    agent: Ticketing Reporting Agent
+    level: L3
+    nlp_ids:
+    - analytics
+    modules:
+    - ticket
+    - performance
+    usecase: Compact alias for analytics_audit_query_executor preset.
+    prompt:
+      actions:
+      - ask_semantic
+      - ask_ontology
+      - generate_report
+      - route_to_specialist
+      taxonomy:
+      - ticket.priority
+      - ticket.status
+      - queue.type
+      metrics_mode: headlines
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - Compact alias — prefer analytics_audit_query_executor runtime id in production.
+      - Path S (ask_semantic) for KPIs using metric ids from this slice.
+      - 'Created/filed/opened by me maps to metrics tickets_created_by_me. Do not send ticket_volume with dataScope=mine.'
+      - 'dataScope=mine is assigned-to-me (assignee/resolver). Omit dataScope for created-by-me KPIs.'
+      entities:
+      - Ticket
+      - Queue
+      - Staff
+      - SLA
+      - AuditEvent
+  tk.portal:
+    agent: Customer Portal
+    level: L3
+    modules:
+    - core
+    - identity
+    - knowledge
+    - ticket
+    - tk_kb
+    usecase: Logged-in customer — help, KB, create/view own tickets. Identity from session.
+    prompt:
+      actions:
+      - create_ticket
+      - get_ticket_status
+      - get_organization_knowledge
+      taxonomy:
+      - ticket.status
+      - knowledge_article.status
+      metrics_mode: none
+      metrics: []
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - Customer identity comes from login session, not typed each time.
+      - Only this customer's tickets — no org analytics.
+      entities:
+      - Customer
+      - Ticket
+      - KnowledgeArticle
+      - Note
+  tk.reporting_mas:
+    agent: Ticketing Reporting MAS
+    level: platform
+    modules:
+    - identity
+    - ticket
+    - tk_team
+    - tk_kb
+    - tk_macro
+    - tk_admin
+    - tk_proactive
+    - knowledge
+    - hub
+    usecase: MAS catalog for KG, MetricFlow, and SQL-agent setup — not staff-chat routing.
+    prompt:
+      full_ontology: true
+      full_definitions: true
+      include_module_index: true
+      metrics_mode: full
+      metrics: []
+      actions:
+      - ask_semantic
+      - ask_ontology
+      - generate_report
+      relations_only_if_both_ends_in_classes: true
+      rules:
+      - MAS catalog / KG / MetricFlow / SQL-agent setup — not staff-chat routing.
+      - Distinct from tk.reporting (runtime KPI worker; headlines only).

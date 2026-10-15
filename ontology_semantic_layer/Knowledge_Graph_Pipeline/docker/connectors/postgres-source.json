@@ -1,0 +1,33 @@
+{
+  "name": "cdc-postgres-source",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "database.hostname": "${DEBEZIUM_PG_HOST}",
+    "database.port": "${DEBEZIUM_PG_PORT}",
+    "database.user": "${PG_USER}",
+    "database.password": "${PG_PASSWORD}",
+    "database.dbname": "${PG_DATABASE}",
+    "topic.prefix": "cdc",
+    "plugin.name": "pgoutput",
+    "publication.autocreate.mode": "filtered",
+    "slot.name": "cdc_slot",
+    "table.include.list": "accounts.organization_locations,accounts.organizations,accounts.setup_business_hour_shifts,accounts.setup_business_hours,accounts.setup_ccaas_queue_agents,accounts.setup_ccaas_queues,accounts.setup_channel_configs,accounts.setup_email_configs,accounts.setup_holiday_calendars,accounts.setup_holidays,accounts.setup_knowledge_documents,accounts.setup_knowledge_org_profiles,accounts.setup_queue_routing_profiles,accounts.setup_roles,accounts.setup_social_configs,accounts.setup_teams,accounts.setup_user_product_access,accounts.setup_users,accounts.setup_voice_dids,accounts.setup_voice_prompt_profiles,accounts.setup_webchat_configs,campaign.app_notifications,campaign.branches,campaign.campaign_agent_sessions,campaign.campaign_audience,campaign.campaign_audience_contact,campaign.campaign_audience_member_of,campaign.campaign_audience_refs,campaign.campaign_channel_templates,campaign.campaign_channels,campaign.campaign_channels_tenant_channel,campaign.campaign_contact_engagement,campaign.campaign_recommendations,campaign.campaign_send_batches,campaign.campaign_send_recipients,campaign.campaign_template_messages,campaign.campaigns,campaign.channel_sending_profiles,campaign.email_domains,campaign.email_org_profiles,campaign.email_return_paths,campaign.email_senders,campaign.email_sending_caps,campaign.email_suppressions,campaign.organization_products,campaign.push_channel_settings,campaign.push_endpoints,campaign.regulated_channel_templates,campaign.sms_channel_settings,campaign.tenant_industry_packs,campaign.website_contacts,ccass.agent_capacity,ccass.agent_missed_contacts,ccass.agent_presence,ccass.agent_skills,ccass.agent_tasks,ccass.agents,ccass.channel_automation_policies,ccass.conversation_assignments,ccass.conversation_dispositions,ccass.conversation_memory,ccass.conversation_message_attachments,ccass.conversation_messages,ccass.conversation_notes,ccass.conversation_participants,ccass.conversation_sentiment_turns,ccass.conversation_sla_state,ccass.conversation_transfers,ccass.conversations,ccass.conversations_tenant_channel,ccass.dispositions,ccass.email_mailbox_policies,ccass.nlp_conversations,ccass.nlp_skill_bindings,ccass.nlp_skill_tools,ccass.nlp_skill_versions,ccass.nlp_skills,ccass.nlp_turns,ccass.presence_reason_codes,ccass.proactive_callback_attempts,ccass.queue_members,ccass.queue_routing_profiles,ccass.queue_skills,ccass.queues,ccass.routing_attempts,ccass.routing_policies,ccass.skills,ccass.sla_policies,ccass.webchat_sessions,ccass.whatsapp_channel_policies,ccass.workspace_common_notes,cdp.activation_tasks,cdp.agentic_model,cdp.ai_insights,cdp.anomaly_alerts,cdp.anomaly_rules,cdp.anomaly_threshold_state,cdp.contact_identities,cdp.customer_events,cdp.customer_interactions,cdp.customer_journey,cdp.customer_metrics,cdp.customer_persona_assignments,cdp.customer_profile,cdp.customer_recommendations,cdp.customer_scores,cdp.customer_segments,cdp.customer_sessions,cdp.episodic_memory,cdp.gold_campaign_lookup,cdp.gold_customer_metrics,cdp.identity_keys,cdp.identity_links,cdp.interactions,cdp.journey_states,cdp.order_items,cdp.orders,cdp.persona_definitions,cdp.persona_snapshots,cdp.procedural_memory,cdp.segments,cdp.semantic_memory,cdp.source_systems,crm.agent_memories,crm.appointments,crm.coaching_insights,crm.companies,crm.company_locations,crm.contact_activities,crm.contact_profiles,crm.contract_billing_schedules,crm.contracts,crm.customer_metrics,crm.deal_activities,crm.deals,crm.invoice_lines,crm.invoice_templates,crm.invoices,crm.lead_enrichment_jobs,crm.lead_enrichment_snapshots,crm.lead_lifecycle_jobs,crm.lead_nurture_jobs,crm.lead_scoring_jobs,crm.lead_summaries,crm.meeting_analyses,crm.meeting_assist_sessions,crm.meeting_transcript_chunks,crm.notifications,crm.order_lines,crm.org_assignment_settings,crm.org_finance_settings,crm.organization_profiles,crm.price_book_entries,crm.price_books,crm.privacy_requests,crm.process_confirmations,crm.product_addon_tiers,crm.product_addons,crm.product_offers,crm.proposal_templates,crm.proposals,crm.quote_lines,crm.quote_templates,crm.quotes,crm.sales_orders,crm.sales_user_assignment_profiles,inventory.products,ticketing.account_products,ticketing.accounts,ticketing.activity_logs,ticketing.agent_queue_members,ticketing.agent_queues,ticketing.agents,ticketing.audit_events,ticketing.automation_rules,ticketing.contact_profile,ticketing.conversation_contexts,ticketing.customer_otp_challenges,ticketing.customer_password_tokens,ticketing.customer_portal_sessions,ticketing.customer_products,ticketing.customers,ticketing.dashboard_metrics,ticketing.email_message_refs,ticketing.kb_articles,ticketing.macros,ticketing.notifications,ticketing.org_api_keys,ticketing.org_settings,ticketing.org_widgets,ticketing.organizations,ticketing.outbound_email_log,ticketing.proactive_approvals,ticketing.proactive_audit,ticketing.proactive_outbox,ticketing.proactive_recommendations,ticketing.proactive_routing_weights,ticketing.products,ticketing.sla_policies,ticketing.sla_policy_defaults,ticketing.ticket_notes,ticketing.ticket_presence,ticketing.ticket_statuses,ticketing.ticketing_accounts,ticketing.tickets,ticketing.user_login_events,ticketing.user_sessions,ticketing.users,ticketing.workflow_events,inventory.inventory_items, inventory.locations, inventory.stock_levels",
+    "snapshot.mode": "initial",
+    "tombstones.on.delete": "false",
+    "decimal.handling.mode": "string",
+    "time.precision.mode": "adaptive",
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "key.converter.schemas.enable": "true",
+    "value.converter.schemas.enable": "true",
+    "unavailable.value.placeholder": "__debezium_unavailable_value",
+    "heartbeat.interval.ms": "10000",
+    "provide.transaction.metadata": "false",
+    "publish.via.partition.root": "true",
+    "transforms": "reroute",
+    "transforms.reroute.type": "io.debezium.transforms.ByLogicalTableRouter",
+    "transforms.reroute.topic.regex": "([^.]+)\\.([^.]+)\\.([a-zA-Z0-9_]+)_(?:\\d{4}_\\d{2}|\\d{4}_\\d{2}_\\d{2}|\\d{6}|\\d{8}|default|p\\d+.*)",
+    "transforms.reroute.topic.replacement": "$1.$2.$3",
+    "transforms.reroute.key.enforce.uniqueness": "false"
+  }
+}

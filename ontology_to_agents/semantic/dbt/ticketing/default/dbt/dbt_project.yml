@@ -1,0 +1,34 @@
+name: ticketing_default_dbt
+version: '1.0.0'
+profile: ticketing_default_dbt
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  ticketing_default_dbt:
+    semantic_layer:
+      +materialized: view
+  postgres_warehouse_dbt:
+    shared:
+      +enabled: true
+    ticketing:
+      +enabled: true
+    ccaas:
+      +enabled: false
+    crm:
+      +enabled: false
+    campaign:
+      +enabled: false
+
+tests:
+  postgres_warehouse_dbt:
+    +enabled: false

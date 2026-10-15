@@ -1,0 +1,418 @@
+version: 1
+# Canonical SQL examples for sql_analytics_executor.
+# All queries target virtual rpt.* views.
+# Runtime parameters use :name tokens or literals; Python pre-step supplies values.
+
+examples:
+  - id: kpi_ticket_count_all
+    goal: "How many tickets were created this month?"
+    answer_type: kpi
+    kpi: ticket_count
+    views: [tickets]
+    sql: |
+      SELECT COUNT(*) AS ticket_count
+      FROM rpt.tickets
+      WHERE created_at >= :start AND created_at < :end
+
+  - id: kpi_avg_resolution_time
+    goal: "What is the average resolution time?"
+    answer_type: kpi
+    kpi: avg_resolution_time
+    views: [tickets, ticket_facts]
+    sql: |
+      SELECT ROUND(AVG(f.resolution_hours)::numeric, 1) AS avg_resolution_hours
+      FROM rpt.tickets t
+      JOIN rpt.ticket_facts f ON f.ticket_id = t.id
+      WHERE f.resolution_hours IS NOT NULL
+
+  - id: breakdown_by_queue
+    goal: "Show ticket count by queue"
+    answer_type: breakdown
+    views: [tickets]
+    sql: |
+      SELECT queue_name, COUNT(*) AS ticket_count
+      FROM rpt.tickets
+      GROUP BY queue_name
+      ORDER BY ticket_count DESC
+      LIMIT 20
+
+  - id: list_open_tickets
+    goal: "Show me open tickets assigned to me"
+    answer_type: list
+    views: [tickets]
+    sql: |
+      SELECT ticket_number, subject, priority, queue_name, created_at
+      FROM rpt.tickets
+      WHERE status = 'Open'
+      ORDER BY created_at DESC
+      LIMIT 50
+
+  - id: list_generic_pending_tickets
+    goal: "Show all pending or unresolved tickets"
+    answer_type: list
+    views: [tickets]
+    sql: |
+      SELECT ticket_number, subject, status, priority, assignee_name, queue_name, created_at
+      FROM rpt.tickets
+      WHERE status NOT IN ('Closed', 'Resolved')
+      ORDER BY created_at DESC
+      LIMIT 50
+
+  - id: ticket_lookup_contact_details
+    goal: "Give customer phone number and email for ticket 104"
+    answer_type: detail
+    views: [tickets]
+    sql: |
+      SELECT ticket_number, subject, customer_name, customer_email, customer_phone, assignee_name, resolver_name, status
+      FROM rpt.tickets
+      WHERE ticket_number IN ('#104', '104')
+      LIMIT 1
+
+  - id: ticket_resolver_and_creator_lookup
+    goal: "Who resolved and who created ticket #245?"
+    answer_type: detail
+    views: [tickets, ticket_facts]
+    sql: |
+      SELECT t.ticket_number, t.creator_name, t.created_at, t.resolver_name, t.resolved_at, f.resolution_hours
+      FROM rpt.tickets t
+      LEFT JOIN rpt.ticket_facts f ON f.ticket_id = t.id
+      WHERE t.ticket_number IN ('#245', '245')
+      LIMIT 1
+
+  - id: kpi_sla_breach_rate
+    goal: "What is the SLA breach rate?"
+    answer_type: kpi
+    kpi: sla_breach_rate
+    views: [ticket_facts]
+    sql: |
+      SELECT
+        COUNT(*) FILTER (WHERE f.resolution_sla_missed) AS breached,
+        COUNT(*) FILTER (WHERE f.resolution_sla_met OR f.resolution_sla_missed) AS decided,
+        ROUND(
+          COUNT(*) FILTER (WHERE f.resolution_sla_missed)::numeric
+          / NULLIF(COUNT(*) FILTER (WHERE f.resolution_sla_met OR f.resolution_sla_missed), 0),
+          4
+        ) AS breach_rate
+      FROM rpt.ticket_facts f
+
+  - id: sla_breach_rate_by_priority
+    goal: "What is the SLA breach rate broken down by priority?"
+    answer_type: breakdown
+    views: [tickets, ticket_facts]
+    sql: |
+      SELECT
+        t.priority,
+        COUNT(*) FILTER (WHERE f.resolution_sla_missed) AS breached_count,
+        COUNT(*) FILTER (WHERE f.resolution_sla_met OR f.resolution_sla_missed) AS decided_count,
+        ROUND(
+          COUNT(*) FILTER (WHERE f.resolution_sla_missed)::numeric
+          / NULLIF(COUNT(*) FILTER (WHERE f.resolution_sla_met OR f.resolution_sla_missed), 0),
+          4
+        ) AS breach_rate
+      FROM rpt.tickets t
+      JOIN rpt.ticket_facts f ON f.ticket_id = t.id
+      GROUP BY t.priority
+      ORDER BY breach_rate DESC NULLS LAST
+
+  - id: breakdown_by_queue_and_priority
+    goal: "Show ticket distribution by queue and priority"
+    answer_type: breakdown
+    views: [tickets]
+    sql: |
+      SELECT queue_name, priority, COUNT(*) AS ticket_count
+      FROM rpt.tickets
+      GROUP BY queue_name, priority
+      ORDER BY queue_name, ticket_count DESC
+      LIMIT 50
+
+  - id: reassignments_by_queue
+    goal: "How many ticket reassignments happened per queue?"
+    answer_type: breakdown
+    views: [tickets, ticket_facts]
+    sql: |
+      SELECT t.queue_name, SUM(f.reassignment_count) AS total_reassignments
+      FROM rpt.tickets t
+      JOIN rpt.ticket_facts f ON f.ticket_id = t.id
+      WHERE t.queue_name IS NOT NULL
+      GROUP BY t.queue_name
+      ORDER BY total_reassignments DESC
+      LIMIT 20
+
+  - id: ranking_agents_by_volume
+    goal: "Which agent has the most tickets this week?"
+    answer_type: ranking
+    views: [tickets]
+    sql: |
+      SELECT assignee_name, COUNT(*) AS ticket_count
+      FROM rpt.tickets
+      WHERE created_at >= :start AND created_at < :end
+        AND assignee_id IS NOT NULL
+      GROUP BY assignee_name
+      ORDER BY ticket_count DESC
+      LIMIT 10
+
+  - id: kpi_unread_notifications
+    goal: "How many unread notifications do I have?"
+    answer_type: kpi
+    kpi: unread_notifications
+    views: [notifications]
+    sql: |
+      SELECT COUNT(*) AS unread_notifications
+      FROM rpt.notifications
+      WHERE is_read = false
+
+  - id: roster_agents
+    goal: "List all active agents"
+    answer_type: list
+    views: [agents]
+    sql: |
+      SELECT display_name, support_email, role, status
+      FROM rpt.agents
+      WHERE status = 'Active'
+      ORDER BY display_name
+
+  - id: roster_queues
+    goal: "List all queues"
+    answer_type: list
+    views: [queues]
+    sql: |
+      SELECT id, queue_name, type, created_at
+      FROM rpt.queues
+      ORDER BY queue_name
+
+  - id: list_resolver_tickets
+    goal: "Show tickets assigned to me to resolve (resolver view)"
+    answer_type: list
+    views: [tickets]
+    sql: |
+      SELECT ticket_number, subject, priority, queue_name, status, created_at
+      FROM rpt.tickets
+      WHERE resolver_id = :user_id
+      ORDER BY created_at DESC
+      LIMIT 50
+
+  - id: list_tickets_created_by_me
+    goal: "List all tickets created by me"
+    answer_type: list
+    views: [tickets]
+    sql: |
+      SELECT ticket_number, subject, status, priority, assignee_name, queue_name, created_at
+      FROM rpt.tickets
+      WHERE created_by_id = :user_id
+      ORDER BY created_at DESC
+      LIMIT 50
+
+  - id: count_tickets_other_agents
+    goal: "How many tickets are assigned to other agents?"
+    answer_type: kpi
+    views: [tickets]
+    sql: |
+      SELECT COUNT(*) AS ticket_count
+      FROM rpt.tickets
+      WHERE assignee_id != :user_id AND assignee_id IS NOT NULL
+
+  - id: my_queues_list
+    goal: "What queues am I assigned to?"
+    answer_type: list
+    views: [queues]
+    sql: |
+      SELECT id, queue_name, type, created_at
+      FROM rpt.queues
+      ORDER BY queue_name
+
+  - id: who_is_in_queue
+    goal: "Who is in the Billing queue?"
+    answer_type: list
+    views: [agents, queue_members, queues]
+    sql: |
+      SELECT a.display_name, a.role, a.status, q.queue_name
+      FROM rpt.agents a
+      JOIN rpt.queue_members qm ON qm.user_id = a.id
+      JOIN rpt.queues q ON q.id = qm.queue_id
+      WHERE q.queue_name ILIKE '%Billing%'
+      ORDER BY a.display_name
+
+  - id: search_customer_by_partial_name
+    goal: "Find tickets for customer John"
+    answer_type: list
+    views: [tickets]
+    sql: |
+      SELECT ticket_number, customer_name, customer_email, customer_phone, status, created_at
+      FROM rpt.tickets
+      WHERE customer_name ILIKE '%John%'
+      ORDER BY created_at DESC
+      LIMIT 50
+
+  - id: search_tickets_by_subject
+    goal: "Find tickets about refund issues"
+    answer_type: list
+    views: [tickets]
+    sql: |
+      SELECT ticket_number, subject, status, priority, assignee_name, created_at
+      FROM rpt.tickets
+      WHERE subject ILIKE '%refund%'
+      ORDER BY created_at DESC
+      LIMIT 50
+
+  - id: count_agents
+    goal: "How many agents are there?"
+    answer_type: kpi
+    views: [agents]
+    sql: |
+      SELECT COUNT(*) AS agent_count
+      FROM rpt.agents
+
+  - id: count_queues
+    goal: "How many queues are there?"
+    answer_type: kpi
+    views: [queues]
+    sql: |
+      SELECT COUNT(*) AS queue_count
+      FROM rpt.queues
+
+  - id: list_all_customers
+    goal: "List all customers"
+    answer_type: list
+    views: [tickets]
+    sql: |
+      SELECT DISTINCT customer_name, customer_email, customer_phone
+      FROM rpt.tickets
+      WHERE customer_name IS NOT NULL
+      ORDER BY customer_name ASC
+      LIMIT 50
+
+  - id: find_customers_by_name
+    goal: "Find customers named Sarah"
+    answer_type: list
+    views: [tickets]
+    sql: |
+      SELECT DISTINCT customer_name, customer_email, customer_phone
+      FROM rpt.tickets
+      WHERE customer_name ILIKE '%Sarah%' OR customer_email ILIKE '%Sarah%'
+      ORDER BY customer_name ASC
+      LIMIT 50
+
+  - id: find_customers_by_email
+    goal: "Find customers with yahoo email"
+    answer_type: list
+    views: [tickets]
+    sql: |
+      SELECT DISTINCT customer_name, customer_email, customer_phone
+      FROM rpt.tickets
+      WHERE customer_email ILIKE '%yahoo%'
+      ORDER BY customer_name ASC
+      LIMIT 50
+
+  - id: list_all_statuses
+    goal: "List all ticket statuses in the system"
+    answer_type: list
+    views: [tickets]
+    sql: |
+      SELECT DISTINCT status
+      FROM rpt.tickets
+      ORDER BY status ASC
+
+  - id: list_all_priorities
+    goal: "List all ticket priority levels"
+    answer_type: list
+    views: [tickets]
+    sql: |
+      SELECT DISTINCT priority
+      FROM rpt.tickets
+      ORDER BY priority ASC
+
+  - id: list_all_categories
+    goal: "List all ticket categories"
+    answer_type: list
+    views: [tickets]
+    sql: |
+      SELECT DISTINCT category
+      FROM rpt.tickets
+      WHERE category IS NOT NULL
+      ORDER BY category ASC
+
+  - id: list_all_channels
+    goal: "List all support channels"
+    answer_type: list
+    views: [tickets]
+    sql: |
+      SELECT DISTINCT channel
+      FROM rpt.tickets
+      WHERE channel IS NOT NULL
+      ORDER BY channel ASC
+
+  - id: list_unassigned_tickets
+    goal: "Show all unassigned tickets"
+    answer_type: list
+    views: [tickets]
+    sql: |
+      SELECT ticket_number, subject, status, priority, queue_name, created_at
+      FROM rpt.tickets
+      WHERE assignee_id IS NULL
+      ORDER BY created_at DESC
+      LIMIT 50
+
+  - id: list_all_teams
+    goal: "List all teams or queues"
+    answer_type: list
+    views: [queues]
+    sql: |
+      SELECT id, queue_name, type
+      FROM rpt.queues
+      ORDER BY queue_name ASC
+
+  - id: find_team_by_name
+    goal: "Find team named Shipping"
+    answer_type: list
+    views: [queues]
+    sql: |
+      SELECT id, queue_name, type
+      FROM rpt.queues
+      WHERE queue_name ILIKE '%Shipping%'
+      ORDER BY queue_name ASC
+
+  - id: show_team_members
+    goal: "Show members of Payments team"
+    answer_type: list
+    views: [agents, queue_members, queues]
+    sql: |
+      SELECT a.display_name, a.role, a.status, q.queue_name
+      FROM rpt.agents a
+      JOIN rpt.queue_members qm ON qm.user_id = a.id
+      JOIN rpt.queues q ON q.id = qm.queue_id
+      WHERE q.queue_name ILIKE '%Payments%'
+      ORDER BY a.display_name ASC
+
+  - id: list_tickets_by_date_range
+    goal: "List tickets created between dates"
+    answer_type: list
+    views: [tickets]
+    sql: |
+      SELECT ticket_number, subject, status, priority, assignee_name, created_at
+      FROM rpt.tickets
+      WHERE created_at >= :start AND created_at < :end
+      ORDER BY created_at DESC
+      LIMIT 50
+
+  - id: agent_my_high_priority_tickets
+    goal: "Show my high priority tickets"
+    answer_type: list
+    views: [tickets]
+    sql: |
+      SELECT ticket_number, subject, status, priority, queue_name, created_at
+      FROM rpt.tickets
+      WHERE assignee_id = :user_id AND priority = 'high'
+      ORDER BY created_at DESC
+      LIMIT 50
+
+  - id: resolver_my_high_priority_tickets
+    goal: "Show high priority tickets assigned to me to resolve"
+    answer_type: list
+    views: [tickets]
+    sql: |
+      SELECT ticket_number, subject, status, priority, queue_name, created_at
+      FROM rpt.tickets
+      WHERE resolver_id = :user_id AND priority = 'high'
+      ORDER BY created_at DESC
+      LIMIT 50
+

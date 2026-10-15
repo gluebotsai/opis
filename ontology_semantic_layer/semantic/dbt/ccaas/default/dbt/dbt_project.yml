@@ -1,0 +1,35 @@
+name: 'aiccaas_default_dbt'
+version: '1.0.0'
+profile: 'aiccaas_default_dbt'
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+# Warehouse SQL lives in semantic/dbt/postgres (local package). This project is semantic-only.
+models:
+  aiccaas_default_dbt:
+    semantic_layer:
+      +materialized: view
+  postgres_warehouse_dbt:
+    shared:
+      +enabled: true
+    ccaas:
+      +enabled: true
+    ticketing:
+      +enabled: false
+    crm:
+      +enabled: false
+    campaign:
+      +enabled: false
+
+tests:
+  postgres_warehouse_dbt:
+    +enabled: false

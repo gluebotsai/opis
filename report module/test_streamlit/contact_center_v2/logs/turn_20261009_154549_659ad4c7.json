@@ -1,0 +1,62 @@
+{
+  "turn_id": "659ad4c7",
+  "timestamp": "2026-10-09T10:15:49.763646+00:00",
+  "question": "what is the csat for the agents",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1016,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>CSAT scores by agent</strong></p>\n<p>The CSAT scores for all time are:</p>\n<ul>\n<li>Raghuram M: <strong>52.05</strong></li>\n<li>Bharathi Sivakumar: <strong>51.01</strong></li>\n<li>Lokesh B: <strong>47.80</strong></li>\n<li>Santhosh S: <strong>42.67</strong></li>\n<li>Unassigned: <strong>25.00</strong></li>\n</ul>\n<p>Would you like to see these scores for a specific time period?</p>",
+  "card": "card: table r1",
+  "facts": "result_id: r1\nwindow: all time\ncertified: false\ntask_goal: Show the CSAT score split by agent.\nanswer_type: number\nrow_count: 5\nrow 1: agent_name=Lokesh B; avg=47.8030303030303030\nrow 2: agent_name=Santhosh S; avg=42.6729559748427673\nrow 3: agent_name=None; avg=25.0000000000000000\nrow 4: agent_name=Raghuram M; avg=52.0454545454545455\nrow 5: agent_name=Bharathi Sivakumar; avg=51.0084033613445378",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1016,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "what is the csat for the agents",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants to see the CSAT scores broken down by agent.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Show the CSAT score split by agent.",
+          "time": "all time",
+          "scope": "org",
+          "slice": [
+            "agent"
+          ],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": false,
+        "kpi_id": null,
+        "row_count": 5
+      }
+    ],
+    "facts": "result_id: r1\nwindow: all time\ncertified: false\ntask_goal: Show the CSAT score split by agent.\nanswer_type: number\nrow_count: 5\nrow 1: agent_name=Lokesh B; avg=47.8030303030303030\nrow 2: agent_name=Santhosh S; avg=42.6729559748427673\nrow 3: agent_name=None; avg=25.0000000000000000\nrow 4: agent_name=Raghuram M; avg=52.0454545454545455\nrow 5: agent_name=Bharathi Sivakumar; avg=51.0084033613445378",
+    "grounded": true,
+    "card": "card: table r1"
+  },
+  "error": null
+}

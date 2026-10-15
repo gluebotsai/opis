@@ -1,0 +1,42 @@
+# Pre-approved metric SQL — same grain/formulas as MetricFlow semantic models.
+# Placeholders: {{extra_where}} appended after organization_id filter.
+# Regenerate via scripts/generate_metric_sql_templates.py after dbt parse.
+
+metrics:
+  total_conversations:
+    product: ccaas
+    result_column: total_conversations
+    default_zero: true
+    sql: |
+      SELECT COUNT(conversation_id)::bigint AS total_conversations
+      FROM ccass_marts_aiccaas.mart_conversations
+      WHERE organization_id = %s{{extra_where}}
+
+  open_conversations:
+    product: ccaas
+    result_column: open_conversations
+    default_zero: true
+    sql: |
+      SELECT COUNT(conversation_id)::bigint AS open_conversations
+      FROM ccass_marts_aiccaas.mart_conversations
+      WHERE organization_id = %s AND is_open = true{{extra_where}}
+
+  ai_containment_rate:
+    product: ccaas
+    result_column: ai_containment_rate
+    sql: |
+      SELECT
+        COUNT(*) FILTER (WHERE is_ai_only_completed = true)::float
+        / NULLIF(COUNT(*), 0) AS ai_containment_rate
+      FROM ccass_marts_aiccaas.mart_conversations
+      WHERE organization_id = %s{{extra_where}}
+
+  average_handle_time:
+    product: ccaas
+    result_column: average_handle_time
+    sql: |
+      SELECT
+        SUM(human_handle_seconds)::float
+        / NULLIF(COUNT(*) FILTER (WHERE is_completed_leg = true), 0) AS average_handle_time
+      FROM ccass_marts_aiccaas.mart_conversation_assignments
+      WHERE organization_id = %s{{extra_where}}

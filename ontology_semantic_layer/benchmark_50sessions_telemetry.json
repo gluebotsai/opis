@@ -1,0 +1,106 @@
+[
+  {
+    "failure_id": "FAIL-001",
+    "layer": "sql",
+    "session_id": "S-05",
+    "agent": "cc.followup",
+    "query": "Scheduled callback for customer ticket inquiry #9914 failed due to busy signal. File an automated task ticket to retry outbound call at 4 PM.",
+    "endpoint": "http://192.168.11.25:8765/v1/sql/query",
+    "payload": {
+      "organizationId": 1000,
+      "userId": 1,
+      "originProduct": "contact_centre",
+      "originAgent": "cc.coworker",
+      "instruction": "Find the customer associated with ticket #9914 to ensure the task is correctly linked.",
+      "limit": 50
+    },
+    "status_code": 500,
+    "error": "{\"detail\":{\"error\":\"UndefinedColumn\",\"message\":\"column \\\"agent_id\\\" does not exist\\nLINE 1: ...l IN ('call', 'email', 'webchat', 'whatsapp') AND agent_id I...\\n                                                             ^\\n\"}}",
+    "root_cause": "Timeout or service issue",
+    "remediation": "Align slice metric_ids with semantic layer or update mart column allowlist"
+  },
+  {
+    "failure_id": "FAIL-002",
+    "layer": "sql",
+    "session_id": "S-17",
+    "agent": "cc.presence",
+    "query": "Are there any Tier 2 support resolvers currently online to accept an escalated ticket?",
+    "endpoint": "http://192.168.11.25:8765/v1/sql/query",
+    "payload": {
+      "organizationId": 1000,
+      "userId": 1,
+      "originProduct": "contact_centre",
+      "originAgent": "cc.presence",
+      "instruction": "Find all WorkforceAgents with a presence status of 'ready' who are associated with 'Tier 2 support'.",
+      "limit": 50
+    },
+    "status_code": 500,
+    "error": "{\"detail\":{\"error\":\"SqlValidationError\",\"message\":\"Column 'agent_id' not allowed on mart_agent_presence_history\"}}",
+    "root_cause": "Entitlement or schema mismatch",
+    "remediation": "Align slice metric_ids with semantic layer or update mart column allowlist"
+  },
+  {
+    "failure_id": "FAIL-003",
+    "layer": "semantic",
+    "session_id": "S-43",
+    "agent": "cc.ai_support",
+    "query": "Provide the self-service customer portal link for password reset so the user can resolve it online.",
+    "endpoint": "http://192.168.11.25:8765/v1/semantic/query",
+    "payload": {
+      "organizationId": 1000,
+      "userId": 1,
+      "product": "contact_centre",
+      "agent": "cc.ai_support",
+      "metrics": [
+        "wt:KnowledgeArticle"
+      ],
+      "limit": 50
+    },
+    "status_code": 400,
+    "error": "{\"detail\":{\"message\":\"Metric 'wt:KnowledgeArticle' is not certified.\"}}",
+    "root_cause": "Timeout or service issue",
+    "remediation": "Align slice metric_ids with semantic layer or update mart column allowlist"
+  },
+  {
+    "failure_id": "FAIL-004",
+    "layer": "sql",
+    "session_id": "S-46",
+    "agent": "cc.compliance",
+    "query": "Audit interaction log for session CC-1092 to verify credit card numbers were redacted before ticket creation.",
+    "endpoint": "http://192.168.11.25:8765/v1/sql/query",
+    "payload": {
+      "organizationId": 1000,
+      "userId": 1,
+      "originProduct": "contact_centre",
+      "originAgent": "cc.coworker",
+      "instruction": "Retrieve the interaction logs and any associated ticket data for session CC-1092 to check for the presence of unredacted credit card numbers.",
+      "limit": 50
+    },
+    "status_code": 500,
+    "error": "{\"detail\":{\"error\":\"SqlValidationError\",\"message\":\"Column 'agent_id' not allowed on mart_agent_presence_history\"}}",
+    "root_cause": "Entitlement or schema mismatch",
+    "remediation": "Align slice metric_ids with semantic layer or update mart column allowlist"
+  },
+  {
+    "failure_id": "FAIL-005",
+    "layer": "semantic",
+    "session_id": "S-48",
+    "agent": "cc.performance",
+    "query": "Evaluate agent 'Alex Rivera': compare average call handle time in CCaaS against total closed tickets in Ticketing this month.",
+    "endpoint": "http://192.168.11.25:8765/v1/semantic/query",
+    "payload": {
+      "organizationId": 1000,
+      "userId": 1,
+      "product": "contact_centre",
+      "agent": "cc.performance",
+      "metrics": [
+        "average_handle_time"
+      ],
+      "limit": 50
+    },
+    "status_code": 500,
+    "error": "{\"detail\":{\"error\":\"SemanticQueryExecutionError\",\"message\":\"Unknown agent 'cc.performance'. Known: cc.super, cc.ai_support, cc.coworker, cc.reporting, cc.anomaly, cc.presence, tk.super, tk.tickets, tk.admin, tk.reporting, tk.proactive, hub.orchestrator, crm-agent, crm.contacts, crm.companies, crm.de",
+    "root_cause": "Timeout or service issue",
+    "remediation": "Align slice metric_ids with semantic layer or update mart column allowlist"
+  }
+]

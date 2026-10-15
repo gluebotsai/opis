@@ -1,0 +1,863 @@
+version: 1
+# Virtual reporting views. LLM writes rpt.<name> only.
+# grain and user_phrases exist so executors group by meaning, not physical names.
+
+views:
+
+  branches:
+    grain: "one Campaign workspace (not accounts.branches)"
+    description: "Workspaces under a tenant. Campaigns are always org+branch scoped."
+    source: |
+      SELECT id, organization_id, name, is_default, created_at, updated_at
+      FROM campaign.branches WHERE organization_id = {org_id}
+    columns:
+      id: { type: bigint, description: "Workspace id stored on campaigns as branch_id.", groupable: false }
+      organization_id: { type: bigint, description: "Tenant.", groupable: false }
+      name: { type: text, description: "Workspace label.", groupable: true, user_phrases: ['workspace', 'branch name'] }
+      is_default: { type: boolean, description: "Login default workspace.", groupable: true }
+      created_at: { type: timestamp, description: "Insert time.", groupable: false }
+      updated_at: { type: timestamp, description: "Last rename.", groupable: false }
+
+  organization_products:
+    grain: "one product entitlement per branch"
+    description: "Whether this branch may use Campaign. Login requires product_code=campaign and status=active."
+    source: |
+      SELECT id, organization_id, branch_id, product_code::text AS product_code, status::text AS status,
+             starts_at, ends_at, created_at, updated_at
+      FROM campaign.organization_products WHERE organization_id = {org_id}
+    columns:
+      id: { type: bigint, description: "Entitlement row id.", groupable: false }
+      organization_id: { type: bigint, description: "Tenant.", groupable: false }
+      branch_id: { type: bigint, description: "Workspace.", groupable: false }
+      product_code: { type: text, description: "campaign or crm.", groupable: true, user_phrases: ['product'] }
+      status: { type: text, description: "active or inactive.", groupable: true, user_phrases: ['status', 'entitlement'] }
+      starts_at: { type: timestamp, description: "Optional start.", groupable: false }
+      ends_at: { type: timestamp, description: "Optional end.", groupable: false }
+      created_at: { type: timestamp, description: "Created.", groupable: false }
+      updated_at: { type: timestamp, description: "Updated.", groupable: false }
+
+  campaigns:
+    grain: "one saved marketing campaign"
+    description: "Saved program: lifecycle, frozen audience size, launch calendar date (UTC filter on launch_local_date text)."
+    source: |
+      SELECT id, organization_id, branch_id, name, description, status::text AS status,
+             starts_at, ends_at, source_channel::text AS source_channel, created_by_user_id,
+             created_at, updated_at, goal, objective, session_id, audience_summary, audience_count,
+             launch_plan, launch_local_date, launch_local_time, timezone
+      FROM campaign.campaigns WHERE organization_id = {org_id}
+    columns:
+      id: { type: bigint, description: "Campaign id. Joins batches and audience.", groupable: false }
+      organization_id: { type: bigint, description: "Tenant.", groupable: false }
+      branch_id: { type: bigint, description: "Workspace.", groupable: false }
+      name: { type: text, description: "Display name.", groupable: true, user_phrases: ['campaign', 'name'] }
+      description: { type: text, description: "Operator description.", groupable: false }
+      status: { type: text, description: "draft/scheduled/live/completed/cancelled.", groupable: true, user_phrases: ['status', 'stage', 'lifecycle'] }
+      starts_at: { type: timestamp, description: "Optional UTC window start. Not Dashboard period.", groupable: false }
+      ends_at: { type: timestamp, description: "Optional UTC window end.", groupable: false }
+      source_channel: { type: text, description: "standalone_campaign or crm_marketing.", groupable: true, user_phrases: ['source'] }
+      created_by_user_id: { type: bigint, description: "Marketer who saved it.", groupable: true, user_phrases: ['created by', 'owner'] }
+      created_at: { type: timestamp, description: "Row insert. Not launch.", groupable: false }
+      updated_at: { type: timestamp, description: "Last column change.", groupable: false }
+      goal: { type: text, description: "Marketing goal text.", groupable: true }
+      objective: { type: text, description: "Finer objective.", groupable: false }
+      session_id: { type: bigint, description: "Draft session if saved from chat.", groupable: false }
+      audience_summary: { type: text, description: "Human audience summary.", groupable: false }
+      audience_count: { type: integer, description: "Frozen selected people count.", groupable: false }
+      launch_plan: { type: jsonb, description: "Schedule, channels, A/B, optional PPC JSON.", groupable: false }
+      launch_local_date: { type: text, description: "Launch calendar date YYYY-MM-DD. Dashboard period.", groupable: true, user_phrases: ['launch date', 'day'] }
+      launch_local_time: { type: text, description: "Launch clock HH:mm.", groupable: false }
+      timezone: { type: text, description: "IANA zone stored on the row; reports still filter in UTC.", groupable: false }
+
+  campaign_channels:
+    grain: "one planned channel on a saved campaign"
+    description: "Planned channel list, not send facts. Delivery uses batches."
+    source: |
+      SELECT id, campaign_id, organization_id, channel, template_id
+      FROM campaign.campaign_channels WHERE organization_id = {org_id}
+    columns:
+      id: { type: bigint, description: "Planned channel row.", groupable: false }
+      campaign_id: { type: bigint, description: "Parent campaign.", groupable: false }
+      organization_id: { type: bigint, description: "Tenant.", groupable: false }
+      channel: { type: text, description: "email/whatsapp/sms/push/web/ppc.", groupable: true, user_phrases: ['channel'] }
+      template_id: { type: bigint, description: "Session creative id if bound.", groupable: false }
+
+  campaign_audience:
+    grain: "one frozen person on a saved campaign"
+    description: "Selected people as campaign bigint contact_id. Use for counts of who was selected. Names and emails are on rpt.audience_people."
+    source: |
+      SELECT campaign_id, contact_id, created_at
+      FROM campaign.campaign_audience a
+      JOIN campaign.campaigns c ON c.id = a.campaign_id AND c.organization_id = {org_id}
+    columns:
+      campaign_id: { type: bigint, description: "Parent campaign.", groupable: true }
+      contact_id: { type: bigint, description: "Campaign person id.", groupable: true, user_phrases: ['contact'] }
+      created_at: { type: timestamp, description: "When frozen.", groupable: false }
+
+  audience_people:
+    grain: "one selected person with CDP name and email when the id maps"
+    description: "List grain for who is on a campaign. Numeric cdp_id tails equal contact_id. Non-numeric people come from launch_plan.audience_cdp_ids. Do not use this join for send volume KPIs."
+    source: |
+      SELECT a.campaign_id, a.contact_id, a.created_at, c.name AS campaign_name,
+             p.cdp_id, p.first_name, p.last_name, ik.key_value AS email
+      FROM campaign.campaign_audience a
+      JOIN campaign.campaigns c ON c.id = a.campaign_id AND c.organization_id = {org_id}
+      JOIN cdp.customer_profile p
+        ON p.organization_id = {org_id}
+       AND regexp_replace(p.cdp_id, '^.*-', '') = a.contact_id::text
+      LEFT JOIN LATERAL (
+        SELECT k.key_value
+        FROM cdp.identity_keys k
+        WHERE k.organization_id = {org_id}
+          AND k.cdp_id = p.cdp_id
+          AND lower(k.key_type) IN ('email', 'primary_email')
+        ORDER BY k.verified DESC NULLS LAST, k.created_at DESC
+        LIMIT 1
+      ) ik ON TRUE
+      UNION ALL
+      SELECT c.id AS campaign_id, NULL::bigint AS contact_id, c.created_at, c.name AS campaign_name,
+             p.cdp_id, p.first_name, p.last_name, ik.key_value AS email
+      FROM campaign.campaigns c
+      CROSS JOIN LATERAL jsonb_array_elements_text(COALESCE(c.launch_plan->'audience_cdp_ids', '[]'::jsonb)) AS x(cdp_id)
+      JOIN cdp.customer_profile p ON p.organization_id = {org_id} AND p.cdp_id = x.cdp_id
+      LEFT JOIN LATERAL (
+        SELECT k.key_value
+        FROM cdp.identity_keys k
+        WHERE k.organization_id = {org_id}
+          AND k.cdp_id = p.cdp_id
+          AND lower(k.key_type) IN ('email', 'primary_email')
+        ORDER BY k.verified DESC NULLS LAST, k.created_at DESC
+        LIMIT 1
+      ) ik ON TRUE
+      WHERE c.organization_id = {org_id}
+        AND regexp_replace(x.cdp_id, '^.*-', '') !~ '^[0-9]+$'
+    columns:
+      campaign_id: { type: bigint, description: "Parent campaign.", groupable: true }
+      contact_id: { type: bigint, description: "Campaign bigint when the CDP tail is numeric.", groupable: true, user_phrases: ['contact'] }
+      created_at: { type: timestamp, description: "Audience freeze or campaign created_at for plan-only rows.", groupable: false }
+      campaign_name: { type: text, description: "Campaign display name.", groupable: true, user_phrases: ['campaign'] }
+      cdp_id: { type: text, description: "CDP text person id.", groupable: false }
+      first_name: { type: text, description: "Given name from CDP.", groupable: false, user_phrases: ['name'] }
+      last_name: { type: text, description: "Family name from CDP.", groupable: false }
+      email: { type: text, description: "Latest verified email identity.", groupable: false, user_phrases: ['email'] }
+
+
+  agent_sessions:
+    grain: "one create-campaign or module chat draft"
+    description: "Drafts are always owned by created_by_user_id, including admins."
+    source: |
+      SELECT id, organization_id, branch_id, created_by_user_id, module, stage, created_at, updated_at
+      FROM campaign.campaign_agent_sessions WHERE organization_id = {org_id}
+    columns:
+      id: { type: bigint, description: "Session id.", groupable: false }
+      organization_id: { type: bigint, description: "Tenant.", groupable: false }
+      branch_id: { type: bigint, description: "Workspace.", groupable: false }
+      created_by_user_id: { type: bigint, description: "Owner of the draft.", groupable: false }
+      module: { type: text, description: "SPA module id.", groupable: true }
+      stage: { type: text, description: "intake/drafting/idle.", groupable: true, user_phrases: ['stage', 'status'] }
+      created_at: { type: timestamp, description: "Started.", groupable: false }
+      updated_at: { type: timestamp, description: "Last write.", groupable: false }
+
+  audience_refs:
+    grain: "one draft-session contact id before save"
+    description: "Becomes campaign_audience at freeze."
+    source: |
+      SELECT session_id, contact_id
+      FROM campaign.campaign_audience_refs r
+      JOIN campaign.campaign_agent_sessions s ON s.id = r.session_id AND s.organization_id = {org_id}
+    columns:
+      session_id: { type: bigint, description: "Draft session.", groupable: false }
+      contact_id: { type: bigint, description: "Campaign bigint.", groupable: false }
+
+  session_temp_contacts:
+    grain: "one sheet-uploaded person on a draft"
+    description: "Not CDP until promote. Not the launched audience."
+    source: |
+      SELECT id, session_id, organization_id, first_name, last_name, email, phone, company_name, city, created_at
+      FROM campaign.campaign_session_temp_contacts WHERE organization_id = {org_id}
+    columns:
+      id: { type: bigint, description: "Sheet row id.", groupable: false }
+      session_id: { type: bigint, description: "Draft.", groupable: false }
+      organization_id: { type: bigint, description: "Tenant.", groupable: false }
+      first_name: { type: text, description: "Given name.", groupable: false }
+      last_name: { type: text, description: "Family name.", groupable: false }
+      email: { type: text, description: "Sheet email.", groupable: false }
+      phone: { type: text, description: "Sheet phone.", groupable: false }
+      company_name: { type: text, description: "Sheet company.", groupable: true }
+      city: { type: text, description: "Sheet city.", groupable: true }
+      created_at: { type: timestamp, description: "Ingested.", groupable: false }
+
+  channel_templates:
+    grain: "one session creative"
+    description: "Structured fields JSON for a channel in a draft."
+    source: |
+      SELECT id, session_id, organization_id, branch_id, channel, launch_at, generation_batch_id, created_at, updated_at
+      FROM campaign.campaign_channel_templates WHERE organization_id = {org_id}
+    columns:
+      id: { type: bigint, description: "Template id.", groupable: false }
+      session_id: { type: bigint, description: "Draft.", groupable: false }
+      organization_id: { type: bigint, description: "Tenant.", groupable: false }
+      branch_id: { type: bigint, description: "Workspace.", groupable: false }
+      channel: { type: text, description: "Channel this creative is for.", groupable: true }
+      launch_at: { type: text, description: "Suggested launch string.", groupable: false }
+      generation_batch_id: { type: bigint, description: "AI generate batch.", groupable: false }
+      created_at: { type: timestamp, description: "Inserted.", groupable: false }
+      updated_at: { type: timestamp, description: "Updated.", groupable: false }
+
+  template_messages:
+    grain: "one edit-space message on a template"
+    description: "Chat/edit messages hanging off a session template."
+    source: |
+      SELECT id, template_id, t.organization_id AS organization_id, role, seq, kind, created_at
+      FROM campaign.campaign_template_messages m
+      JOIN campaign.campaign_channel_templates t ON t.id = m.template_id AND t.organization_id = {org_id}
+    columns:
+      id: { type: bigint, description: "Message id.", groupable: false }
+      template_id: { type: bigint, description: "Parent template.", groupable: false }
+      organization_id: { type: bigint, description: "Tenant.", groupable: false }
+      role: { type: text, description: "Speaker: user, assistant, or system.", groupable: true, user_phrases: ['speaker'] }
+      seq: { type: integer, description: "Turn order within the template.", groupable: false }
+      kind: { type: text, description: "text chat vs template payload update.", groupable: true }
+      created_at: { type: timestamp, description: "Created.", groupable: false }
+
+  channel_sending_profiles:
+    grain: "one channel setup row for the org/branch"
+    description: "Can this workspace send on a channel yet. Admin configuration."
+    source: |
+      SELECT id, organization_id, branch_id, channel, status::text AS status, created_at, updated_at
+      FROM campaign.channel_sending_profiles WHERE organization_id = {org_id}
+    columns:
+      id: { type: bigint, description: "Profile id.", groupable: false }
+      organization_id: { type: bigint, description: "Tenant.", groupable: false }
+      branch_id: { type: bigint, description: "Workspace.", groupable: false }
+      channel: { type: text, description: "Channel.", groupable: true }
+      status: { type: text, description: "not_started/in_progress/ready/blocked.", groupable: true, user_phrases: ['readiness'] }
+      created_at: { type: timestamp, description: "Created.", groupable: false }
+      updated_at: { type: timestamp, description: "Updated.", groupable: false }
+
+  organization_api_keys:
+    grain: "one API key metadata row (secret stripped)"
+    description: "Integration health listing only. No certified KPI. Never select secret material."
+    source: |
+      SELECT id, organization_id, purpose, key_prefix, active, last_used_at, created_at
+      FROM campaign.organization_api_keys WHERE organization_id = {org_id}
+    columns:
+      id: { type: bigint, description: "Key id.", groupable: false }
+      organization_id: { type: bigint, description: "Tenant.", groupable: false }
+      purpose: { type: text, description: "Integration purpose, usually app_push.", groupable: true }
+      key_prefix: { type: text, description: "Visible prefix only. Never the hash or secret.", groupable: false }
+      active: { type: boolean, description: "Whether the key is active.", groupable: true }
+      last_used_at: { type: timestamp, description: "Last use.", groupable: false }
+      created_at: { type: timestamp, description: "Created.", groupable: false }
+
+  push_channel_settings:
+    grain: "one org push settings row"
+    description: "App push configuration readiness."
+    source: |
+      SELECT id, organization_id, channel, status, created_at, updated_at
+      FROM campaign.push_channel_settings WHERE organization_id = {org_id}
+    columns:
+      id: { type: bigint, description: "Row id.", groupable: false }
+      organization_id: { type: bigint, description: "Tenant.", groupable: false }
+      channel: { type: text, description: "web_push or app_push.", groupable: true, user_phrases: ['push product'] }
+      status: { type: text, description: "Setup status.", groupable: true }
+      created_at: { type: timestamp, description: "Created.", groupable: false }
+      updated_at: { type: timestamp, description: "Updated.", groupable: false }
+
+  email_org_profiles:
+    grain: "one org email legal/profile row"
+    description: "Sender org profile, not recipient opens."
+    source: |
+      SELECT id, organization_id, legal_name, city, country, created_at, updated_at
+      FROM campaign.email_org_profiles WHERE organization_id = {org_id}
+    columns:
+      id: { type: bigint, description: "Row id.", groupable: false }
+      organization_id: { type: bigint, description: "Tenant.", groupable: false }
+      legal_name: { type: text, description: "Legal sender name in email footers.", groupable: false }
+      city: { type: text, description: "Legal address city, not a recipient city.", groupable: true }
+      country: { type: text, description: "Legal address country.", groupable: true }
+      created_at: { type: timestamp, description: "Created.", groupable: false }
+      updated_at: { type: timestamp, description: "Updated.", groupable: false }
+
+  email_senders:
+    grain: "one from-address"
+    description: "ESP sender identity. Admin config."
+    source: |
+      SELECT id, organization_id, email, status, is_active, created_at, updated_at
+      FROM campaign.email_senders WHERE organization_id = {org_id}
+    columns:
+      id: { type: bigint, description: "Sender id.", groupable: false }
+      organization_id: { type: bigint, description: "Tenant.", groupable: false }
+      email: { type: text, description: "From address.", groupable: false }
+      status: { type: text, description: "Sender status.", groupable: true }
+      is_active: { type: boolean, description: "Usable from-address.", groupable: true }
+      created_at: { type: timestamp, description: "Created.", groupable: false }
+      updated_at: { type: timestamp, description: "Updated.", groupable: false }
+
+  email_domains:
+    grain: "one sending domain"
+    description: "SPF/DKIM/DMARC flags for admin health."
+    source: |
+      SELECT id, organization_id, domain, status, spf_ok, dkim_ok, dmarc_ok, created_at, updated_at
+      FROM campaign.email_domains WHERE organization_id = {org_id}
+    columns:
+      id: { type: bigint, description: "Domain row.", groupable: false }
+      organization_id: { type: bigint, description: "Tenant.", groupable: false }
+      domain: { type: text, description: "Sending domain.", groupable: true }
+      status: { type: text, description: "Domain status.", groupable: true }
+      spf_ok: { type: boolean, description: "SPF ready.", groupable: true }
+      dkim_ok: { type: boolean, description: "DKIM ready.", groupable: true }
+      dmarc_ok: { type: boolean, description: "DMARC ready.", groupable: true }
+      created_at: { type: timestamp, description: "Created.", groupable: false }
+      updated_at: { type: timestamp, description: "Updated.", groupable: false }
+
+  email_return_paths:
+    grain: "one bounce return-path"
+    description: "Return-path status for domain auth."
+    source: |
+      SELECT id, organization_id, status, created_at, updated_at
+      FROM campaign.email_return_paths WHERE organization_id = {org_id}
+    columns:
+      id: { type: bigint, description: "Row id.", groupable: false }
+      organization_id: { type: bigint, description: "Tenant.", groupable: false }
+      status: { type: text, description: "Return-path status.", groupable: true }
+      created_at: { type: timestamp, description: "Created.", groupable: false }
+      updated_at: { type: timestamp, description: "Updated.", groupable: false }
+
+  email_sending_caps:
+    grain: "one org email cap/health row"
+    description: "Hourly/daily caps, warmup, health_status JSON."
+    source: |
+      SELECT id, organization_id, hourly_cap, daily_cap, warmup_stage, health_status, created_at, updated_at
+      FROM campaign.email_sending_caps WHERE organization_id = {org_id}
+    columns:
+      id: { type: bigint, description: "Row id.", groupable: false }
+      organization_id: { type: bigint, description: "Tenant.", groupable: false }
+      hourly_cap: { type: integer, description: "Hourly cap.", groupable: false }
+      daily_cap: { type: integer, description: "Daily cap.", groupable: false }
+      warmup_stage: { type: text, description: "Warmup ladder.", groupable: true }
+      health_status: { type: text, description: "Auto-pause health.", groupable: true }
+      created_at: { type: timestamp, description: "Created.", groupable: false }
+      updated_at: { type: timestamp, description: "Updated.", groupable: false }
+
+  email_suppressions:
+    grain: "one do-not-email address"
+    description: "Unsubscribe/hard bounce/complaint list. Not Dashboard Failed."
+    source: |
+      SELECT id, organization_id, email, reason, created_at
+      FROM campaign.email_suppressions WHERE organization_id = {org_id}
+    columns:
+      id: { type: bigint, description: "Row id.", groupable: false }
+      organization_id: { type: bigint, description: "Tenant.", groupable: false }
+      email: { type: text, description: "Suppressed address.", groupable: false }
+      reason: { type: text, description: "unsubscribe/hard_bounce/complaint.", groupable: true, user_phrases: ['reason'] }
+      created_at: { type: timestamp, description: "When added.", groupable: false }
+
+  send_batches:
+    grain: "one timed channel send slice"
+    description: "Workers pick queued batches. Channel for all KPI group-bys lives here."
+    source: |
+      SELECT b.id, b.organization_id, b.campaign_id, b.seq, b.scheduled_for, b.status, b.size,
+             b.created_at, b.updated_at, b.channel, c.name AS campaign_name, c.launch_local_date,
+             c.created_by_user_id, c.branch_id, c.status AS campaign_status
+      FROM campaign.campaign_send_batches b
+      JOIN campaign.campaigns c ON c.id = b.campaign_id AND c.organization_id = {org_id}
+      WHERE b.organization_id = {org_id}
+    columns:
+      id: { type: bigint, description: "Batch id.", groupable: false }
+      organization_id: { type: bigint, description: "Tenant.", groupable: false }
+      campaign_id: { type: bigint, description: "Parent campaign.", groupable: true }
+      seq: { type: integer, description: "Slice number.", groupable: false }
+      scheduled_for: { type: timestamp, description: "UTC send-eligible time.", groupable: false }
+      status: { type: text, description: "queued/sending/sent/failed/cancelled.", groupable: true, user_phrases: ['batch status'] }
+      size: { type: integer, description: "Planned recipient count.", groupable: false }
+      created_at: { type: timestamp, description: "Inserted.", groupable: false }
+      updated_at: { type: timestamp, description: "Last worker change.", groupable: false }
+      channel: { type: text, description: "Agent-canonical channel.", groupable: true, user_phrases: ['channel'] }
+      campaign_name: { type: text, description: "Campaign display name.", groupable: true, user_phrases: ['campaign'] }
+      launch_local_date: { type: text, description: "Campaign launch date.", groupable: true, user_phrases: ['day'] }
+      created_by_user_id: { type: bigint, description: "Campaign creator.", groupable: false }
+      branch_id: { type: bigint, description: "Workspace.", groupable: false }
+      campaign_status: { type: text, description: "Campaign lifecycle.", groupable: true, user_phrases: ['status', 'stage'] }
+
+  send_recipients:
+    grain: "one intended delivery (messaging fact table)"
+    description: "Sent/failed/open/click/bounce/A/B facts. outcome is the shared delivery mapping. Do not join CDP."
+    source: |
+      SELECT r.id, r.organization_id, r.batch_id, r.campaign_id, r.contact_id, r.email, r.status,
+             r.skip_fail_reason, r.provider_message_id, r.created_at, r.updated_at, r.attempt_count,
+             r.destination, r.platform, r.ab_variant, r.opened_at, r.clicked_at, r.open_count, r.click_count,
+             (CASE WHEN lower(coalesce(r.status,'')) IN ('failed','cancelled') THEN 'failed' WHEN lower(coalesce(r.status,'')) = 'skipped' THEN 'skipped' WHEN lower(coalesce(r.status,'')) IN ('stub','stub_sent') THEN 'stub' WHEN lower(coalesce(r.provider_message_id,'')) LIKE 'stub-%' OR lower(coalesce(r.provider_message_id,'')) LIKE 'stub://%' THEN 'stub' WHEN lower(coalesce(r.status,'')) IN ('bounced','hard_bounce','soft_bounce') THEN 'bounce' WHEN lower(coalesce(r.skip_fail_reason,'')) LIKE '%bounce%' THEN 'bounce' WHEN lower(coalesce(r.status,'')) IN ('sent','delivered') THEN 'sent' ELSE 'pending' END) AS outcome,
+             b.channel, c.name AS campaign_name, c.launch_local_date, c.created_by_user_id, c.branch_id,
+             c.status::text AS campaign_status,
+             ((CASE WHEN lower(coalesce(r.status,'')) IN ('failed','cancelled') THEN 'failed' WHEN lower(coalesce(r.status,'')) = 'skipped' THEN 'skipped' WHEN lower(coalesce(r.status,'')) IN ('stub','stub_sent') THEN 'stub' WHEN lower(coalesce(r.provider_message_id,'')) LIKE 'stub-%' OR lower(coalesce(r.provider_message_id,'')) LIKE 'stub://%' THEN 'stub' WHEN lower(coalesce(r.status,'')) IN ('bounced','hard_bounce','soft_bounce') THEN 'bounce' WHEN lower(coalesce(r.skip_fail_reason,'')) LIKE '%bounce%' THEN 'bounce' WHEN lower(coalesce(r.status,'')) IN ('sent','delivered') THEN 'sent' ELSE 'pending' END) = 'sent' AND (CASE WHEN lower(coalesce(r.status,'')) IN ('failed','cancelled') THEN 'failed' WHEN lower(coalesce(r.status,'')) = 'skipped' THEN 'skipped' WHEN lower(coalesce(r.status,'')) IN ('stub','stub_sent') THEN 'stub' WHEN lower(coalesce(r.provider_message_id,'')) LIKE 'stub-%' OR lower(coalesce(r.provider_message_id,'')) LIKE 'stub://%' THEN 'stub' WHEN lower(coalesce(r.status,'')) IN ('bounced','hard_bounce','soft_bounce') THEN 'bounce' WHEN lower(coalesce(r.skip_fail_reason,'')) LIKE '%bounce%' THEN 'bounce' WHEN lower(coalesce(r.status,'')) IN ('sent','delivered') THEN 'sent' ELSE 'pending' END) <> 'bounce' AND (CASE WHEN lower(coalesce(r.status,'')) IN ('failed','cancelled') THEN 'failed' WHEN lower(coalesce(r.status,'')) = 'skipped' THEN 'skipped' WHEN lower(coalesce(r.status,'')) IN ('stub','stub_sent') THEN 'stub' WHEN lower(coalesce(r.provider_message_id,'')) LIKE 'stub-%' OR lower(coalesce(r.provider_message_id,'')) LIKE 'stub://%' THEN 'stub' WHEN lower(coalesce(r.status,'')) IN ('bounced','hard_bounce','soft_bounce') THEN 'bounce' WHEN lower(coalesce(r.skip_fail_reason,'')) LIKE '%bounce%' THEN 'bounce' WHEN lower(coalesce(r.status,'')) IN ('sent','delivered') THEN 'sent' ELSE 'pending' END) <> 'stub') AS is_delivered,
+             ((CASE WHEN lower(coalesce(r.status,'')) IN ('failed','cancelled') THEN 'failed' WHEN lower(coalesce(r.status,'')) = 'skipped' THEN 'skipped' WHEN lower(coalesce(r.status,'')) IN ('stub','stub_sent') THEN 'stub' WHEN lower(coalesce(r.provider_message_id,'')) LIKE 'stub-%' OR lower(coalesce(r.provider_message_id,'')) LIKE 'stub://%' THEN 'stub' WHEN lower(coalesce(r.status,'')) IN ('bounced','hard_bounce','soft_bounce') THEN 'bounce' WHEN lower(coalesce(r.skip_fail_reason,'')) LIKE '%bounce%' THEN 'bounce' WHEN lower(coalesce(r.status,'')) IN ('sent','delivered') THEN 'sent' ELSE 'pending' END) = 'stub') AS is_stub
+      FROM campaign.campaign_send_recipients r
+      JOIN campaign.campaign_send_batches b ON b.id = r.batch_id
+      JOIN campaign.campaigns c ON c.id = r.campaign_id AND c.organization_id = {org_id}
+      WHERE r.organization_id = {org_id}
+    columns:
+      id: { type: bigint, description: "Recipient row.", groupable: false }
+      organization_id: { type: bigint, description: "Tenant.", groupable: false }
+      batch_id: { type: bigint, description: "Parent batch.", groupable: false }
+      campaign_id: { type: bigint, description: "Campaign.", groupable: true }
+      contact_id: { type: bigint, description: "Campaign bigint person.", groupable: true, user_phrases: ['contact'] }
+      email: { type: text, description: "Address for email sends.", groupable: false }
+      status: { type: text, description: "Raw provider/lifecycle status.", groupable: true }
+      skip_fail_reason: { type: text, description: "Skip/fail/bounce text.", groupable: false }
+      provider_message_id: { type: text, description: "Provider id; stub- means demo.", groupable: false }
+      created_at: { type: timestamp, description: "Queued time.", groupable: false }
+      updated_at: { type: timestamp, description: "Last status/open/click write.", groupable: false }
+      attempt_count: { type: integer, description: "Send attempts.", groupable: false }
+      destination: { type: text, description: "Push destination.", groupable: false }
+      platform: { type: text, description: "ios/android/web.", groupable: true, user_phrases: ['platform'] }
+      ab_variant: { type: text, description: "a/b/holdout/winner.", groupable: true, user_phrases: ['variant', 'a/b'] }
+      opened_at: { type: timestamp, description: "First unique open.", groupable: false }
+      clicked_at: { type: timestamp, description: "First unique click.", groupable: false }
+      open_count: { type: integer, description: "Repeat opens.", groupable: false }
+      click_count: { type: integer, description: "Repeat clicks.", groupable: false }
+      outcome: { type: text, description: "sent/failed/skipped/stub/pending/bounce.", groupable: true, user_phrases: ['outcome', 'result', 'status'] }
+      channel: { type: text, description: "Batch channel.", groupable: true, user_phrases: ['channel'] }
+      campaign_name: { type: text, description: "Campaign name.", groupable: true, user_phrases: ['campaign'] }
+      launch_local_date: { type: text, description: "Launch date for Dashboard period.", groupable: true, user_phrases: ['day'] }
+      created_by_user_id: { type: bigint, description: "Campaign creator.", groupable: false }
+      branch_id: { type: bigint, description: "Workspace.", groupable: false }
+      campaign_status: { type: text, description: "Campaign lifecycle.", groupable: true, user_phrases: ['stage'] }
+      is_delivered: { type: boolean, description: "Sent, not bounce, not stub. Rate denominator.", groupable: true }
+      is_stub: { type: boolean, description: "Demo delivery.", groupable: true }
+
+  push_endpoints:
+    grain: "one device or browser subscription"
+    description: "Inventory of reachable push/web endpoints. auth_keys stripped."
+    source: |
+      SELECT id, organization_id, contact_id, channel, platform, label, active, created_at, updated_at
+      FROM campaign.push_endpoints WHERE organization_id = {org_id}
+    columns:
+      id: { type: bigint, description: "Endpoint id.", groupable: false }
+      organization_id: { type: bigint, description: "Tenant.", groupable: false }
+      contact_id: { type: bigint, description: "Optional person.", groupable: true }
+      channel: { type: text, description: "push or web.", groupable: true }
+      platform: { type: text, description: "OS/browser.", groupable: true }
+      label: { type: text, description: "Operator label.", groupable: false }
+      active: { type: boolean, description: "Eligible to send.", groupable: true }
+      created_at: { type: timestamp, description: "Created.", groupable: false }
+      updated_at: { type: timestamp, description: "Updated.", groupable: false }
+
+  website_contacts:
+    grain: "one site visitor / web-push person"
+    description: "Anonymous or matched website people. Not CDP join."
+    source: |
+      SELECT id, organization_id, contact_id, subscribed, visit_count, first_seen_at, last_seen_at, created_at
+      FROM campaign.website_contacts WHERE organization_id = {org_id}
+    columns:
+      id: { type: bigint, description: "Visitor row.", groupable: false }
+      organization_id: { type: bigint, description: "Tenant.", groupable: false }
+      contact_id: { type: bigint, description: "Matched Campaign person or null.", groupable: true }
+      subscribed: { type: boolean, description: "Web-push opt-in.", groupable: true }
+      visit_count: { type: integer, description: "Visit total.", groupable: false }
+      first_seen_at: { type: timestamp, description: "First seen.", groupable: false }
+      last_seen_at: { type: timestamp, description: "Last seen.", groupable: false }
+      created_at: { type: timestamp, description: "Created.", groupable: false }
+
+  contact_engagement:
+    grain: "one org+contact email engagement rollup"
+    description: "Lifetime email open/click and unsubscribe. Not Dashboard unique open rate."
+    source: |
+      SELECT id, organization_id, contact_id, email_unsubscribed, email_unsubscribed_at,
+             email_unsubscribe_reason, last_email_opened_at, last_email_clicked_at,
+             email_open_count, email_click_count, created_at, updated_at
+      FROM campaign.campaign_contact_engagement WHERE organization_id = {org_id}
+    columns:
+      id: { type: bigint, description: "Row id.", groupable: false }
+      organization_id: { type: bigint, description: "Tenant.", groupable: false }
+      contact_id: { type: bigint, description: "Campaign person.", groupable: true, user_phrases: ['contact'] }
+      email_unsubscribed: { type: boolean, description: "Org-level email opt-out.", groupable: true, user_phrases: ['unsub'] }
+      email_unsubscribed_at: { type: timestamp, description: "When they unsubscribed.", groupable: false }
+      email_unsubscribe_reason: { type: text, description: "Optional reason.", groupable: false }
+      last_email_opened_at: { type: timestamp, description: "Most recent open.", groupable: false }
+      last_email_clicked_at: { type: timestamp, description: "Most recent click.", groupable: false }
+      email_open_count: { type: integer, description: "Lifetime opens.", groupable: false }
+      email_click_count: { type: integer, description: "Lifetime clicks.", groupable: false }
+      created_at: { type: timestamp, description: "Created.", groupable: false }
+      updated_at: { type: timestamp, description: "Updated.", groupable: false }
+
+  regulated_templates:
+    grain: "one SMS DLT or WhatsApp Meta template"
+    description: "Approval ops. channel_config_id is not exposed."
+    source: |
+      SELECT id, organization_id, channel, name, external_id, language, category, status::text AS status,
+             rejected_reason, submitted_at, last_status_checked_at, created_by_user_id, created_at, updated_at,
+             campaign_name, goal, objective, source_campaign_id
+      FROM campaign.regulated_channel_templates WHERE organization_id = {org_id}
+    columns:
+      id: { type: bigint, description: "Template id.", groupable: false }
+      organization_id: { type: bigint, description: "Tenant.", groupable: false }
+      channel: { type: text, description: "sms or whatsapp.", groupable: true }
+      name: { type: text, description: "Internal name.", groupable: false }
+      external_id: { type: text, description: "DLT or Meta name.", groupable: false }
+      language: { type: text, description: "Language.", groupable: true }
+      category: { type: text, description: "Provider category.", groupable: true }
+      status: { type: text, description: "draft/pending/approved/rejected/paused/disabled.", groupable: true, user_phrases: ['approval', 'stage'] }
+      rejected_reason: { type: text, description: "Provider rejection.", groupable: false }
+      submitted_at: { type: timestamp, description: "Submitted.", groupable: false }
+      last_status_checked_at: { type: timestamp, description: "Last poll.", groupable: false }
+      created_by_user_id: { type: bigint, description: "Creator.", groupable: false }
+      created_at: { type: timestamp, description: "Created.", groupable: false }
+      updated_at: { type: timestamp, description: "Updated.", groupable: false }
+      campaign_name: { type: text, description: "Copied campaign name.", groupable: false }
+      goal: { type: text, description: "Copied goal.", groupable: false }
+      objective: { type: text, description: "Copied objective.", groupable: false }
+      source_campaign_id: { type: bigint, description: "Source campaign.", groupable: false }
+
+  library_templates:
+    grain: "one library catalog card"
+    description: "Template library reuse, not send volume."
+    source: |
+      SELECT id, organization_id, source, name, primary_channel, approval_status, used_count,
+             created_by_user_id, created_at, updated_at
+      FROM campaign.campaign_library_templates WHERE organization_id = {org_id}
+    columns:
+      id: { type: bigint, description: "Row id.", groupable: false }
+      organization_id: { type: bigint, description: "Tenant.", groupable: false }
+      source: { type: text, description: "system or user.", groupable: true }
+      name: { type: text, description: "Card title.", groupable: false }
+      primary_channel: { type: text, description: "Main channel.", groupable: true, user_phrases: ['channel'] }
+      approval_status: { type: text, description: "Library gate.", groupable: true, user_phrases: ['status'] }
+      used_count: { type: integer, description: "Reuse count not send volume.", groupable: false }
+      created_by_user_id: { type: bigint, description: "Uploader.", groupable: false }
+      created_at: { type: timestamp, description: "Created.", groupable: false }
+      updated_at: { type: timestamp, description: "Updated.", groupable: false }
+
+  gallery_ideas:
+    grain: "one gallery idea card"
+    description: "Creative idea status, not engagement."
+    source: |
+      SELECT id, organization_id, idea_key, title, industry, pack_id, status, sort_order, created_at, updated_at FROM campaign.campaign_gallery_ideas WHERE organization_id = {org_id}
+    columns:
+      id: { type: bigint, description: "Row id.", groupable: false }
+      organization_id: { type: bigint, description: "Tenant.", groupable: false }
+      idea_key: { type: text, description: "Stable idea id for regeneration.", groupable: false }
+      title: { type: text, description: "Gallery card title.", groupable: false }
+      industry: { type: text, description: "Industry on the card.", groupable: true }
+      pack_id: { type: text, description: "Industry pack used to generate the idea.", groupable: true }
+      status: { type: text, description: "active to show; other values hide.", groupable: true, user_phrases: ['status'] }
+      sort_order: { type: integer, description: "Card order in the gallery.", groupable: false }
+      created_at: { type: timestamp, description: "Created.", groupable: false }
+      updated_at: { type: timestamp, description: "Updated.", groupable: false }
+
+  gallery_jobs:
+    grain: "one gallery generation job"
+    description: "Job pipeline health."
+    source: |
+      SELECT id, organization_id, job_type, status, error_message, started_at, finished_at, created_at, updated_at FROM campaign.campaign_gallery_jobs WHERE organization_id = {org_id}
+    columns:
+      id: { type: bigint, description: "Row id.", groupable: false }
+      organization_id: { type: bigint, description: "Tenant.", groupable: false }
+      job_type: { type: text, description: "Kind of gallery job.", groupable: true }
+      status: { type: text, description: "queued, running, done, failed.", groupable: true, user_phrases: ['status'] }
+      error_message: { type: text, description: "Failure text when status=failed.", groupable: false }
+      started_at: { type: timestamp, description: "When the worker started.", groupable: false }
+      finished_at: { type: timestamp, description: "When the job finished or failed.", groupable: false }
+      created_at: { type: timestamp, description: "Created.", groupable: false }
+      updated_at: { type: timestamp, description: "Updated.", groupable: false }
+
+  image_gallery_assets:
+    grain: "one image asset"
+    description: "Image gallery ops."
+    source: |
+      SELECT id, organization_id, media_id, short_description, source, channel, status, created_by_user_id, created_at, updated_at FROM campaign.campaign_image_gallery_assets WHERE organization_id = {org_id}
+    columns:
+      id: { type: bigint, description: "Row id.", groupable: false }
+      organization_id: { type: bigint, description: "Tenant.", groupable: false }
+      media_id: { type: text, description: "Stable media handle used in templates.", groupable: false }
+      short_description: { type: text, description: "Alt/summary for the asset.", groupable: false }
+      source: { type: text, description: "ai_generated, uploaded, or imported.", groupable: true }
+      channel: { type: text, description: "Intended reuse channel.", groupable: true }
+      status: { type: text, description: "active vs archived.", groupable: true, user_phrases: ['status'] }
+      created_by_user_id: { type: bigint, description: "Who added the asset.", groupable: false }
+      created_at: { type: timestamp, description: "Created.", groupable: false }
+      updated_at: { type: timestamp, description: "Updated.", groupable: false }
+
+  sms_channel_settings:
+    grain: "one org SMS settings row"
+    description: "SMS channel readiness."
+    source: |
+      SELECT id, organization_id, status, created_at, updated_at
+      FROM campaign.sms_channel_settings WHERE organization_id = {org_id}
+    columns:
+      id: { type: bigint, description: "Row id.", groupable: false }
+      organization_id: { type: bigint, description: "Tenant.", groupable: false }
+      status: { type: text, description: "Setup status.", groupable: true }
+      created_at: { type: timestamp, description: "Created.", groupable: false }
+      updated_at: { type: timestamp, description: "Updated.", groupable: false }
+
+  tenant_industry_packs:
+    grain: "one industry pack overlay"
+    description: "Packaging, not send KPIs."
+    source: |
+      SELECT id, organization_id, pack_id, seed_industry_type, created_at, updated_at
+      FROM campaign.tenant_industry_packs WHERE organization_id = {org_id}
+    columns:
+      id: { type: bigint, description: "Row id.", groupable: false }
+      organization_id: { type: bigint, description: "Tenant.", groupable: false }
+      pack_id: { type: text, description: "generic-b2b or generic-b2c family.", groupable: true }
+      seed_industry_type: { type: text, description: "Industry type snapshot at seed time.", groupable: true }
+      created_at: { type: timestamp, description: "Created.", groupable: false }
+      updated_at: { type: timestamp, description: "Updated.", groupable: false }
+
+  recommendations:
+    grain: "one campaign recommendation card"
+    description: "Suggested next campaigns, not performance."
+    source: |
+      SELECT id, organization_id, branch_id, created_by_user_id, public_id, status, title, created_at, updated_at
+      FROM campaign.campaign_recommendations WHERE organization_id = {org_id}
+    columns:
+      id: { type: bigint, description: "Row id.", groupable: false }
+      organization_id: { type: bigint, description: "Tenant.", groupable: false }
+      branch_id: { type: bigint, description: "Workspace of the card.", groupable: false }
+      created_by_user_id: { type: bigint, description: "Who created the card.", groupable: false }
+      public_id: { type: text, description: "Frontend rec- id.", groupable: false }
+      status: { type: text, description: "Board state: open, used, dismissed.", groupable: true, user_phrases: ['status'] }
+      title: { type: text, description: "Card title.", groupable: false }
+      created_at: { type: timestamp, description: "Created.", groupable: false }
+      updated_at: { type: timestamp, description: "Updated.", groupable: false }
+
+  app_notifications:
+    grain: "one in-app bell item"
+    description: "Unread backlog. user_id null can be tenant-wide."
+    source: |
+      SELECT id, organization_id, user_id, kind, read_at, created_at
+      FROM campaign.app_notifications WHERE organization_id = {org_id}
+    columns:
+      id: { type: bigint, description: "Notification id.", groupable: false }
+      organization_id: { type: bigint, description: "Tenant.", groupable: false }
+      user_id: { type: bigint, description: "Recipient user or null.", groupable: true }
+      kind: { type: text, description: "Notification kind.", groupable: true }
+      read_at: { type: timestamp, description: "Read time; null = unread.", groupable: false }
+      created_at: { type: timestamp, description: "Created.", groupable: false }
+
+  opportunity_events:
+    grain: "one public form/event"
+    description: "Org-wide for both roles. Opens and submissions."
+    source: |
+      SELECT id, organization_id, public_id, status, open_count, submission_count, created_at, updated_at
+      FROM campaign.campaign_opportunity_events WHERE organization_id = {org_id}
+    columns:
+      id: { type: bigint, description: "Event id.", groupable: false }
+      organization_id: { type: bigint, description: "Tenant.", groupable: false }
+      public_id: { type: text, description: "Public slug id.", groupable: true, user_phrases: ['event'] }
+      status: { type: text, description: "draft vs launched.", groupable: true, user_phrases: ['status', 'stage'] }
+      open_count: { type: integer, description: "Form opens.", groupable: false }
+      submission_count: { type: integer, description: "Replies.", groupable: false }
+      created_at: { type: timestamp, description: "Created.", groupable: false }
+      updated_at: { type: timestamp, description: "Updated.", groupable: false }
+
+  form_submissions:
+    grain: "one form reply"
+    description: "Org-wide submissions. Join events via event_public_id."
+    source: |
+      SELECT id, organization_id, event_public_id, created_at
+      FROM campaign.campaign_form_submissions WHERE organization_id = {org_id}
+    columns:
+      id: { type: bigint, description: "Submission id.", groupable: false }
+      organization_id: { type: bigint, description: "Tenant.", groupable: false }
+      event_public_id: { type: text, description: "Parent event.", groupable: true, user_phrases: ['event'] }
+      created_at: { type: timestamp, description: "Submitted at.", groupable: false }
+
+  daily_report_emails:
+    grain: "one daily KPI email delivery attempt"
+    description: "Whether yesterday's email went out. Not in-app Dashboard scope."
+    source: |
+      SELECT id, organization_id, report_date, status, recipient_email, error_message, sent_at, created_at
+      FROM campaign.daily_report_email_deliveries WHERE organization_id = {org_id}
+    columns:
+      id: { type: bigint, description: "Row id.", groupable: false }
+      organization_id: { type: bigint, description: "Tenant.", groupable: false }
+      report_date: { type: date, description: "Report day.", groupable: true }
+      status: { type: text, description: "Send status.", groupable: true }
+      recipient_email: { type: text, description: "Recipient.", groupable: false }
+      error_message: { type: text, description: "Error if failed.", groupable: false }
+      sent_at: { type: timestamp, description: "When sent.", groupable: false }
+      created_at: { type: timestamp, description: "Created.", groupable: false }
+
+  customers:
+    grain: "one CDP person (org directory, not joined to sends)"
+    description: "Audience directory. Soft-delete is custom_fields.campaign_deleted. No FK to contact_id."
+    source: |
+      SELECT cdp_id, first_name, last_name, gender, date_of_birth, company, city, region, country, language,
+             timezone, acquisition_channel, acquisition_date, first_referrer, first_seen_at, last_seen_at,
+             created_at, updated_at, organization_id, contact_type, primary_product, industry, blocked
+      FROM cdp.customer_profile
+      WHERE organization_id = {org_id}
+        AND coalesce(custom_fields->>'campaign_deleted','') <> 'true'
+    columns:
+      cdp_id: { type: text, description: "Canonical CDP text id.", groupable: false }
+      first_name: { type: text, description: "Given name.", groupable: false }
+      last_name: { type: text, description: "Family name.", groupable: false }
+      gender: { type: text, description: "Optional gender.", groupable: true }
+      date_of_birth: { type: date, description: "Optional DOB.", groupable: false }
+      company: { type: text, description: "Company.", groupable: true, user_phrases: ['company'] }
+      city: { type: text, description: "City.", groupable: true, user_phrases: ['city'] }
+      region: { type: text, description: "Region.", groupable: true }
+      country: { type: text, description: "Country.", groupable: true, user_phrases: ['country'] }
+      language: { type: text, description: "Language.", groupable: true }
+      timezone: { type: text, description: "Person timezone.", groupable: false }
+      acquisition_channel: { type: text, description: "How they entered CDP.", groupable: true, user_phrases: ['acquisition'] }
+      acquisition_date: { type: date, description: "Acquire date.", groupable: false }
+      first_referrer: { type: text, description: "First referrer.", groupable: false }
+      first_seen_at: { type: timestamptz, description: "First activity.", groupable: false }
+      last_seen_at: { type: timestamptz, description: "Last activity.", groupable: false }
+      created_at: { type: timestamptz, description: "Profile created.", groupable: false }
+      updated_at: { type: timestamptz, description: "Last profile change.", groupable: false }
+      organization_id: { type: bigint, description: "Tenant.", groupable: false }
+      contact_type: { type: text, description: "lead/customer/…", groupable: true }
+      primary_product: { type: text, description: "Primary product.", groupable: false }
+      industry: { type: text, description: "Industry.", groupable: true }
+      blocked: { type: boolean, description: "CDP hard block.", groupable: true }
+
+  identity_keys:
+    grain: "one email or phone identity on a CDP person"
+    description: "Send-address lookup. Org-wide. Not joined automatically to send_recipients."
+    source: |
+      SELECT identity_id, cdp_id, key_type, key_value, source_system, confidence_score, verified,
+             created_at, organization_id
+      FROM cdp.identity_keys WHERE organization_id = {org_id}
+    columns:
+      identity_id: { type: text, description: "Identity pk.", groupable: false }
+      cdp_id: { type: text, description: "Parent profile.", groupable: false }
+      key_type: { type: text, description: "email/primary_email/phone/…", groupable: true, user_phrases: ['key type'] }
+      key_value: { type: text, description: "Normalized email or phone.", groupable: false }
+      source_system: { type: text, description: "Writer system.", groupable: true }
+      confidence_score: { type: numeric, description: "Optional confidence.", groupable: false }
+      verified: { type: boolean, description: "Verified flag.", groupable: true, user_phrases: ['verified'] }
+      created_at: { type: timestamptz, description: "Created.", groupable: false }
+      organization_id: { type: bigint, description: "Tenant.", groupable: false }
+
+  organizations:
+    grain: "one Accounts tenant"
+    description: "Tenant record Campaign login uses."
+    source: |
+      SELECT id, name, created_at, updated_at FROM accounts.organizations WHERE id = {org_id}
+    columns:
+      id: { type: bigint, description: "Tenant id.", groupable: false }
+      name: { type: text, description: "Tenant name.", groupable: false }
+      created_at: { type: timestamp, description: "Created.", groupable: false }
+      updated_at: { type: timestamp, description: "Updated.", groupable: false }
+
+  setup_users:
+    grain: "one Accounts user in the tenant"
+    description: "created_by_user_id points here. Safe columns only."
+    source: |
+      SELECT id, organization_id, email, name, status, created_at
+      FROM accounts.setup_users WHERE organization_id = {org_id}
+    columns:
+      id: { type: bigint, description: "User id.", groupable: false }
+      organization_id: { type: bigint, description: "Tenant.", groupable: false }
+      email: { type: text, description: "Login email.", groupable: false }
+      name: { type: text, description: "Display name.", groupable: false }
+      status: { type: text, description: "active/…", groupable: true }
+      created_at: { type: timestamp, description: "Created.", groupable: false }
+
+  setup_roles:
+    grain: "one Accounts role"
+    description: "Campaign only cares if name is admin."
+    source: |
+      SELECT id, organization_id, name FROM accounts.setup_roles WHERE organization_id = {org_id}
+    columns:
+      id: { type: bigint, description: "Role id.", groupable: false }
+      organization_id: { type: bigint, description: "Tenant.", groupable: false }
+      name: { type: text, description: "Role name.", groupable: true }
+
+  setup_user_product_access:
+    grain: "one user-product-role grant"
+    description: "Campaign access is product_id=campaign."
+    source: |
+      SELECT id, user_id, product_id, role_id FROM accounts.setup_user_product_access u
+      JOIN accounts.setup_users s ON s.id = u.user_id AND s.organization_id = {org_id}
+    columns:
+      id: { type: bigint, description: "Grant id.", groupable: false }
+      user_id: { type: bigint, description: "User.", groupable: false }
+      product_id: { type: text, description: "Product.", groupable: false }
+      role_id: { type: bigint, description: "Role.", groupable: false }
+
+  setup_channel_configs:
+    grain: "one Accounts channel config"
+    description: "Mailbox/channel setup. Admin."
+    source: |
+      SELECT id, organization_id, channel_type, name, status, created_at, updated_at
+      FROM accounts.setup_channel_configs WHERE organization_id = {org_id}
+    columns:
+      id: { type: bigint, description: "Config id. Internal; do not treat as a send KPI.", groupable: false }
+      organization_id: { type: bigint, description: "Tenant.", groupable: false }
+      channel_type: { type: text, description: "Channel type.", groupable: true }
+      name: { type: text, description: "Connection display name.", groupable: false }
+      status: { type: text, description: "Connection state, not recipient status.", groupable: true }
+      created_at: { type: timestamp, description: "Created.", groupable: false }
+      updated_at: { type: timestamp, description: "Updated.", groupable: false }
+
+  setup_email_configs:
+    grain: "one mailbox SMTP/OAuth config (secrets stripped)"
+    description: "Test-send mailbox, not bulk ESP. Org is on setup_channel_configs."
+    source: |
+      SELECT e.id, c.organization_id, e.provider_type, e.sender_email, e.sender_name, e.domain,
+             e.domain_verification_status, e.created_at, e.updated_at
+      FROM accounts.setup_email_configs e
+      JOIN accounts.setup_channel_configs c ON c.id = e.channel_config_id
+      WHERE c.organization_id = {org_id}
+    columns:
+      id: { type: bigint, description: "Row id.", groupable: false }
+      organization_id: { type: bigint, description: "Tenant from parent channel config.", groupable: false }
+      provider_type: { type: text, description: "Mailbox provider class.", groupable: true }
+      sender_email: { type: text, description: "Connected-inbox From, not bulk ESP.", groupable: false }
+      sender_name: { type: text, description: "Mailbox display name.", groupable: false }
+      domain: { type: text, description: "Accounts mailbox domain.", groupable: false }
+      domain_verification_status: { type: text, description: "Whether Accounts considers the domain verified.", groupable: true }
+      created_at: { type: timestamp, description: "Created.", groupable: false }
+      updated_at: { type: timestamp, description: "Updated.", groupable: false }
+
+  mail_oauth_connections:
+    grain: "one mailbox OAuth connection (tokens stripped)"
+    description: "needs_reauth and expiry only. Org is via email config to channel config."
+    source: |
+      SELECT o.id, c.organization_id, o.needs_reauth, o.expires_at, o.created_at, o.updated_at
+      FROM accounts.mail_oauth_connections o
+      JOIN accounts.setup_email_configs e ON e.oauth_connection_id = o.id
+      JOIN accounts.setup_channel_configs c ON c.id = e.channel_config_id
+      WHERE c.organization_id = {org_id}
+    columns:
+      id: { type: bigint, description: "Row id.", groupable: false }
+      organization_id: { type: bigint, description: "Tenant from parent channel config.", groupable: false }
+      needs_reauth: { type: boolean, description: "Must reconnect.", groupable: true }
+      expires_at: { type: timestamp, description: "Token expiry.", groupable: false }
+      created_at: { type: timestamp, description: "Created.", groupable: false }
+      updated_at: { type: timestamp, description: "Updated.", groupable: false }
+
+  a2a_spoke_clients:
+    grain: "one A2A client metadata (tokens stripped)"
+    description: "Catalog only. No certified a2a_health KPI."
+    source: |
+      SELECT id, organization_id, a2a_server_name, client_id, access_expires_at, refresh_expires_at, skill_version, created_at, updated_at
+      FROM accounts.a2a_spoke_clients WHERE organization_id = {org_id}
+    columns:
+      id: { type: bigint, description: "Client id.", groupable: false }
+      organization_id: { type: bigint, description: "Tenant.", groupable: false }
+      a2a_server_name: { type: text, description: "Spoke name.", groupable: false }
+      client_id: { type: text, description: "Public A2A client id. No secrets.", groupable: false }
+      access_expires_at: { type: timestamp, description: "When the access token expires.", groupable: false }
+      refresh_expires_at: { type: timestamp, description: "When the refresh token expires.", groupable: false }
+      skill_version: { type: text, description: "Optional skill catalog version.", groupable: false }
+      created_at: { type: timestamp, description: "Created.", groupable: false }
+      updated_at: { type: timestamp, description: "Updated.", groupable: false }
+
+  auth_sessions:
+    grain: "one login session for campaign product (secrets stripped)"
+    description: "Ops count of sessions. No tokens."
+    source: |
+      SELECT id, organization_id, user_id, product_id, created_at, expires_at
+      FROM accounts.auth_sessions WHERE organization_id = {org_id} AND product_id = 'campaign'
+    columns:
+      id: { type: bigint, description: "Session id.", groupable: false }
+      organization_id: { type: bigint, description: "Tenant.", groupable: false }
+      user_id: { type: bigint, description: "User.", groupable: false }
+      product_id: { type: text, description: "Product.", groupable: false }
+      created_at: { type: timestamp, description: "Created.", groupable: false }
+      expires_at: { type: timestamp, description: "Expiry.", groupable: false }

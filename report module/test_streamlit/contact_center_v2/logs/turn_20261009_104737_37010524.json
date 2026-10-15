@@ -1,0 +1,60 @@
+{
+  "turn_id": "37010524",
+  "timestamp": "2026-10-09T05:17:37.151390+00:00",
+  "question": "what is the average handle time last 7 days?",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1016,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Average Handle Time</strong></p><p>The average handle time for the past 7 days (UTC) was <strong>3566.86</strong> seconds.</p><p>Would you like to see this broken down by queue or agent?</p>",
+  "card": "card: kpi r1",
+  "facts": "result_id: r1\nwindow: past 7 days (UTC)\nkpi: avg_handle_time\ncertified: true\ntask_goal: Calculate the average handle time for all conversations.\nanswer_type: number\nrow_count: 1\nrow 1: avg_handle_time=3566.8623600357142857",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1016,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "what is the average handle time last 7 days?",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants to know the average handle time for the last 7 days.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Calculate the average handle time for all conversations.",
+          "time": "last 7 days",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "avg_handle_time",
+        "row_count": 1
+      }
+    ],
+    "facts": "result_id: r1\nwindow: past 7 days (UTC)\nkpi: avg_handle_time\ncertified: true\ntask_goal: Calculate the average handle time for all conversations.\nanswer_type: number\nrow_count: 1\nrow 1: avg_handle_time=3566.8623600357142857",
+    "grounded": true,
+    "card": "card: kpi r1"
+  },
+  "error": null
+}

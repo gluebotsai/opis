@@ -1,0 +1,60 @@
+{
+  "turn_id": "6c7546c9",
+  "timestamp": "2026-10-12T12:03:54.320818+00:00",
+  "question": "how to i reduces the sla breach rate?",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1054,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>One check before I answer</strong></p><p>Would you like to see the first-reply SLA rate or the number of conversations that breached SLA?</p>",
+  "card": "card: none",
+  "facts": "",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1054,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "how to i reduces the sla breach rate?",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants to understand how to reduce SLA breaches, implying a need to identify the drivers or patterns behind them.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Find the first-reply SLA rate and the number of conversations that breached SLA.",
+          "time": "all time",
+          "scope": "org",
+          "slice": [
+            "channel"
+          ],
+          "answer_type": "number"
+        },
+        {
+          "id": "t2",
+          "executor": "kg",
+          "path": "why_links",
+          "goal": "Identify the routing paths, queues, or agents associated with conversations that breached their first-reply SLA.",
+          "time": "all time",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "list"
+        }
+      ]
+    },
+    "clarify": "Would you like to see the first-reply SLA rate or the number of conversations that breached SLA?"
+  },
+  "error": null
+}

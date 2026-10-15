@@ -1,0 +1,104 @@
+[
+  {
+    "failure_id": "FAIL-001",
+    "layer": "sql",
+    "session_id": "CP-06",
+    "starting_agent": "cc.super",
+    "user_query": "The customer was disconnected mid-call. Create a follow-up ticket in the customer support queue with notes from call ID CC-9912.",
+    "endpoint_called": "http://192.168.11.25:8765/v1/sql/query",
+    "request_payload": {
+      "organizationId": 1000,
+      "userId": 1,
+      "originProduct": "contact_centre",
+      "originAgent": "cc.super",
+      "instruction": "Retrieve the transcript and notes for interaction ID CC-9912.",
+      "limit": 50
+    },
+    "http_status": 500,
+    "error_response": "HTTPConnectionPool(host='192.168.11.25', port=8765): Read timed out. (read timeout=12)",
+    "root_cause": "Backend execution exception",
+    "remediation": "Update slice metric_ids allowlist or register originAgent in backend SQL service"
+  },
+  {
+    "failure_id": "FAIL-002",
+    "layer": "sql",
+    "session_id": "CP-09",
+    "starting_agent": "cc.super",
+    "user_query": "Can you check if ticket #5512 has an SLA breach warning?",
+    "endpoint_called": "http://192.168.11.25:8765/v1/sql/query",
+    "request_payload": {
+      "organizationId": 1000,
+      "userId": 1,
+      "originProduct": "contact_centre",
+      "originAgent": "cc.super",
+      "instruction": "Check the status and SLA breach details for ticket #5512.",
+      "limit": 50
+    },
+    "http_status": 500,
+    "error_response": "{\"detail\":{\"error\":\"SqlValidationError\",\"message\":\"Column 'conversation_id' not allowed on mart_conversation_sla_state\"}}",
+    "root_cause": "Backend execution exception",
+    "remediation": "Update slice metric_ids allowlist or register originAgent in backend SQL service"
+  },
+  {
+    "failure_id": "FAIL-003",
+    "layer": "sql",
+    "session_id": "CP-12",
+    "starting_agent": "cc.super",
+    "user_query": "Find out who is the currently assigned resolver for ticket #8921.",
+    "endpoint_called": "http://192.168.11.25:8765/v1/sql/query",
+    "request_payload": {
+      "organizationId": 1000,
+      "userId": 1,
+      "originProduct": "contact_centre",
+      "originAgent": "cc.super",
+      "instruction": "Find the currently assigned resolver (agent) for ticket #8921.",
+      "limit": 50
+    },
+    "http_status": 500,
+    "error_response": "HTTPConnectionPool(host='192.168.11.25', port=8765): Read timed out. (read timeout=12)",
+    "root_cause": "Backend execution exception",
+    "remediation": "Update slice metric_ids allowlist or register originAgent in backend SQL service"
+  },
+  {
+    "failure_id": "FAIL-004",
+    "layer": "semantic",
+    "session_id": "CP-18",
+    "starting_agent": "tk.reporting",
+    "user_query": "What is our overall SLA adherence percentage for resolved tickets?",
+    "endpoint_called": "http://192.168.11.25:8765/v1/semantic/query",
+    "request_payload": {
+      "organizationId": 1000,
+      "userId": 1,
+      "product": "ticketing",
+      "agent": "tk.reporting",
+      "metrics": [
+        "resolution_sla_compliance_rate"
+      ],
+      "limit": 50
+    },
+    "http_status": 400,
+    "error_response": "{\"detail\":{\"message\":\"Metric 'resolution_sla_compliance_rate' is not entitled for agent 'tk.reporting' (organization 1000).\"}}",
+    "root_cause": "Backend execution exception",
+    "remediation": "Update slice metric_ids allowlist or register originAgent in backend SQL service"
+  },
+  {
+    "failure_id": "FAIL-005",
+    "layer": "sql",
+    "session_id": "CP-21",
+    "starting_agent": "tk.tickets",
+    "user_query": "Retrieve recent interaction history and notes for ticket #12935 from customer portal.",
+    "endpoint_called": "http://192.168.11.25:8765/v1/sql/query",
+    "request_payload": {
+      "organizationId": 1000,
+      "userId": 1,
+      "originProduct": "ticketing",
+      "originAgent": "tk.tickets",
+      "instruction": "Retrieve the recent interaction history, comments, and notes for ticket #12935.",
+      "limit": 50
+    },
+    "http_status": 500,
+    "error_response": "{\"detail\":{\"error\":\"SqlValidationError\",\"message\":\"Column 'ticket_id' not allowed on mart_audit_events\"}}",
+    "root_cause": "Backend execution exception",
+    "remediation": "Update slice metric_ids allowlist or register originAgent in backend SQL service"
+  }
+]

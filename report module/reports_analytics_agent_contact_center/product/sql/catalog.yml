@@ -1,0 +1,56 @@
+version: 1
+# Operational tables and allowlisted joins for Contact Center.
+# All queries target virtual rpt.* views.
+
+entities:
+  conversations:
+    schema: ccass
+    table: conversations
+    grain: one row is one customer conversation
+    tenant_column: organization_id
+    columns:
+      id: { type: bigint, groupable: false }
+      organization_id: { type: bigint, groupable: false }
+      channel: { type: character varying, groupable: true, filter_ops: [eq, in] }
+      contact_id: { type: text, groupable: true, filter_ops: [eq, in] }
+      queue_id: { type: bigint, groupable: true, filter_ops: [eq, in] }
+      assigned_agent_id: { type: bigint, groupable: true, filter_ops: [eq, in, is_null] }
+      status: { type: character varying, groupable: true, filter_ops: [eq, in] }
+      priority: { type: integer, groupable: true, filter_ops: [eq, in, gte, lte] }
+      subject: { type: character varying, groupable: false }
+      created_at: { type: timestamptz, date_column: true }
+      queued_at: { type: timestamptz, date_column: true }
+      assigned_at: { type: timestamptz, date_column: true }
+      first_agent_response_at: { type: timestamptz, date_column: true }
+      resolved_at: { type: timestamptz, date_column: true }
+      ended_at: { type: timestamptz, date_column: true }
+      closed_at: { type: timestamptz, date_column: true }
+      end_reason: { type: character varying, groupable: true, filter_ops: [eq, in] }
+      end_actor: { type: character varying, groupable: true, filter_ops: [eq, in] }
+      disposition_code: { type: character varying, groupable: true, filter_ops: [eq, in] }
+      resolution_code: { type: character varying, groupable: true, filter_ops: [eq, in] }
+      sla_status: { type: character varying, groupable: true, filter_ops: [eq, in] }
+
+  agents:
+    schema: ccass
+    table: agents
+    grain: one published agent
+    tenant_column: organization_id
+    columns:
+      id: { type: bigint, groupable: true }
+      organization_id: { type: bigint, groupable: false }
+      display_name: { type: character varying, groupable: false }
+      email: { type: character varying, groupable: false }
+      status: { type: character varying, groupable: true }
+
+  queues:
+    schema: ccass
+    table: queues
+    grain: one published queue
+    tenant_column: organization_id
+    columns:
+      id: { type: bigint, groupable: true }
+      organization_id: { type: bigint, groupable: false }
+      name: { type: character varying, groupable: false }
+      team_id: { type: bigint, groupable: true }
+      status: { type: character varying, groupable: true }

@@ -1,0 +1,80 @@
+{
+  "turn_id": "3705ecb4",
+  "timestamp": "2026-10-09T11:24:40.450702+00:00",
+  "question": "last 7 days conversation count",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1016,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Conversation count for the past 7 days (UTC)</strong></p>\n<p>There were <strong>368</strong> started conversations in the past 7 days (UTC).</p>\n<ul>\n<li><strong>call</strong>: 212</li>\n<li><strong>webchat</strong>: 123</li>\n<li><strong>whatsapp</strong>: 15</li>\n<li><strong>instagram</strong>: 7</li>\n<li><strong>email</strong>: 6</li>\n<li><strong>facebook</strong>: 5</li>\n</ul>\n<p>Would you like to see how these conversation volumes compare to the previous 7-day period?</p>",
+  "card": "card: bar r2",
+  "facts": "result_id: r1\nwindow: past 7 days (UTC)\nkpi: total\ncertified: true\nunit: conversations\ntask_goal: Count the number of started conversations\nanswer_type: number\nrow_count: 1\nrow 1: total=368\n\nresult_id: r2\nwindow: past 7 days (UTC)\nkpi: total\ncertified: true\nunit: conversations\ntask_goal: Count the number of started conversations broken down by channel\nanswer_type: number\nrow_count: 6\nrow 1: channel=email; total=6\nrow 2: channel=facebook; total=5\nrow 3: channel=instagram; total=7\nrow 4: channel=webchat; total=123\nrow 5: channel=whatsapp; total=15\nrow 6: channel=call; total=212",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1016,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "last 7 days conversation count",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants the total conversation count and a breakdown by channel for the last 7 days.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Count the number of started conversations",
+          "time": "last 7 days",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "number"
+        },
+        {
+          "id": "t2",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Count the number of started conversations broken down by channel",
+          "time": "last 7 days",
+          "scope": "org",
+          "slice": [
+            "channel"
+          ],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "total",
+        "row_count": 1
+      },
+      {
+        "result_id": "r2",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "total",
+        "row_count": 6
+      }
+    ],
+    "facts": "result_id: r1\nwindow: past 7 days (UTC)\nkpi: total\ncertified: true\nunit: conversations\ntask_goal: Count the number of started conversations\nanswer_type: number\nrow_count: 1\nrow 1: total=368\n\nresult_id: r2\nwindow: past 7 days (UTC)\nkpi: total\ncertified: true\nunit: conversations\ntask_goal: Count the number of started conversations broken down by channel\nanswer_type: number\nrow_count: 6\nrow 1: channel=email; total=6\nrow 2: channel=facebook; total=5\nrow 3: channel=instagram; total=7\nrow 4: channel=webchat; total=123\nrow 5: channel=whatsapp; total=15\nrow 6: channel=call; total=212",
+    "grounded": true,
+    "card": "card: bar r2"
+  },
+  "error": null
+}

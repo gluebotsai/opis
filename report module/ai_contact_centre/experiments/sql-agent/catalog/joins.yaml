@@ -1,0 +1,180 @@
+version: 1
+description: >
+  Certified join graph. The agent may only join along these edges.
+  Multi-hop paths are shortest paths over this graph.
+
+edges:
+  - from: ccass.conversations
+    to: ccass.queues
+    from_column: queue_id
+    to_column: id
+    cardinality: many_to_one
+    purpose: queue name, queue filters
+
+  - from: ccass.conversations
+    to: ccass.agents
+    from_column: assigned_agent_id
+    to_column: id
+    cardinality: many_to_one
+    purpose: agent display name for assigned conversations
+
+  - from: ccass.conversations
+    to: ccass.conversation_messages
+    from_column: id
+    to_column: conversation_id
+    cardinality: one_to_many
+    purpose: message volume, sender mix, first-response reconstruction
+
+  - from: ccass.conversations
+    to: ccass.conversation_dispositions
+    from_column: id
+    to_column: conversation_id
+    cardinality: one_to_many
+    purpose: disposition events; use latest applied_at per conversation
+
+  - from: ccass.conversation_dispositions
+    to: ccass.dispositions
+    from_column: disposition_id
+    to_column: id
+    cardinality: many_to_one
+    purpose: disposition label, code, outcome
+
+  - from: ccass.conversations
+    to: ccass.conversation_assignments
+    from_column: id
+    to_column: conversation_id
+    cardinality: one_to_many
+    purpose: offer accept/reject/timeout history
+
+  - from: ccass.conversation_assignments
+    to: ccass.agents
+    from_column: agent_id
+    to_column: id
+    cardinality: many_to_one
+    purpose: offered agent identity
+
+  - from: ccass.conversations
+    to: ccass.conversation_transfers
+    from_column: id
+    to_column: conversation_id
+    cardinality: one_to_many
+    purpose: transfer destinations and completion
+
+  - from: ccass.conversation_transfers
+    to: ccass.queues
+    from_column: to_queue_id
+    to_column: id
+    cardinality: many_to_one
+    purpose: transfer destination queue name
+
+  - from: ccass.conversations
+    to: ccass.routing_attempts
+    from_column: id
+    to_column: conversation_id
+    cardinality: one_to_many
+    purpose: routing success, skip reasons
+
+  - from: ccass.routing_attempts
+    to: ccass.queues
+    from_column: queue_id
+    to_column: id
+    cardinality: many_to_one
+    purpose: queue of the routing attempt
+
+  - from: ccass.queues
+    to: ccass.queue_members
+    from_column: id
+    to_column: queue_id
+    cardinality: one_to_many
+    purpose: staffing and channel capabilities
+
+  - from: ccass.queue_members
+    to: ccass.agents
+    from_column: agent_id
+    to_column: id
+    cardinality: many_to_one
+    purpose: member agent identity
+
+  - from: ccass.agents
+    to: ccass.agent_presence
+    from_column: id
+    to_column: agent_id
+    cardinality: one_to_one
+    purpose: current presence
+
+  - from: ccass.agents
+    to: ccass.agent_presence_history
+    from_column: id
+    to_column: agent_id
+    cardinality: one_to_many
+    purpose: ready/busy occupancy intervals
+
+  - from: ccass.agents
+    to: ccass.agent_capacity
+    from_column: id
+    to_column: agent_id
+    cardinality: one_to_many
+    purpose: concurrency by channel
+
+  - from: ccass.conversations
+    to: ccass.agent_missed_contacts
+    from_column: id
+    to_column: conversation_id
+    cardinality: one_to_many
+    purpose: missed / offer-timeout events
+
+  - from: ccass.agents
+    to: ccass.agent_missed_contacts
+    from_column: id
+    to_column: agent_id
+    cardinality: one_to_many
+    purpose: missed contacts for an agent
+
+  - from: ccass.conversation_messages
+    to: ccass.message_receipts
+    from_column: id
+    to_column: message_id
+    cardinality: one_to_many
+    purpose: sent/delivered/read
+
+  - from: ccass.conversation_messages
+    to: ccass.message_delivery_attempts
+    from_column: id
+    to_column: message_id
+    cardinality: one_to_many
+    purpose: delivery retries and failures
+
+  - from: ccass.conversations
+    to: ccass.conversation_sla_state
+    from_column: id
+    to_column: conversation_id
+    cardinality: one_to_one
+    purpose: SLA due/breach timestamps
+
+  - from: ccass.conversation_sla_state
+    to: ccass.sla_policies
+    from_column: sla_policy_id
+    to_column: id
+    cardinality: many_to_one
+    purpose: SLA policy thresholds
+
+  - from: ccass.conversations
+    to: ccass.conversation_sentiment_turns
+    from_column: id
+    to_column: conversation_id
+    cardinality: one_to_many
+    purpose: per-turn sentiment scores
+
+  - from: ccass.conversations
+    to: cdp.interactions
+    from_column: id
+    to_column: conversation_id
+    cardinality: one_to_one
+    purpose: customer-centric projection (logical, no FK)
+
+  - from: cdp.interactions
+    to: cdp.interaction_events
+    from_column: id
+    to_column: interaction_id
+    cardinality: one_to_many
+    purpose: projected event stream

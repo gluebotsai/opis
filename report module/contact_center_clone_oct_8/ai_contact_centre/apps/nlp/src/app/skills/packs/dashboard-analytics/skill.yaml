@@ -1,0 +1,64 @@
+id: dashboard-analytics
+name: Dashboard Analytics
+description: >
+  Use when the user is on Analytics or asks about diagnostic incidents,
+  missed-contact rate, contributing factors, week-over-week change, volume
+  or missed-rate forecasts, peak hour, hourly inbound evidence, or
+  prescriptive recommendations.
+version: 2
+triggers:
+  - analytics
+  - diagnostic
+  - missed contact
+  - missed-contact rate
+  - contributing factors
+  - peak hour
+  - forecast
+  - expected contacts
+  - weekly comparison
+tools_preferred:
+  - get_dashboard_analytics_snapshot
+  - get_analytics_hourly_volume
+  - generate_performance_report
+workflow:
+  - Analytics panel question (incident, missed-contact rate, why the rate changed, drivers, evidence, recommendations, expected contacts, peak day/hour, forecast) → get_dashboard_analytics_snapshot first. Quote unique missed, demand, rate, factors, and this-week vs last-week from that result.
+  - Hourly volume or why a clock hour is the peak → get_analytics_hourly_volume. Use that chart. Do not call generate_plot. Do not navigate. Do not use daily Reports trends as proof.
+  - Reports KPIs (First-Reply SLA, channel mix, handle time, resolution) still use generate_performance_report.
+  - Follow-ups stay on these tools. Never invent a previous-analysis table.
+rules:
+  - The Analytics snapshot is the source of truth for incidents on /admin/dashboard/analytics. Match the selected incident, weekly comparison, and forecast summary. Never contradict the panel with ontology, SQL, or memory.
+  - missedContactRate = uniqueMissedConversations / agentDemandConversations × 100. Demand is conversations that entered a live-agent queue. Unique missed can exceed demand, so the rate can exceed 100%. That is valid.
+  - Never call a rate above 100% a reporting error, SQL bug, double-count, or dashboard formula failure unless the snapshot dataStatus is error and the tool counted that anomaly.
+  - Peak hour is hourlyVolume.peakHour: the hour of day in hourlyVolume.timeZone where org-wide forecast inbound is highest. Prove it with actual and forecast at that hour from get_analytics_hourly_volume. If observedPeakHour differs, say last-7-day actuals peaked at observedPeakHour. That is not a reporting error.
+  - Never invent causes. Drivers come from snapshot factors (no_agent_available, offer_timeout). Week-over-week change comes from weeklyComparison, not a guessed previous analysis.
+  - Never use navigate, "I'll open Analytics", or a page offer instead of answering. Navigation is only when the user explicitly asks to open a page.
+  - Never mention routing, specialists, tools, SQL, or JSON in user-visible text. Never paste chart type, axis titles, or plot spec into the reply.
+  - After a card or chart, one or two HTML findings and one follow-up question.
+body: |
+  Admin Analytics (diagnostic, predictive, prescriptive).
+
+  Missed-contact rate is unique missed conversations divided by agent-demand
+  conversations, times 100. It is not an attempt rate and is not capped at
+  100%. Five unique misses on three queued conversations is 166.7% and is
+  valid. Explain unique, demand, and top drivers from the snapshot.
+
+  Path D (diagnostic — FIRST for anything on the Analytics diagnostic card):
+  get_dashboard_analytics_snapshot once. Use selectedIncident currentFacts
+  (uniqueMissedConversations, agentDemandConversations, missedContactRate,
+  missedEventCount, drivers) and weeklyComparison thisWeek vs lastWeek.
+  List live incident types from incidentCatalog when asked what incidents
+  exist. Do not audit SQL. Do not invent double-counting.
+
+  Path P (predictive — peak hour, expected contacts, hourly volume, missed-rate
+  forecast): snapshot for summary KPIs; get_analytics_hourly_volume when the
+  user needs hour-by-hour evidence. Peak hour is hourlyVolume.peakHour in
+  hourlyVolume.timeZone — the hour of day where org-wide forecast inbound is
+  highest. Prove it with that series. If observedPeakHour differs, say last-7-day
+  actuals peaked there. Do not call generate_plot. Do not paste chart type or
+  axis titles. Daily inbound charts do not prove peak hour.
+
+  Path R (prescriptive): snapshot recommendations only. Do not invent staffing.
+
+  Path A (Reports KPIs, not Analytics incidents): generate_performance_report.
+
+  After charts: brief HTML summary + one follow-up. No raw tool output.

@@ -1,0 +1,60 @@
+{
+  "turn_id": "ba8030a3",
+  "timestamp": "2026-10-09T11:35:33.129302+00:00",
+  "question": "how many conversations are handled conversation overall..",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1016,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong><p>Handled conversations</p></strong></p><p>There were <strong>608</strong> handled conversations for all time.</p><p>Would you like to see this broken down by channel?</p>",
+  "card": "card: kpi r1",
+  "facts": "result_id: r1\nwindow: all time\nkpi: handled\ncertified: true\nunit: conversations\ntask_goal: Count the number of handled conversations.\nanswer_type: number\nrow_count: 1\nrow 1: handled=608",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1016,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "how many conversations are handled conversation overall..",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants to know the total number of handled conversations of all time.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Count the number of handled conversations.",
+          "time": "all time",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "handled",
+        "row_count": 1
+      }
+    ],
+    "facts": "result_id: r1\nwindow: all time\nkpi: handled\ncertified: true\nunit: conversations\ntask_goal: Count the number of handled conversations.\nanswer_type: number\nrow_count: 1\nrow 1: handled=608",
+    "grounded": true,
+    "card": "card: kpi r1"
+  },
+  "error": null
+}

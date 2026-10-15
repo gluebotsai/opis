@@ -1,0 +1,225 @@
+# =============================================================================
+# Worktual OKG — CANONICAL NOUN MAP & AGENT VOCABULARY
+# =============================================================================
+# Source of truth for graph labels: core.yaml / Neo4j.
+# wt:* is the Agent compact vocabulary for prompts and MetricFlow ids.
+#
+# Rules:
+#   1. Neo4j labels are NEVER renamed to match wt:* slugs (e.g. Opportunity is
+#      NEVER renamed to Deal; SupportCase is NEVER renamed to Ticket).
+#   2. Account is CRM Company (customer firm), NEVER the tenant organization.
+#   3. Tenant (accounts.organizations) is wt:Organization.
+#   4. Contact (cdp.customer_profile) is wt:Customer.
+# =============================================================================
+
+version: 1
+
+mappings:
+  Contact:
+    agent_id: wt:Customer
+    kg_label: Contact
+    source_table: cdp.customer_profile
+    key_property: cdp_id
+    display_names:
+      default: Contact
+      healthcare: Patient
+      ecommerce: Shopper / Customer
+      legal: Client
+      b2b: Client / Prospect
+    description: "Individual human person (lead, prospect, customer, or patient)."
+
+  Account:
+    agent_id: wt:Account
+    kg_label: Account
+    source_table: crm.companies
+    key_property: id
+    display_names:
+      default: Account
+      healthcare: Provider Organisation / Hospital
+      ecommerce: Merchant / Brand Account
+      b2b: Client Company / Enterprise
+    description: "Customer organization or corporate client (distinct from Tenant)."
+
+  Tenant:
+    agent_id: wt:Organization
+    kg_label: Tenant
+    source_table: accounts.organizations
+    key_property: id
+    display_names:
+      default: Organization
+    description: "The root tenant organization that owns this graph partition."
+
+  Opportunity:
+    agent_id: wt:Deal
+    kg_label: Opportunity
+    source_table: crm.deals
+    key_property: id
+    display_names:
+      default: Opportunity
+      b2b: Deal / Tender
+      legal: Matter / Retainer
+    description: "Commercial sales opportunity or deal with stage and value."
+
+  SupportCase:
+    agent_id: wt:Ticket
+    kg_label: SupportCase
+    source_table: ticketing.tickets
+    key_property: id
+    display_names:
+      default: Support Case
+      healthcare: Patient Request
+      ticketing: Ticket
+    description: "Customer service issue, inquiry, ticket, or patient request."
+
+  Conversation:
+    agent_id: wt:Conversation
+    kg_label: Conversation
+    source_table: ccaas.conversations
+    key_property: id
+    display_names:
+      default: Conversation
+    description: "Omnichannel interaction thread (voice, chat, email, social)."
+
+  Employee:
+    agent_id: wt:Employee
+    kg_label: Employee
+    source_table: accounts.setup_users
+    key_property: id
+    display_names:
+      default: Employee
+      healthcare: Staff Member
+    description: "Internal staff member or user employed by the Tenant."
+
+  Campaign:
+    agent_id: wt:Campaign
+    kg_label: Campaign
+    source_table: campaign.campaigns
+    key_property: id
+    display_names:
+      default: Campaign
+      healthcare: Outreach Programme
+    description: "Marketing or outreach campaign."
+
+  Quote:
+    agent_id: wt:Quote
+    kg_label: Quote
+    source_table: crm.quotes
+    key_property: id
+    display_names:
+      default: Quote
+    description: "Price quotation or estimate."
+
+  Contract:
+    agent_id: wt:Contract
+    kg_label: Contract
+    source_table: crm.contracts
+    key_property: id
+    display_names:
+      default: Contract
+      healthcare: Coverage / Care Plan
+    description: "Legally binding commercial agreement."
+
+  QueueDefinition:
+    agent_id: wt:Queue
+    kg_label: QueueDefinition
+    source_table: accounts.setup_ccaas_queues
+    key_property: id
+    display_names:
+      default: Queue
+    description: "Configured routing queue in setup."
+
+  ServiceQueue:
+    agent_id: wt:Queue
+    kg_label: ServiceQueue
+    source_table: ccaas.queues
+    key_property: id
+    display_names:
+      default: Service Queue
+    description: "Operational contact center queue."
+
+  ChannelAccount:
+    agent_id: wt:Channel
+    kg_label: ChannelAccount
+    source_table: accounts.setup_channel_configs
+    key_property: id
+    display_names:
+      default: Channel Account
+    description: "Configured communication channel endpoint (email, voice, chat, social)."
+
+products:
+  platform:
+    code: platform
+    product_id: platform
+    sellable: false
+  crm:
+    code: crm
+    product_id: crm
+    sellable: true
+  cdp:
+    code: cdp
+    product_id: cdp
+    sellable: true
+  webtracking:
+    code: web-tracking
+    product_id: web-tracking
+    sellable: true
+    requires: [cdp]
+  campaign:
+    code: campaign
+    product_id: campaign
+    sellable: true
+  ccaas:
+    code: contact-center
+    product_id: contact-center
+    sellable: true
+  ticketing:
+    code: ticketing
+    product_id: ticketing
+    sellable: true
+
+channels:
+  email_volume:
+    metric: email_volume
+    channel_type: email
+    fine_grain: email
+    setup_tables:
+      - accounts.setup_channel_configs
+      - accounts.setup_email_configs
+  whatsapp_volume:
+    metric: whatsapp_volume
+    channel_type: social
+    fine_grain: whatsapp
+    provider: whatsapp
+    setup_tables:
+      - accounts.setup_channel_configs
+      - accounts.setup_social_configs
+  instagram_volume:
+    metric: instagram_volume
+    channel_type: social
+    fine_grain: instagram
+    provider: instagram
+    setup_tables:
+      - accounts.setup_channel_configs
+      - accounts.setup_social_configs
+  facebook_volume:
+    metric: facebook_volume
+    channel_type: social
+    fine_grain: facebook
+    provider: facebook
+    setup_tables:
+      - accounts.setup_channel_configs
+      - accounts.setup_social_configs
+  call_volume:
+    metric: call_volume
+    channel_type: voice
+    fine_grain: call
+    setup_tables:
+      - accounts.setup_channel_configs
+      - accounts.setup_voice_dids
+  webchat_volume:
+    metric: webchat_volume
+    channel_type: webchat
+    fine_grain: webchat
+    setup_tables:
+      - accounts.setup_channel_configs
+      - accounts.setup_webchat_configs

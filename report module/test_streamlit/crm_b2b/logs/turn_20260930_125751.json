@@ -1,0 +1,87 @@
+{
+  "question": "give me the quotation acceptance percentage",
+  "answer": "The quote acceptance rate is 0.00% for all time.",
+  "trace": {
+    "question": "give me the quotation acceptance percentage",
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1015,
+      "role": "admin"
+    },
+    "model": "worktual-gemma",
+    "tasks": [
+      {
+        "status": "ok",
+        "store": "sql",
+        "sql": "WITH rpt_quotes AS (\nSELECT src.id, src.organization_id, src.deal_id, src.deal_title, src.quote_number, src.version, src.status, src.currency_code, src.subtotal, src.discount_pct, src.discount_amount, src.total, src.valid_until, src.sent_at, src.accepted_at, src.created_by_user_id, src.owner_user_id, src.owner_name, src.approval_status, src.created_at, src.updated_at FROM (\nSELECT \n  q.id,\n  q.organization_id,\n  q.deal_id,\n  d.title AS deal_title,\n  q.number AS quote_number,\n  q.version,\n  q.status,\n  COALESCE(q.currency, 'USD') AS currency_code,\n  COALESCE(q.subtotal, 0) AS subtotal,\n  COALESCE(q.discount_pct, 0) AS discount_pct,\n  ROUND(COALESCE(q.subtotal, 0) * (COALESCE(q.discount_pct, 0) / 100.0), 2) AS discount_amount,\n  COALESCE(q.total, 0) AS total,\n  q.valid_until,\n  q.sent_at,\n  q.accepted_at,\n  q.created_by_user_id,\n  d.owner_user_id,\n  su.first_name || ' ' || COALESCE(su.last_name, '') AS owner_name,\n  q.approval_status,\n  q.created_at,\n  q.updated_at\nFROM crm.quotes q\nLEFT JOIN crm.deals d ON d.id = q.deal_id AND d.organization_id = q.organization_id\nLEFT JOIN accounts.setup_users su ON su.id = d.owner_user_id\nWHERE q.organization_id = %(_org_id)s\n) src WHERE TRUE\n)\nSELECT CAST(COUNT(*) FILTER(WHERE status = 'accepted') AS BIGINT) AS accepted_count, CAST(COUNT(*) FILTER(WHERE status = 'rejected') AS BIGINT) AS rejected_count, CASE WHEN COUNT(*) FILTER(WHERE status IN ('accepted', 'rejected')) > 0 THEN ROUND(CAST((CAST(COUNT(*) FILTER(WHERE status = 'accepted') AS DECIMAL) / CAST(COUNT(*) FILTER(WHERE status IN ('accepted', 'rejected')) AS DECIMAL)) * 100.0 AS DECIMAL), 2) ELSE 0.00 END AS quote_acceptance_rate FROM rpt_quotes AS quotes WHERE status IN ('accepted', 'rejected') AND TRUE AND TRUE AND TRUE LIMIT 500",
+        "views": [
+          "quotes"
+        ],
+        "guard_notes": [
+          "row cap 500 applied"
+        ],
+        "bound_params": {
+          "_org_id": 1003,
+          "_user_id": 1015,
+          "user_id": 1015,
+          "organization_id": 1003,
+          "org_id": 1003,
+          "tenant_id": 1003,
+          "current_user_id": 1015
+        },
+        "rows": [
+          {
+            "accepted_count": 0,
+            "rejected_count": 0,
+            "quote_acceptance_rate": "0.00"
+          }
+        ],
+        "kpi_id": "quote_acceptance_rate",
+        "time_status": "all_time",
+        "attempts": [
+          {
+            "raw": "{\"tool\":\"run_kpi\",\"kpi_id\":\"quote_acceptance_rate\",\"dimension\":null}",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "quote_acceptance_rate"
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "tool": "run_kpi",
+        "requested_kpi": "quote_acceptance_rate",
+        "requested_dimension": null,
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "quote_acceptance_rate",
+          "goal": "Calculate the percentage of accepted quotes",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "kpi",
+          "depends_on": []
+        }
+      }
+    ],
+    "domain_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"quick\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"quote_acceptance_rate\",\n      \"goal\": \"Calculate the percentage of accepted quotes\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"answer_type\": \"kpi\",\n      \"depends_on\": []\n    }\n  ]\n}\n```",
+    "plan": {
+      "kind": "plan",
+      "depth": "quick",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "quote_acceptance_rate",
+          "goal": "Calculate the percentage of accepted quotes",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "kpi",
+          "depends_on": []
+        }
+      ]
+    },
+    "facts": "time_requested: all time\nperiod_applied: overall (no date filter, UTC)\ntime_status: all_time\ncatalog_kpi: quote_acceptance_rate\nRESULT: 1 row(s)\ntask_goal: Calculate the percentage of accepted quotes\n  accepted_count=0 | rejected_count=0 | quote_acceptance_rate=0.00",
+    "grounded": true,
+    "briefing_raw": "The quote acceptance rate is 0.00% for all time."
+  }
+}

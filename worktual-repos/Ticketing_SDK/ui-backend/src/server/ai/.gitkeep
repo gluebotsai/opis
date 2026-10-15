@@ -1,0 +1,7 @@
+"""Issue MCP execution JWTs (Express-side mirror used by Python host helpers)."""
+
+from __future__ import annotations
+
+from app.mcp.authorization import issue_mcp_token
+
+__all__ = ["issue_mcp_token"]

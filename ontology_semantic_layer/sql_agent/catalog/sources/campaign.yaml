@@ -1,0 +1,448 @@
+product: campaign
+engine: postgres
+default_schema: campaign_marts
+tenant_column: organization_id
+tables:
+- name: mart_campaign_batch_health
+  schema: campaign_marts
+  engine: postgres
+  description: 'Campaign x channel grain. Batch-level send infrastructure health (failure rate, processing
+    time) — distinct from per-recipient outcomes in mart_campaign_touch_performance.
+
+    '
+  tenant_column: organization_id
+  sql_agent_only: false
+  columns: []
+  semantic_model: sem_campaign_batch_health
+  semantic_dimensions:
+  - channel_name
+  - first_batch_created_at
+  - organization_id
+  semantic_measures:
+  - batch_count
+  - failed_batch_count
+  - completed_batch_count
+  - total_expected_recipients
+  - avg_batch_processing_seconds
+- name: mart_campaign_overview
+  schema: campaign_marts
+  engine: postgres
+  description: 'Campaign-grain overview. Answers: how many campaigns, how many live/scheduled, how big
+    is each campaign''s audience. NOT built: campaign_touch_volume-style time_dimension slicing beyond
+    starts/ends (no campaign_schedule table exists).
+
+    '
+  tenant_column: organization_id
+  sql_agent_only: false
+  columns:
+  - name: campaign_id
+  semantic_model: sem_campaign_overview
+  semantic_dimensions:
+  - created_at
+  - organization_id
+  - campaign_status
+  - source_channel
+  - campaign_name
+  - is_live_flag
+  - is_scheduled_flag
+  semantic_measures:
+  - campaign_count
+  - audience_reached
+  - avg_planned_duration_seconds
+- name: mart_campaign_touch_performance
+  schema: campaign_marts
+  engine: postgres
+  description: 'Campaign-grain send/engagement performance built from campaign_send_recipients, the closest
+    real analog to the metrics doc''s "campaign_touch" entity (which does not exist in this schema). delivery_rate
+    is a proxy using status=''sent'', since no literal ''delivered'' status exists. conversion_rate, converted_touch_count
+    are NOT built — no conversion/response field exists anywhere in the source schema.
+
+    '
+  tenant_column: organization_id
+  sql_agent_only: false
+  columns:
+  - name: campaign_id
+  semantic_model: sem_campaign_touch_performance
+  semantic_dimensions:
+  - campaign_created_at
+  semantic_measures:
+  - touch_count
+  - sent_touch_count
+  - failed_touch_count
+  - opened_touch_count
+  - clicked_touch_count
+  - unique_contacts_touched
+  - avg_attempt_count
+  - avg_seconds_to_open
+  - avg_seconds_open_to_click
+- name: mart_campaign_variant_performance
+  schema: campaign_marts
+  engine: postgres
+  description: 'Campaign x ab_variant x recipient_platform grain. Lets you compare open/click performance
+    across A/B variants and delivery platforms. Same delivery_rate proxy caveat as mart_campaign_touch_performance
+    applies to sent_touch_count.
+
+    '
+  tenant_column: organization_id
+  sql_agent_only: false
+  columns: []
+  semantic_model: sem_campaign_variant_performance
+  semantic_dimensions:
+  - campaign_created_at
+  - organization_id
+  - ab_variant
+  - recipient_platform
+  semantic_measures:
+  - variant_touch_count
+  - variant_sent_touch_count
+  - variant_opened_touch_count
+  - variant_clicked_touch_count
+- name: mart_contact_engagement_org
+  schema: campaign_marts
+  engine: postgres
+  description: 'Org grain. unsubscribe_rate and suppression rates are proxies — both source tables are
+    org-level, not per-campaign, so this cannot answer "unsubscribe rate for campaign X", only "unsubscribe
+    rate across an org''s known contacts." suppression_rate and bounce/complaint shares are similarly
+    weak proxies: no per-send bounce/complaint field exists anywhere in the schema, so these are measured
+    against engaged_contact_count, not total sends.
+
+    '
+  tenant_column: organization_id
+  sql_agent_only: false
+  columns:
+  - name: organization_id
+  semantic_model: sem_contact_engagement_org
+  semantic_dimensions:
+  - organization_id
+  - first_engagement_at
+  semantic_measures:
+  - engaged_contact_count
+  - unsubscribed_contact_count
+  - suppressed_email_count
+  - bounce_suppressed_count
+  - complaint_suppressed_count
+- name: mart_template_approval
+  schema: campaign_marts
+  engine: postgres
+  description: 'Org+channel grain. template_count and template_approval_rate from regulated_channel_templates
+    (sms/whatsapp only — the only templates with a real approval lifecycle). compliance_denial_rate is
+    NOT built — no compliance_evaluation table exists.
+
+    '
+  tenant_column: organization_id
+  sql_agent_only: false
+  columns:
+  - name: organization_id
+  semantic_model: sem_template_approval
+  semantic_dimensions:
+  - channel_name
+  - first_submitted_at
+  - organization_id
+  semantic_measures:
+  - template_count
+  - approved_template_count
+  - rejected_template_count
+- name: mart_template_rejection_reasons
+  schema: campaign_marts
+  engine: postgres
+  description: Org x channel x rejected_reason grain. Breakdown of why regulated_channel_templates were
+    rejected. Kept as a separate mart because rejected_reason is free-form text, not a fixed enum — pivoting
+    it into mart_template_approval would break grain additivity.
+  tenant_column: organization_id
+  sql_agent_only: false
+  columns: []
+  semantic_model: sem_template_rejection_reasons
+  semantic_dimensions:
+  - channel_name
+  - rejected_reason
+  - first_rejected_template_submitted_at
+  - organization_id
+  semantic_measures:
+  - rejection_reason_count
+certified_metrics:
+- id: approved_template_count
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: audience_reached
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: avg_attempt_count
+  label: null
+  'on': null
+  dims: null
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: avg_batch_processing_seconds
+  label: null
+  'on': null
+  dims: null
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: avg_planned_duration_seconds
+  label: null
+  'on': null
+  dims: null
+  kind: rate
+  direction: higher_is_worse
+  via: ask_semantic
+- id: avg_seconds_open_to_click
+  label: null
+  'on': null
+  dims: null
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: avg_seconds_to_open
+  label: null
+  'on': null
+  dims: null
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: batch_count
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: batch_failure_rate
+  label: null
+  'on': null
+  dims: null
+  kind: rate
+  direction: higher_is_worse
+  via: ask_semantic
+- id: bounce_share_of_suppressions
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: bounce_suppressed_count
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: campaign_volume
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: click_rate
+  label: Click Rate
+  'on': Message
+  dims:
+  - channel
+  - campaign_name
+  kind: rate
+  direction: higher_is_better
+  via: ask_semantic
+- id: clicked_touch_count
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: complaint_share_of_suppressions
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: complaint_suppressed_count
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: delivery_rate
+  label: Delivery Rate
+  'on': Message
+  dims:
+  - channel
+  - campaign_name
+  kind: rate
+  direction: higher_is_better
+  via: ask_semantic
+- id: engaged_contact_count
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: failed_batch_count
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: failed_touch_count
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: failure_rate
+  label: null
+  'on': null
+  dims: null
+  kind: rate
+  direction: higher_is_worse
+  via: ask_semantic
+- id: frequency_per_contact
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: open_rate
+  label: Open Rate
+  'on': Message
+  dims:
+  - channel
+  - campaign_name
+  kind: rate
+  direction: higher_is_better
+  via: ask_semantic
+- id: opened_touch_count
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: rejected_template_count
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: sent_touch_count
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: suppressed_email_count
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: suppression_rate
+  label: null
+  'on': null
+  dims: null
+  kind: rate
+  direction: higher_is_worse
+  via: ask_semantic
+- id: template_approval_rate
+  label: null
+  'on': null
+  dims: null
+  kind: rate
+  direction: higher_is_worse
+  via: ask_semantic
+- id: template_count
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: touch_count
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: unique_contacts_touched
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: unsubscribe_rate
+  label: null
+  'on': null
+  dims: null
+  kind: rate
+  direction: higher_is_worse
+  via: ask_semantic
+- id: unsubscribed_contact_count
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: variant_click_rate
+  label: null
+  'on': null
+  dims: null
+  kind: rate
+  direction: higher_is_better
+  via: ask_semantic
+- id: variant_clicked_touch_count
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: variant_open_rate
+  label: null
+  'on': null
+  dims: null
+  kind: rate
+  direction: higher_is_better
+  via: ask_semantic
+- id: variant_opened_touch_count
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: variant_sent_touch_count
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: variant_touch_count
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic

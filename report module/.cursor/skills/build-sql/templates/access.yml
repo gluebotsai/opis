@@ -1,0 +1,38 @@
+# Copy to product/access.yml
+
+version: 1
+roles:
+  admin:
+    default_scope: org
+    my_rows_column: owner_id
+  rep:
+    default_scope: own
+    my_rows_column: owner_id
+
+scope_levels:
+  - org
+  - own
+
+matrix:
+  org:
+    admin: all
+    rep: deny
+  own:
+    admin: all
+    rep: all
+
+personal_data_columns:
+  - email
+  - phone
+
+views:
+  admin:
+    deals:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+  rep:
+    deals:
+      scope: "owner_id = {user_id}"
+      hide: []
+      mask: {}

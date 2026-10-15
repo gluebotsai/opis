@@ -1,0 +1,16 @@
+table: ccass.conversations
+columns:
+  id: uuid
+  organization_id: text
+  channel: text (webchat, whatsapp, instagram, facebook, email, voice)
+  status: text (queued, assigned, resolved, closed)
+  assigned_user_id: text
+  assigned_at: timestamptz
+related:
+  accounts.setup_users:
+    join: accounts.setup_users.id = ccass.conversations.assigned_user_id
+    display_name: TRIM(CONCAT(first_name, ' ', last_name))
+  first_response_at: timestamptz
+  resolved_at: timestamptz
+  ended_at: timestamptz
+  transferred_at: timestamptz

@@ -1,0 +1,68 @@
+{
+  "question": "what is the stage conversation",
+  "answer": "Stage conversion rates are currently unavailable because the CRM does not store deal stage transition history.",
+  "trace": {
+    "question": "what is the stage conversation",
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1015,
+      "role": "admin"
+    },
+    "model": "worktual-gemma",
+    "tasks": [
+      {
+        "status": "error",
+        "store": "sql",
+        "kpi_id": "stage_conversion",
+        "error_type": "UNAVAILABLE_KPI",
+        "error": "KPI 'stage_conversion' is unavailable: CRM does not store deal stage transition history.",
+        "missing_input": "CRM does not store deal stage transition history.",
+        "rows": [],
+        "attempts": [
+          {
+            "raw": "{\"tool\":\"run_kpi\",\"kpi_id\":\"stage_conversion\",\"dimension\":null}",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "stage_conversion"
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "time_status": "all_time",
+        "tool": "run_kpi",
+        "requested_kpi": "stage_conversion",
+        "requested_dimension": null,
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "stage_conversion",
+          "goal": "Calculate stage conversion rates for deals",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "kpi",
+          "depends_on": []
+        }
+      }
+    ],
+    "domain_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"standard\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"stage_conversion\",\n      \"goal\": \"Calculate stage conversion rates for deals\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"answer_type\": \"kpi\",\n      \"depends_on\": []\n    }\n  ]\n}\n```",
+    "plan": {
+      "kind": "plan",
+      "depth": "standard",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "stage_conversion",
+          "goal": "Calculate stage conversion rates for deals",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "kpi",
+          "depends_on": []
+        }
+      ]
+    },
+    "facts": "EXECUTION_ERROR\ntime_requested: all time\nperiod_applied: overall (no date filter, UTC)\ntime_status: all_time\ncatalog_kpi: stage_conversion\nerror_type: UNAVAILABLE_KPI\nmessage: KPI 'stage_conversion' is unavailable: CRM does not store deal stage transition history.\ntask_goal: Calculate stage conversion rates for deals",
+    "grounded": true,
+    "briefing_raw": "Stage conversion rates are currently unavailable because the CRM does not store deal stage transition history."
+  }
+}

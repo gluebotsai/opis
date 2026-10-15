@@ -1,0 +1,68 @@
+{
+  "question": "what is our quota attainment ",
+  "answer": "Quota attainment is currently unavailable because the CRM does not store monthly sales targets per representative.",
+  "trace": {
+    "question": "what is our quota attainment",
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1015,
+      "role": "admin"
+    },
+    "model": "worktual-gemma",
+    "tasks": [
+      {
+        "status": "error",
+        "store": "sql",
+        "kpi_id": "quota_attainment",
+        "error_type": "UNAVAILABLE_KPI",
+        "error": "KPI 'quota_attainment' is unavailable: CRM does not store monthly sales targets per rep.",
+        "missing_input": "CRM does not store monthly sales targets per rep.",
+        "rows": [],
+        "attempts": [
+          {
+            "raw": "{\"tool\":\"run_kpi\",\"kpi_id\":\"quota_attainment\",\"dimension\":null}",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "quota_attainment"
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "time_status": "all_time",
+        "tool": "run_kpi",
+        "requested_kpi": "quota_attainment",
+        "requested_dimension": null,
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "quota_attainment",
+          "goal": "Calculate quota attainment for the organization",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "kpi",
+          "depends_on": []
+        }
+      }
+    ],
+    "domain_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"quick\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"quota_attainment\",\n      \"goal\": \"Calculate quota attainment for the organization\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"answer_type\": \"kpi\",\n      \"depends_on\": []\n    }\n  ]\n}\n```",
+    "plan": {
+      "kind": "plan",
+      "depth": "quick",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "quota_attainment",
+          "goal": "Calculate quota attainment for the organization",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "kpi",
+          "depends_on": []
+        }
+      ]
+    },
+    "facts": "EXECUTION_ERROR\ntime_requested: all time\nperiod_applied: overall (no date filter, UTC)\ntime_status: all_time\ncatalog_kpi: quota_attainment\nerror_type: UNAVAILABLE_KPI\nmessage: KPI 'quota_attainment' is unavailable: CRM does not store monthly sales targets per rep.\ntask_goal: Calculate quota attainment for the organization",
+    "grounded": true,
+    "briefing_raw": "Quota attainment is currently unavailable because the CRM does not store monthly sales targets per representative."
+  }
+}

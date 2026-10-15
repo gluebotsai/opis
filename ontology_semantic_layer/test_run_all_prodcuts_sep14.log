@@ -1,0 +1,1436 @@
+
+═══ CC-SUP-001 | total_conversations | scenario=A ═══
+Query: "total conversations last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.super", "metrics": ["total_conversations"]}
+Result: ✅ MF PASS → 42
+
+═══ CC-SUP-001 | total_conversations | scenario=B ═══
+Query: "total conversations last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.super", "metrics": ["total_conversations"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}]}
+Result: ✅ MF PASS → 21
+
+═══ CC-SUP-001 | total_conversations | scenario=C ═══
+Query: "total conversations last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.super", "metrics": ["total_conversations"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 7
+
+═══ CC-SUP-001 | total_conversations | scenario=D ═══
+Query: "total conversations last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.super", "metrics": ["total_conversations"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 2
+
+═══ CC-SUP-002 | missed_contact_rate | scenario=A ═══
+Query: "missed contact rate by channel"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.super", "metrics": ["missed_contact_rate"]}
+Result: ✅ MF PASS → 0.5113636363636364
+
+═══ CC-SUP-002 | missed_contact_rate | scenario=B ═══
+Query: "missed contact rate by channel"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.super", "metrics": ["missed_contact_rate"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}]}
+Result: ✅ MF PASS → 0.6
+
+═══ CC-SUP-002 | missed_contact_rate | scenario=C ═══
+Query: "missed contact rate by channel"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.super", "metrics": ["missed_contact_rate"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 0.3333333333333333
+
+═══ CC-SUP-002 | missed_contact_rate | scenario=D ═══
+Query: "missed contact rate by channel"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.super", "metrics": ["missed_contact_rate"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 0.5
+
+═══ CC-SUP-003 | sla_breach_rate | scenario=A ═══
+Query: "sla breach rate on whatsapp last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.super", "metrics": ["sla_breach_rate"]}
+Result: ✅ MF PASS → 0
+
+═══ CC-SUP-003 | sla_breach_rate | scenario=B ═══
+Query: "sla breach rate on whatsapp last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.super", "metrics": ["sla_breach_rate"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}]}
+Result: ✅ MF PASS → 0
+
+═══ CC-SUP-003 | sla_breach_rate | scenario=C ═══
+Query: "sla breach rate on whatsapp last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.super", "metrics": ["sla_breach_rate"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS
+
+═══ CC-SUP-003 | sla_breach_rate | scenario=D ═══
+Query: "sla breach rate on whatsapp last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.super", "metrics": ["sla_breach_rate"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS
+
+═══ CC-SUP-004 | open_conversations | scenario=A ═══
+Query: "open conversations right now"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.super", "metrics": ["open_conversations"]}
+Result: ✅ MF PASS → 0
+
+═══ CC-SUP-004 | open_conversations | scenario=B ═══
+Query: "open conversations right now"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.super", "metrics": ["open_conversations"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}]}
+Result: ✅ MF PASS → 0
+
+── AGENT cc.super SUMMARY: MF 14✅ 0❌ | SQL 0✅ 0❌ ──
+
+═══ CC-RPT-001 | total_conversations | scenario=A ═══
+Query: "total conversations last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["total_conversations"]}
+Result: ✅ MF PASS → 42
+
+═══ CC-RPT-001 | total_conversations | scenario=B ═══
+Query: "total conversations last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["total_conversations"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}]}
+Result: ✅ MF PASS → 21
+
+═══ CC-RPT-001 | total_conversations | scenario=C ═══
+Query: "total conversations last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["total_conversations"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 7
+
+═══ CC-RPT-001 | total_conversations | scenario=D ═══
+Query: "total conversations last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["total_conversations"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 2
+
+═══ CC-RPT-002 | handled_volume | scenario=A ═══
+Query: "handled volume this month"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["handled_volume"]}
+Result: ✅ MF PASS → 42
+
+═══ CC-RPT-002 | handled_volume | scenario=B ═══
+Query: "handled volume this month"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["handled_volume"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}]}
+Result: ✅ MF PASS → 21
+
+═══ CC-RPT-002 | handled_volume | scenario=C ═══
+Query: "handled volume this month"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["handled_volume"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 7
+
+═══ CC-RPT-002 | handled_volume | scenario=D ═══
+Query: "handled volume this month"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["handled_volume"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 2
+
+═══ CC-RPT-003 | open_conversations | scenario=A ═══
+Query: "open conversations right now"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["open_conversations"]}
+Result: ✅ MF PASS → 0
+
+═══ CC-RPT-003 | open_conversations | scenario=B ═══
+Query: "open conversations right now"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["open_conversations"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}]}
+Result: ✅ MF PASS → 0
+
+═══ CC-RPT-004 | missed_contact_rate | scenario=A ═══
+Query: "missed contact rate by channel"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["missed_contact_rate"]}
+Result: ✅ MF PASS → 0.5113636363636364
+
+═══ CC-RPT-004 | missed_contact_rate | scenario=B ═══
+Query: "missed contact rate by channel"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["missed_contact_rate"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}]}
+Result: ✅ MF PASS → 0.6
+
+═══ CC-RPT-004 | missed_contact_rate | scenario=C ═══
+Query: "missed contact rate by channel"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["missed_contact_rate"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 0.3333333333333333
+
+═══ CC-RPT-004 | missed_contact_rate | scenario=D ═══
+Query: "missed contact rate by channel"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["missed_contact_rate"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 0.5
+
+═══ CC-RPT-005 | sla_breach_rate | scenario=A ═══
+Query: "sla breach rate on whatsapp last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["sla_breach_rate"]}
+Result: ✅ MF PASS → 0
+
+═══ CC-RPT-005 | sla_breach_rate | scenario=B ═══
+Query: "sla breach rate on whatsapp last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["sla_breach_rate"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}]}
+Result: ✅ MF PASS → 0
+
+═══ CC-RPT-005 | sla_breach_rate | scenario=C ═══
+Query: "sla breach rate on whatsapp last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["sla_breach_rate"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS
+
+═══ CC-RPT-005 | sla_breach_rate | scenario=D ═══
+Query: "sla breach rate on whatsapp last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["sla_breach_rate"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS
+
+═══ CC-RPT-006 | ai_containment_rate | scenario=A ═══
+Query: "ai containment rate this week"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["ai_containment_rate"]}
+Result: ✅ MF PASS → 0.5329949238578681
+
+═══ CC-RPT-006 | ai_containment_rate | scenario=B ═══
+Query: "ai containment rate this week"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["ai_containment_rate"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}]}
+Result: ✅ MF PASS → 0.045454545454545456
+
+═══ CC-RPT-006 | ai_containment_rate | scenario=C ═══
+Query: "ai containment rate this week"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["ai_containment_rate"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 0
+
+═══ CC-RPT-006 | ai_containment_rate | scenario=D ═══
+Query: "ai containment rate this week"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["ai_containment_rate"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 0
+
+═══ CC-RPT-007 | average_handle_time | scenario=A ═══
+Query: "average handle time by agent"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["average_handle_time"]}
+Result: ✅ MF PASS → 1946.4281686511629
+
+═══ CC-RPT-007 | average_handle_time | scenario=B ═══
+Query: "average handle time by agent"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["average_handle_time"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}]}
+Result: ✅ MF PASS → 3431.0376444090907
+
+═══ CC-RPT-007 | average_handle_time | scenario=C ═══
+Query: "average handle time by agent"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["average_handle_time"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 286.788833
+
+═══ CC-RPT-007 | average_handle_time | scenario=D ═══
+Query: "average handle time by agent"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["average_handle_time"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 265.92549433333335
+
+═══ CC-RPT-008 | average_speed_of_answer | scenario=A ═══
+Query: "average speed of answer today"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["average_speed_of_answer"]}
+Result: ✅ MF PASS → 0.2754295
+
+═══ CC-RPT-008 | average_speed_of_answer | scenario=B ═══
+Query: "average speed of answer today"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["average_speed_of_answer"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}]}
+Result: ✅ MF PASS → 0.720354076923077
+
+═══ CC-RPT-008 | average_speed_of_answer | scenario=C ═══
+Query: "average speed of answer today"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["average_speed_of_answer"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 0.0
+
+═══ CC-RPT-008 | average_speed_of_answer | scenario=D ═══
+Query: "average speed of answer today"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["average_speed_of_answer"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → None
+
+═══ CC-RPT-009 | average_first_response_time | scenario=A ═══
+Query: "first response time trend"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["average_first_response_time"]}
+Result: ✅ MF PASS → 2259.3289094594593
+
+═══ CC-RPT-009 | average_first_response_time | scenario=B ═══
+Query: "first response time trend"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["average_first_response_time"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}]}
+Result: ✅ MF PASS → 4476.443546555555
+
+═══ CC-RPT-009 | average_first_response_time | scenario=C ═══
+Query: "first response time trend"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["average_first_response_time"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 1273.5738631428571
+
+═══ CC-RPT-009 | average_first_response_time | scenario=D ═══
+Query: "first response time trend"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["average_first_response_time"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 3945.271472
+
+═══ CC-RPT-010 | human_agent_occupancy_rate_presence | scenario=A ═══
+Query: "agent occupancy rate this shift"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["human_agent_occupancy_rate_presence"]}
+Result: ✅ MF PASS → 0
+
+═══ CC-RPT-010 | human_agent_occupancy_rate_presence | scenario=B ═══
+Query: "agent occupancy rate this shift"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["human_agent_occupancy_rate_presence"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}]}
+Result: ❌ MF FAIL — Got error(s) during query resolution.
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "contact_centre", "originAgent": "cc.reporting", "instruction": "agent occupancy rate this shift", "entityHint": "wt:Interaction", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["human_agent_occupancy_rate_presence"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}]}}
+
+═══ CC-RPT-010 | human_agent_occupancy_rate_presence | scenario=B ═══
+Query: "agent occupancy rate this shift"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "contact_centre", "originAgent": "cc.reporting", "instruction": "agent occupancy rate this shift", "entityHint": "wt:Interaction", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["human_agent_occupancy_rate_presence"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}]}}
+Result: ✅ SQL FALLBACK PASS
+
+═══ CC-RPT-010 | human_agent_occupancy_rate_presence | scenario=C ═══
+Query: "agent occupancy rate this shift"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["human_agent_occupancy_rate_presence"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 0
+
+═══ CC-RPT-010 | human_agent_occupancy_rate_presence | scenario=D ═══
+Query: "agent occupancy rate this shift"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["human_agent_occupancy_rate_presence"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ❌ MF FAIL — Got error(s) during query resolution.
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "contact_centre", "originAgent": "cc.reporting", "instruction": "agent occupancy rate this shift", "entityHint": "wt:Interaction", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["human_agent_occupancy_rate_presence"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}], "time": {"period": "last_30_days", "grain": "day"}}}
+
+═══ CC-RPT-010 | human_agent_occupancy_rate_presence | scenario=D ═══
+Query: "agent occupancy rate this shift"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "contact_centre", "originAgent": "cc.reporting", "instruction": "agent occupancy rate this shift", "entityHint": "wt:Interaction", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["human_agent_occupancy_rate_presence"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}], "time": {"period": "last_30_days", "grain": "day"}}}
+Result: ✅ SQL FALLBACK PASS
+
+═══ CC-RPT-011 | callback_tasks | scenario=A ═══
+Query: "pending callback tasks"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["callback_tasks"]}
+Result: ✅ MF PASS → 26
+
+═══ CC-RPT-011 | callback_tasks | scenario=B ═══
+Query: "pending callback tasks"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["callback_tasks"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}]}
+Result: ✅ MF PASS → 26
+
+═══ CC-RPT-011 | callback_tasks | scenario=C ═══
+Query: "pending callback tasks"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["callback_tasks"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 5
+
+═══ CC-RPT-011 | callback_tasks | scenario=D ═══
+Query: "pending callback tasks"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.reporting", "metrics": ["callback_tasks"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 5
+
+── AGENT cc.reporting SUMMARY: MF 40✅ 2❌ | SQL 2✅ 0❌ ──
+
+═══ CC-ANM-001 | total_conversations | scenario=A ═══
+Query: "total conversations last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.anomaly", "metrics": ["total_conversations"]}
+Result: ✅ MF PASS → 42
+
+═══ CC-ANM-001 | total_conversations | scenario=B ═══
+Query: "total conversations last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.anomaly", "metrics": ["total_conversations"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}]}
+Result: ✅ MF PASS → 21
+
+═══ CC-ANM-001 | total_conversations | scenario=C ═══
+Query: "total conversations last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.anomaly", "metrics": ["total_conversations"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 7
+
+═══ CC-ANM-001 | total_conversations | scenario=D ═══
+Query: "total conversations last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.anomaly", "metrics": ["total_conversations"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 2
+
+═══ CC-ANM-002 | missed_contact_rate | scenario=A ═══
+Query: "missed contact rate by channel"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.anomaly", "metrics": ["missed_contact_rate"]}
+Result: ✅ MF PASS → 0.5113636363636364
+
+═══ CC-ANM-002 | missed_contact_rate | scenario=B ═══
+Query: "missed contact rate by channel"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.anomaly", "metrics": ["missed_contact_rate"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}]}
+Result: ✅ MF PASS → 0.6
+
+═══ CC-ANM-002 | missed_contact_rate | scenario=C ═══
+Query: "missed contact rate by channel"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.anomaly", "metrics": ["missed_contact_rate"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 0.3333333333333333
+
+═══ CC-ANM-002 | missed_contact_rate | scenario=D ═══
+Query: "missed contact rate by channel"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.anomaly", "metrics": ["missed_contact_rate"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 0.5
+
+═══ CC-ANM-003 | open_conversations | scenario=A ═══
+Query: "open conversations right now"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.anomaly", "metrics": ["open_conversations"]}
+Result: ✅ MF PASS → 0
+
+═══ CC-ANM-003 | open_conversations | scenario=B ═══
+Query: "open conversations right now"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.anomaly", "metrics": ["open_conversations"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}]}
+Result: ✅ MF PASS → 0
+
+═══ CC-ANM-004 | sla_breach_rate | scenario=A ═══
+Query: "sla breach rate on whatsapp last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.anomaly", "metrics": ["sla_breach_rate"]}
+Result: ✅ MF PASS → 0
+
+═══ CC-ANM-004 | sla_breach_rate | scenario=B ═══
+Query: "sla breach rate on whatsapp last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.anomaly", "metrics": ["sla_breach_rate"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}]}
+Result: ✅ MF PASS → 0
+
+═══ CC-ANM-004 | sla_breach_rate | scenario=C ═══
+Query: "sla breach rate on whatsapp last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.anomaly", "metrics": ["sla_breach_rate"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS
+
+═══ CC-ANM-004 | sla_breach_rate | scenario=D ═══
+Query: "sla breach rate on whatsapp last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.anomaly", "metrics": ["sla_breach_rate"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS
+
+═══ CC-ANM-005 | ai_containment_rate | scenario=A ═══
+Query: "ai containment rate this week"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.anomaly", "metrics": ["ai_containment_rate"]}
+Result: ✅ MF PASS → 0.5329949238578681
+
+═══ CC-ANM-005 | ai_containment_rate | scenario=B ═══
+Query: "ai containment rate this week"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.anomaly", "metrics": ["ai_containment_rate"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}]}
+Result: ✅ MF PASS → 0.045454545454545456
+
+═══ CC-ANM-005 | ai_containment_rate | scenario=C ═══
+Query: "ai containment rate this week"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.anomaly", "metrics": ["ai_containment_rate"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 0
+
+═══ CC-ANM-005 | ai_containment_rate | scenario=D ═══
+Query: "ai containment rate this week"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.anomaly", "metrics": ["ai_containment_rate"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 0
+
+── AGENT cc.anomaly SUMMARY: MF 18✅ 0❌ | SQL 0✅ 0❌ ──
+
+═══ CC-PRV-001 | open_conversations | scenario=A ═══
+Query: "open conversations right now"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.presence", "metrics": ["open_conversations"]}
+Result: ✅ MF PASS → 0
+
+═══ CC-PRV-001 | open_conversations | scenario=B ═══
+Query: "open conversations right now"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.presence", "metrics": ["open_conversations"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}]}
+Result: ✅ MF PASS → 0
+
+═══ CC-PRV-002 | human_agent_occupancy_rate_presence | scenario=A ═══
+Query: "agent occupancy rate this shift"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.presence", "metrics": ["human_agent_occupancy_rate_presence"]}
+Result: ✅ MF PASS → 0
+
+═══ CC-PRV-002 | human_agent_occupancy_rate_presence | scenario=B ═══
+Query: "agent occupancy rate this shift"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.presence", "metrics": ["human_agent_occupancy_rate_presence"], "filters": [{"dimension": "presence", "op": "eq", "values": ["available"]}]}
+Result: ❌ MF FAIL — Dimension 'presence' does not match any MetricFlow group-by item.
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "contact_centre", "originAgent": "cc.presence", "instruction": "agent occupancy rate this shift", "entityHint": "wt:Interaction", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.presence", "metrics": ["human_agent_occupancy_rate_presence"], "filters": [{"dimension": "presence", "op": "eq", "values": ["available"]}]}}
+
+═══ CC-PRV-002 | human_agent_occupancy_rate_presence | scenario=B ═══
+Query: "agent occupancy rate this shift"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "contact_centre", "originAgent": "cc.presence", "instruction": "agent occupancy rate this shift", "entityHint": "wt:Interaction", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.presence", "metrics": ["human_agent_occupancy_rate_presence"], "filters": [{"dimension": "presence", "op": "eq", "values": ["available"]}]}}
+Result: ❌ SQL FALLBACK FAIL — Dimension 'presence' does not match any MetricFlow group-by item.
+
+═══ CC-PRV-002 | human_agent_occupancy_rate_presence | scenario=C ═══
+Query: "agent occupancy rate this shift"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.presence", "metrics": ["human_agent_occupancy_rate_presence"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 0
+
+═══ CC-PRV-002 | human_agent_occupancy_rate_presence | scenario=D ═══
+Query: "agent occupancy rate this shift"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.presence", "metrics": ["human_agent_occupancy_rate_presence"], "filters": [{"dimension": "presence", "op": "eq", "values": ["available"]}], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ❌ MF FAIL — Dimension 'presence' does not match any MetricFlow group-by item.
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "contact_centre", "originAgent": "cc.presence", "instruction": "agent occupancy rate this shift", "entityHint": "wt:Interaction", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.presence", "metrics": ["human_agent_occupancy_rate_presence"], "filters": [{"dimension": "presence", "op": "eq", "values": ["available"]}], "time": {"period": "last_30_days", "grain": "day"}}}
+
+═══ CC-PRV-002 | human_agent_occupancy_rate_presence | scenario=D ═══
+Query: "agent occupancy rate this shift"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "contact_centre", "originAgent": "cc.presence", "instruction": "agent occupancy rate this shift", "entityHint": "wt:Interaction", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.presence", "metrics": ["human_agent_occupancy_rate_presence"], "filters": [{"dimension": "presence", "op": "eq", "values": ["available"]}], "time": {"period": "last_30_days", "grain": "day"}}}
+Result: ❌ SQL FALLBACK FAIL — Dimension 'presence' does not match any MetricFlow group-by item.
+
+═══ CC-PRV-003 | callback_tasks | scenario=A ═══
+Query: "pending callback tasks"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.presence", "metrics": ["callback_tasks"]}
+Result: ✅ MF PASS → 26
+
+═══ CC-PRV-003 | callback_tasks | scenario=B ═══
+Query: "pending callback tasks"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.presence", "metrics": ["callback_tasks"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}]}
+Result: ✅ MF PASS → 26
+
+═══ CC-PRV-003 | callback_tasks | scenario=C ═══
+Query: "pending callback tasks"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.presence", "metrics": ["callback_tasks"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 5
+
+═══ CC-PRV-003 | callback_tasks | scenario=D ═══
+Query: "pending callback tasks"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.presence", "metrics": ["callback_tasks"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 5
+
+═══ CC-PRV-004 | open_agent_tasks | scenario=A ═══
+Query: "show me open_agent_tasks"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.presence", "metrics": ["open_agent_tasks"]}
+Result: ✅ MF PASS → 4
+
+═══ CC-PRV-004 | open_agent_tasks | scenario=B ═══
+Query: "show me open_agent_tasks"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.presence", "metrics": ["open_agent_tasks"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}]}
+Result: ✅ MF PASS → 4
+
+═══ CC-PRV-004 | open_agent_tasks | scenario=C ═══
+Query: "show me open_agent_tasks"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.presence", "metrics": ["open_agent_tasks"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 1
+
+═══ CC-PRV-004 | open_agent_tasks | scenario=D ═══
+Query: "show me open_agent_tasks"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "contact_centre", "agent": "cc.presence", "metrics": ["open_agent_tasks"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 1
+
+── AGENT cc.presence SUMMARY: MF 12✅ 2❌ | SQL 0✅ 2❌ ──
+
+═══ TK-SUP-001 | open_tickets_metric | scenario=A ═══
+Query: "open tickets right now"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.super", "metrics": ["open_tickets_metric"]}
+Result: ✅ MF PASS → 0
+
+═══ TK-SUP-001 | open_tickets_metric | scenario=B ═══
+Query: "open tickets right now"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.super", "metrics": ["open_tickets_metric"], "filters": [{"dimension": "priority", "op": "eq", "values": ["high"]}]}
+Result: ✅ MF PASS → 0
+
+═══ TK-SUP-002 | high_priority_open_tickets_metric | scenario=A ═══
+Query: "high priority open tickets count"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.super", "metrics": ["high_priority_open_tickets_metric"]}
+Result: ✅ MF PASS → 0
+
+═══ TK-SUP-002 | high_priority_open_tickets_metric | scenario=B ═══
+Query: "high priority open tickets count"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.super", "metrics": ["high_priority_open_tickets_metric"], "filters": [{"dimension": "priority", "op": "eq", "values": ["high"]}]}
+Result: ✅ MF PASS → 0
+
+═══ TK-SUP-003 | sla_breach_rate | scenario=A ═══
+Query: "sla breach rate on whatsapp last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.super", "metrics": ["sla_breach_rate"]}
+Result: ✅ MF PASS → 15.0
+
+═══ TK-SUP-003 | sla_breach_rate | scenario=B ═══
+Query: "sla breach rate on whatsapp last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.super", "metrics": ["sla_breach_rate"], "filters": [{"dimension": "priority", "op": "eq", "values": ["high"]}]}
+Result: ✅ MF PASS → 14.666666666666666
+
+═══ TK-SUP-003 | sla_breach_rate | scenario=C ═══
+Query: "sla breach rate on whatsapp last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.super", "metrics": ["sla_breach_rate"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 0
+
+═══ TK-SUP-003 | sla_breach_rate | scenario=D ═══
+Query: "sla breach rate on whatsapp last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.super", "metrics": ["sla_breach_rate"], "filters": [{"dimension": "priority", "op": "eq", "values": ["high"]}], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 0
+
+── AGENT tk.super SUMMARY: MF 8✅ 0❌ | SQL 0✅ 0❌ ──
+
+═══ TK-TKT-001 | open_tickets_metric | scenario=A ═══
+Query: "open tickets right now"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.tickets", "metrics": ["open_tickets_metric"]}
+Result: ✅ MF PASS → 0
+
+═══ TK-TKT-001 | open_tickets_metric | scenario=B ═══
+Query: "open tickets right now"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.tickets", "metrics": ["open_tickets_metric"], "filters": [{"dimension": "priority", "op": "eq", "values": ["high"]}]}
+Result: ✅ MF PASS → 0
+
+═══ TK-TKT-002 | high_priority_open_tickets_metric | scenario=A ═══
+Query: "high priority open tickets count"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.tickets", "metrics": ["high_priority_open_tickets_metric"]}
+Result: ✅ MF PASS → 0
+
+═══ TK-TKT-002 | high_priority_open_tickets_metric | scenario=B ═══
+Query: "high priority open tickets count"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.tickets", "metrics": ["high_priority_open_tickets_metric"], "filters": [{"dimension": "priority", "op": "eq", "values": ["high"]}]}
+Result: ✅ MF PASS → 0
+
+═══ TK-TKT-003 | sla_breach_rate | scenario=A ═══
+Query: "sla breach rate on whatsapp last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.tickets", "metrics": ["sla_breach_rate"]}
+Result: ✅ MF PASS → 15.0
+
+═══ TK-TKT-003 | sla_breach_rate | scenario=B ═══
+Query: "sla breach rate on whatsapp last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.tickets", "metrics": ["sla_breach_rate"], "filters": [{"dimension": "priority", "op": "eq", "values": ["high"]}]}
+Result: ✅ MF PASS → 14.666666666666666
+
+═══ TK-TKT-003 | sla_breach_rate | scenario=C ═══
+Query: "sla breach rate on whatsapp last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.tickets", "metrics": ["sla_breach_rate"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 0
+
+═══ TK-TKT-003 | sla_breach_rate | scenario=D ═══
+Query: "sla breach rate on whatsapp last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.tickets", "metrics": ["sla_breach_rate"], "filters": [{"dimension": "priority", "op": "eq", "values": ["high"]}], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 0
+
+── AGENT tk.tickets SUMMARY: MF 8✅ 0❌ | SQL 0✅ 0❌ ──
+
+═══ TK-ADM-001 | open_tickets_metric | scenario=A ═══
+Query: "open tickets right now"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.admin", "metrics": ["open_tickets_metric"]}
+Result: ✅ MF PASS → 0
+
+═══ TK-ADM-001 | open_tickets_metric | scenario=B ═══
+Query: "open tickets right now"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.admin", "metrics": ["open_tickets_metric"], "filters": [{"dimension": "priority", "op": "eq", "values": ["high"]}]}
+Result: ✅ MF PASS → 0
+
+═══ TK-ADM-002 | high_priority_open_tickets_metric | scenario=A ═══
+Query: "high priority open tickets count"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.admin", "metrics": ["high_priority_open_tickets_metric"]}
+Result: ✅ MF PASS → 0
+
+═══ TK-ADM-002 | high_priority_open_tickets_metric | scenario=B ═══
+Query: "high priority open tickets count"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.admin", "metrics": ["high_priority_open_tickets_metric"], "filters": [{"dimension": "priority", "op": "eq", "values": ["high"]}]}
+Result: ✅ MF PASS → 0
+
+═══ TK-ADM-003 | sla_breach_rate | scenario=A ═══
+Query: "sla breach rate on whatsapp last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.admin", "metrics": ["sla_breach_rate"]}
+Result: ✅ MF PASS → 15.0
+
+═══ TK-ADM-003 | sla_breach_rate | scenario=B ═══
+Query: "sla breach rate on whatsapp last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.admin", "metrics": ["sla_breach_rate"], "filters": [{"dimension": "priority", "op": "eq", "values": ["high"]}]}
+Result: ✅ MF PASS → 14.666666666666666
+
+═══ TK-ADM-003 | sla_breach_rate | scenario=C ═══
+Query: "sla breach rate on whatsapp last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.admin", "metrics": ["sla_breach_rate"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 0
+
+═══ TK-ADM-003 | sla_breach_rate | scenario=D ═══
+Query: "sla breach rate on whatsapp last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.admin", "metrics": ["sla_breach_rate"], "filters": [{"dimension": "priority", "op": "eq", "values": ["high"]}], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 0
+
+═══ TK-ADM-004 | average_resolution_time_hours | scenario=A ═══
+Query: "average resolution time hours"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.admin", "metrics": ["average_resolution_time_hours"]}
+Result: ✅ MF PASS → 56.986096548194446
+
+═══ TK-ADM-004 | average_resolution_time_hours | scenario=B ═══
+Query: "average resolution time hours"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.admin", "metrics": ["average_resolution_time_hours"], "filters": [{"dimension": "priority", "op": "eq", "values": ["high"]}]}
+Result: ✅ MF PASS → 64.90820186361111
+
+═══ TK-ADM-004 | average_resolution_time_hours | scenario=C ═══
+Query: "average resolution time hours"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.admin", "metrics": ["average_resolution_time_hours"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → None
+
+═══ TK-ADM-004 | average_resolution_time_hours | scenario=D ═══
+Query: "average resolution time hours"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.admin", "metrics": ["average_resolution_time_hours"], "filters": [{"dimension": "priority", "op": "eq", "values": ["high"]}], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → None
+
+═══ TK-ADM-005 | average_csat_score | scenario=A ═══
+Query: "customer satisfaction score average"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.admin", "metrics": ["average_csat_score"]}
+Result: ✅ MF PASS → None
+
+═══ TK-ADM-005 | average_csat_score | scenario=B ═══
+Query: "customer satisfaction score average"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.admin", "metrics": ["average_csat_score"], "filters": [{"dimension": "queue_name", "op": "eq", "values": ["support"]}]}
+Result: ✅ MF PASS → None
+
+═══ TK-ADM-005 | average_csat_score | scenario=C ═══
+Query: "customer satisfaction score average"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.admin", "metrics": ["average_csat_score"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → None
+
+═══ TK-ADM-005 | average_csat_score | scenario=D ═══
+Query: "customer satisfaction score average"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.admin", "metrics": ["average_csat_score"], "filters": [{"dimension": "queue_name", "op": "eq", "values": ["support"]}], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS
+
+═══ TK-ADM-006 | reopen_rate | scenario=A ═══
+Query: "ticket reopen rate this month"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.admin", "metrics": ["reopen_rate"]}
+Result: ✅ MF PASS → 0.0
+
+═══ TK-ADM-006 | reopen_rate | scenario=B ═══
+Query: "ticket reopen rate this month"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.admin", "metrics": ["reopen_rate"], "filters": [{"dimension": "queue_name", "op": "eq", "values": ["support"]}]}
+Result: ✅ MF PASS → 0
+
+═══ TK-ADM-006 | reopen_rate | scenario=C ═══
+Query: "ticket reopen rate this month"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.admin", "metrics": ["reopen_rate"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 0
+
+═══ TK-ADM-006 | reopen_rate | scenario=D ═══
+Query: "ticket reopen rate this month"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.admin", "metrics": ["reopen_rate"], "filters": [{"dimension": "queue_name", "op": "eq", "values": ["support"]}], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS
+
+── AGENT tk.admin SUMMARY: MF 20✅ 0❌ | SQL 0✅ 0❌ ──
+
+═══ TK-RPT-001 | open_tickets_metric | scenario=A ═══
+Query: "open tickets right now"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.reporting", "metrics": ["open_tickets_metric"]}
+Result: ✅ MF PASS → 0
+
+═══ TK-RPT-001 | open_tickets_metric | scenario=B ═══
+Query: "open tickets right now"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.reporting", "metrics": ["open_tickets_metric"], "filters": [{"dimension": "priority", "op": "eq", "values": ["high"]}]}
+Result: ✅ MF PASS → 0
+
+═══ TK-RPT-002 | high_priority_open_tickets_metric | scenario=A ═══
+Query: "high priority open tickets count"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.reporting", "metrics": ["high_priority_open_tickets_metric"]}
+Result: ✅ MF PASS → 0
+
+═══ TK-RPT-002 | high_priority_open_tickets_metric | scenario=B ═══
+Query: "high priority open tickets count"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.reporting", "metrics": ["high_priority_open_tickets_metric"], "filters": [{"dimension": "priority", "op": "eq", "values": ["high"]}]}
+Result: ✅ MF PASS → 0
+
+═══ TK-RPT-003 | sla_breach_rate | scenario=A ═══
+Query: "sla breach rate on whatsapp last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.reporting", "metrics": ["sla_breach_rate"]}
+Result: ✅ MF PASS → 15.0
+
+═══ TK-RPT-003 | sla_breach_rate | scenario=B ═══
+Query: "sla breach rate on whatsapp last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.reporting", "metrics": ["sla_breach_rate"], "filters": [{"dimension": "priority", "op": "eq", "values": ["high"]}]}
+Result: ✅ MF PASS → 14.666666666666666
+
+═══ TK-RPT-003 | sla_breach_rate | scenario=C ═══
+Query: "sla breach rate on whatsapp last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.reporting", "metrics": ["sla_breach_rate"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 0
+
+═══ TK-RPT-003 | sla_breach_rate | scenario=D ═══
+Query: "sla breach rate on whatsapp last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.reporting", "metrics": ["sla_breach_rate"], "filters": [{"dimension": "priority", "op": "eq", "values": ["high"]}], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 0
+
+═══ TK-RPT-004 | average_resolution_time_hours | scenario=A ═══
+Query: "average resolution time hours"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.reporting", "metrics": ["average_resolution_time_hours"]}
+Result: ✅ MF PASS → 56.986096548194446
+
+═══ TK-RPT-004 | average_resolution_time_hours | scenario=B ═══
+Query: "average resolution time hours"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.reporting", "metrics": ["average_resolution_time_hours"], "filters": [{"dimension": "priority", "op": "eq", "values": ["high"]}]}
+Result: ✅ MF PASS → 64.90820186361111
+
+═══ TK-RPT-004 | average_resolution_time_hours | scenario=C ═══
+Query: "average resolution time hours"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.reporting", "metrics": ["average_resolution_time_hours"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → None
+
+═══ TK-RPT-004 | average_resolution_time_hours | scenario=D ═══
+Query: "average resolution time hours"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.reporting", "metrics": ["average_resolution_time_hours"], "filters": [{"dimension": "priority", "op": "eq", "values": ["high"]}], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → None
+
+═══ TK-RPT-005 | average_csat_score | scenario=A ═══
+Query: "customer satisfaction score average"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.reporting", "metrics": ["average_csat_score"]}
+Result: ✅ MF PASS → None
+
+═══ TK-RPT-005 | average_csat_score | scenario=B ═══
+Query: "customer satisfaction score average"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.reporting", "metrics": ["average_csat_score"], "filters": [{"dimension": "queue_name", "op": "eq", "values": ["support"]}]}
+Result: ✅ MF PASS → None
+
+═══ TK-RPT-005 | average_csat_score | scenario=C ═══
+Query: "customer satisfaction score average"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.reporting", "metrics": ["average_csat_score"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → None
+
+═══ TK-RPT-005 | average_csat_score | scenario=D ═══
+Query: "customer satisfaction score average"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.reporting", "metrics": ["average_csat_score"], "filters": [{"dimension": "queue_name", "op": "eq", "values": ["support"]}], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS
+
+═══ TK-RPT-006 | reopen_rate | scenario=A ═══
+Query: "ticket reopen rate this month"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.reporting", "metrics": ["reopen_rate"]}
+Result: ✅ MF PASS → 0.0
+
+═══ TK-RPT-006 | reopen_rate | scenario=B ═══
+Query: "ticket reopen rate this month"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.reporting", "metrics": ["reopen_rate"], "filters": [{"dimension": "queue_name", "op": "eq", "values": ["support"]}]}
+Result: ✅ MF PASS → 0
+
+═══ TK-RPT-006 | reopen_rate | scenario=C ═══
+Query: "ticket reopen rate this month"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.reporting", "metrics": ["reopen_rate"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 0
+
+═══ TK-RPT-006 | reopen_rate | scenario=D ═══
+Query: "ticket reopen rate this month"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.reporting", "metrics": ["reopen_rate"], "filters": [{"dimension": "queue_name", "op": "eq", "values": ["support"]}], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS
+
+═══ TK-RPT-007 | ticket_volume | scenario=A ═══
+Query: "ticket volume last 7 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.reporting", "metrics": ["ticket_volume"]}
+Result: ✅ MF PASS → 64
+
+═══ TK-RPT-007 | ticket_volume | scenario=B ═══
+Query: "ticket volume last 7 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.reporting", "metrics": ["ticket_volume"], "filters": [{"dimension": "priority", "op": "eq", "values": ["high"]}]}
+Result: ✅ MF PASS → 47
+
+═══ TK-RPT-007 | ticket_volume | scenario=C ═══
+Query: "ticket volume last 7 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.reporting", "metrics": ["ticket_volume"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 1
+
+═══ TK-RPT-007 | ticket_volume | scenario=D ═══
+Query: "ticket volume last 7 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.reporting", "metrics": ["ticket_volume"], "filters": [{"dimension": "priority", "op": "eq", "values": ["high"]}], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 3
+
+═══ TK-RPT-008 | resolution_rate | scenario=A ═══
+Query: "resolution rate this quarter"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.reporting", "metrics": ["resolution_rate"]}
+Result: ✅ MF PASS → 0.0625
+
+═══ TK-RPT-008 | resolution_rate | scenario=B ═══
+Query: "resolution rate this quarter"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.reporting", "metrics": ["resolution_rate"], "filters": [{"dimension": "queue_name", "op": "eq", "values": ["support"]}]}
+Result: ✅ MF PASS → 0
+
+═══ TK-RPT-008 | resolution_rate | scenario=C ═══
+Query: "resolution rate this quarter"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.reporting", "metrics": ["resolution_rate"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 0.0
+
+═══ TK-RPT-008 | resolution_rate | scenario=D ═══
+Query: "resolution rate this quarter"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.reporting", "metrics": ["resolution_rate"], "filters": [{"dimension": "queue_name", "op": "eq", "values": ["support"]}], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS
+
+── AGENT tk.reporting SUMMARY: MF 28✅ 0❌ | SQL 0✅ 0❌ ──
+
+═══ TK-PRC-001 | sla_at_risk_tickets_metric | scenario=A ═══
+Query: "tickets at SLA risk"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.proactive", "metrics": ["sla_at_risk_tickets_metric"]}
+Result: ✅ MF PASS → 0
+
+═══ TK-PRC-001 | sla_at_risk_tickets_metric | scenario=B ═══
+Query: "tickets at SLA risk"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.proactive", "metrics": ["sla_at_risk_tickets_metric"], "filters": [{"dimension": "priority", "op": "eq", "values": ["high"]}]}
+Result: ✅ MF PASS → 0
+
+═══ TK-PRC-001 | sla_at_risk_tickets_metric | scenario=C ═══
+Query: "tickets at SLA risk"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.proactive", "metrics": ["sla_at_risk_tickets_metric"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 0
+
+═══ TK-PRC-001 | sla_at_risk_tickets_metric | scenario=D ═══
+Query: "tickets at SLA risk"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.proactive", "metrics": ["sla_at_risk_tickets_metric"], "filters": [{"dimension": "priority", "op": "eq", "values": ["high"]}], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 0
+
+═══ TK-PRC-002 | unanswered_tickets_metric | scenario=A ═══
+Query: "unanswered tickets count"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.proactive", "metrics": ["unanswered_tickets_metric"]}
+Result: ✅ MF PASS → 41
+
+═══ TK-PRC-002 | unanswered_tickets_metric | scenario=B ═══
+Query: "unanswered tickets count"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.proactive", "metrics": ["unanswered_tickets_metric"], "filters": [{"dimension": "priority", "op": "eq", "values": ["high"]}]}
+Result: ✅ MF PASS → 31
+
+═══ TK-PRC-002 | unanswered_tickets_metric | scenario=C ═══
+Query: "unanswered tickets count"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.proactive", "metrics": ["unanswered_tickets_metric"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 1
+
+═══ TK-PRC-002 | unanswered_tickets_metric | scenario=D ═══
+Query: "unanswered tickets count"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "ticketing", "agent": "tk.proactive", "metrics": ["unanswered_tickets_metric"], "filters": [{"dimension": "priority", "op": "eq", "values": ["high"]}], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 2
+
+── AGENT tk.proactive SUMMARY: MF 8✅ 0❌ | SQL 0✅ 0❌ ──
+
+═══ HUB-ORN-001 | total_conversations | scenario=A ═══
+Query: "total conversations last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["total_conversations"]}
+Result: ❌ MF FAIL — Metric(s) require product 'contact_centre', not 'hub'.
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "hub", "originAgent": "hub.orchestrator", "instruction": "total conversations last 30 days", "entityHint": "wt:Interaction", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["total_conversations"]}}
+
+═══ HUB-ORN-001 | total_conversations | scenario=A ═══
+Query: "total conversations last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "hub", "originAgent": "hub.orchestrator", "instruction": "total conversations last 30 days", "entityHint": "wt:Interaction", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["total_conversations"]}}
+Result: ❌ SQL FALLBACK FAIL — Hub requires products: non-empty list of active purchased SKUs.
+
+═══ HUB-ORN-001 | total_conversations | scenario=B ═══
+Query: "total conversations last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["total_conversations"], "filters": [{"dimension": "hub.scenario", "op": "eq", "values": ["escalate"]}]}
+Result: ❌ MF FAIL — Metric(s) require product 'contact_centre', not 'hub'.
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "hub", "originAgent": "hub.orchestrator", "instruction": "total conversations last 30 days", "entityHint": "wt:Interaction", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["total_conversations"], "filters": [{"dimension": "hub.scenario", "op": "eq", "values": ["escalate"]}]}}
+
+═══ HUB-ORN-001 | total_conversations | scenario=B ═══
+Query: "total conversations last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "hub", "originAgent": "hub.orchestrator", "instruction": "total conversations last 30 days", "entityHint": "wt:Interaction", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["total_conversations"], "filters": [{"dimension": "hub.scenario", "op": "eq", "values": ["escalate"]}]}}
+Result: ❌ SQL FALLBACK FAIL — Hub requires products: non-empty list of active purchased SKUs.
+
+═══ HUB-ORN-001 | total_conversations | scenario=C ═══
+Query: "total conversations last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["total_conversations"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ❌ MF FAIL — Metric(s) require product 'contact_centre', not 'hub'.
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "hub", "originAgent": "hub.orchestrator", "instruction": "total conversations last 30 days", "entityHint": "wt:Interaction", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["total_conversations"], "time": {"period": "last_30_days", "grain": "day"}}}
+
+═══ HUB-ORN-001 | total_conversations | scenario=C ═══
+Query: "total conversations last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "hub", "originAgent": "hub.orchestrator", "instruction": "total conversations last 30 days", "entityHint": "wt:Interaction", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["total_conversations"], "time": {"period": "last_30_days", "grain": "day"}}}
+Result: ❌ SQL FALLBACK FAIL — Hub requires products: non-empty list of active purchased SKUs.
+
+═══ HUB-ORN-001 | total_conversations | scenario=D ═══
+Query: "total conversations last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["total_conversations"], "filters": [{"dimension": "hub.scenario", "op": "eq", "values": ["escalate"]}], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ❌ MF FAIL — Metric(s) require product 'contact_centre', not 'hub'.
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "hub", "originAgent": "hub.orchestrator", "instruction": "total conversations last 30 days", "entityHint": "wt:Interaction", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["total_conversations"], "filters": [{"dimension": "hub.scenario", "op": "eq", "values": ["escalate"]}], "time": {"period": "last_30_days", "grain": "day"}}}
+
+═══ HUB-ORN-001 | total_conversations | scenario=D ═══
+Query: "total conversations last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "hub", "originAgent": "hub.orchestrator", "instruction": "total conversations last 30 days", "entityHint": "wt:Interaction", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["total_conversations"], "filters": [{"dimension": "hub.scenario", "op": "eq", "values": ["escalate"]}], "time": {"period": "last_30_days", "grain": "day"}}}
+Result: ❌ SQL FALLBACK FAIL — Hub requires products: non-empty list of active purchased SKUs.
+
+═══ HUB-ORN-002 | open_conversations | scenario=A ═══
+Query: "open conversations right now"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["open_conversations"]}
+Result: ❌ MF FAIL — Metric(s) require product 'contact_centre', not 'hub'.
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "hub", "originAgent": "hub.orchestrator", "instruction": "open conversations right now", "entityHint": "wt:Interaction", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["open_conversations"]}}
+
+═══ HUB-ORN-002 | open_conversations | scenario=A ═══
+Query: "open conversations right now"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "hub", "originAgent": "hub.orchestrator", "instruction": "open conversations right now", "entityHint": "wt:Interaction", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["open_conversations"]}}
+Result: ❌ SQL FALLBACK FAIL — Hub requires products: non-empty list of active purchased SKUs.
+
+═══ HUB-ORN-002 | open_conversations | scenario=B ═══
+Query: "open conversations right now"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["open_conversations"], "filters": [{"dimension": "hub.scenario", "op": "eq", "values": ["escalate"]}]}
+Result: ❌ MF FAIL — Metric(s) require product 'contact_centre', not 'hub'.
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "hub", "originAgent": "hub.orchestrator", "instruction": "open conversations right now", "entityHint": "wt:Interaction", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["open_conversations"], "filters": [{"dimension": "hub.scenario", "op": "eq", "values": ["escalate"]}]}}
+
+═══ HUB-ORN-002 | open_conversations | scenario=B ═══
+Query: "open conversations right now"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "hub", "originAgent": "hub.orchestrator", "instruction": "open conversations right now", "entityHint": "wt:Interaction", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["open_conversations"], "filters": [{"dimension": "hub.scenario", "op": "eq", "values": ["escalate"]}]}}
+Result: ❌ SQL FALLBACK FAIL — Hub requires products: non-empty list of active purchased SKUs.
+
+═══ HUB-ORN-003 | missed_contact_rate | scenario=A ═══
+Query: "missed contact rate by channel"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["missed_contact_rate"]}
+Result: ❌ MF FAIL — Metric(s) require product 'contact_centre', not 'hub'.
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "hub", "originAgent": "hub.orchestrator", "instruction": "missed contact rate by channel", "entityHint": "wt:Interaction", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["missed_contact_rate"]}}
+
+═══ HUB-ORN-003 | missed_contact_rate | scenario=A ═══
+Query: "missed contact rate by channel"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "hub", "originAgent": "hub.orchestrator", "instruction": "missed contact rate by channel", "entityHint": "wt:Interaction", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["missed_contact_rate"]}}
+Result: ❌ SQL FALLBACK FAIL — Hub requires products: non-empty list of active purchased SKUs.
+
+═══ HUB-ORN-003 | missed_contact_rate | scenario=B ═══
+Query: "missed contact rate by channel"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["missed_contact_rate"], "filters": [{"dimension": "hub.scenario", "op": "eq", "values": ["escalate"]}]}
+Result: ❌ MF FAIL — Metric(s) require product 'contact_centre', not 'hub'.
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "hub", "originAgent": "hub.orchestrator", "instruction": "missed contact rate by channel", "entityHint": "wt:Interaction", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["missed_contact_rate"], "filters": [{"dimension": "hub.scenario", "op": "eq", "values": ["escalate"]}]}}
+
+═══ HUB-ORN-003 | missed_contact_rate | scenario=B ═══
+Query: "missed contact rate by channel"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "hub", "originAgent": "hub.orchestrator", "instruction": "missed contact rate by channel", "entityHint": "wt:Interaction", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["missed_contact_rate"], "filters": [{"dimension": "hub.scenario", "op": "eq", "values": ["escalate"]}]}}
+Result: ❌ SQL FALLBACK FAIL — Hub requires products: non-empty list of active purchased SKUs.
+
+═══ HUB-ORN-003 | missed_contact_rate | scenario=C ═══
+Query: "missed contact rate by channel"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["missed_contact_rate"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ❌ MF FAIL — Metric(s) require product 'contact_centre', not 'hub'.
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "hub", "originAgent": "hub.orchestrator", "instruction": "missed contact rate by channel", "entityHint": "wt:Interaction", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["missed_contact_rate"], "time": {"period": "last_30_days", "grain": "day"}}}
+
+═══ HUB-ORN-003 | missed_contact_rate | scenario=C ═══
+Query: "missed contact rate by channel"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "hub", "originAgent": "hub.orchestrator", "instruction": "missed contact rate by channel", "entityHint": "wt:Interaction", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["missed_contact_rate"], "time": {"period": "last_30_days", "grain": "day"}}}
+Result: ❌ SQL FALLBACK FAIL — Hub requires products: non-empty list of active purchased SKUs.
+
+═══ HUB-ORN-003 | missed_contact_rate | scenario=D ═══
+Query: "missed contact rate by channel"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["missed_contact_rate"], "filters": [{"dimension": "hub.scenario", "op": "eq", "values": ["escalate"]}], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ❌ MF FAIL — Metric(s) require product 'contact_centre', not 'hub'.
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "hub", "originAgent": "hub.orchestrator", "instruction": "missed contact rate by channel", "entityHint": "wt:Interaction", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["missed_contact_rate"], "filters": [{"dimension": "hub.scenario", "op": "eq", "values": ["escalate"]}], "time": {"period": "last_30_days", "grain": "day"}}}
+
+═══ HUB-ORN-003 | missed_contact_rate | scenario=D ═══
+Query: "missed contact rate by channel"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "hub", "originAgent": "hub.orchestrator", "instruction": "missed contact rate by channel", "entityHint": "wt:Interaction", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["missed_contact_rate"], "filters": [{"dimension": "hub.scenario", "op": "eq", "values": ["escalate"]}], "time": {"period": "last_30_days", "grain": "day"}}}
+Result: ❌ SQL FALLBACK FAIL — Hub requires products: non-empty list of active purchased SKUs.
+
+═══ HUB-ORN-004 | open_tickets_metric | scenario=A ═══
+Query: "open tickets right now"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["open_tickets_metric"]}
+Result: ❌ MF FAIL — Metric(s) require product 'ticketing', not 'hub'.
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "hub", "originAgent": "hub.orchestrator", "instruction": "open tickets right now", "entityHint": "wt:Interaction", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["open_tickets_metric"]}}
+
+═══ HUB-ORN-004 | open_tickets_metric | scenario=A ═══
+Query: "open tickets right now"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "hub", "originAgent": "hub.orchestrator", "instruction": "open tickets right now", "entityHint": "wt:Interaction", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["open_tickets_metric"]}}
+Result: ❌ SQL FALLBACK FAIL — Hub requires products: non-empty list of active purchased SKUs.
+
+═══ HUB-ORN-004 | open_tickets_metric | scenario=B ═══
+Query: "open tickets right now"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["open_tickets_metric"], "filters": [{"dimension": "hub.scenario", "op": "eq", "values": ["escalate"]}]}
+Result: ❌ MF FAIL — Metric(s) require product 'ticketing', not 'hub'.
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "hub", "originAgent": "hub.orchestrator", "instruction": "open tickets right now", "entityHint": "wt:Interaction", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["open_tickets_metric"], "filters": [{"dimension": "hub.scenario", "op": "eq", "values": ["escalate"]}]}}
+
+═══ HUB-ORN-004 | open_tickets_metric | scenario=B ═══
+Query: "open tickets right now"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "hub", "originAgent": "hub.orchestrator", "instruction": "open tickets right now", "entityHint": "wt:Interaction", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["open_tickets_metric"], "filters": [{"dimension": "hub.scenario", "op": "eq", "values": ["escalate"]}]}}
+Result: ❌ SQL FALLBACK FAIL — Hub requires products: non-empty list of active purchased SKUs.
+
+═══ HUB-ORN-005 | high_priority_open_tickets_metric | scenario=A ═══
+Query: "high priority open tickets count"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["high_priority_open_tickets_metric"]}
+Result: ❌ MF FAIL — Metric(s) require product 'ticketing', not 'hub'.
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "hub", "originAgent": "hub.orchestrator", "instruction": "high priority open tickets count", "entityHint": "wt:Interaction", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["high_priority_open_tickets_metric"]}}
+
+═══ HUB-ORN-005 | high_priority_open_tickets_metric | scenario=A ═══
+Query: "high priority open tickets count"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "hub", "originAgent": "hub.orchestrator", "instruction": "high priority open tickets count", "entityHint": "wt:Interaction", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["high_priority_open_tickets_metric"]}}
+Result: ❌ SQL FALLBACK FAIL — Hub requires products: non-empty list of active purchased SKUs.
+
+═══ HUB-ORN-005 | high_priority_open_tickets_metric | scenario=B ═══
+Query: "high priority open tickets count"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["high_priority_open_tickets_metric"], "filters": [{"dimension": "hub.scenario", "op": "eq", "values": ["escalate"]}]}
+Result: ❌ MF FAIL — Metric(s) require product 'ticketing', not 'hub'.
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "hub", "originAgent": "hub.orchestrator", "instruction": "high priority open tickets count", "entityHint": "wt:Interaction", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["high_priority_open_tickets_metric"], "filters": [{"dimension": "hub.scenario", "op": "eq", "values": ["escalate"]}]}}
+
+═══ HUB-ORN-005 | high_priority_open_tickets_metric | scenario=B ═══
+Query: "high priority open tickets count"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "hub", "originAgent": "hub.orchestrator", "instruction": "high priority open tickets count", "entityHint": "wt:Interaction", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["high_priority_open_tickets_metric"], "filters": [{"dimension": "hub.scenario", "op": "eq", "values": ["escalate"]}]}}
+Result: ❌ SQL FALLBACK FAIL — Hub requires products: non-empty list of active purchased SKUs.
+
+═══ HUB-ORN-006 | sla_breach_rate | scenario=A ═══
+Query: "sla breach rate on whatsapp last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["sla_breach_rate"]}
+Result: ❌ MF FAIL — Metric(s) require product 'contact_centre', not 'hub'.
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "hub", "originAgent": "hub.orchestrator", "instruction": "sla breach rate on whatsapp last 30 days", "entityHint": "wt:Interaction", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["sla_breach_rate"]}}
+
+═══ HUB-ORN-006 | sla_breach_rate | scenario=A ═══
+Query: "sla breach rate on whatsapp last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "hub", "originAgent": "hub.orchestrator", "instruction": "sla breach rate on whatsapp last 30 days", "entityHint": "wt:Interaction", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["sla_breach_rate"]}}
+Result: ❌ SQL FALLBACK FAIL — Hub requires products: non-empty list of active purchased SKUs.
+
+═══ HUB-ORN-006 | sla_breach_rate | scenario=B ═══
+Query: "sla breach rate on whatsapp last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["sla_breach_rate"], "filters": [{"dimension": "hub.scenario", "op": "eq", "values": ["escalate"]}]}
+Result: ❌ MF FAIL — Metric(s) require product 'contact_centre', not 'hub'.
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "hub", "originAgent": "hub.orchestrator", "instruction": "sla breach rate on whatsapp last 30 days", "entityHint": "wt:Interaction", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["sla_breach_rate"], "filters": [{"dimension": "hub.scenario", "op": "eq", "values": ["escalate"]}]}}
+
+═══ HUB-ORN-006 | sla_breach_rate | scenario=B ═══
+Query: "sla breach rate on whatsapp last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "hub", "originAgent": "hub.orchestrator", "instruction": "sla breach rate on whatsapp last 30 days", "entityHint": "wt:Interaction", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["sla_breach_rate"], "filters": [{"dimension": "hub.scenario", "op": "eq", "values": ["escalate"]}]}}
+Result: ❌ SQL FALLBACK FAIL — Hub requires products: non-empty list of active purchased SKUs.
+
+═══ HUB-ORN-006 | sla_breach_rate | scenario=C ═══
+Query: "sla breach rate on whatsapp last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["sla_breach_rate"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ❌ MF FAIL — Metric(s) require product 'contact_centre', not 'hub'.
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "hub", "originAgent": "hub.orchestrator", "instruction": "sla breach rate on whatsapp last 30 days", "entityHint": "wt:Interaction", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["sla_breach_rate"], "time": {"period": "last_30_days", "grain": "day"}}}
+
+═══ HUB-ORN-006 | sla_breach_rate | scenario=C ═══
+Query: "sla breach rate on whatsapp last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "hub", "originAgent": "hub.orchestrator", "instruction": "sla breach rate on whatsapp last 30 days", "entityHint": "wt:Interaction", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["sla_breach_rate"], "time": {"period": "last_30_days", "grain": "day"}}}
+Result: ❌ SQL FALLBACK FAIL — Hub requires products: non-empty list of active purchased SKUs.
+
+═══ HUB-ORN-006 | sla_breach_rate | scenario=D ═══
+Query: "sla breach rate on whatsapp last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["sla_breach_rate"], "filters": [{"dimension": "hub.scenario", "op": "eq", "values": ["escalate"]}], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ❌ MF FAIL — Metric(s) require product 'contact_centre', not 'hub'.
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "hub", "originAgent": "hub.orchestrator", "instruction": "sla breach rate on whatsapp last 30 days", "entityHint": "wt:Interaction", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["sla_breach_rate"], "filters": [{"dimension": "hub.scenario", "op": "eq", "values": ["escalate"]}], "time": {"period": "last_30_days", "grain": "day"}}}
+
+═══ HUB-ORN-006 | sla_breach_rate | scenario=D ═══
+Query: "sla breach rate on whatsapp last 30 days"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "hub", "originAgent": "hub.orchestrator", "instruction": "sla breach rate on whatsapp last 30 days", "entityHint": "wt:Interaction", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "hub", "agent": "hub.orchestrator", "metrics": ["sla_breach_rate"], "filters": [{"dimension": "hub.scenario", "op": "eq", "values": ["escalate"]}], "time": {"period": "last_30_days", "grain": "day"}}}
+Result: ❌ SQL FALLBACK FAIL — Hub requires products: non-empty list of active purchased SKUs.
+
+── AGENT hub.orchestrator SUMMARY: MF 0✅ 18❌ | SQL 0✅ 18❌ ──
+
+═══ CRM-DEL-001 | open_pipeline_value | scenario=A ═══
+Query: "open pipeline value"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.deals", "metrics": ["open_pipeline_value"]}
+Result: ❌ MF FAIL — Database Error
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "crm", "originAgent": "crm.deals", "instruction": "open pipeline value", "entityHint": "wt:Deal", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.deals", "metrics": ["open_pipeline_value"]}}
+
+═══ CRM-DEL-001 | open_pipeline_value | scenario=A ═══
+Query: "open pipeline value"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "crm", "originAgent": "crm.deals", "instruction": "open pipeline value", "entityHint": "wt:Deal", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.deals", "metrics": ["open_pipeline_value"]}}
+Result: ❌ SQL FALLBACK FAIL — No SQL template for metric 'open_pipeline_value' (product=crm)
+
+═══ CRM-DEL-001 | open_pipeline_value | scenario=B ═══
+Query: "open pipeline value"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.deals", "metrics": ["open_pipeline_value"], "filters": [{"dimension": "deal.stage", "op": "eq", "values": ["qualification"]}]}
+Result: ❌ MF FAIL — Dimension(s) ['deal.stage'] not allowed for metric 'open_pipeline_value'. Allowed: owner_name, stage
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "crm", "originAgent": "crm.deals", "instruction": "open pipeline value", "entityHint": "wt:Deal", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.deals", "metrics": ["open_pipeline_value"], "filters": [{"dimension": "deal.stage", "op": "eq", "values": ["qualification"]}]}}
+
+═══ CRM-DEL-001 | open_pipeline_value | scenario=B ═══
+Query: "open pipeline value"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "crm", "originAgent": "crm.deals", "instruction": "open pipeline value", "entityHint": "wt:Deal", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.deals", "metrics": ["open_pipeline_value"], "filters": [{"dimension": "deal.stage", "op": "eq", "values": ["qualification"]}]}}
+Result: ❌ SQL FALLBACK FAIL — Dimension(s) ['deal.stage'] not allowed for metric 'open_pipeline_value'. Allowed: owner_name, stage
+
+═══ CRM-DEL-001 | open_pipeline_value | scenario=C ═══
+Query: "open pipeline value"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.deals", "metrics": ["open_pipeline_value"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ❌ MF FAIL — Database Error
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "crm", "originAgent": "crm.deals", "instruction": "open pipeline value", "entityHint": "wt:Deal", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.deals", "metrics": ["open_pipeline_value"], "time": {"period": "last_30_days", "grain": "day"}}}
+
+═══ CRM-DEL-001 | open_pipeline_value | scenario=C ═══
+Query: "open pipeline value"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "crm", "originAgent": "crm.deals", "instruction": "open pipeline value", "entityHint": "wt:Deal", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.deals", "metrics": ["open_pipeline_value"], "time": {"period": "last_30_days", "grain": "day"}}}
+Result: ❌ SQL FALLBACK FAIL — No SQL template for metric 'open_pipeline_value' (product=crm)
+
+═══ CRM-DEL-001 | open_pipeline_value | scenario=D ═══
+Query: "open pipeline value"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.deals", "metrics": ["open_pipeline_value"], "filters": [{"dimension": "deal.stage", "op": "eq", "values": ["qualification"]}], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ❌ MF FAIL — Dimension(s) ['deal.stage'] not allowed for metric 'open_pipeline_value'. Allowed: owner_name, stage
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "crm", "originAgent": "crm.deals", "instruction": "open pipeline value", "entityHint": "wt:Deal", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.deals", "metrics": ["open_pipeline_value"], "filters": [{"dimension": "deal.stage", "op": "eq", "values": ["qualification"]}], "time": {"period": "last_30_days", "grain": "day"}}}
+
+═══ CRM-DEL-001 | open_pipeline_value | scenario=D ═══
+Query: "open pipeline value"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "crm", "originAgent": "crm.deals", "instruction": "open pipeline value", "entityHint": "wt:Deal", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.deals", "metrics": ["open_pipeline_value"], "filters": [{"dimension": "deal.stage", "op": "eq", "values": ["qualification"]}], "time": {"period": "last_30_days", "grain": "day"}}}
+Result: ❌ SQL FALLBACK FAIL — Dimension(s) ['deal.stage'] not allowed for metric 'open_pipeline_value'. Allowed: owner_name, stage
+
+═══ CRM-DEL-002 | won_deal_rate | scenario=A ═══
+Query: "won deal rate this quarter"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.deals", "metrics": ["won_deal_rate"]}
+Result: ❌ MF FAIL — Database Error
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "crm", "originAgent": "crm.deals", "instruction": "won deal rate this quarter", "entityHint": "wt:Deal", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.deals", "metrics": ["won_deal_rate"]}}
+
+═══ CRM-DEL-002 | won_deal_rate | scenario=A ═══
+Query: "won deal rate this quarter"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "crm", "originAgent": "crm.deals", "instruction": "won deal rate this quarter", "entityHint": "wt:Deal", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.deals", "metrics": ["won_deal_rate"]}}
+Result: ❌ SQL FALLBACK FAIL — No SQL template for metric 'won_deal_rate' (product=crm)
+
+═══ CRM-DEL-002 | won_deal_rate | scenario=B ═══
+Query: "won deal rate this quarter"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.deals", "metrics": ["won_deal_rate"], "filters": [{"dimension": "deal.stage", "op": "eq", "values": ["qualification"]}]}
+Result: ❌ MF FAIL — Dimension(s) ['deal.stage'] not allowed for metric 'won_deal_rate'. Allowed: owner_name, owner_team_
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "crm", "originAgent": "crm.deals", "instruction": "won deal rate this quarter", "entityHint": "wt:Deal", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.deals", "metrics": ["won_deal_rate"], "filters": [{"dimension": "deal.stage", "op": "eq", "values": ["qualification"]}]}}
+
+═══ CRM-DEL-002 | won_deal_rate | scenario=B ═══
+Query: "won deal rate this quarter"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "crm", "originAgent": "crm.deals", "instruction": "won deal rate this quarter", "entityHint": "wt:Deal", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.deals", "metrics": ["won_deal_rate"], "filters": [{"dimension": "deal.stage", "op": "eq", "values": ["qualification"]}]}}
+Result: ❌ SQL FALLBACK FAIL — Dimension(s) ['deal.stage'] not allowed for metric 'won_deal_rate'. Allowed: owner_name, owner_team_
+
+═══ CRM-DEL-002 | won_deal_rate | scenario=C ═══
+Query: "won deal rate this quarter"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.deals", "metrics": ["won_deal_rate"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ❌ MF FAIL — Database Error
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "crm", "originAgent": "crm.deals", "instruction": "won deal rate this quarter", "entityHint": "wt:Deal", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.deals", "metrics": ["won_deal_rate"], "time": {"period": "last_30_days", "grain": "day"}}}
+
+═══ CRM-DEL-002 | won_deal_rate | scenario=C ═══
+Query: "won deal rate this quarter"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "crm", "originAgent": "crm.deals", "instruction": "won deal rate this quarter", "entityHint": "wt:Deal", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.deals", "metrics": ["won_deal_rate"], "time": {"period": "last_30_days", "grain": "day"}}}
+Result: ❌ SQL FALLBACK FAIL — No SQL template for metric 'won_deal_rate' (product=crm)
+
+═══ CRM-DEL-002 | won_deal_rate | scenario=D ═══
+Query: "won deal rate this quarter"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.deals", "metrics": ["won_deal_rate"], "filters": [{"dimension": "deal.stage", "op": "eq", "values": ["qualification"]}], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ❌ MF FAIL — Dimension(s) ['deal.stage'] not allowed for metric 'won_deal_rate'. Allowed: owner_name, owner_team_
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "crm", "originAgent": "crm.deals", "instruction": "won deal rate this quarter", "entityHint": "wt:Deal", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.deals", "metrics": ["won_deal_rate"], "filters": [{"dimension": "deal.stage", "op": "eq", "values": ["qualification"]}], "time": {"period": "last_30_days", "grain": "day"}}}
+
+═══ CRM-DEL-002 | won_deal_rate | scenario=D ═══
+Query: "won deal rate this quarter"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "crm", "originAgent": "crm.deals", "instruction": "won deal rate this quarter", "entityHint": "wt:Deal", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.deals", "metrics": ["won_deal_rate"], "filters": [{"dimension": "deal.stage", "op": "eq", "values": ["qualification"]}], "time": {"period": "last_30_days", "grain": "day"}}}
+Result: ❌ SQL FALLBACK FAIL — Dimension(s) ['deal.stage'] not allowed for metric 'won_deal_rate'. Allowed: owner_name, owner_team_
+
+═══ CRM-DEL-003 | deal_volume | scenario=A ═══
+Query: "deal volume this month"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.deals", "metrics": ["deal_volume"]}
+Result: ❌ MF FAIL — Database Error
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "crm", "originAgent": "crm.deals", "instruction": "deal volume this month", "entityHint": "wt:Deal", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.deals", "metrics": ["deal_volume"]}}
+
+═══ CRM-DEL-003 | deal_volume | scenario=A ═══
+Query: "deal volume this month"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "crm", "originAgent": "crm.deals", "instruction": "deal volume this month", "entityHint": "wt:Deal", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.deals", "metrics": ["deal_volume"]}}
+Result: ❌ SQL FALLBACK FAIL — No SQL template for metric 'deal_volume' (product=crm)
+
+═══ CRM-DEL-003 | deal_volume | scenario=B ═══
+Query: "deal volume this month"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.deals", "metrics": ["deal_volume"], "filters": [{"dimension": "deal.stage", "op": "eq", "values": ["qualification"]}]}
+Result: ❌ MF FAIL — Dimension(s) ['deal.stage'] not allowed for metric 'deal_volume'. Allowed: owner_name, stage
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "crm", "originAgent": "crm.deals", "instruction": "deal volume this month", "entityHint": "wt:Deal", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.deals", "metrics": ["deal_volume"], "filters": [{"dimension": "deal.stage", "op": "eq", "values": ["qualification"]}]}}
+
+═══ CRM-DEL-003 | deal_volume | scenario=B ═══
+Query: "deal volume this month"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "crm", "originAgent": "crm.deals", "instruction": "deal volume this month", "entityHint": "wt:Deal", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.deals", "metrics": ["deal_volume"], "filters": [{"dimension": "deal.stage", "op": "eq", "values": ["qualification"]}]}}
+Result: ❌ SQL FALLBACK FAIL — Dimension(s) ['deal.stage'] not allowed for metric 'deal_volume'. Allowed: owner_name, stage
+
+═══ CRM-DEL-003 | deal_volume | scenario=C ═══
+Query: "deal volume this month"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.deals", "metrics": ["deal_volume"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ❌ MF FAIL — Database Error
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "crm", "originAgent": "crm.deals", "instruction": "deal volume this month", "entityHint": "wt:Deal", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.deals", "metrics": ["deal_volume"], "time": {"period": "last_30_days", "grain": "day"}}}
+
+═══ CRM-DEL-003 | deal_volume | scenario=C ═══
+Query: "deal volume this month"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "crm", "originAgent": "crm.deals", "instruction": "deal volume this month", "entityHint": "wt:Deal", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.deals", "metrics": ["deal_volume"], "time": {"period": "last_30_days", "grain": "day"}}}
+Result: ❌ SQL FALLBACK FAIL — No SQL template for metric 'deal_volume' (product=crm)
+
+═══ CRM-DEL-003 | deal_volume | scenario=D ═══
+Query: "deal volume this month"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.deals", "metrics": ["deal_volume"], "filters": [{"dimension": "deal.stage", "op": "eq", "values": ["qualification"]}], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ❌ MF FAIL — Dimension(s) ['deal.stage'] not allowed for metric 'deal_volume'. Allowed: owner_name, stage
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "crm", "originAgent": "crm.deals", "instruction": "deal volume this month", "entityHint": "wt:Deal", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.deals", "metrics": ["deal_volume"], "filters": [{"dimension": "deal.stage", "op": "eq", "values": ["qualification"]}], "time": {"period": "last_30_days", "grain": "day"}}}
+
+═══ CRM-DEL-003 | deal_volume | scenario=D ═══
+Query: "deal volume this month"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "crm", "originAgent": "crm.deals", "instruction": "deal volume this month", "entityHint": "wt:Deal", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.deals", "metrics": ["deal_volume"], "filters": [{"dimension": "deal.stage", "op": "eq", "values": ["qualification"]}], "time": {"period": "last_30_days", "grain": "day"}}}
+Result: ❌ SQL FALLBACK FAIL — Dimension(s) ['deal.stage'] not allowed for metric 'deal_volume'. Allowed: owner_name, stage
+
+── AGENT crm.deals SUMMARY: MF 0✅ 12❌ | SQL 0✅ 12❌ ──
+
+═══ CRM-RPT-001 | won_deal_rate | scenario=A ═══
+Query: "won deal rate this quarter"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.reports", "metrics": ["won_deal_rate"]}
+Result: ❌ MF FAIL — Database Error
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "crm", "originAgent": "crm.reports", "instruction": "won deal rate this quarter", "entityHint": "wt:Deal", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.reports", "metrics": ["won_deal_rate"]}}
+
+═══ CRM-RPT-001 | won_deal_rate | scenario=A ═══
+Query: "won deal rate this quarter"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "crm", "originAgent": "crm.reports", "instruction": "won deal rate this quarter", "entityHint": "wt:Deal", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.reports", "metrics": ["won_deal_rate"]}}
+Result: ❌ SQL FALLBACK FAIL — No SQL template for metric 'won_deal_rate' (product=crm)
+
+═══ CRM-RPT-001 | won_deal_rate | scenario=C ═══
+Query: "won deal rate this quarter"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.reports", "metrics": ["won_deal_rate"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ❌ MF FAIL — Database Error
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "crm", "originAgent": "crm.reports", "instruction": "won deal rate this quarter", "entityHint": "wt:Deal", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.reports", "metrics": ["won_deal_rate"], "time": {"period": "last_30_days", "grain": "day"}}}
+
+═══ CRM-RPT-001 | won_deal_rate | scenario=C ═══
+Query: "won deal rate this quarter"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "crm", "originAgent": "crm.reports", "instruction": "won deal rate this quarter", "entityHint": "wt:Deal", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.reports", "metrics": ["won_deal_rate"], "time": {"period": "last_30_days", "grain": "day"}}}
+Result: ❌ SQL FALLBACK FAIL — No SQL template for metric 'won_deal_rate' (product=crm)
+
+═══ CRM-RPT-002 | open_pipeline_value | scenario=A ═══
+Query: "open pipeline value"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.reports", "metrics": ["open_pipeline_value"]}
+Result: ❌ MF FAIL — Database Error
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "crm", "originAgent": "crm.reports", "instruction": "open pipeline value", "entityHint": "wt:Deal", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.reports", "metrics": ["open_pipeline_value"]}}
+
+═══ CRM-RPT-002 | open_pipeline_value | scenario=A ═══
+Query: "open pipeline value"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "crm", "originAgent": "crm.reports", "instruction": "open pipeline value", "entityHint": "wt:Deal", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.reports", "metrics": ["open_pipeline_value"]}}
+Result: ❌ SQL FALLBACK FAIL — No SQL template for metric 'open_pipeline_value' (product=crm)
+
+═══ CRM-RPT-002 | open_pipeline_value | scenario=C ═══
+Query: "open pipeline value"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.reports", "metrics": ["open_pipeline_value"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ❌ MF FAIL — Database Error
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "crm", "originAgent": "crm.reports", "instruction": "open pipeline value", "entityHint": "wt:Deal", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.reports", "metrics": ["open_pipeline_value"], "time": {"period": "last_30_days", "grain": "day"}}}
+
+═══ CRM-RPT-002 | open_pipeline_value | scenario=C ═══
+Query: "open pipeline value"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "crm", "originAgent": "crm.reports", "instruction": "open pipeline value", "entityHint": "wt:Deal", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.reports", "metrics": ["open_pipeline_value"], "time": {"period": "last_30_days", "grain": "day"}}}
+Result: ❌ SQL FALLBACK FAIL — No SQL template for metric 'open_pipeline_value' (product=crm)
+
+═══ CRM-RPT-003 | mql_rate | scenario=A ═══
+Query: "mql rate this quarter"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.reports", "metrics": ["mql_rate"]}
+Result: ❌ MF FAIL — Database Error
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "crm", "originAgent": "crm.reports", "instruction": "mql rate this quarter", "entityHint": "wt:Deal", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.reports", "metrics": ["mql_rate"]}}
+
+═══ CRM-RPT-003 | mql_rate | scenario=A ═══
+Query: "mql rate this quarter"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "crm", "originAgent": "crm.reports", "instruction": "mql rate this quarter", "entityHint": "wt:Deal", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.reports", "metrics": ["mql_rate"]}}
+Result: ❌ SQL FALLBACK FAIL — No SQL template for metric 'mql_rate' (product=crm)
+
+═══ CRM-RPT-003 | mql_rate | scenario=C ═══
+Query: "mql rate this quarter"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.reports", "metrics": ["mql_rate"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ❌ MF FAIL — Database Error
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "crm", "originAgent": "crm.reports", "instruction": "mql rate this quarter", "entityHint": "wt:Deal", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.reports", "metrics": ["mql_rate"], "time": {"period": "last_30_days", "grain": "day"}}}
+
+═══ CRM-RPT-003 | mql_rate | scenario=C ═══
+Query: "mql rate this quarter"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "crm", "originAgent": "crm.reports", "instruction": "mql rate this quarter", "entityHint": "wt:Deal", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.reports", "metrics": ["mql_rate"], "time": {"period": "last_30_days", "grain": "day"}}}
+Result: ❌ SQL FALLBACK FAIL — No SQL template for metric 'mql_rate' (product=crm)
+
+═══ CRM-RPT-004 | customer_conversion_rate | scenario=A ═══
+Query: "customer conversion rate"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.reports", "metrics": ["customer_conversion_rate"]}
+Result: ❌ MF FAIL — Database Error
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "crm", "originAgent": "crm.reports", "instruction": "customer conversion rate", "entityHint": "wt:Deal", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.reports", "metrics": ["customer_conversion_rate"]}}
+
+═══ CRM-RPT-004 | customer_conversion_rate | scenario=A ═══
+Query: "customer conversion rate"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "crm", "originAgent": "crm.reports", "instruction": "customer conversion rate", "entityHint": "wt:Deal", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.reports", "metrics": ["customer_conversion_rate"]}}
+Result: ❌ SQL FALLBACK FAIL — No SQL template for metric 'customer_conversion_rate' (product=crm)
+
+═══ CRM-RPT-004 | customer_conversion_rate | scenario=C ═══
+Query: "customer conversion rate"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.reports", "metrics": ["customer_conversion_rate"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ❌ MF FAIL — Database Error
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "crm", "originAgent": "crm.reports", "instruction": "customer conversion rate", "entityHint": "wt:Deal", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.reports", "metrics": ["customer_conversion_rate"], "time": {"period": "last_30_days", "grain": "day"}}}
+
+═══ CRM-RPT-004 | customer_conversion_rate | scenario=C ═══
+Query: "customer conversion rate"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "crm", "originAgent": "crm.reports", "instruction": "customer conversion rate", "entityHint": "wt:Deal", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "crm", "agent": "crm.reports", "metrics": ["customer_conversion_rate"], "time": {"period": "last_30_days", "grain": "day"}}}
+Result: ❌ SQL FALLBACK FAIL — No SQL template for metric 'customer_conversion_rate' (product=crm)
+
+── AGENT crm.reports SUMMARY: MF 0✅ 8❌ | SQL 0✅ 8❌ ──
+
+═══ CMP-RPT-001 | delivery_rate | scenario=A ═══
+Query: "campaign delivery rate"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "campaign", "agent": "camp.reports", "metrics": ["delivery_rate"]}
+Result: ✅ MF PASS → 1.0
+
+═══ CMP-RPT-001 | delivery_rate | scenario=B ═══
+Query: "campaign delivery rate"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "campaign", "agent": "camp.reports", "metrics": ["delivery_rate"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}]}
+Result: ❌ MF FAIL — Database Error
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "campaign", "originAgent": "camp.reports", "instruction": "campaign delivery rate", "entityHint": "wt:Campaign", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "campaign", "agent": "camp.reports", "metrics": ["delivery_rate"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}]}}
+
+═══ CMP-RPT-001 | delivery_rate | scenario=B ═══
+Query: "campaign delivery rate"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "campaign", "originAgent": "camp.reports", "instruction": "campaign delivery rate", "entityHint": "wt:Campaign", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "campaign", "agent": "camp.reports", "metrics": ["delivery_rate"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}]}}
+Result: ❌ SQL FALLBACK FAIL — No SQL template for metric 'delivery_rate' (product=campaign)
+
+═══ CMP-RPT-001 | delivery_rate | scenario=C ═══
+Query: "campaign delivery rate"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "campaign", "agent": "camp.reports", "metrics": ["delivery_rate"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 1.0
+
+═══ CMP-RPT-001 | delivery_rate | scenario=D ═══
+Query: "campaign delivery rate"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "campaign", "agent": "camp.reports", "metrics": ["delivery_rate"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ❌ MF FAIL — Database Error
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "campaign", "originAgent": "camp.reports", "instruction": "campaign delivery rate", "entityHint": "wt:Campaign", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "campaign", "agent": "camp.reports", "metrics": ["delivery_rate"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}], "time": {"period": "last_30_days", "grain": "day"}}}
+
+═══ CMP-RPT-001 | delivery_rate | scenario=D ═══
+Query: "campaign delivery rate"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "campaign", "originAgent": "camp.reports", "instruction": "campaign delivery rate", "entityHint": "wt:Campaign", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "campaign", "agent": "camp.reports", "metrics": ["delivery_rate"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}], "time": {"period": "last_30_days", "grain": "day"}}}
+Result: ❌ SQL FALLBACK FAIL — No SQL template for metric 'delivery_rate' (product=campaign)
+
+═══ CMP-RPT-002 | open_rate | scenario=A ═══
+Query: "email open rate"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "campaign", "agent": "camp.reports", "metrics": ["open_rate"]}
+Result: ✅ MF PASS → 0.2
+
+═══ CMP-RPT-002 | open_rate | scenario=B ═══
+Query: "email open rate"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "campaign", "agent": "camp.reports", "metrics": ["open_rate"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}]}
+Result: ❌ MF FAIL — Database Error
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "campaign", "originAgent": "camp.reports", "instruction": "email open rate", "entityHint": "wt:Campaign", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "campaign", "agent": "camp.reports", "metrics": ["open_rate"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}]}}
+
+═══ CMP-RPT-002 | open_rate | scenario=B ═══
+Query: "email open rate"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "campaign", "originAgent": "camp.reports", "instruction": "email open rate", "entityHint": "wt:Campaign", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "campaign", "agent": "camp.reports", "metrics": ["open_rate"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}]}}
+Result: ❌ SQL FALLBACK FAIL — No SQL template for metric 'open_rate' (product=campaign)
+
+═══ CMP-RPT-002 | open_rate | scenario=C ═══
+Query: "email open rate"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "campaign", "agent": "camp.reports", "metrics": ["open_rate"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 0.2
+
+═══ CMP-RPT-002 | open_rate | scenario=D ═══
+Query: "email open rate"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "campaign", "agent": "camp.reports", "metrics": ["open_rate"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ❌ MF FAIL — Database Error
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "campaign", "originAgent": "camp.reports", "instruction": "email open rate", "entityHint": "wt:Campaign", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "campaign", "agent": "camp.reports", "metrics": ["open_rate"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}], "time": {"period": "last_30_days", "grain": "day"}}}
+
+═══ CMP-RPT-002 | open_rate | scenario=D ═══
+Query: "email open rate"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "campaign", "originAgent": "camp.reports", "instruction": "email open rate", "entityHint": "wt:Campaign", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "campaign", "agent": "camp.reports", "metrics": ["open_rate"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}], "time": {"period": "last_30_days", "grain": "day"}}}
+Result: ❌ SQL FALLBACK FAIL — No SQL template for metric 'open_rate' (product=campaign)
+
+═══ CMP-RPT-003 | click_rate | scenario=A ═══
+Query: "click rate this campaign"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "campaign", "agent": "camp.reports", "metrics": ["click_rate"]}
+Result: ✅ MF PASS → 0.0
+
+═══ CMP-RPT-003 | click_rate | scenario=B ═══
+Query: "click rate this campaign"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "campaign", "agent": "camp.reports", "metrics": ["click_rate"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}]}
+Result: ❌ MF FAIL — Database Error
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "campaign", "originAgent": "camp.reports", "instruction": "click rate this campaign", "entityHint": "wt:Campaign", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "campaign", "agent": "camp.reports", "metrics": ["click_rate"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}]}}
+
+═══ CMP-RPT-003 | click_rate | scenario=B ═══
+Query: "click rate this campaign"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "campaign", "originAgent": "camp.reports", "instruction": "click rate this campaign", "entityHint": "wt:Campaign", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "campaign", "agent": "camp.reports", "metrics": ["click_rate"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}]}}
+Result: ❌ SQL FALLBACK FAIL — No SQL template for metric 'click_rate' (product=campaign)
+
+═══ CMP-RPT-003 | click_rate | scenario=C ═══
+Query: "click rate this campaign"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "campaign", "agent": "camp.reports", "metrics": ["click_rate"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ✅ MF PASS → 0.0
+
+═══ CMP-RPT-003 | click_rate | scenario=D ═══
+Query: "click rate this campaign"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "campaign", "agent": "camp.reports", "metrics": ["click_rate"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ❌ MF FAIL — Database Error
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "campaign", "originAgent": "camp.reports", "instruction": "click rate this campaign", "entityHint": "wt:Campaign", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "campaign", "agent": "camp.reports", "metrics": ["click_rate"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}], "time": {"period": "last_30_days", "grain": "day"}}}
+
+═══ CMP-RPT-003 | click_rate | scenario=D ═══
+Query: "click rate this campaign"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "campaign", "originAgent": "camp.reports", "instruction": "click rate this campaign", "entityHint": "wt:Campaign", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "campaign", "agent": "camp.reports", "metrics": ["click_rate"], "filters": [{"dimension": "channel", "op": "eq", "values": ["whatsapp"]}], "time": {"period": "last_30_days", "grain": "day"}}}
+Result: ❌ SQL FALLBACK FAIL — No SQL template for metric 'click_rate' (product=campaign)
+
+═══ CMP-RPT-004 | campaign_attributed_session_rate | scenario=A ═══
+Query: "campaign attributed session rate"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "campaign", "agent": "camp.reports", "metrics": ["campaign_attributed_session_rate"]}
+Result: ❌ MF FAIL — Metric(s) require product 'webtracking', not 'campaign'.
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "campaign", "originAgent": "camp.reports", "instruction": "campaign attributed session rate", "entityHint": "wt:Campaign", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "campaign", "agent": "camp.reports", "metrics": ["campaign_attributed_session_rate"]}}
+
+═══ CMP-RPT-004 | campaign_attributed_session_rate | scenario=A ═══
+Query: "campaign attributed session rate"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "campaign", "originAgent": "camp.reports", "instruction": "campaign attributed session rate", "entityHint": "wt:Campaign", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "campaign", "agent": "camp.reports", "metrics": ["campaign_attributed_session_rate"]}}
+Result: ❌ SQL FALLBACK FAIL — Metric(s) require product 'webtracking', not 'campaign'.
+
+═══ CMP-RPT-004 | campaign_attributed_session_rate | scenario=C ═══
+Query: "campaign attributed session rate"
+Payload: {"organizationId": 1000, "userId": 1001, "product": "campaign", "agent": "camp.reports", "metrics": ["campaign_attributed_session_rate"], "time": {"period": "last_30_days", "grain": "day"}}
+Result: ❌ MF FAIL — Metric(s) require product 'webtracking', not 'campaign'.
+Action: → SQL fallback triggered
+SQL Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "campaign", "originAgent": "camp.reports", "instruction": "campaign attributed session rate", "entityHint": "wt:Campaign", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "campaign", "agent": "camp.reports", "metrics": ["campaign_attributed_session_rate"], "time": {"period": "last_30_days", "grain": "day"}}}
+
+═══ CMP-RPT-004 | campaign_attributed_session_rate | scenario=C ═══
+Query: "campaign attributed session rate"
+Payload: {"organizationId": 1000, "userId": 1001, "originProduct": "campaign", "originAgent": "camp.reports", "instruction": "campaign attributed session rate", "entityHint": "wt:Campaign", "metricRequest": {"organizationId": 1000, "userId": 1001, "product": "campaign", "agent": "camp.reports", "metrics": ["campaign_attributed_session_rate"], "time": {"period": "last_30_days", "grain": "day"}}}
+Result: ❌ SQL FALLBACK FAIL — Metric(s) require product 'webtracking', not 'campaign'.
+
+── AGENT camp.reports SUMMARY: MF 6✅ 8❌ | SQL 0✅ 8❌ ──

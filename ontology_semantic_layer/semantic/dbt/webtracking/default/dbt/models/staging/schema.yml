@@ -1,0 +1,35 @@
+version: 2
+
+models:
+  - name: stg_web_sites
+    description: "Staging view for tracked websites."
+  - name: stg_web_visitors
+    description: "Staging view for visitor entity profiles."
+  - name: stg_web_sessions
+    description: "Staging view for browsing session entities (dim_sessions FINAL). Bounce/duration/pageview on dim are stale — join stg_session_bounce for Tier-1 KPIs."
+  - name: stg_session_bounce
+    description: "Staging over v_session_bounce — canonical pageview_count, activity-span duration_seconds, is_bounce."
+  - name: stg_known_users
+    description: "Staging view for dim_known_users identity mappings (email, phone, traits)."
+  - name: stg_ecommerce
+    description: "Staging over ecommerce daily KPI view."
+  - name: stg_page_views
+    description: "Staging view for page load events."
+  - name: stg_interaction_events
+    description: "Staging view for click and UX interactions."
+  - name: stg_form_events
+    description: "Staging view for form interactions."
+  - name: stg_conversion_events
+    description: "Staging view for goal conversion events."
+  - name: stg_custom_events
+    description: "Staging view for custom business events."
+  - name: stg_product_interactions
+    description: "Staging view for ecommerce product interactions."
+  - name: stg_performance_events
+    description: "Staging view for Core Web Vitals measurements."
+  - name: stg_error_events
+    description: "Staging view for frontend JavaScript and resource errors."
+  - name: stg_cookie_operations
+    description: "Staging view for cookie consent operations."
+  - name: stg_replay_chunks
+    description: "Staging view for session replay chunks (out of scope for AnalyticsAgent chat)."

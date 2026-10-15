@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SQL agent</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/app.css" />
+  </head>
+  <body>
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-mark">W</div>
+        <div>
+          <p class="brand-name">Worktual</p>
+          <p class="portal-label">SQL agent experiment</p>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <p class="nav-section">Console</p>
+        <a class="nav-item is-active" href="/">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
+          Ask
+        </a>
+      </nav>
+      <div class="sidebar-setup">
+        <p class="nav-section">Setup</p>
+        <dl class="setup-list">
+          <div><dt>Model</dt><dd id="setup-model">…</dd></div>
+          <div><dt>Org</dt><dd id="setup-org">…</dd></div>
+          <div><dt>Warehouse</dt><dd id="setup-warehouse">…</dd></div>
+          <div><dt>Live</dt><dd id="setup-live">…</dd></div>
+        </dl>
+        <button type="button" class="btn-outline" id="ping-btn">Ping MiniMax</button>
+        <p class="setup-ping" id="ping-status"></p>
+      </div>
+    </aside>
+
+    <div class="shell">
+      <header class="topbar">
+        <h1>SQL agent</h1>
+        <span class="avatar" aria-hidden="true">SA</span>
+      </header>
+
+      <main class="inset">
+        <section class="panel chat-panel">
+          <div class="panel-header">
+            <div>
+              <h2>Ask</h2>
+              <p class="panel-sub" id="period-caption">Trusted period is set here, not by the model.</p>
+            </div>
+            <div class="segment" role="tablist" aria-label="Period">
+              <button type="button" class="segment-btn is-active" data-period="7d">Last 7 days</button>
+              <button type="button" class="segment-btn" data-period="last_month">Last month</button>
+            </div>
+          </div>
+          <div class="thread" id="thread"></div>
+          <div class="composer-wrap">
+            <div class="chips" id="chips"></div>
+            <form class="composer" id="ask-form">
+              <input
+                id="question"
+                name="question"
+                type="text"
+                maxlength="2000"
+                placeholder="Ask a KPI, mix, or daily trend question"
+                autocomplete="off"
+              />
+              <button type="submit" class="btn-send" id="ask-btn" aria-label="Ask">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M22 2L11 13" />
+                  <path d="M22 2L15 22 11 13 2 9 22 2z" />
+                </svg>
+              </button>
+            </form>
+          </div>
+        </section>
+
+        <section class="panel data-panel">
+          <div class="panel-header">
+            <div>
+              <h2>Logs and data</h2>
+              <p class="panel-sub" id="run-meta">Run a question to see agent status, plan, and warehouse preview.</p>
+            </div>
+          </div>
+          <div class="segment segment-wide" role="tablist" aria-label="Inspector">
+            <button type="button" class="segment-btn is-active" data-tab="logs">Logs</button>
+            <button type="button" class="segment-btn" data-tab="plan">Plan</button>
+            <button type="button" class="segment-btn" data-tab="warehouse">Warehouse</button>
+            <button type="button" class="segment-btn" data-tab="tools">Tools</button>
+          </div>
+          <div class="inspect" id="inspect-logs"></div>
+          <pre class="inspect is-hidden" id="inspect-plan"></pre>
+          <div class="inspect is-hidden" id="inspect-warehouse"></div>
+          <pre class="inspect is-hidden" id="inspect-tools"></pre>
+        </section>
+      </main>
+    </div>
+    <script src="/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,75 @@
+# Governance, Security, and Access Rules for CRM B2B Knowledge Graph Agent
+
+governance:
+  query_mode: "READ_ONLY"
+  max_result_limit: 100
+  allowed_clauses: ["MATCH", "RETURN", "WITH", "WHERE", "ORDER BY", "LIMIT", "SKIP", "UNWIND"]
+  prohibited_clauses: ["CREATE", "MERGE", "DETACH", "DELETE", "SET", "REMOVE", "DROP", "ALTER", "LOAD CSV"]
+
+multi_tenancy:
+  enforce_org_filter: false
+  default_org_id: 1003
+  org_filter_clause: ""
+  isolation_mode: "DATABASE_PER_TENANT"
+  note: "Tenants are 100% separated at database level (e.g. org1003). Never write organization_id in Cypher."
+
+rbac_policies:
+  admin:
+    can_view_all_records: true
+    can_access_finance: true
+    can_access_agents_ops: true
+  sales_manager:
+    can_view_all_records: true
+    can_access_finance: true
+    can_access_agents_ops: true
+  finance:
+    can_view_all_records: true
+    can_access_finance: true
+    can_access_agents_ops: false
+  sales_rep:
+    can_view_all_records: false
+    can_access_finance: false
+    can_access_agents_ops: false
+    scoping_rule: "d.owner_user_id = $user_id"
+    fail_closed_sentinel: 0
+  presales:
+    can_view_all_records: false
+    can_access_finance: false
+    can_access_agents_ops: false
+    scoping_rule: "d.owner_user_id = $user_id"
+  marketing:
+    can_view_all_records: false
+    can_access_finance: false
+    can_access_agents_ops: false
+    scoping_rule: "sp.owner_user_id = $user_id"
+  viewer:
+    can_view_all_records: false
+    can_access_finance: false
+    can_access_agents_ops: false
+    read_only_strictly_enforced: true
+
+unsupported_metrics_catalog:
+  quota_attainment:
+    reason: "Monthly or quarterly quota targets per sales rep are not stored in the CRM schema."
+    missing_inputs: ["rep_target_amount", "quota_period"]
+    action: "UNSUPPORTED"
+  time_in_stage:
+    reason: "Deal stage transition history is not stored; the CRM only stores the current stage."
+    missing_inputs: ["stage_history_table", "transitioned_at"]
+    action: "UNSUPPORTED"
+  stage_conversion:
+    reason: "Stage conversion rates require historical transition logs (from_stage, to_stage, timestamp) which are not stored."
+    missing_inputs: ["deal_stage_history"]
+    action: "UNSUPPORTED"
+  won_reason_mix:
+    reason: "The database stores lost_reason for closed_lost deals, but does not have a won_reason column for closed_won deals."
+    missing_inputs: ["deals.won_reason"]
+    action: "UNSUPPORTED"
+  email_open_rate:
+    reason: "Email open and click events are not tracked as reportable columns on activity records."
+    missing_inputs: ["email_opens", "email_clicks"]
+    action: "UNSUPPORTED"
+  campaign_attribution_roi:
+    reason: "Marketing campaign spend and multi-touch revenue attribution chains are not tracked on CRM deals."
+    missing_inputs: ["campaign_spend", "deal_attribution_weights"]
+    action: "UNSUPPORTED"

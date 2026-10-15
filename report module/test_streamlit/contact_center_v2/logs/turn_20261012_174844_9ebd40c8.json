@@ -1,0 +1,60 @@
+{
+  "turn_id": "9ebd40c8",
+  "timestamp": "2026-10-12T12:18:44.659434+00:00",
+  "question": "how many conversations are there?",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1017,
+    "role": "agent",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Handled conversations</strong></p><p>There were no handled conversations for you in the all time window.</p><p>Would you like to see your total conversation count instead?</p>",
+  "card": "card: none",
+  "facts": "result_id: r1\nwindow: all time\ncertified: false\ntask_goal: List the handled conversations for the agent.\nanswer_type: roster\nRESULT: 0 rows",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1017,
+      "role": "agent",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "how many conversations are there?",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants to see a list of their own handled conversations.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "free_sql",
+          "goal": "List the handled conversations for the agent.",
+          "time": "all time",
+          "scope": "agent",
+          "slice": [],
+          "answer_type": "roster"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": false,
+        "kpi_id": null,
+        "row_count": 0
+      }
+    ],
+    "facts": "result_id: r1\nwindow: all time\ncertified: false\ntask_goal: List the handled conversations for the agent.\nanswer_type: roster\nRESULT: 0 rows",
+    "grounded": true,
+    "card": "card: none"
+  },
+  "error": null
+}

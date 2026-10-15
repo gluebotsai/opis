@@ -1,0 +1,62 @@
+{
+  "turn_id": "6cdd9b1b",
+  "timestamp": "2026-10-09T05:16:34.330843+00:00",
+  "question": "show handled conversations by channel for the last 7 days",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1016,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "json\n{\"kind\":\"plan\",\"understanding\":\"A breakdown of handled conversations by channel for the last 7 days.\",\"tasks\":[{\"id\":\"t1\",\"executor\":\"sql\",\"path\":\"free_sql\",\"goal\":\"List the number of handled conversations split by channel for the last 7 days.\",\"time\":\"the last 7 days\",\"scope\":\"org\",\"slice\":[\"channel\"],\"answer_type\":\"list\"}]}",
+  "card": "card: none",
+  "facts": "result_id: r1\ntask_goal: List the number of handled conversations split by channel for the last 7 days.\nEXECUTION_ERROR\nerror_type: REPLAN\nmessage: unsupported time expression: 'the last 7 days'",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1016,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "show handled conversations by channel for the last 7 days",
+    "plan": {
+      "kind": "plan",
+      "understanding": "A breakdown of handled conversations by channel over the last 7 days.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "free_sql",
+          "goal": "List the number of handled conversations split by channel for the last 7 days.",
+          "time": "the last 7 days",
+          "scope": "org",
+          "slice": [
+            "channel"
+          ],
+          "answer_type": "list"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "error",
+        "error_type": "REPLAN",
+        "certified": null,
+        "kpi_id": null,
+        "row_count": 0
+      }
+    ],
+    "facts": "result_id: r1\ntask_goal: List the number of handled conversations split by channel for the last 7 days.\nEXECUTION_ERROR\nerror_type: REPLAN\nmessage: unsupported time expression: 'the last 7 days'",
+    "grounded": true,
+    "card": "card: none"
+  },
+  "error": null
+}

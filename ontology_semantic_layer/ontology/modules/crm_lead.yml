@@ -1,0 +1,31 @@
+# Lead pipeline job agents — enrich, score, assign, nurture
+module: crm_lead
+layer: domain
+depends_on: [core, cdp]
+owned_by_spoke: crm
+usecase: Lead scoring, assignment, lifecycle — operates on Contact in lead stage.
+
+classes:
+  - id: LeadScore
+    definition: Fit + intent score overlay on a contact.
+    properties: [band, score]
+    relations:
+      of: Contact
+
+actions:
+  - id: action.enrich_lead
+    operates_on: [Contact]
+  - id: action.score_lead
+    operates_on: [LeadScore]
+  - id: action.assign_sales
+    operates_on: [Contact]
+    requires: [approvalGranted]
+  - id: action.nurture_lead
+    operates_on: [Contact]
+
+metric_ids:
+  - new_lead_volume
+  - mql_contact_count
+  - mql_rate
+  - eligible_lead_contact_count
+  - customer_conversion_rate

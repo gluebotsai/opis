@@ -1,0 +1,262 @@
+version: 2
+
+metrics:
+
+  # --- simple metrics (one per measure that's used standalone or inside a ratio) ---
+  - name: campaign_volume
+    type: simple
+    label: Campaign Volume
+    type_params:
+      measure: campaign_count
+
+  - name: audience_reached
+    type: simple
+    label: Unique Audience Reached
+    type_params:
+      measure: audience_reached
+
+  - name: touch_count
+    type: simple
+    label: Campaign Touch Volume (proxy)
+    description: Built from campaign_send_recipients — see sem_campaign_touch_performance caveat.
+    type_params:
+      measure: touch_count
+
+  - name: sent_touch_count
+    type: simple
+    label: Sent Touch Count
+    type_params:
+      measure: sent_touch_count
+
+  - name: opened_touch_count
+    type: simple
+    label: Opened Touch Count
+    type_params:
+      measure: opened_touch_count
+
+  - name: clicked_touch_count
+    type: simple
+    label: Clicked Touch Count
+    type_params:
+      measure: clicked_touch_count
+
+  - name: failed_touch_count
+    type: simple
+    label: Failed Touch Count
+    type_params:
+      measure: failed_touch_count
+
+  - name: unique_contacts_touched
+    type: simple
+    label: Unique Contacts Touched
+    type_params:
+      measure: unique_contacts_touched
+
+  - name: template_count
+    type: simple
+    label: Template Count
+    type_params:
+      measure: template_count
+
+  - name: approved_template_count
+    type: simple
+    label: Approved Template Count
+    type_params:
+      measure: approved_template_count
+
+  - name: engaged_contact_count
+    type: simple
+    label: Engaged Contact Count
+    type_params:
+      measure: engaged_contact_count
+
+  - name: unsubscribed_contact_count
+    type: simple
+    label: Unsubscribed Contact Count
+    type_params:
+      measure: unsubscribed_contact_count
+
+  - name: suppressed_email_count
+    type: simple
+    label: Suppressed Email Count
+    type_params:
+      measure: suppressed_email_count
+
+  - name: bounce_suppressed_count
+    type: simple
+    label: Bounce-Suppressed Email Count
+    type_params:
+      measure: bounce_suppressed_count
+
+  - name: complaint_suppressed_count
+    type: simple
+    label: Complaint-Suppressed Email Count
+    type_params:
+      measure: complaint_suppressed_count
+
+  - name: avg_planned_duration_seconds
+    type: simple
+    label: Average Planned Campaign Duration (seconds)
+    type_params:
+      measure: avg_planned_duration_seconds
+
+  - name: avg_attempt_count
+    type: simple
+    label: Average Send Attempts per Touch
+    type_params:
+      measure: avg_attempt_count
+
+  - name: avg_seconds_to_open
+    type: simple
+    label: Average Seconds to Open
+    type_params:
+      measure: avg_seconds_to_open
+
+  - name: avg_seconds_open_to_click
+    type: simple
+    label: Average Seconds from Open to Click
+    type_params:
+      measure: avg_seconds_open_to_click
+
+  - name: variant_touch_count
+    type: simple
+    label: Touch Count by Variant/Platform
+    type_params:
+      measure: variant_touch_count
+
+  - name: variant_sent_touch_count
+    type: simple
+    label: Sent Touch Count by Variant/Platform
+    type_params:
+      measure: variant_sent_touch_count
+
+  - name: variant_opened_touch_count
+    type: simple
+    label: Opened Touch Count by Variant/Platform
+    type_params:
+      measure: variant_opened_touch_count
+
+  - name: variant_clicked_touch_count
+    type: simple
+    label: Clicked Touch Count by Variant/Platform
+    type_params:
+      measure: variant_clicked_touch_count
+
+  - name: batch_count
+    type: simple
+    label: Send Batch Count
+    type_params:
+      measure: batch_count
+
+  - name: failed_batch_count
+    type: simple
+    label: Failed Batch Count
+    type_params:
+      measure: failed_batch_count
+
+  - name: avg_batch_processing_seconds
+    type: simple
+    label: Average Batch Processing Time (seconds)
+    type_params:
+      measure: avg_batch_processing_seconds
+
+  - name: rejected_template_count
+    type: simple
+    label: Rejected Template Count (by reason)
+    type_params:
+      measure: rejection_reason_count
+
+  # --- ratio metrics (numerator/denominator reference the simple metrics above) ---
+  - name: delivery_rate
+    type: ratio
+    label: Delivery Rate (proxy — status='sent')
+    type_params:
+      numerator: sent_touch_count
+      denominator: touch_count
+
+  - name: open_rate
+    type: ratio
+    label: Open Rate
+    type_params:
+      numerator: opened_touch_count
+      denominator: sent_touch_count
+
+  - name: click_rate
+    type: ratio
+    label: Click-Through Rate (CTR)
+    type_params:
+      numerator: clicked_touch_count
+      denominator: sent_touch_count
+
+  - name: failure_rate
+    type: ratio
+    label: Send Failure Rate
+    type_params:
+      numerator: failed_touch_count
+      denominator: touch_count
+
+  - name: template_approval_rate
+    type: ratio
+    label: Template Approval Rate
+    type_params:
+      numerator: approved_template_count
+      denominator: template_count
+
+  - name: unsubscribe_rate
+    type: ratio
+    label: Unsubscribe Rate (org-level proxy, not per-campaign)
+    type_params:
+      numerator: unsubscribed_contact_count
+      denominator: engaged_contact_count
+
+  - name: suppression_rate
+    type: ratio
+    label: Suppression Rate (proxy — suppressions / engaged contacts, not / total sends)
+    type_params:
+      numerator: suppressed_email_count
+      denominator: engaged_contact_count
+
+  - name: bounce_share_of_suppressions
+    type: ratio
+    label: Bounce Share of Suppressions
+    type_params:
+      numerator: bounce_suppressed_count
+      denominator: suppressed_email_count
+
+  - name: complaint_share_of_suppressions
+    type: ratio
+    label: Complaint Share of Suppressions
+    type_params:
+      numerator: complaint_suppressed_count
+      denominator: suppressed_email_count
+
+  - name: batch_failure_rate
+    type: ratio
+    label: Batch Failure Rate
+    type_params:
+      numerator: failed_batch_count
+      denominator: batch_count
+
+  - name: variant_open_rate
+    type: ratio
+    label: Open Rate by Variant/Platform
+    type_params:
+      numerator: variant_opened_touch_count
+      denominator: variant_sent_touch_count
+
+  - name: variant_click_rate
+    type: ratio
+    label: Click Rate by Variant/Platform
+    type_params:
+      numerator: variant_clicked_touch_count
+      denominator: variant_sent_touch_count
+
+  # --- derived metrics ---
+  - name: frequency_per_contact
+    type: derived
+    label: Average Campaign Frequency
+    type_params:
+      expr: touch_count / nullif(unique_contacts_touched, 0)
+      metrics:
+        - name: touch_count
+        - name: unique_contacts_touched

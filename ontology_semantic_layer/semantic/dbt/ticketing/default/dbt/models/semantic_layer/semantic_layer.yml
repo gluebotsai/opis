@@ -1,0 +1,1260 @@
+version: 2
+semantic_models:
+- name: ticket
+  description: One row per support ticket (mart_tickets), queue type/account name/assignee
+    role denormalized.
+  model: ref('mart_tickets')
+  defaults:
+    agg_time_dimension: created_at
+  entities:
+  - name: ticket
+    type: primary
+    expr: ticket_id
+  - name: customer
+    type: foreign
+    expr: customer_id
+  - name: account
+    type: foreign
+    expr: account_id
+  - name: assignee
+    type: foreign
+    expr: assignee_id
+  - name: created_by
+    type: foreign
+    expr: created_by_id
+  - name: queue
+    type: foreign
+    expr: queue_id
+  - name: organization
+    type: foreign
+    expr: organization_id
+  dimensions:
+  - name: organization_id
+    type: categorical
+  - name: created_at
+    type: time
+    type_params:
+      time_granularity: day
+  - name: resolved_at
+    type: time
+    type_params:
+      time_granularity: day
+  - name: due_at
+    type: time
+    type_params:
+      time_granularity: day
+  - name: status
+    type: categorical
+  - name: status_display_name
+    type: categorical
+  - name: is_closed_by_status
+    type: categorical
+  - name: priority
+    type: categorical
+  - name: channel
+    type: categorical
+  - name: category
+    type: categorical
+  - name: skill
+    type: categorical
+  - name: assignee_name
+    type: categorical
+  - name: assignee_role
+    type: categorical
+  - name: resolver_name
+    type: categorical
+  - name: queue_name
+    type: categorical
+  - name: queue_type
+    type: categorical
+  - name: account_name
+    type: categorical
+  - name: organization_name
+    type: categorical
+  - name: organization_business_type
+    type: categorical
+  - name: team_supports_ticketing
+    type: categorical
+  - name: created_by_name
+    type: categorical
+  - name: customer_name
+    type: categorical
+  - name: has_assignee
+    type: categorical
+  - name: has_resolver
+    type: categorical
+  - name: has_first_response
+    type: categorical
+  - name: has_csat_rating
+    type: categorical
+  - name: is_overdue
+    type: categorical
+  measures:
+  - name: ticket_count
+    agg: count_distinct
+    expr: ticket_id
+  - name: ticket_active_day_count
+    agg: count_distinct
+    expr: "cast(created_at as date)"
+  - name: resolved_ticket_count
+    agg: count
+    expr: case when is_resolved then ticket_id end
+  - name: open_ticket_count
+    agg: count
+    expr: case when is_open then ticket_id end
+  - name: active_ticket_count
+    agg: count
+    # Non-closed / in-progress queue (is_pending), not literal status=Open (is_open).
+    expr: case when is_pending then ticket_id end
+  - name: closed_ticket_count
+    agg: count
+    expr: case when is_closed then ticket_id end
+  - name: pending_ticket_count
+    agg: count
+    expr: case when is_pending then ticket_id end
+  - name: reopened_ticket_count
+    agg: count
+    expr: case when is_reopened then ticket_id end
+  - name: high_priority_ticket_count
+    agg: count
+    expr: case when lower(priority) in ('high', 'urgent') then ticket_id end
+  - name: assigned_ticket_count
+    agg: count
+    expr: case when has_assignee then ticket_id end
+  - name: unassigned_ticket_count
+    agg: count
+    expr: case when not has_assignee and not is_closed then ticket_id end
+  - name: tickets_with_resolver_count
+    agg: count
+    expr: case when has_resolver then ticket_id end
+  - name: tickets_without_resolver_count
+    agg: count
+    expr: case when not has_resolver then ticket_id end
+  - name: due_today_ticket_count
+    agg: count
+    expr: case when is_due_today then ticket_id end
+  - name: current_overdue_ticket_count
+    agg: count
+    expr: case when is_overdue then ticket_id end
+  - name: sla_at_risk_ticket_count
+    agg: count
+    expr: case when is_sla_at_risk then ticket_id end
+  - name: unanswered_ticket_count
+    agg: count
+    expr: case when not has_first_response then ticket_id end
+  - name: tickets_created_today_count
+    agg: count
+    expr: case when date(created_at) = current_date then ticket_id end
+  - name: tickets_last_7_days_count
+    agg: count
+    expr: case when created_at >= now() - interval '7 days' then ticket_id end
+  - name: tickets_last_30_days_count
+    agg: count
+    expr: case when created_at >= now() - interval '30 days' then ticket_id end
+  - name: days_since_last_ticket_val
+    agg: min
+    expr: extract(epoch from (now() - created_at)) / 86400.0
+  - name: breached_ticket_count
+    agg: count
+    expr: case when is_breached_proxy then ticket_id end
+  - name: resolution_hours_sum
+    agg: sum
+    expr: resolution_hours
+  - name: resolved_ticket_count_for_avg
+    agg: count
+    expr: case when is_resolved then ticket_id end
+  - name: first_response_hours_sum
+    agg: sum
+    expr: first_response_hours
+  - name: first_response_minutes_sum
+    agg: sum
+    expr: first_response_minutes
+  - name: tickets_with_first_response_count
+    agg: count
+    expr: case when has_first_response then ticket_id end
+  - name: first_response_met_count
+    agg: count
+    expr: case when has_first_response and sla_first_response_hours is not null and
+      first_response_hours <= sla_first_response_hours then ticket_id end
+  - name: tickets_with_first_response_sla_target_count
+    agg: count
+    expr: case when has_first_response and sla_first_response_hours is not null then
+      ticket_id end
+  - name: resolution_sla_met_count
+    agg: count
+    expr: case when is_resolution_sla_met then ticket_id end
+  - name: tickets_with_resolution_sla_target_count
+    agg: count
+    expr: case when has_resolution_sla_target then ticket_id end
+  - name: resolution_hours_variance_sum
+    agg: sum
+    expr: resolution_hours_variance
+  - name: tickets_with_sla_target_count
+    agg: count
+    expr: case when resolution_hours_variance is not null then ticket_id end
+  - name: overdue_hours_sum
+    agg: sum
+    expr: overdue_hours
+  - name: open_ticket_age_days_sum
+    agg: sum
+    expr: case when is_open then extract(epoch from (now() - created_at)) / 86400.0
+      end
+  - name: distinct_customers_served
+    agg: count_distinct
+    expr: customer_id
+  - name: distinct_accounts_served
+    agg: count_distinct
+    expr: account_id
+  - name: csat_score_sum
+    agg: sum
+    expr: csat_score
+  - name: csat_rated_count
+    agg: count
+    expr: case when has_csat_score then ticket_id end
+  - name: csat_promoter_count
+    agg: count
+    expr: case when csat_score >= 4 then ticket_id end
+  - name: csat_neutral_count
+    agg: count
+    expr: case when csat_score = 3 then ticket_id end
+  - name: csat_detractor_count
+    agg: count
+    expr: case when csat_score <= 2 then ticket_id end
+  - name: average_overdue_hours_val
+    agg: average
+    expr: overdue_hours
+- name: ticket_note
+  description: One row per ticket note/reply (mart_ticket_notes), parent ticket priority/status/queue/assignee
+    denormalized.
+  model: ref('mart_ticket_notes')
+  defaults:
+    agg_time_dimension: created_at
+  entities:
+  - name: ticket_note
+    type: primary
+    expr: ticket_note_id
+  - name: ticket
+    type: foreign
+    expr: ticket_id
+  - name: author
+    type: foreign
+    expr: author_id
+  - name: organization
+    type: foreign
+    expr: organization_id
+  dimensions:
+  - name: organization_id
+    type: categorical
+  - name: created_at
+    type: time
+    type_params:
+      time_granularity: day
+  - name: visibility
+    type: categorical
+  - name: is_internal_note
+    type: categorical
+  - name: ticket_priority
+    type: categorical
+  - name: ticket_status
+    type: categorical
+  - name: queue_name
+    type: categorical
+  - name: assignee_name
+    type: categorical
+  - name: author_name
+    type: categorical
+  measures:
+  - name: note_count
+    agg: count_distinct
+    expr: ticket_note_id
+  - name: internal_note_count
+    agg: count
+    expr: case when is_internal_note then ticket_note_id end
+  - name: customer_visible_note_count
+    agg: count
+    expr: case when not is_internal_note then ticket_note_id end
+- name: agent_queue_member
+  description: One row per agent-to-queue membership (mart_agent_queue_members), queue
+    name/type and agent name/role denormalized.
+  model: ref('mart_agent_queue_members')
+  defaults:
+    agg_time_dimension: created_at
+  entities:
+  - name: agent_queue_member
+    type: primary
+    expr: queue_membership_id
+  - name: queue
+    type: foreign
+    expr: queue_id
+  - name: agent
+    type: foreign
+    expr: user_id
+  - name: organization
+    type: foreign
+    expr: organization_id
+  dimensions:
+  - name: organization_id
+    type: categorical
+  - name: created_at
+    type: time
+    type_params:
+      time_granularity: day
+  - name: queue_name
+    type: categorical
+  - name: queue_type
+    type: categorical
+  - name: sla_status
+    type: categorical
+  - name: user_name
+    type: categorical
+  - name: user_role
+    type: categorical
+  - name: myaccount_team_name
+    type: categorical
+  - name: team_supports_ticketing
+    type: categorical
+  measures:
+  - name: queue_membership_count
+    agg: count_distinct
+    expr: queue_membership_id
+  - name: distinct_agents_in_queues_count
+    agg: count_distinct
+    expr: user_id
+  - name: distinct_queues_covered_count
+    agg: count_distinct
+    expr: queue_id
+- name: audit_event
+  description: One row per audit event (mart_audit_events), parent ticket priority/status/queue/assignee
+    denormalized.
+  model: ref('mart_audit_events')
+  defaults:
+    agg_time_dimension: created_at
+  entities:
+  - name: audit_event
+    type: primary
+    expr: audit_event_id
+  - name: ticket
+    type: foreign
+    expr: ticket_id
+  - name: actor
+    type: foreign
+    expr: actor_id
+  - name: organization
+    type: foreign
+    expr: organization_id
+  dimensions:
+  - name: organization_id
+    type: categorical
+  - name: created_at
+    type: time
+    type_params:
+      time_granularity: day
+  - name: action
+    type: categorical
+  - name: ticket_priority
+    type: categorical
+  - name: ticket_status
+    type: categorical
+  - name: queue_name
+    type: categorical
+  - name: assignee_name
+    type: categorical
+  - name: actor_name
+    type: categorical
+  measures:
+  - name: audit_event_count
+    agg: count_distinct
+    expr: audit_event_id
+  - name: escalation_count
+    agg: count
+    expr: case when is_escalation_event then audit_event_id end
+  - name: assignment_change_count
+    agg: count
+    expr: case when is_assignment_event then audit_event_id end
+  - name: creation_event_count
+    agg: count
+    expr: case when is_creation_event then audit_event_id end
+- name: proactive_recommendation
+  description: One row per proactive AI recommendation (mart_proactive_recommendations),
+    parent ticket priority/status/queue denormalized.
+  model: ref('mart_proactive_recommendations')
+  defaults:
+    agg_time_dimension: created_at
+  entities:
+  - name: proactive_recommendation
+    type: primary
+    expr: recommendation_id
+  - name: ticket
+    type: foreign
+    expr: ticket_id
+  - name: agent
+    type: foreign
+    expr: agent_id
+  - name: organization
+    type: foreign
+    expr: organization_id
+  dimensions:
+  - name: organization_id
+    type: categorical
+  - name: agent_id
+    type: categorical
+  - name: created_at
+    type: time
+    type_params:
+      time_granularity: day
+  - name: status
+    type: categorical
+  - name: ticket_priority
+    type: categorical
+  - name: ticket_status
+    type: categorical
+  - name: queue_name
+    type: categorical
+  measures:
+  - name: recommendation_count
+    agg: count_distinct
+    expr: recommendation_id
+  - name: accepted_count
+    agg: count
+    expr: case when is_accepted then recommendation_id end
+  - name: dismissed_count
+    agg: count
+    expr: case when is_dismissed then recommendation_id end
+  - name: open_recommendation_count
+    agg: count
+    expr: case when is_open then recommendation_id end
+- name: proactive_approval
+  description: One row per proactive AI action approval (mart_proactive_approvals),
+    parent ticket priority/status/queue denormalized.
+  model: ref('mart_proactive_approvals')
+  defaults:
+    agg_time_dimension: created_at
+  entities:
+  - name: proactive_approval
+    type: primary
+    expr: approval_id
+  - name: ticket
+    type: foreign
+    expr: ticket_id
+  - name: agent
+    type: foreign
+    expr: agent_id
+  - name: organization
+    type: foreign
+    expr: organization_id
+  dimensions:
+  - name: organization_id
+    type: categorical
+  - name: agent_id
+    type: categorical
+  - name: created_at
+    type: time
+    type_params:
+      time_granularity: day
+  - name: status
+    type: categorical
+  - name: tool_name
+    type: categorical
+  - name: ticket_priority
+    type: categorical
+  - name: ticket_status
+    type: categorical
+  - name: queue_name
+    type: categorical
+  measures:
+  - name: approval_count
+    agg: count_distinct
+    expr: approval_id
+  - name: approved_count
+    agg: count
+    expr: case when is_approved then approval_id end
+  - name: rejected_count
+    agg: count
+    expr: case when is_rejected then approval_id end
+  - name: pending_approval_count
+    agg: count
+    expr: case when is_pending then approval_id end
+  - name: decided_count
+    agg: count
+    expr: case when decision_hours is not null then approval_id end
+  - name: decision_hours_sum
+    agg: sum
+    expr: decision_hours
+- name: kb_article
+  description: Knowledge base articles for the organization.
+  model: ref('mart_kb_articles')
+  defaults:
+    agg_time_dimension: created_at
+  entities:
+  - name: kb_article
+    type: primary
+    expr: kb_article_id
+  - name: author
+    type: foreign
+    expr: author_id
+  - name: organization
+    type: foreign
+    expr: organization_id
+  dimensions:
+  - name: organization_id
+    type: categorical
+  - name: created_at
+    type: time
+    type_params:
+      time_granularity: day
+  - name: category
+    type: categorical
+  - name: status
+    type: categorical
+  - name: author_name
+    type: categorical
+  measures:
+  - name: kb_article_count
+    agg: count_distinct
+    expr: kb_article_id
+  - name: kb_published_article_count
+    agg: count
+    expr: case when is_published then kb_article_id end
+  - name: kb_views_sum
+    agg: sum
+    expr: view_count
+- name: macro
+  description: Saved reply templates / macros for the organization.
+  model: ref('mart_macros')
+  defaults:
+    agg_time_dimension: created_at
+  entities:
+  - name: macro
+    type: primary
+    expr: macro_id
+  - name: created_by
+    type: foreign
+    expr: created_by_id
+  - name: organization
+    type: foreign
+    expr: organization_id
+  dimensions:
+  - name: organization_id
+    type: categorical
+  - name: created_at
+    type: time
+    type_params:
+      time_granularity: day
+  measures:
+  - name: macro_count
+    agg: count_distinct
+    expr: macro_id
+- name: notification
+  description: In-app staff notifications for the organization.
+  model: ref('mart_notifications')
+  defaults:
+    agg_time_dimension: created_at
+  entities:
+  - name: notification
+    type: primary
+    expr: notification_id
+  - name: user
+    type: foreign
+    expr: user_id
+  - name: ticket
+    type: foreign
+    expr: ticket_id
+  - name: organization
+    type: foreign
+    expr: organization_id
+  dimensions:
+  - name: organization_id
+    type: categorical
+  - name: created_at
+    type: time
+    type_params:
+      time_granularity: day
+  - name: kind
+    type: categorical
+  - name: is_read
+    type: categorical
+  measures:
+  - name: notification_count
+    agg: count_distinct
+    expr: notification_id
+  - name: unread_notification_count
+    agg: count
+    expr: case when not is_read then notification_id end
+- name: outbound_email
+  description: Outbound emails sent on tickets.
+  model: ref('mart_outbound_emails')
+  defaults:
+    agg_time_dimension: created_at
+  entities:
+  - name: outbound_email
+    type: primary
+    expr: outbound_email_id
+  - name: ticket
+    type: foreign
+    expr: ticket_id
+  - name: organization
+    type: foreign
+    expr: organization_id
+  dimensions:
+  - name: organization_id
+    type: categorical
+  - name: created_at
+    type: time
+    type_params:
+      time_granularity: day
+  - name: kind
+    type: categorical
+  - name: status
+    type: categorical
+  measures:
+  - name: outbound_email_count
+    agg: count_distinct
+    expr: outbound_email_id
+- name: customer
+  description: End-customer directory.
+  model: ref('mart_customers')
+  defaults:
+    agg_time_dimension: created_at
+  entities:
+  - name: customer
+    type: primary
+    expr: customer_id
+  - name: account
+    type: foreign
+    expr: account_id
+  - name: organization
+    type: foreign
+    expr: organization_id
+  dimensions:
+  - name: organization_id
+    type: categorical
+  - name: created_at
+    type: time
+    type_params:
+      time_granularity: day
+  - name: status
+    type: categorical
+  measures:
+  - name: active_customer_count
+    agg: count
+    expr: case when is_active then customer_id end
+  - name: total_customer_count
+    agg: count_distinct
+    expr: customer_id
+- name: user
+  description: Staff users for the organization.
+  model: ref('mart_users')
+  defaults:
+    agg_time_dimension: created_at
+  entities:
+  - name: user
+    type: primary
+    expr: user_id
+  - name: organization
+    type: foreign
+    expr: organization_id
+  dimensions:
+  - name: organization_id
+    type: categorical
+  - name: created_at
+    type: time
+    type_params:
+      time_granularity: day
+  - name: role
+    type: categorical
+  - name: status
+    type: categorical
+  measures:
+  - name: active_agent_count
+    agg: count
+    expr: case when is_active and role = 'agent' then user_id end
+  - name: total_user_count
+    agg: count_distinct
+    expr: user_id
+- name: agent_queue
+  description: Support queues / teams.
+  model: ref('mart_agent_queues')
+  defaults:
+    agg_time_dimension: created_at
+  entities:
+  - name: agent_queue
+    type: primary
+    expr: queue_id
+  - name: organization
+    type: foreign
+    expr: organization_id
+  dimensions:
+  - name: organization_id
+    type: categorical
+  - name: created_at
+    type: time
+    type_params:
+      time_granularity: day
+  - name: queue_name
+    type: categorical
+  - name: queue_type
+    type: categorical
+  - name: sla_status
+    type: categorical
+  measures:
+  - name: agent_queue_count
+    agg: count_distinct
+    expr: queue_id
+  - name: queues_at_risk_count
+    agg: count
+    expr: case when is_at_risk then queue_id end
+- name: proactive_audit
+  description: Proactive AI agent audit log.
+  model: ref('mart_proactive_audit')
+  defaults:
+    agg_time_dimension: created_at
+  entities:
+  - name: proactive_audit
+    type: primary
+    expr: proactive_audit_id
+  - name: agent
+    type: foreign
+    expr: agent_id
+  - name: ticket
+    type: foreign
+    expr: ticket_id
+  - name: organization
+    type: foreign
+    expr: organization_id
+  dimensions:
+  - name: organization_id
+    type: categorical
+  - name: agent_id
+    type: categorical
+  - name: decision
+    type: categorical
+  - name: created_at
+    type: time
+    type_params:
+      time_granularity: day
+  measures:
+  - name: proactive_audit_count
+    agg: count_distinct
+    expr: proactive_audit_id
+metrics:
+- name: ticket_volume
+  type: simple
+  label: Ticket Volume
+  type_params:
+    measure: ticket_count
+- name: ticket_active_days
+  type: simple
+  label: Distinct Ticket Activity Days
+  type_params:
+    measure: ticket_active_day_count
+- name: resolved_tickets_metric
+  type: simple
+  label: Resolved Ticket Count
+  type_params:
+    measure: resolved_ticket_count
+- name: open_tickets_metric
+  type: simple
+  label: Open Ticket Count
+  type_params:
+    measure: open_ticket_count
+- name: active_tickets_metric
+  type: simple
+  label: Active Ticket Count
+  type_params:
+    measure: active_ticket_count
+- name: resolution_rate
+  type: ratio
+  label: Resolution Rate
+  type_params:
+    numerator: resolved_tickets_metric
+    denominator: ticket_volume
+- name: unassigned_tickets_metric
+  type: simple
+  label: Unassigned Ticket Count
+  type_params:
+    measure: unassigned_ticket_count
+- name: unassignment_rate
+  type: ratio
+  label: Unassignment Rate
+  type_params:
+    numerator: unassigned_tickets_metric
+    denominator: ticket_volume
+- name: customers_served
+  type: simple
+  label: Distinct Customers Served
+  type_params:
+    measure: distinct_customers_served
+- name: accounts_served
+  type: simple
+  label: Distinct B2B Accounts Served
+  type_params:
+    measure: distinct_accounts_served
+- name: open_ticket_age_days_total
+  type: simple
+  label: Open Ticket Age Days (sum)
+  type_params:
+    measure: open_ticket_age_days_sum
+- name: average_open_ticket_age_days
+  type: derived
+  label: Average Open Ticket Age (days)
+  type_params:
+    expr: open_ticket_age_days_total / open_tickets_metric
+    metrics:
+    - name: open_ticket_age_days_total
+    - name: open_tickets_metric
+- name: tickets_created_today_metric
+  type: simple
+  label: Tickets Created Today
+  type_params:
+    measure: tickets_created_today_count
+- name: tickets_last_30_days
+  type: simple
+  label: Tickets in Last 30 Days
+  type_params:
+    measure: tickets_last_30_days_count
+- name: days_since_last_ticket
+  type: simple
+  label: Days Since Last Ticket
+  type_params:
+    measure: days_since_last_ticket_val
+- name: reopened_tickets_metric
+  type: simple
+  label: Reopened Ticket Count
+  type_params:
+    measure: reopened_ticket_count
+- name: high_priority_ticket_volume
+  type: simple
+  label: High/Urgent Ticket Volume
+  type_params:
+    measure: high_priority_ticket_count
+- name: closed_tickets_metric
+  type: simple
+  label: Closed Ticket Count
+  type_params:
+    measure: closed_ticket_count
+- name: pending_tickets_metric
+  type: simple
+  label: Pending / In-Progress Ticket Count
+  type_params:
+    measure: pending_ticket_count
+- name: assigned_tickets_metric
+  type: simple
+  label: Assigned Ticket Count
+  type_params:
+    measure: assigned_ticket_count
+- name: assignment_rate
+  type: ratio
+  label: Assignment Rate
+  type_params:
+    numerator: assigned_tickets_metric
+    denominator: ticket_volume
+- name: tickets_last_7_days
+  type: simple
+  label: Tickets in Last 7 Days
+  type_params:
+    measure: tickets_last_7_days_count
+- name: average_tickets_per_day
+  type: derived
+  label: Average Tickets Per Day
+  type_params:
+    # ticket_volume / distinct calendar days with tickets in the window
+    expr: ticket_volume / ticket_active_days
+    metrics:
+    - name: ticket_volume
+    - name: ticket_active_days
+- name: active_customers_metric
+  type: simple
+  label: Active Customers in Directory
+  type_params:
+    measure: active_customer_count
+- name: breached_tickets_metric
+  type: simple
+  label: SLA Breached Ticket Count
+  type_params:
+    measure: breached_ticket_count
+- name: sla_breach_rate
+  type: ratio
+  label: SLA Breach Rate
+  type_params:
+    numerator: breached_tickets_metric
+    denominator: tickets_with_resolution_sla_target_metric
+- name: resolution_hours_total
+  type: simple
+  label: Resolution Hours (sum)
+  type_params:
+    measure: resolution_hours_sum
+- name: resolved_for_avg
+  type: simple
+  label: Resolved Ticket Count (for averages)
+  type_params:
+    measure: resolved_ticket_count_for_avg
+- name: average_resolution_time_hours
+  type: derived
+  label: Average Resolution Time (hours)
+  type_params:
+    expr: resolution_hours_total / resolved_for_avg
+    metrics:
+    - name: resolution_hours_total
+    - name: resolved_for_avg
+- name: first_response_hours_total
+  type: simple
+  label: First Response Hours (sum)
+  type_params:
+    measure: first_response_hours_sum
+- name: tickets_with_first_response_metric
+  type: simple
+  label: Tickets With First Response Count
+  type_params:
+    measure: tickets_with_first_response_count
+- name: average_first_response_hours
+  type: derived
+  label: Average First Response Time (hours)
+  type_params:
+    expr: first_response_hours_total / tickets_with_first_response_metric
+    metrics:
+    - name: first_response_hours_total
+    - name: tickets_with_first_response_metric
+- name: average_first_response_minutes
+  type: derived
+  label: Average First Response Time (minutes)
+  type_params:
+    expr: (first_response_hours_total * 60) / tickets_with_first_response_metric
+    metrics:
+    - name: first_response_hours_total
+    - name: tickets_with_first_response_metric
+- name: first_response_sla_met_metric
+  type: simple
+  label: First-Response SLA Met Count
+  type_params:
+    measure: first_response_met_count
+- name: tickets_with_first_response_sla_target_metric
+  type: simple
+  label: Tickets With First-Response SLA Target Count
+  type_params:
+    measure: tickets_with_first_response_sla_target_count
+- name: first_response_sla_compliance_rate
+  type: ratio
+  label: First-Response SLA Compliance Rate
+  type_params:
+    numerator: first_response_sla_met_metric
+    denominator: tickets_with_first_response_sla_target_metric
+- name: first_response_coverage_rate
+  type: ratio
+  label: First Response Coverage Rate
+  type_params:
+    numerator: tickets_with_first_response_metric
+    denominator: ticket_volume
+- name: resolution_hours_variance_total
+  type: simple
+  label: Resolution Hours Variance (sum, actual - target)
+  type_params:
+    measure: resolution_hours_variance_sum
+- name: tickets_with_sla_target_metric
+  type: simple
+  label: Tickets With SLA Target Count
+  type_params:
+    measure: tickets_with_sla_target_count
+- name: average_resolution_hours_variance
+  type: derived
+  label: Average Resolution Hours Variance vs SLA Target
+  type_params:
+    expr: resolution_hours_variance_total / tickets_with_sla_target_metric
+    metrics:
+    - name: resolution_hours_variance_total
+    - name: tickets_with_sla_target_metric
+- name: tickets_with_resolution_sla_target_metric
+  type: simple
+  label: Tickets With Resolution SLA Target Count
+  type_params:
+    measure: tickets_with_resolution_sla_target_count
+- name: resolution_sla_met_metric
+  type: simple
+  label: Resolution SLA Met Count
+  type_params:
+    measure: resolution_sla_met_count
+- name: resolution_sla_compliance_rate
+  type: ratio
+  label: Resolution SLA Compliance Rate
+  type_params:
+    numerator: resolution_sla_met_metric
+    denominator: tickets_with_sla_target_metric
+- name: due_today_tickets_metric
+  type: simple
+  label: Tickets Due Today
+  type_params:
+    measure: due_today_ticket_count
+- name: current_overdue_tickets_metric
+  type: simple
+  label: Current Overdue Ticket Count
+  type_params:
+    measure: current_overdue_ticket_count
+- name: unanswered_tickets_metric
+  type: simple
+  label: Unanswered Ticket Count (no first response)
+  type_params:
+    measure: unanswered_ticket_count
+- name: sla_at_risk_tickets_metric
+  type: simple
+  label: SLA At-Risk Ticket Count (due soon)
+  type_params:
+    measure: sla_at_risk_ticket_count
+- name: average_overdue_hours
+  type: simple
+  label: Average Overdue Hours
+  type_params:
+    measure: average_overdue_hours_val
+- name: queues_at_risk_metric
+  type: simple
+  label: Queues At Risk Count
+  type_params:
+    measure: queues_at_risk_count
+- name: csat_score_total
+  type: simple
+  label: CSAT Score (sum)
+  type_params:
+    measure: csat_score_sum
+- name: csat_rated_metric
+  type: simple
+  label: CSAT Rated Ticket Count
+  type_params:
+    measure: csat_rated_count
+- name: average_csat_score
+  type: derived
+  label: Average CSAT Score
+  type_params:
+    expr: csat_score_total / csat_rated_metric
+    metrics:
+    - name: csat_score_total
+    - name: csat_rated_metric
+- name: csat_response_rate
+  type: ratio
+  label: CSAT Response Rate (rated / resolved)
+  type_params:
+    numerator: csat_rated_metric
+    denominator: resolved_tickets_metric
+- name: csat_promoter_metric
+  type: simple
+  label: CSAT Promoter Count (score >= 4)
+  type_params:
+    measure: csat_promoter_count
+- name: csat_neutral_metric
+  type: simple
+  label: CSAT Neutral Count (score = 3)
+  type_params:
+    measure: csat_neutral_count
+- name: csat_detractor_metric
+  type: simple
+  label: CSAT Detractor Count (score <= 2)
+  type_params:
+    measure: csat_detractor_count
+- name: csat_promoter_rate
+  type: ratio
+  label: CSAT Promoter Rate
+  type_params:
+    numerator: csat_promoter_metric
+    denominator: csat_rated_metric
+- name: csat_detractor_rate
+  type: ratio
+  label: CSAT Detractor Rate
+  type_params:
+    numerator: csat_detractor_metric
+    denominator: csat_rated_metric
+- name: reopen_rate
+  type: ratio
+  label: Reopen Rate
+  type_params:
+    numerator: reopened_tickets_metric
+    denominator: resolved_tickets_metric
+- name: queue_coverage_count
+  type: simple
+  label: Queue Membership Count
+  type_params:
+    measure: queue_membership_count
+- name: distinct_agents_in_queues
+  type: simple
+  label: Distinct Agents Covering Queues
+  type_params:
+    measure: distinct_agents_in_queues_count
+- name: distinct_queues_covered
+  type: simple
+  label: Distinct Queues Covered
+  type_params:
+    measure: distinct_queues_covered_count
+- name: tickets_with_resolver_metric
+  type: simple
+  label: Tickets With Resolver Assigned Count
+  type_params:
+    measure: tickets_with_resolver_count
+- name: tickets_without_resolver_metric
+  type: simple
+  label: Tickets Without Resolver Count
+  type_params:
+    measure: tickets_without_resolver_count
+- name: active_agents_metric
+  type: simple
+  label: Active Agent Headcount
+  type_params:
+    measure: active_agent_count
+- name: queue_count
+  type: simple
+  label: Support Queue Count
+  type_params:
+    measure: agent_queue_count
+- name: note_volume
+  type: simple
+  label: Ticket Note Volume
+  type_params:
+    measure: note_count
+- name: internal_note_volume
+  type: simple
+  label: Internal Note Volume
+  type_params:
+    measure: internal_note_count
+- name: customer_reply_volume
+  type: simple
+  label: Customer-Visible Reply Volume
+  type_params:
+    measure: customer_visible_note_count
+- name: internal_note_ratio
+  type: ratio
+  label: Internal Note Ratio (internal / total notes)
+  type_params:
+    numerator: internal_note_volume
+    denominator: note_volume
+- name: average_notes_per_ticket
+  type: ratio
+  label: 'Average Notes Per Ticket (cross-model: ticket_note vs ticket)'
+  type_params:
+    numerator: note_volume
+    denominator: ticket_volume
+- name: notification_volume
+  type: simple
+  label: Staff Notification Volume
+  type_params:
+    measure: notification_count
+- name: unread_notifications_metric
+  type: simple
+  label: Unread Notification Count
+  type_params:
+    measure: unread_notification_count
+- name: outbound_email_volume
+  type: simple
+  label: Outbound Email Volume
+  type_params:
+    measure: outbound_email_count
+- name: audit_event_volume
+  type: simple
+  label: Audit Event Volume
+  type_params:
+    measure: audit_event_count
+- name: escalation_volume
+  type: simple
+  label: Escalation Volume
+  type_params:
+    measure: escalation_count
+- name: reassignment_volume
+  type: simple
+  label: Reassignment (Assignment-Change) Volume
+  type_params:
+    measure: assignment_change_count
+- name: escalation_rate
+  type: ratio
+  label: 'Escalation Rate (cross-model: audit_event vs ticket)'
+  type_params:
+    numerator: escalation_volume
+    denominator: ticket_volume
+- name: kb_article_volume
+  type: simple
+  label: Knowledge Base Article Count
+  type_params:
+    measure: kb_article_count
+- name: kb_published_article_metric
+  type: simple
+  label: Published KB Article Count
+  type_params:
+    measure: kb_published_article_count
+- name: kb_views_total
+  type: simple
+  label: KB Article Views (sum)
+  type_params:
+    measure: kb_views_sum
+- name: macro_volume
+  type: simple
+  label: Macro Template Count
+  type_params:
+    measure: macro_count
+- name: recommendation_volume
+  type: simple
+  label: Proactive Recommendation Volume
+  type_params:
+    measure: recommendation_count
+- name: accepted_recommendations_metric
+  type: simple
+  label: Accepted Recommendation Count
+  type_params:
+    measure: accepted_count
+- name: dismissed_recommendations_metric
+  type: simple
+  label: Dismissed Recommendation Count
+  type_params:
+    measure: dismissed_count
+- name: open_recommendations_metric
+  type: simple
+  label: Open (Undecided) Recommendation Count
+  type_params:
+    measure: open_recommendation_count
+- name: recommendation_acceptance_rate
+  type: ratio
+  label: Recommendation Acceptance Rate
+  type_params:
+    numerator: accepted_recommendations_metric
+    denominator: recommendation_volume
+- name: approval_volume
+  type: simple
+  label: Proactive Approval Volume
+  type_params:
+    measure: approval_count
+- name: approved_metric
+  type: simple
+  label: Approved Action Count
+  type_params:
+    measure: approved_count
+- name: rejected_metric
+  type: simple
+  label: Rejected Action Count
+  type_params:
+    measure: rejected_count
+- name: pending_approvals_metric
+  type: simple
+  label: Pending (Undecided) Approval Count
+  type_params:
+    measure: pending_approval_count
+- name: approval_rate
+  type: ratio
+  label: Approval Rate
+  type_params:
+    numerator: approved_metric
+    denominator: approval_volume
+- name: decision_hours_total
+  type: simple
+  label: Approval Decision Hours (sum)
+  type_params:
+    measure: decision_hours_sum
+- name: decided_approvals_metric
+  type: simple
+  label: Decided Approval Count
+  type_params:
+    measure: decided_count
+- name: average_decision_hours
+  type: derived
+  label: Average Approval Decision Time (hours)
+  type_params:
+    expr: decision_hours_total / decided_approvals_metric
+    metrics:
+    - name: decision_hours_total
+    - name: decided_approvals_metric
+- name: proactive_audit_volume
+  type: simple
+  label: Proactive Agent Audit Event Volume
+  type_params:
+    measure: proactive_audit_count

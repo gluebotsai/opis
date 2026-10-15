@@ -1,0 +1,69 @@
+slice_id: cc.booking
+agent: Lola Booking Agent
+modules:
+- core
+- identity
+- interaction
+- booking
+classes:
+- Party
+- Person
+- Organization
+- Contact
+- Agent
+- Consent
+- Preference
+- Channel
+- Event
+- WorkItem
+- Location
+- Identity
+- ContactProfile
+- Contact
+- ContactDraft
+- ContactSkill
+- Conversation
+- Conversation
+- Intent
+- Disposition
+- WrapUp
+- Appointment
+relations:
+- Person works_for Organization
+- Contact has_consent Consent
+- Contact has_preference Preference
+- Contact belongs_to Organization
+- Agent works_for Organization
+- Identity identifies Party
+- Contact resolves_to Contact
+- Contact has_skill ContactSkill
+- Conversation WITH Contact
+- Conversation WITH Contact
+- Conversation handled_by Agent
+- Conversation IN_QUEUE Queue
+- Conversation MAY_CREATE Ticket
+- Conversation about WorkItem
+- Conversation HAS_INTENT Intent
+- Appointment ATTENDEE Contact
+- Appointment ATTENDEE Contact
+actions:
+- action.identify
+- action.route_to_specialist
+- action.list_contacts
+- action.get_contact
+- action.stage_contact_draft
+- action.create_contact
+- action.update_contact
+- action.contact_enrich
+- action.merge_contacts
+- action.get_conversation_context
+- action.suggest_reply
+- action.summarize_conversation
+- action.handoff
+- action.adapt_channel
+- action.validate_identity_field
+- action.check_availability
+- action.book_appointment
+- action.reschedule_appointment
+metric_ids: []
+note: Legal slice (tools/policy). Inject pack.as_prompt() compact, not this file.

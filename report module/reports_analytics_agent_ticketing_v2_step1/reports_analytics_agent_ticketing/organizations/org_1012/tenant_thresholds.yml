@@ -1,0 +1,108 @@
+version: 1
+organization_id: 1012
+# Product KPIs only. No add. No override.
+timezone: UTC
+week_start: monday
+kpis:
+  add: {}
+  override: {}
+access: {}
+# Ecommerce / online-retail CX bands (email + ecommerce helpdesk norms:
+# first reply same business day, resolution inside 1 day, CSAT 4.0+/5,
+# reopen under ~8%, SLA miss under ~10%). Warning fires first; critical is worse.
+# Python compares using warn_below/critical_below or warn_above/critical_above.
+# Ratios are 0–1. Times are calendar hours (UTC), matching product SQL.
+thresholds:
+  avg_open_ticket_age:
+    unit: hours
+    warn_above: 24
+    critical_above: 72
+  resolution_rate:
+    unit: ratio
+    warn_below: 0.70
+    critical_below: 0.50
+  assignment_rate:
+    unit: ratio
+    warn_below: 0.90
+    critical_below: 0.80
+  reopen_rate:
+    unit: ratio
+    warn_above: 0.08
+    critical_above: 0.15
+  escalation_rate:
+    unit: ratio
+    warn_above: 0.15
+    critical_above: 0.25
+  reassignment_rate:
+    unit: ratio
+    warn_above: 0.20
+    critical_above: 0.35
+  avg_first_response_time:
+    unit: hours
+    warn_above: 4
+    critical_above: 8
+  avg_resolution_time:
+    unit: hours
+    warn_above: 24
+    critical_above: 48
+  avg_resolution_variance_vs_sla:
+    unit: hours
+    warn_above: 0
+    critical_above: 8
+  first_response_sla_compliance:
+    unit: ratio
+    warn_below: 0.85
+    critical_below: 0.70
+  resolution_sla_compliance:
+    unit: ratio
+    warn_below: 0.90
+    critical_below: 0.80
+  sla_breach_rate:
+    unit: ratio
+    warn_above: 0.10
+    critical_above: 0.20
+  first_response_at_risk_count:
+    unit: tickets
+    warn_above: 5
+    critical_above: 15
+  resolution_at_risk_count:
+    unit: tickets
+    warn_above: 5
+    critical_above: 15
+  no_sla_count:
+    unit: tickets
+    warn_above: 0
+    critical_above: 10
+  queues_at_risk:
+    unit: queues
+    warn_above: 0
+    critical_above: 2
+  average_overdue_hours:
+    unit: hours
+    warn_above: 4
+    critical_above: 24
+  avg_csat:
+    unit: score
+    warn_below: 4.0
+    critical_below: 3.5
+  csat_response_rate:
+    unit: ratio
+    warn_below: 0.20
+    critical_below: 0.10
+  csat_distribution_rate:
+    unit: ratio
+    by_segment:
+      promoter:
+        warn_below: 0.50
+        critical_below: 0.35
+      detractor:
+        warn_above: 0.20
+        critical_above: 0.35
+  recommendation_acceptance_rate:
+    unit: ratio
+    warn_below: 0.40
+    critical_below: 0.25
+  approval_rate:
+    unit: ratio
+    warn_below: 0.80
+    critical_below: 0.60

@@ -1,0 +1,130 @@
+slice_id: cc.presence
+agent: Agent Presence Monitoring Agent
+modules:
+- core
+- identity
+- interaction
+- followup
+- workforce
+- performance
+- hub
+classes:
+- Party
+- Person
+- Organization
+- Contact
+- Agent
+- Consent
+- Preference
+- Channel
+- Event
+- WorkItem
+- Location
+- Identity
+- ContactProfile
+- Contact
+- ContactDraft
+- ContactSkill
+- Conversation
+- Conversation
+- Intent
+- Disposition
+- WrapUp
+- Task
+- Callback
+- Agent
+- AgentPresence
+- MonitoringSnapshot
+- Attendance
+- NotReadyEscalation
+- Anomaly
+- PerformanceReport
+- Spoke
+- Skill
+- HubRequest
+- Strategy
+- DispatchAction
+relations:
+- Person works_for Organization
+- Contact has_consent Consent
+- Contact has_preference Preference
+- Contact belongs_to Organization
+- Agent works_for Organization
+- Identity identifies Party
+- Contact resolves_to Contact
+- Contact has_skill ContactSkill
+- Conversation WITH Contact
+- Conversation WITH Contact
+- Conversation handled_by Agent
+- Conversation IN_QUEUE Queue
+- Conversation MAY_CREATE Ticket
+- Conversation about WorkItem
+- Conversation HAS_INTENT Intent
+- Task assigned_to Agent
+- Task related_to Conversation
+- Callback raised_by Contact
+- Callback assigned_to Agent
+- Callback FROM Conversation
+- Agent has_presence AgentPresence
+- MonitoringSnapshot includes Agent
+- NotReadyEscalation of Agent
+- Anomaly about Queue
+- Anomaly triggers HubRequest
+- PerformanceReport about Agent
+- HubRequest about Contact
+- HubRequest about Conversation
+- Strategy PRODUCES DispatchAction
+- DispatchAction targets Spoke
+- DispatchAction USES Skill
+actions:
+- action.identify
+- action.route_to_specialist
+- action.list_contacts
+- action.get_contact
+- action.stage_contact_draft
+- action.create_contact
+- action.update_contact
+- action.contact_enrich
+- action.merge_contacts
+- action.get_conversation_context
+- action.suggest_reply
+- action.summarize_conversation
+- action.handoff
+- action.adapt_channel
+- action.list_tasks
+- action.get_task
+- action.update_task
+- action.open_task_workspace
+- action.callback
+- action.assign_recovery
+- action.get_monitoring_snapshot
+- action.get_agent_attendance
+- action.set_presence
+- action.force_logout
+- action.acknowledge_escalation
+- action.list_presence
+- action.ask_semantic
+- action.ask_ontology
+- action.generate_report
+- action.investigate_anomaly
+- action.spoke_query
+- action.run_pipeline
+- action.dispatch
+metric_ids:
+- active_agents
+- active_agents_setup
+- agents_assigned_callback
+- callback_tasks
+- follow_up_tasks
+- handling_or_wrap_seconds
+- human_agent_occupancy_rate_capacity
+- human_agent_occupancy_rate_presence
+- human_handle_seconds_sum
+- logged_in_eligible_seconds
+- open_agent_tasks
+- suggestion_tasks
+- total_active_agent_count
+- total_agent_capacity
+- total_agents
+- total_agents_setup
+note: Legal slice (tools/policy). Inject pack.as_prompt() compact, not this file.

@@ -1,0 +1,296 @@
+kpi_id: avg_hold_time
+object: call_cdr
+grain_table: ccass.call_cdr
+joined_tables:
+- ccass.conversations
+- ccass.queues
+- ccass.agents
+hitl:
+  reviewed_by: Uday
+  reviewed_at: 2026-10-08
+columns:
+- column: ccass.conversations.assigned_agent_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.assigned_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.assigned_user_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.bot_active
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.channel_config_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.channel
+  use: filter
+  reason: Hold is call CDR. Channel is a filter only. GROUP BY channel is not this metric.
+- column: ccass.conversations.closed_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.contact_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.created_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.direction
+  use: filter
+  reason: Hold is call CDR. Direction is a filter only. GROUP BY direction is not this metric.
+- column: ccass.conversations.disposition_code
+  use: not_this_metric
+  reason: Disposition split is the catalog label, not the raw code.
+- column: ccass.conversations.disposition_note
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.end_actor
+  use: filter
+  reason: Can filter this call_cdr metric. Not a default volume GROUP BY.
+- column: ccass.conversations.end_reason
+  use: filter
+  reason: Can filter this call_cdr metric. Not a default volume GROUP BY.
+- column: ccass.conversations.ended_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.external_thread_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.first_agent_response_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.first_response_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.first_response_due_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.handoff_reason
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.lifecycle_state
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.live_agent_enabled
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.mailbox_connection_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.nlp_enabled
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.organization_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.previous_conversation_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.priority
+  use: filter
+  reason: Hold is call CDR. Priority is a filter only. GROUP BY priority is not this metric.
+- column: ccass.conversations.provider_thread_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.queue_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.queued_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.resolution_code
+  use: filter
+  reason: Can filter this call_cdr metric. Not a default volume GROUP BY.
+- column: ccass.conversations.resolution_due_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.resolution_summary
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.resolved_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.sla_status
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.status
+  use: filter
+  reason: Hold is call CDR. Status is a filter only. GROUP BY status is not this metric.
+- column: ccass.conversations.subject
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.transferred_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.visitor_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.webchat_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.agents.created_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.agents.display_name
+  use: filter
+  reason: Hold is call CDR. Agent is a filter only. GROUP BY agent is not this metric.
+- column: ccass.agents.id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.agents.organization_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.agents.setup_user_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.agents.status
+  use: not_this_metric
+  reason: Roster status is not ready and not a volume split. Ready is presence_state. Agent split is display_name.
+- column: ccass.queues.business_hours_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.queues.id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.queues.name
+  use: both
+  reason: Filter and GROUP BY on this call_cdr metric.
+- column: ccass.queues.organization_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.queues.published_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.queues.setup_queue_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.queues.status
+  use: not_this_metric
+  reason: Published queue active/inactive is not a volume split. Queue split is ccass.queues.name.
+- column: ccass.queues.team_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.call_cdr.agent_hold_duration
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.call_cdr.business_end_time
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.call_cdr.business_start_time
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.call_cdr.call_duration
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.call_cdr.created_at
+  use: not_this_metric
+  reason: Time window. Python time.py binds :start/:end. Not a filter slot.
+- column: ccass.call_cdr.dial_duration
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.call_cdr.disconnected_by
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.call_cdr.disposition_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.call_cdr.domain_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.call_cdr.hours_of_operation
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.call_cdr.id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.call_cdr.is_abandoned
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.call_cdr.is_autobot
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.call_cdr.is_barge
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.call_cdr.is_bot
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.call_cdr.is_ccaas
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.call_cdr.is_crm
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.call_cdr.is_inbound
+  use: both
+  reason: Filter and GROUP BY on this call_cdr metric.
+- column: ccass.call_cdr.is_listen
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.call_cdr.is_missed
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.call_cdr.is_transferred
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.call_cdr.is_whisper
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.call_cdr.leg_duration
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.call_cdr.leg_end_time
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.call_cdr.leg_start_time
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.call_cdr.outbound_campaign
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.call_cdr.queue_duration
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.call_cdr.queue_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.call_cdr.recording_duration
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.call_cdr.session_end_time
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.call_cdr.session_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.call_cdr.session_start_time
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.call_cdr.transferred_time
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.call_cdr.transferred_type_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.call_cdr.umn_status
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.call_cdr.wait_duration
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.is_reopened
+  use: filter
+  reason: Can filter this call_cdr metric. Not a default volume GROUP BY.
+- column: ccass.conversations.is_bot_only
+  use: filter
+  reason: Can filter this call_cdr metric. Not a default volume GROUP BY.
+- column: ccass.conversations.handler
+  use: filter
+  reason: Hold is call CDR. Handler is a filter only. GROUP BY handler is not this metric.
+- column: ccass.call_cdr.hold_seconds
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.

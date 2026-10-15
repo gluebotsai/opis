@@ -1,0 +1,254 @@
+product: ticketing
+engine: postgres
+default_schema: ticketing
+tenant_column: organization_id
+tables:
+- name: tickets
+  schema: ticketing
+  grain: ticket
+  row_scope_column: assignee_id
+  tenant_column: organization_id
+  columns:
+  - name: id
+  - name: organization_id
+  - name: ticket_number
+  - name: subject
+  - name: description
+  - name: status
+  - name: priority
+  - name: channel
+  - name: category
+  - name: skill
+  - name: customer_id
+  - name: customer_name
+  - name: customer_email
+  - name: customer_phone
+  - name: assignee_id
+  - name: assignee_name
+  - name: resolver_id
+  - name: resolver_name
+  - name: queue_id
+  - name: queue_name
+  - name: due_at
+  - name: first_response_at
+  - name: resolved_at
+  - name: csat_score
+  - name: csat_rated_at
+  - name: created_by_id
+  - name: created_by_name
+  - name: created_at
+  - name: updated_at
+- name: ticket_statuses
+  schema: ticketing
+  tenant_column: organization_id
+  columns:
+  - name: id
+  - name: organization_id
+  - name: status
+  - name: display_name
+  - name: is_system
+  - name: is_terminal
+  - name: sort_order
+  - name: active
+- name: agents
+  schema: ticketing
+  tenant_column: organization_id
+  columns:
+  - name: id
+  - name: organization_id
+  - name: setup_user_id
+  - name: support_email
+  - name: status
+  - name: role
+  - name: created_at
+- name: agent_queues
+  schema: ticketing
+  tenant_column: organization_id
+  columns:
+  - name: id
+  - name: organization_id
+  - name: queue_name
+  - name: type
+  - name: open_tickets
+  - name: assigned
+  - name: sla_status
+  - name: created_at
+- name: agent_queue_members
+  schema: ticketing
+  tenant_column: organization_id
+  columns:
+  - name: id
+  - name: organization_id
+  - name: queue_id
+  - name: user_id
+  - name: created_at
+- name: contact_profile
+  schema: ticketing
+  tenant_column: organization_id
+  columns:
+  - name: id
+  - name: organization_id
+  - name: cdp_id
+  - name: status
+  - name: total_tickets
+  - name: account_id
+  - name: created_at
+- name: ticketing_accounts
+  schema: ticketing
+  tenant_column: organization_id
+  columns:
+  - name: id
+  - name: organization_id
+  - name: name
+  - name: status
+  - name: created_at
+- name: org_settings
+  schema: ticketing
+  tenant_column: organization_id
+  columns:
+  - name: organization_id
+  - name: ticket_prefix
+  - name: display_timezone
+  - name: portal_slug
+- name: sla_policies
+  schema: ticketing
+  tenant_column: organization_id
+  columns:
+  - name: id
+  - name: organization_id
+  - name: priority
+  - name: resolution_hours
+  - name: first_response_hours
+  - name: active
+- name: ticket_notes
+  schema: ticketing
+  tenant_column: organization_id
+  columns:
+  - name: id
+  - name: organization_id
+  - name: ticket_id
+  - name: author_id
+  - name: author_name
+  - name: body
+  - name: visibility
+  - name: created_at
+- name: audit_events
+  schema: ticketing
+  tenant_column: organization_id
+  columns:
+  - name: id
+  - name: organization_id
+  - name: ticket_id
+  - name: action
+  - name: actor_id
+  - name: actor_name
+  - name: queue_name
+  - name: created_at
+- name: notifications
+  schema: ticketing
+  tenant_column: organization_id
+  columns:
+  - name: id
+  - name: organization_id
+  - name: user_id
+  - name: kind
+  - name: is_read
+  - name: created_at
+- name: kb_articles
+  schema: ticketing
+  tenant_column: organization_id
+  columns:
+  - name: id
+  - name: organization_id
+  - name: title
+  - name: status
+  - name: category
+  - name: views
+  - name: created_at
+- name: macros
+  schema: ticketing
+  tenant_column: organization_id
+  columns:
+  - name: id
+  - name: organization_id
+  - name: title
+  - name: created_by_name
+  - name: created_at
+- name: outbound_email_log
+  schema: ticketing
+  tenant_column: organization_id
+  columns:
+  - name: id
+  - name: organization_id
+  - name: ticket_id
+  - name: kind
+  - name: status
+  - name: created_at
+- name: proactive_recommendations
+  schema: ticketing
+  tenant_column: organization_id
+  columns:
+  - name: id
+  - name: organization_id
+  - name: ticket_id
+  - name: agent_id
+  - name: status
+  - name: created_at
+- name: proactive_approvals
+  schema: ticketing
+  tenant_column: organization_id
+  columns:
+  - name: id
+  - name: organization_id
+  - name: ticket_id
+  - name: agent_id
+  - name: tool_name
+  - name: status
+  - name: created_at
+- name: proactive_audit
+  schema: ticketing
+  tenant_column: organization_id
+  columns:
+  - name: id
+  - name: organization_id
+  - name: ticket_id
+  - name: agent_id
+  - name: event_id
+  - name: decision
+  - name: tool_name
+  - name: reason
+  - name: created_at
+cdp_tables:
+- name: customer_profile
+  schema: cdp
+  tenant_column: organization_id
+  columns:
+  - name: cdp_id
+  - name: organization_id
+  - name: first_name
+  - name: last_name
+  - name: contact_type
+- name: identity_keys
+  schema: cdp
+  tenant_column: organization_id
+  columns:
+  - name: cdp_id
+  - name: organization_id
+  - name: key_type
+  - name: key_value
+joins:
+- from: tickets
+  to: contact_profile
+  keys:
+  - { left: customer_id, right: id }
+  - { left: organization_id, right: organization_id }
+- from: contact_profile
+  to: customer_profile
+  keys:
+  - { left: cdp_id, right: cdp_id }
+  - { left: organization_id, right: organization_id }
+- from: contact_profile
+  to: identity_keys
+  keys:
+  - { left: cdp_id, right: cdp_id }
+  - { left: organization_id, right: organization_id }

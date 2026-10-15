@@ -1,0 +1,56 @@
+{
+  "question": "why we have less deals?",
+  "answer": "I cannot provide a specific analysis of why deal volume has decreased because the request requires aggregate historical trend analysis, which is not supported by the current knowledge graph tool. To determine if we are seeing a drop in new opportunities, a decline in win rates, or a shift in deal velocity, I would need to run a warehouse-based volume analysis.\n\nPlease let me know if you would like me to pull a report on deal counts or pipeline trends over a specific period to identify where the volume is dropping.",
+  "trace": {
+    "question": "why we have less deals?",
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1017,
+      "role": "sales_manager"
+    },
+    "model": "worktual-gemma",
+    "tasks": [
+      {
+        "status": "error",
+        "error_type": "ERROR",
+        "error": "Warehouse 'how many / how much' or volume-based trend analysis (e.g., 'why we have less deals') is a SQL/Warehouse task. The Knowledge Graph is designed to explain the 'why' behind specific lost or stalled deals through commercial paths and empirical reasons, rather than calculating aggregate volume changes or historical deal counts.",
+        "rows": [],
+        "sql": "",
+        "tool": "kg",
+        "attempts_made": 1,
+        "task": {
+          "id": "t1",
+          "executor": "kg",
+          "kpi": null,
+          "goal": "Analyze commercial path and reasons for deal loss or stalling to explain volume decrease",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "graph",
+          "depends_on": []
+        }
+      }
+    ],
+    "domain_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"deep\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"kg\",\n      \"kpi\": null,\n      \"goal\": \"Analyze commercial path and reasons for deal loss or stalling to explain volume decrease\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"dimension\": null,\n      \"answer_type\": \"graph\",\n      \"depends_on\": []\n    }\n  ]\n}\n```",
+    "plan": {
+      "kind": "plan",
+      "depth": "deep",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "kg",
+          "kpi": null,
+          "goal": "Analyze commercial path and reasons for deal loss or stalling to explain volume decrease",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "graph",
+          "depends_on": []
+        }
+      ]
+    },
+    "facts": "EXECUTION_ERROR\ntime_requested: all time\ntime_status: kg\nerror_type: ERROR\nmessage: Warehouse 'how many / how much' or volume-based trend analysis (e.g., 'why we have less deals') is a SQL/Warehouse task. The Knowledge Graph is designed to explain the 'why' behind specific lost or stalled deals through commercial paths and empirical reasons, rather than calculating aggregate volume changes or historical deal counts.\ntask_goal: Analyze commercial path and reasons for deal loss or stalling to explain volume decrease",
+    "grounded": true,
+    "briefing_raw": "I cannot provide a specific analysis of why deal volume has decreased because the request requires aggregate historical trend analysis, which is not supported by the current knowledge graph tool. To determine if we are seeing a drop in new opportunities, a decline in win rates, or a shift in deal velocity, I would need to run a warehouse-based volume analysis.\n\nPlease let me know if you would like me to pull a report on deal counts or pipeline trends over a specific period to identify where the volume is dropping."
+  }
+}

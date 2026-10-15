@@ -1,0 +1,24 @@
+{
+  "name": "Worktual Assist",
+  "version": "1.0.0",
+  "manifestVersion": "2.1.0",
+  "description": "In-meeting Sales Assist — KB coaching beside the Zoom call.",
+  "homeUrl": "YOUR_PUBLIC_ORIGIN/meeting-assist/hosts/zoom",
+  "iconUrl": "YOUR_PUBLIC_ORIGIN/brand/worktual-logo.png",
+  "screenshots": [],
+  "requiredScopes": [
+    "meeting:read",
+    "meeting:write"
+  ],
+  "features": {
+    "inMeeting": {
+      "url": "YOUR_PUBLIC_ORIGIN/meeting-assist/hosts/zoom",
+      "panel": true
+    }
+  },
+  "domainAllowList": ["YOUR_PUBLIC_ORIGIN"],
+  "oauth": {
+    "redirectUri": "YOUR_PUBLIC_ORIGIN/meeting-assist/link?host=zoom",
+    "clientId": "YOUR_ZOOM_APP_CLIENT_ID"
+  }
+}

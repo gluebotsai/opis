@@ -1,0 +1,25 @@
+# Healthcare overlay — labels + extra terms only. Do not fork Contact.
+pack: healthcare
+extends_ontology: cc
+businessTypes: [b2c, b2b2c]
+
+labels:
+  Contact: Patient
+  Contact: Patient contact
+  Ticket: Case
+  Appointment: Appointment
+
+extends:
+  Contact:
+    additional_properties: [mrn]
+
+taxonomy_adds:
+  intent:
+    - appointment_change
+    - phi_request
+  ticket.category:
+    - appointment
+    - prescription
+    - insurance
+
+modules: []

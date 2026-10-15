@@ -1,0 +1,349 @@
+/**
+ * Sales agents directory — admin list chrome.
+ * Reuses admin-users primitives; canvas #F4F4F6 · surfaces #FFFFFF · border #C9C9CF.
+ * Native selects: one CSS chevron only (no Lucide sibling).
+ */
+
+.app-shell--sales-admin .app-content:has(.sa-agents-page) {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.admin-users-page.sa-agents-page {
+  --au-canvas: #f4f4f6;
+  background: #f4f4f6;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 24px;
+  min-height: 0;
+  min-width: 0;
+  padding-bottom: 0;
+  width: 100%;
+}
+
+/* Lock page gap — do not inherit admin short-viewport gap: 10px */
+@media (max-height: 720px) {
+  .admin-users-page.sa-agents-page {
+    gap: 20px;
+  }
+}
+
+@media (max-height: 600px) {
+  .admin-users-page.sa-agents-page {
+    gap: 16px;
+  }
+}
+
+.sa-agents-page__chrome {
+  display: grid;
+  flex: 0 0 auto;
+  gap: 8px;
+}
+
+.sa-agents-page__back {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: #0b0b10;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 0.875rem;
+  font-weight: 600;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  width: fit-content;
+}
+
+.sa-agents-page__back:hover {
+  text-decoration: underline;
+}
+
+.sa-agents-page__header {
+  align-items: flex-start;
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+/* Match admin compact header scale (not 1.75rem display) */
+.sa-agents-page .admin-users-page__header h1 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.sa-agents-page__header .admin-users-page__subtitle {
+  font-size: 0.875rem;
+  margin-top: 4px;
+  max-width: 640px;
+}
+
+.sa-agents-period {
+  display: grid;
+  flex-shrink: 0;
+  gap: 8px;
+  min-width: 200px;
+}
+
+.sa-agents-period__label {
+  align-items: center;
+  color: #5e5e69;
+  display: inline-flex;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  gap: 6px;
+}
+
+/* Period & Sort live in Filters popover — scrollable body, sticky footer */
+.sa-agents-page .admin-users-filter-dropdown.sa-agents-filter-dropdown {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-height: min(360px, calc(100vh - 160px));
+  max-width: min(260px, calc(100vw - 32px));
+  min-width: 220px;
+  overflow: hidden;
+  padding: 0;
+}
+
+.sa-agents-filter-dropdown__scroll {
+  display: grid;
+  flex: 1 1 auto;
+  gap: 12px;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 12px;
+}
+
+.sa-agents-page .sa-agents-filter-dropdown .admin-users-filter-dropdown__section {
+  display: grid;
+  gap: 8px;
+}
+
+.sa-agents-page .sa-agents-filter-dropdown .admin-users-filter-dropdown__title {
+  font-size: 0.6875rem;
+  margin: 0 0 2px;
+}
+
+.sa-agents-page .sa-agents-filter-dropdown .admin-users-filter-dropdown__field {
+  gap: 4px;
+}
+
+.sa-agents-page .sa-agents-filter-dropdown .admin-users-filter-dropdown__field > span {
+  font-size: 0.75rem;
+}
+
+.sa-agents-page .sa-agents-filter-dropdown .admin-users-filter-dropdown__field select {
+  font-size: 0.8125rem;
+  min-height: 34px;
+  padding: 6px 40px 6px 12px;
+}
+
+.sa-agents-page .sa-agents-filter-dropdown .admin-users-filter-dropdown__actions {
+  border-top: 1px solid #c9c9cf;
+  flex: 0 0 auto;
+  gap: 6px;
+  margin: 0;
+  padding: 10px 12px;
+}
+
+.sa-agents-page .sa-agents-filter-dropdown .admin-users-filter-dropdown__actions .secondary-button,
+.sa-agents-page .sa-agents-filter-dropdown .admin-users-filter-dropdown__actions .primary-button {
+  border-radius: 8px;
+  flex: 1 1 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  height: 28px;
+  line-height: 1;
+  max-height: 28px;
+  min-height: 28px;
+  padding: 0 10px;
+}
+
+/* Single CSS chevron — portal-chrome also styles selects; keep one image via cascade */
+.sa-agents-period select,
+.sa-agents-sort select {
+  -webkit-appearance: none;
+  appearance: none;
+  background-color: var(--bg-surface);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%237E7E88' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-position: right 16px center;
+  background-repeat: no-repeat;
+  background-size: 16px 16px;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 600;
+  min-height: 38px;
+  padding: 8px 48px 8px 16px;
+  width: 100%;
+}
+
+.sa-agents-period select::-ms-expand,
+.sa-agents-sort select::-ms-expand,
+.sa-agents-page .admin-users-panel__page-size-control select::-ms-expand {
+  display: none;
+}
+
+/* Footer matches admin lists — #C9C9CF rule (styles.css neutral-100 must not win) */
+.sa-agents-page .admin-users-panel__footer {
+  border-top: 1px solid #c9c9cf;
+  color: #5e5e69;
+  font-size: 0.8125rem;
+}
+
+.sa-agents-page .admin-users-panel__page-size-control {
+  min-width: 5.5rem;
+}
+
+.sa-agents-page .admin-users-panel__page-size-control select {
+  -webkit-appearance: none;
+  appearance: none;
+  background-color: transparent;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%237E7E88' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-position: right 16px center;
+  background-repeat: no-repeat;
+  background-size: 16px 16px;
+  border: 0;
+  min-width: 5.5rem;
+  padding: 0 48px 0 16px;
+}
+
+.sa-agents-period select:hover,
+.sa-agents-sort select:hover {
+  background-color: var(--bg-subtle);
+  border-color: var(--border-strong);
+}
+
+.sa-agents-period select:focus,
+.sa-agents-period select:focus-visible,
+.sa-agents-sort select:focus,
+.sa-agents-sort select:focus-visible {
+  border-color: #5f1fb0;
+  box-shadow: 0 0 0 3px color-mix(in srgb, #5f1fb0 18%, transparent);
+  outline: none;
+}
+
+.sa-agents-panel {
+  min-height: 0;
+}
+
+.sa-agents-page .admin-users-panel__search {
+  background: #ffffff;
+  min-width: min(240px, 100%);
+}
+
+.sa-agents-panel__toolbar {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.sa-agents-sort {
+  display: block;
+  min-width: 220px;
+}
+
+.sa-agents-table__name {
+  color: #0b0b10;
+  display: block;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sa-agents-table__email {
+  color: #3f3f49;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sa-agents-page .sa-agents-table th:nth-child(1),
+.sa-agents-page .sa-agents-table td:nth-child(1) {
+  min-width: 180px;
+  width: 18%;
+}
+
+.sa-agents-page .sa-agents-table th:nth-child(2),
+.sa-agents-page .sa-agents-table td:nth-child(2) {
+  min-width: 160px;
+  width: 18%;
+}
+
+.sa-agents-empty {
+  align-items: center;
+  color: #5e5e69;
+  display: grid;
+  flex: 1 1 auto;
+  gap: 12px;
+  justify-items: center;
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.sa-agents-empty h3 {
+  color: #0b0b10;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.sa-agents-empty p {
+  margin: 0;
+  max-width: 360px;
+}
+
+.visually-hidden {
+  border: 0;
+  clip: rect(0 0 0 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+@media (max-width: 1100px) {
+  .sa-agents-panel__toolbar {
+    justify-content: stretch;
+    width: 100%;
+  }
+
+  .sa-agents-page .admin-users-panel__search {
+    flex: 1 1 180px;
+    max-width: none;
+    min-width: 0;
+  }
+}
+
+@media (max-height: 720px) {
+  .sa-agents-page .admin-users-page__header h1 {
+    font-size: 1.25rem;
+  }
+
+  .sa-agents-page .admin-users-panel__section-header {
+    padding: 12px 16px;
+  }
+
+  .sa-agents-page .admin-users-filter-dropdown.sa-agents-filter-dropdown {
+    max-height: min(280px, calc(100vh - 120px));
+  }
+}

@@ -1,0 +1,40 @@
+[
+  {
+    "id": "launch-on-demand-confirmed",
+    "title": "Launch campaign after user confirms",
+    "turns": [
+      {
+        "role": "user",
+        "content": "Launch this campaign now to the selected audience"
+      },
+      {
+        "role": "assistant",
+        "content": "<p>Ready to launch. Reply <strong>yes</strong> to confirm send.</p>"
+      },
+      {
+        "role": "user",
+        "content": "yes"
+      },
+      {
+        "role": "assistant",
+        "content": "<p>Campaign launched successfully.</p>",
+        "tools": ["launch_campaign"]
+      }
+    ]
+  },
+  {
+    "id": "hub-on-demand-structured",
+    "title": "Hub on-demand create and launch (no clarification)",
+    "turns": [
+      {
+        "role": "user",
+        "content": "On-demand send email promo to contact_ids=c1 channels=email"
+      },
+      {
+        "role": "assistant",
+        "content": "<p>On-demand campaign created and launched.</p>",
+        "tools": ["launch_campaign"]
+      }
+    ]
+  }
+]

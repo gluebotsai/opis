@@ -1,0 +1,161 @@
+{
+  "question": "what is the deal count base on the product",
+  "answer": "There are 41 deals across all time.\n\n| Product | Deal Count |\n| :--- | :--- |\n| AI Native CRM | 8 |\n| AI Native Customer Value Management | 5 |\n| AI Native Contact Centre (CCaaS) | 5 |\n| AI Native Campaign Management | 5 |\n| AI Native Ticketing System | 4 |\n| Lola Voicebot | 1 |\n| Monthly recurring - 1900 sessions | 1 |\n| Monthly recurring - 2500 sessions | 1 |\n| Monthly recurring - 390 sessions | 1 |\n| pricing | 1 |\n| Product Explanation | 1 |\n| Proposal \u2013 crm | 1 |\n| Seekers | 1 |\n| Sierra | 1 |\n| Web Tracking | 1 |\n| *Other products* | 4 |",
+  "trace": {
+    "question": "what is the deal count base on the product",
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1015,
+      "role": "admin"
+    },
+    "model": "worktual-gemma",
+    "tasks": [
+      {
+        "status": "ok",
+        "store": "sql",
+        "sql": "WITH rpt_quote_lines AS (\nSELECT src.id, src.organization_id, src.quote_id, src.product_id, src.product_name, src.quantity, src.unit_price, src.amount, src.created_at FROM (\nSELECT \n  ql.id,\n  ql.organization_id,\n  ql.quote_id,\n  ql.product_id,\n  COALESCE(p.name, ql.name) AS product_name,\n  COALESCE(ql.quantity, 0) AS quantity,\n  COALESCE(ql.unit_price, 0) AS unit_price,\n  COALESCE(ql.amount, 0) AS amount,\n  ql.created_at\nFROM crm.quote_lines ql\nLEFT JOIN inventory.products p ON p.id = ql.product_id\nWHERE ql.organization_id = %(_org_id)s\n) src WHERE TRUE\n),\nrpt_quotes AS (\nSELECT src.id, src.organization_id, src.deal_id, src.deal_title, src.quote_number, src.version, src.status, src.currency_code, src.subtotal, src.discount_pct, src.discount_amount, src.total, src.valid_until, src.sent_at, src.accepted_at, src.created_by_user_id, src.owner_user_id, src.owner_name, src.approval_status, src.created_at, src.updated_at FROM (\nSELECT \n  q.id,\n  q.organization_id,\n  q.deal_id,\n  d.title AS deal_title,\n  q.number AS quote_number,\n  q.version,\n  q.status,\n  COALESCE(q.currency, 'USD') AS currency_code,\n  COALESCE(q.subtotal, 0) AS subtotal,\n  COALESCE(q.discount_pct, 0) AS discount_pct,\n  ROUND(COALESCE(q.subtotal, 0) * (COALESCE(q.discount_pct, 0) / 100.0), 2) AS discount_amount,\n  COALESCE(q.total, 0) AS total,\n  q.valid_until,\n  q.sent_at,\n  q.accepted_at,\n  q.created_by_user_id,\n  d.owner_user_id,\n  su.first_name || ' ' || COALESCE(su.last_name, '') AS owner_name,\n  q.approval_status,\n  q.created_at,\n  q.updated_at\nFROM crm.quotes q\nLEFT JOIN crm.deals d ON d.id = q.deal_id AND d.organization_id = q.organization_id\nLEFT JOIN accounts.setup_users su ON su.id = d.owner_user_id\nWHERE q.organization_id = %(_org_id)s\n) src WHERE TRUE\n)\nSELECT COALESCE(ql.product_name, 'Other Products') AS product_name, CAST(COUNT(DISTINCT q.deal_id) AS BIGINT) AS deal_count FROM rpt_quote_lines AS ql JOIN rpt_quotes AS q ON q.id = ql.quote_id WHERE q.deal_id IS NOT NULL AND TRUE AND TRUE AND TRUE GROUP BY COALESCE(ql.product_name, 'Other Products') ORDER BY deal_count DESC LIMIT 500",
+        "views": [
+          "quote_lines",
+          "quotes"
+        ],
+        "guard_notes": [
+          "row cap 500 applied"
+        ],
+        "bound_params": {
+          "_org_id": 1003,
+          "_user_id": 1015,
+          "user_id": 1015,
+          "organization_id": 1003,
+          "org_id": 1003,
+          "tenant_id": 1003,
+          "current_user_id": 1015
+        },
+        "rows": [
+          {
+            "product_name": "AI Native CRM",
+            "deal_count": 8
+          },
+          {
+            "product_name": "AI Native Customer Value Management",
+            "deal_count": 5
+          },
+          {
+            "product_name": "AI Native Contact Centre (CCaaS)",
+            "deal_count": 5
+          },
+          {
+            "product_name": "AI Native Campaign Management",
+            "deal_count": 5
+          },
+          {
+            "product_name": "AI Native Ticketing System",
+            "deal_count": 4
+          },
+          {
+            "product_name": "Lola Voicebot",
+            "deal_count": 1
+          },
+          {
+            "product_name": "Monthly recurring - 1900 sessions",
+            "deal_count": 1
+          },
+          {
+            "product_name": "Monthly recurring - 2500 sessions",
+            "deal_count": 1
+          },
+          {
+            "product_name": "Monthly recurring - 390 sessions",
+            "deal_count": 1
+          },
+          {
+            "product_name": "pricing",
+            "deal_count": 1
+          },
+          {
+            "product_name": "Product Explanation",
+            "deal_count": 1
+          },
+          {
+            "product_name": "Proposal \u2013 crm",
+            "deal_count": 1
+          },
+          {
+            "product_name": "Seekers",
+            "deal_count": 1
+          },
+          {
+            "product_name": "Sierra",
+            "deal_count": 1
+          },
+          {
+            "product_name": "Web Tracking",
+            "deal_count": 1
+          },
+          {
+            "product_name": "C-cast",
+            "deal_count": 1
+          },
+          {
+            "product_name": "Cognitive Customer Data Platform",
+            "deal_count": 1
+          },
+          {
+            "product_name": "Implementation fee",
+            "deal_count": 1
+          },
+          {
+            "product_name": "Lola Chatbot",
+            "deal_count": 1
+          }
+        ],
+        "kpi_id": "deals_by_product",
+        "time_status": "all_time",
+        "attempts": [
+          {
+            "raw": "{\"tool\":\"run_kpi\",\"kpi_id\":\"deals_by_product\",\"dimension\":null}",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "deals_by_product"
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "tool": "run_kpi",
+        "requested_kpi": "deals_by_product",
+        "requested_dimension": null,
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "deals_by_product",
+          "goal": "Distinct deals per product on quotes",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "breakdown",
+          "depends_on": []
+        }
+      }
+    ],
+    "domain_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"quick\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"deals_by_product\",\n      \"goal\": \"Distinct deals per product on quotes\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"dimension\": null,\n      \"answer_type\": \"breakdown\",\n      \"depends_on\": []\n    }\n  ]\n}\n```",
+    "plan": {
+      "kind": "plan",
+      "depth": "quick",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "deals_by_product",
+          "goal": "Distinct deals per product on quotes",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "breakdown",
+          "depends_on": []
+        }
+      ]
+    },
+    "facts": "time_requested: all time\nperiod_applied: overall (no date filter, UTC)\ntime_status: all_time\ncatalog_kpi: deals_by_product\nRESULT: 19 group(s)\ngroup_by: group\ntotal_deal_count: 41\n  AI Native CRM: 8\n  AI Native Customer Value Management: 5\n  AI Native Contact Centre (CCaaS): 5\n  AI Native Campaign Management: 5\n  AI Native Ticketing System: 4\n  Lola Voicebot: 1\n  Monthly recurring - 1900 sessions: 1\n  Monthly recurring - 2500 sessions: 1\n  Monthly recurring - 390 sessions: 1\n  pricing: 1\n  Product Explanation: 1\n  Proposal \u2013 crm: 1\n  Seekers: 1\n  Sierra: 1\n  Web Tracking: 1\n  ... 4 more groups not listed",
+    "grounded": true,
+    "briefing_raw": "There are 41 deals across all time.\n\n| Product | Deal Count |\n| :--- | :--- |\n| AI Native CRM | 8 |\n| AI Native Customer Value Management | 5 |\n| AI Native Contact Centre (CCaaS) | 5 |\n| AI Native Campaign Management | 5 |\n| AI Native Ticketing System | 4 |\n| Lola Voicebot | 1 |\n| Monthly recurring - 1900 sessions | 1 |\n| Monthly recurring - 2500 sessions | 1 |\n| Monthly recurring - 390 sessions | 1 |\n| pricing | 1 |\n| Product Explanation | 1 |\n| Proposal \u2013 crm | 1 |\n| Seekers | 1 |\n| Sierra | 1 |\n| Web Tracking | 1 |\n| *Other products* | 4 |"
+  }
+}

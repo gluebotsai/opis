@@ -1,0 +1,400 @@
+# Metric ownership: reporting catalog (API) + MAS specialist assignment.
+# Runtime API entitlement for reporting agents uses full certified product catalogs
+# (see semantic/ownership.py). prompt.metrics stays headline-sized for LLM grounding.
+
+version: 2026.09.1
+
+headline_max: 15
+
+# Product (normalized) -> reporting agent id
+reporting_agents:
+  contact_centre: cc.reporting
+  ccaas: cc.reporting
+  ticketing: tk.reporting
+  crm: crm.reports
+  campaign: camp.reports
+  cdp: cdp.profile
+  webtracking: webtracking.analytics
+
+# Registry source id -> reporting agent (for certified metric lists)
+registry_reporting:
+  aiccaas: cc.reporting
+  ticketing: tk.reporting
+  crm: crm.reports
+  campaign: camp.reports
+  webtracking: webtracking.analytics
+
+# Headline KPIs stay in catalog prompt.metrics (LLM context only)
+headline_metrics:
+  cc.reporting:
+    - total_conversations
+    - handled_volume
+    - open_conversations
+    - missed_contact_rate
+    - sla_breach_rate
+    - ai_containment_rate
+    - average_handle_time
+    - average_speed_of_answer
+    - average_first_response_time
+    - human_agent_occupancy_rate_presence
+    - callback_tasks
+  tk.reporting: &tk_reporting_headlines
+    - open_tickets_metric
+    - high_priority_ticket_volume
+    - ticket_volume
+    - average_resolution_time_hours
+    - average_csat_score
+    - reopen_rate
+    - resolution_sla_compliance_rate
+    - breached_tickets_metric
+    - current_overdue_tickets_metric
+    - due_today_tickets_metric
+    - unassigned_tickets_metric
+    - tickets_created_today_metric
+    - tickets_created_by_me
+  tk.analytics_audit_query_executor: *tk_reporting_headlines
+  tk.insights_analytics_executor: *tk_reporting_headlines
+  crm.reports:
+    - won_deal_rate
+    - open_pipeline_value
+    - mql_rate
+    - customer_conversion_rate
+  camp.reports:
+    - delivery_rate
+    - open_rate
+    - click_rate
+    - campaign_attributed_session_rate
+  cdp.profile:
+    - web_session_volume
+    - open_rate
+    - contact_volume
+    - mql_rate
+    - visitor_identification_rate
+  webtracking.analytics:
+    - unique_visitors
+    - web_session_volume
+    - bounce_rate
+    - average_session_duration
+    - conversion_rate
+    - page_views
+    - engagement_rate
+    - campaign_attributed_sessions
+    - form_success_rate
+    - error_session_rate
+    - avg_lcp_ms
+    - visitor_identification_rate
+
+# API-only metrics for reporting agents (not in LLM prompt headlines)
+reporting_only:
+  ticketing:
+  - accepted_recommendations_metric
+  - accounts_served
+  - active_agents_metric
+  - active_customers_metric
+  - active_tickets_metric
+  - approval_rate
+  - approval_volume
+  - approved_metric
+  - assigned_tickets_metric
+  - assignment_rate
+  - audit_event_volume
+  - average_decision_hours
+  - average_first_response_hours
+  - average_first_response_minutes
+  - average_notes_per_ticket
+  - average_open_ticket_age_days
+  - average_overdue_hours
+  - average_resolution_hours_variance
+  - average_tickets_per_day
+  - closed_tickets_metric
+  - csat_detractor_metric
+  - csat_detractor_rate
+  - csat_neutral_metric
+  - csat_promoter_metric
+  - csat_promoter_rate
+  - csat_rated_metric
+  - csat_response_rate
+  - csat_score_total
+  - customer_reply_volume
+  - customers_served
+  - days_since_last_ticket
+  - decided_approvals_metric
+  - decision_hours_total
+  - dismissed_recommendations_metric
+  - distinct_agents_in_queues
+  - distinct_queues_covered
+  - escalation_rate
+  - escalation_volume
+  - high_priority_open_tickets_metric
+  - first_response_coverage_rate
+  - first_response_hours_total
+  - first_response_sla_compliance_rate
+  - first_response_sla_met_metric
+  - internal_note_ratio
+  - internal_note_volume
+  - kb_article_volume
+  - kb_published_article_metric
+  - kb_views_total
+  - macro_volume
+  - note_volume
+  - notification_volume
+  - open_recommendations_metric
+  - open_ticket_age_days_total
+  - outbound_email_volume
+  - pending_approvals_metric
+  - pending_tickets_metric
+  - proactive_audit_volume
+  - queue_count
+  - queue_coverage_count
+  - queues_at_risk_metric
+  - reassignment_volume
+  - recommendation_acceptance_rate
+  - recommendation_volume
+  - rejected_metric
+  - reopened_tickets_metric
+  - resolution_hours_total
+  - resolution_hours_variance_total
+  - resolution_rate
+  - resolution_sla_met_metric
+  - resolved_for_avg
+  - resolved_tickets_metric
+  - sla_at_risk_tickets_metric
+  - sla_breach_rate
+  - ticket_active_days
+  - tickets_last_30_days
+  - tickets_last_7_days
+  - tickets_with_first_response_metric
+  - tickets_with_first_response_sla_target_metric
+  - tickets_with_resolution_sla_target_metric
+  - tickets_with_resolver_metric
+  - tickets_with_sla_target_metric
+  - tickets_without_resolver_metric
+  - unanswered_tickets_metric
+  - unassignment_rate
+  - unread_notifications_metric
+  contact_centre:
+  - active_agents
+  - active_agents_setup
+  - agent_assist_accepted_or_modified
+  - agent_assist_adoption_rate
+  - agent_assist_modification_rate
+  - agent_assist_modified
+  - agent_assist_suggestions_total
+  - agents_assigned_callback
+  - ai_handover_rate
+  - ai_only_completed_conversations
+  - breached_sla_count
+  - call_volume
+  - chat_volume
+  - completed_leg_count
+  - email_volume
+  - facebook_volume
+  - follow_up_tasks
+  - handling_or_wrap_seconds
+  - handoff_conversations
+  - handover_rate
+  - human_agent_occupancy_rate_capacity
+  - human_handle_seconds_sum
+  - instagram_volume
+  - logged_in_eligible_seconds
+  - missed_assignments
+  - open_agent_tasks
+  - resolution_rate
+  - resolved_conversations_count
+  - resolved_dispositions
+  - social_media_volume
+  - suggestion_tasks
+  - tool_executions_succeeded
+  - tool_executions_total
+  - tool_success_rate
+  - total_active_agent_count
+  - total_agent_capacity
+  - total_agents
+  - total_agents_setup
+  - total_assignments
+  - total_queue_agent_assignments
+  - total_queues_configured
+  - total_sla_states
+  - total_teams
+  - total_transfers
+  - unique_contacts_handled
+  - webchat_volume
+  - whatsapp_volume
+
+# Ticketing harness presets that receive full reporting catalog (not never_assign)
+reporting_executor_presets:
+  - tk.reporting
+  - tk.analytics_audit_query_executor
+  - tk.insights_analytics_executor
+  - webtracking.analytics
+
+# Agents that must not receive rule-assigned metrics (empty prompt.metrics)
+never_assign:
+  - cc.booking
+  - cc.channel_adaptation
+  - cc.identity
+  - cc.coworker
+  - cc.coworker.general
+  - cc.compliance
+  - cc.quality
+  - tk.super
+  - tk.portal
+  - tk.intake_deflection_domain
+  - tk.triage_routing_domain
+  - tk.resolution_lifecycle_domain
+  - tk.knowledge_domain
+  - tk.catalog_administration_domain
+  - tk.ai_resolution_executor
+  - tk.ticket_creation_executor
+  - tk.classification_priority_executor
+  - tk.intelligent_assignment_executor
+  - tk.workload_optimization_executor
+  - tk.root_cause_learning_executor
+  - tk.ticket_lifecycle_executor
+  - tk.sla_escalation_executor
+  - tk.investigation_summary_executor
+  - tk.customer_reply_drafting_executor
+  - tk.autonomous_resolution_executor
+  - tk.resolution_quality_executor
+  - tk.personalized_notification_executor
+  - tk.resolution_knowledge_executor
+  - tk.similar_ticket_detection_executor
+  - tk.team_queue_crud_executor
+  - tk.kb_quality_crud_executor
+  - tk.macro_crud_executor
+  - tk.customer_directory_crud_executor
+  - tk.priority_status_crud_executor
+  - tk.org_settings_integrations_executor
+  - tk.notification_inbox_executor
+  - tk.automation_rule_crud_executor
+  - ticketing_super_agent
+  - intake_deflection_domain
+  - triage_routing_domain
+  - resolution_lifecycle_domain
+  - knowledge_domain
+  - catalog_administration_domain
+  - ai_resolution_executor
+  - ticket_creation_executor
+  - classification_priority_executor
+  - intelligent_assignment_executor
+  - workload_optimization_executor
+  - root_cause_learning_executor
+  - ticket_lifecycle_executor
+  - sla_escalation_executor
+  - investigation_summary_executor
+  - customer_reply_drafting_executor
+  - autonomous_resolution_executor
+  - resolution_quality_executor
+  - personalized_notification_executor
+  - resolution_knowledge_executor
+  - similar_ticket_detection_executor
+  - team_queue_crud_executor
+  - kb_quality_crud_executor
+  - macro_crud_executor
+  - customer_directory_crud_executor
+  - priority_status_crud_executor
+  - org_settings_integrations_executor
+  - notification_inbox_executor
+  - automation_rule_crud_executor
+
+# Super agents keep catalog snapshots — not expanded by sync
+preserve_prompt_metrics:
+  - cc.super
+  - hub.orchestrator
+  - crm.super
+  - camp.super
+
+specialist_rules:
+  aiccaas:
+    - patterns:
+        - active_agents*
+        - total_agents*
+        - total_active_agent_count
+        - human_agent_occupancy*
+        - logged_in*
+        - handling_or_wrap*
+        - human_handle_seconds*
+        - total_agent_capacity
+      agents: [cc.presence, cc.wfm]
+    - patterns: [total_queues_configured, total_queue_agent_assignments, total_teams]
+      agents: [cc.queue, cc.wfm]
+    - patterns:
+        - "*_volume"
+        - unique_contacts_handled
+      agents: [cc.omnichannel, cc.channel_adaptation]
+    - patterns: [agent_assist_*]
+      agents: [cc.agent_assist]
+    - patterns:
+        - callback_tasks
+        - follow_up_tasks
+        - suggestion_tasks
+        - open_agent_tasks
+        - agents_assigned_callback
+      agents: [cc.followup, cc.presence]
+    - patterns: [missed_*]
+      agents: [cc.recovery, cc.anomaly]
+    - patterns:
+        - ai_containment_rate
+        - ai_handover_rate
+        - handover_rate
+        - handoff_conversations
+        - ai_only_completed_conversations
+      agents: [cc.ai_support]
+    - patterns:
+        - average_handle_time
+        - average_speed_of_answer
+        - average_first_response_time
+        - human_handle_seconds_sum
+        - completed_leg_count
+      agents: [cc.performance]
+    - patterns:
+        - sla_breach_rate
+        - breached_sla_count
+        - total_sla_states
+      agents: [cc.anomaly, cc.performance]
+    - patterns: [resolution_rate, resolved_conversations_count, resolved_dispositions]
+      agents: [cc.closure]
+    - patterns:
+        - total_conversations
+        - handled_volume
+        - open_conversations
+      agents: [cc.interaction_ops, cc.performance, cc.wfm]
+    - patterns: [tool_*]
+      agents: [cc.agent_assist]
+    - patterns: [total_transfers]
+      agents: [cc.interaction_ops]
+    - patterns:
+        - total_conversations
+        - average_handle_time
+        - human_agent_occupancy_rate_presence
+        - open_conversations
+      agents: [cc.forecast, cc.wfm]
+
+  crm:
+    - patterns:
+        - "*deal*"
+        - "*pipeline*"
+        - won_deal_rate
+        - open_pipeline_value
+        - deal_volume
+      agents: [crm.deals]
+    - patterns:
+        - "*forecast*"
+        - average_win_rate*
+        - average_loss_rate
+      agents: [audit-forecast]
+
+  campaign:
+    - patterns:
+        - delivery_rate
+        - open_rate
+        - click_rate
+        - engaged_contact*
+        - unsubscribe_rate
+        - batch_*
+        - avg_batch*
+        - approved_template*
+        - variant_*
+      agents: [camp.monitoring, camp.reports]
+    - patterns: [template*, approved_template*, rejected_template*]
+      agents: [camp.templates]

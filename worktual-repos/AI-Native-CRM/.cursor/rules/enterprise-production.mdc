@@ -1,0 +1,58 @@
+---
+description: Enterprise production standards — RBAC matrix, business-type gating, common-table tenancy
+alwaysApply: true
+---
+
+# Enterprise production standards
+
+This CRM is built for **enterprise production**, not demos or throwaway prototypes.
+
+## Before changing access / modules / roles
+
+Think through the **full workflow** end-to-end (who sends mail, who opens which deep link, which business type owns which revenue path). Do **not** patch one role in isolation — update the matrix and invariants together.
+
+## Business-type module gating
+
+| Type | Revenue path | Finance | Notes |
+|---|----|---|-----|
+| **B2B** | Deal → quote → order → invoice | Yes | Company required |
+| **B2C** | Contact → Commerce orders | **No** | No B2B Finance module |
+| **B2B2C** | Sales + Commerce | Yes | Shared contact/company IDs |
+
+Marketing & Service = **microservices** (own DBs); CRM via webhooks/handoffs only. Dual DB: separate queries + pagination (no FDW primary). Agents deferred.
+
+## Common-table multi-tenancy (locked)
+
+One shared CRM schema for all business types. Do **not** fork tables by B2B/B2C/B2B2C, industry, or franchise. Keep companies and contacts separate — no unified party table. Industry = `accounts.organizations.industry_type` mapped to CRM field packs; franchise = company `channel_role`. See [`docs/multi-tenancy-common-model.md`](../../docs/multi-tenancy-common-model.md).
+
+## Role × module matrix (nav)
+
+Intersection with business type still applies.
+
+| Role | Nav modules | Notes |
+|---|----|-----|
+| **admin / sales_manager** | All for business type (incl. **agents**) | Full access |
+| **sales_rep** | dashboard, inbox, contact, company, sales, activities, product, commerce, service, **configuration** | No Marketing/Finance/Agents/**Reports** nav (analytics on Dashboard) |
+| **marketing** | dashboard, inbox, contact, company, marketing, activities, product, commerce, reports, **configuration** | No Sales/Finance/Service/Agents; **Reports** nav only for marketing campaign sidebar |
+| **finance** | dashboard, inbox, contact, company, finance, **configuration** | Must send mail → needs Configuration; analytics on Dashboard |
+| **viewer** | dashboard, inbox, contact, company, sales, activities, product, commerce | Read-only; **no** Configuration/Agents/Reports nav |
+
+### Deep links (route only, not sidebar)
+
+| Role | Extra routes | Why |
+|---|-----|-----|
+| finance | sales | Invoice → deal |
+| sales_rep / sales_manager | finance | Accepted quote → invoice |
+
+### Invariants (enforced in `backend/src/config/modules.ts`)
+
+1. B2C must never enable `finance`.
+2. Any role with `inbox` except `viewer` must have `configuration`.
+3. Seed users must match roles that exist for that business type (no `finance.b2c`).
+
+## Engineering bar
+
+- No shortcuts that only work for seeded accounts.
+- Prefer durable UX (confirmations, backlinks, clear empty states) over silent side effects.
+- RBAC / ownership / tenancy on mutations — not UI-only.
+- When adding a cross-module link in UI, update deep-link allowlists in the same change.

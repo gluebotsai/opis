@@ -1,0 +1,110 @@
+version: 2
+
+models:
+  - name: mart_tickets
+    description: One row per support ticket; queue, assignee, SLA flags denormalized.
+    meta:
+      grain: ticket
+      purpose: Primary ticketing fact for open count, SLA, CSAT, resolution metrics.
+      tenant_column: organization_id
+      row_scope_column: assignee_id
+    columns:
+      - name: ticket_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+      - name: status
+        description: "Open tickets metric uses lower(status) = 'open' only."
+      - name: priority
+        description: High-priority open uses high, urgent, p1.
+
+  - name: mart_ticket_notes
+    columns:
+      - name: ticket_note_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: mart_agent_queues
+    columns:
+      - name: queue_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: mart_agent_queue_members
+    columns:
+      - name: queue_membership_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: mart_users
+    columns:
+      - name: user_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: mart_customers
+    columns:
+      - name: customer_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: mart_kb_articles
+    columns:
+      - name: kb_article_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: mart_macros
+    columns:
+      - name: macro_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: mart_notifications
+    columns:
+      - name: notification_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: mart_outbound_emails
+    columns:
+      - name: outbound_email_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: mart_proactive_approvals
+    columns:
+      - name: approval_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: mart_proactive_audit
+    columns:
+      - name: proactive_audit_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: mart_proactive_recommendations
+    columns:
+      - name: recommendation_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: mart_audit_events
+    columns:
+      - name: audit_event_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]

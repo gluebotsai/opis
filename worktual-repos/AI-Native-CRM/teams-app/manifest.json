@@ -1,0 +1,43 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.17/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.17",
+  "version": "1.0.0",
+  "id": "YOUR_TEAMS_APP_ID",
+  "developer": {
+    "name": "Worktual",
+    "websiteUrl": "YOUR_PUBLIC_ORIGIN",
+    "privacyUrl": "YOUR_PUBLIC_ORIGIN/privacy",
+    "termsOfUseUrl": "YOUR_PUBLIC_ORIGIN/terms"
+  },
+  "name": {
+    "short": "Worktual Assist",
+    "full": "Worktual in-meeting Sales Assist"
+  },
+  "description": {
+    "short": "Sales Assist side panel for Teams meetings",
+    "full": "Opens Worktual Assist beside the call with transcript-backed coaching from CRM knowledge bases. Open from meeting Apps (Teams does not auto-open side panels)."
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#0f766e",
+  "configurableTabs": [
+    {
+      "configurationUrl": "YOUR_PUBLIC_ORIGIN/meeting-assist/hosts/teams",
+      "canUpdateConfiguration": false,
+      "scopes": ["groupChat"],
+      "context": [
+        "meetingSidePanel",
+        "meetingDetailsTab",
+        "meetingChatTab"
+      ]
+    }
+  ],
+  "permissions": ["identity", "messageTeamMembers"],
+  "validDomains": ["YOUR_PUBLIC_ORIGIN_HOST"],
+  "webApplicationInfo": {
+    "id": "YOUR_AZURE_AD_APP_ID",
+    "resource": "api://YOUR_PUBLIC_ORIGIN_HOST/YOUR_AZURE_AD_APP_ID"
+  }
+}

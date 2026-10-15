@@ -1,0 +1,41 @@
+# One file per metric. Fill from THIS spoke's grain + join graph. A person signs hitl.
+# Not the whole warehouse. Not another spoke's filter list.
+
+kpi_id: deal_count
+object: deal
+grain_table: spoke.deals
+joined_tables:
+  - spoke.companies      # region, industry
+  - spoke.products       # product name
+  - spoke.contacts       # customer / contact
+
+hitl:
+  reviewed_by: ""        # required. Empty fails the gate
+  reviewed_at: ""
+
+# use: filter | dimension | both | not_this_metric
+columns:
+  - column: spoke.deals.stage
+    use: both
+    reason: "User word status on a deal. Filter and GROUP BY."
+  - column: spoke.deals.owner_id
+    use: both
+    reason: "Rep / owner."
+  - column: spoke.deals.amount
+    use: filter
+    reason: "Amount thresholds. Not a GROUP BY."
+  - column: spoke.companies.region
+    use: both
+    reason: "Joined attribute. Must be a slot, not discovered later."
+  - column: spoke.products.name
+    use: both
+    reason: "Product slice and filter."
+  - column: spoke.contacts.id
+    use: filter
+    reason: "Customer / contact filter."
+  - column: spoke.deals.created_at
+    use: not_this_metric
+    reason: "Time window. Python time.py binds :start/:end. Not a filter slot."
+  - column: spoke.deals.description
+    use: not_this_metric
+    reason: "Free-text blob. Lists only, not a certified filter."

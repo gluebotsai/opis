@@ -1,0 +1,34 @@
+# Copy one block per view into product/schema.yml
+# The model writes only rpt.<view>. Physical names stay inside source.
+
+version: 1
+views:
+  deals:
+    grain: "one deal"
+    description: "Pipeline opportunity. User word status on this object means stage."
+    object: deal
+    source: |
+      SELECT id, title, stage, amount, owner_id, company_id, created_at
+      FROM spoke.deals
+      WHERE organization_id = {org_id}
+    columns:
+      id:
+        type: bigint
+        description: "Internal id. Joins only. Do not show it."
+        groupable: false
+        user_phrases: []
+      stage:
+        type: text
+        description: "Pipeline stage. When the user says status on a deal, use this column. Not invoice status."
+        groupable: true
+        user_phrases: [status, stage, pipeline stage]
+        not_the_same_as: [invoice status, lead status]
+      title:
+        type: text
+        description: "Deal name. Match with ILIKE, not exact equality."
+        groupable: false
+        user_phrases: [name, title, deal]
+    joins:
+      - to: rpt.companies
+        on: deals.company_id = companies.id
+        why: "Region and account name live on the company, not on the deal."

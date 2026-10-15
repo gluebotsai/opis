@@ -1,0 +1,91 @@
+{
+  "turn_id": "22fdbcf3",
+  "timestamp": "2026-10-05T11:40:24.744344+00:00",
+  "question": "what is the email open rate",
+  "identity": {
+    "organization_id": 1012,
+    "user_id": 1054,
+    "branch_id": 1004,
+    "role": "admin"
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma",
+    "dsn_set": true
+  },
+  "answer": "The email open rate is **12.22%**.",
+  "facts": "window: overall (no date filter, UTC)\nRESULT: email_open_rate = 0.12222853894258101194",
+  "trace": {
+    "identity": {
+      "organization_id": 1012,
+      "user_id": 1054,
+      "branch_id": 1004,
+      "role": "admin",
+      "scope_label": "All branch campaigns",
+      "timezone": "UTC"
+    },
+    "question": "what is the email open rate",
+    "supervisor": {
+      "kind": "route",
+      "target": "domain"
+    },
+    "supervisor_raw": "```json\n{\"kind\": \"route\", \"target\": \"domain\"}\n```",
+    "task_results": [
+      {
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Calculate the unique email open rate",
+          "time": "all time",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "rate"
+        },
+        "status": "ok",
+        "error_type": null,
+        "error": null,
+        "kpi_id": "email_open_rate",
+        "store": "sql",
+        "sql": "SELECT\n    \n    CASE WHEN COUNT(*) FILTER (WHERE ((CASE\n  WHEN lower(coalesce(r.status,'')) IN ('failed','cancelled') THEN 'failed'\n  WHEN lower(coalesce(r.status,'')) = 'skipped' THEN 'skipped'\n  WHEN lower(coalesce(r.status,'')) IN ('stub','stub_sent') THEN 'stub'\n  WHEN lower(coalesce(r.provider_message_id,'')) LIKE 'stub-%'\n    OR lower(coalesce(r.provider_message_id,'')) LIKE 'stub://%' THEN 'stub'\n  WHEN lower(coalesce(r.status,'')) IN ('bounced','hard_bounce','soft_bounce') THEN 'bounce'\n  WHEN lower(coalesce(r.skip_fail_reason,'')) LIKE '%bounce%' THEN 'bounce'\n  WHEN lower(coalesce(r.status,'')) IN ('sent','delivered') THEN 'sent'\n  ELSE 'pending'\nEND) = 'sent') AND b.channel = 'email') = 0 THEN NULL\n    ELSE LEAST(1.0, COUNT(*) FILTER (WHERE ((CASE\n  WHEN lower(coalesce(r.status,'')) IN ('failed','cancelled') THEN 'failed'\n  WHEN lower(coalesce(r.status,'')) = 'skipped' THEN 'skipped'\n  WHEN lower(coalesce(r.status,'')) IN ('stub','stub_sent') THEN 'stub'\n  WHEN lower(coalesce(r.provider_message_id,'')) LIKE 'stub-%'\n    OR lower(coalesce(r.provider_message_id,'')) LIKE 'stub://%' THEN 'stub'\n  WHEN lower(coalesce(r.status,'')) IN ('bounced','hard_bounce','soft_bounce') THEN 'bounce'\n  WHEN lower(coalesce(r.skip_fail_reason,'')) LIKE '%bounce%' THEN 'bounce'\n  WHEN lower(coalesce(r.status,'')) IN ('sent','delivered') THEN 'sent'\n  ELSE 'pending'\nEND) = 'sent') AND b.channel = 'email' AND r.opened_at IS NOT NULL)::numeric\n         / COUNT(*) FILTER (WHERE ((CASE\n  WHEN lower(coalesce(r.status,'')) IN ('failed','cancelled') THEN 'failed'\n  WHEN lower(coalesce(r.status,'')) = 'skipped' THEN 'skipped'\n  WHEN lower(coalesce(r.status,'')) IN ('stub','stub_sent') THEN 'stub'\n  WHEN lower(coalesce(r.provider_message_id,'')) LIKE 'stub-%'\n    OR lower(coalesce(r.provider_message_id,'')) LIKE 'stub://%' THEN 'stub'\n  WHEN lower(coalesce(r.status,'')) IN ('bounced','hard_bounce','soft_bounce') THEN 'bounce'\n  WHEN lower(coalesce(r.skip_fail_reason,'')) LIKE '%bounce%' THEN 'bounce'\n  WHEN lower(coalesce(r.status,'')) IN ('sent','delivered') THEN 'sent'\n  ELSE 'pending'\nEND) = 'sent') AND b.channel = 'email')) END AS email_open_rate\n\nFROM campaign.campaign_send_recipients r\nJOIN campaign.campaign_send_batches b ON b.id = r.batch_id\nJOIN (\nSELECT\n  c.id,\n  c.organization_id,\n  c.branch_id,\n  c.name,\n  c.description,\n  c.status,\n  c.starts_at,\n  c.ends_at,\n  c.source_channel,\n  c.created_by_user_id,\n  c.created_at,\n  c.updated_at,\n  c.goal,\n  c.objective,\n  c.session_id,\n  c.audience_summary,\n  c.audience_count,\n  c.launch_plan,\n  c.launch_local_date,\n  c.launch_local_time,\n  c.timezone\nFROM campaign.campaigns c\nWHERE c.organization_id = 1012\n  AND c.branch_id = 1004\n\n) campaigns ON campaigns.id = r.campaign_id\nWHERE r.organization_id = 1012\n  AND campaigns.branch_id = 1004\n  AND TRUE\n  AND TRUE\n  AND TRUE\n\n\n\n",
+        "row_count": 1,
+        "time_echo": "overall (no date filter, UTC)",
+        "path": "certified_metric",
+        "rows": [
+          {
+            "email_open_rate": "0.12222853894258101194"
+          }
+        ]
+      }
+    ],
+    "plan": {
+      "kind": "plan",
+      "understanding": "Calculate the unique email open rate for the workspace.",
+      "depth": "quick",
+      "path": "certified_metric",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Calculate the unique email open rate",
+          "time": "all time",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "rate"
+        }
+      ]
+    },
+    "plan_raw": "```json\n{\"kind\":\"plan\",\"understanding\":\"Calculate the unique email open rate for the workspace.\",\"depth\":\"quick\",\"path\":\"certified_metric\",\"tasks\":[{\"id\":\"t1\",\"executor\":\"sql\",\"path\":\"certified_metric\",\"goal\":\"Calculate the unique email open rate\",\"time\":\"all time\",\"scope\":\"org\",\"slice\":[],\"answer_type\":\"rate\"}]}\n```",
+    "interpret": {
+      "need": "Calculate the unique email open rate for the workspace.",
+      "time": "all time",
+      "slice": ""
+    },
+    "facts": "window: overall (no date filter, UTC)\nRESULT: email_open_rate = 0.12222853894258101194",
+    "loop_errors": [],
+    "briefing_raw": "The email open rate is **12.22%**.",
+    "grounded": true
+  },
+  "error": null
+}

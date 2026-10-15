@@ -1,0 +1,3334 @@
+
+version: 3
+layer: core
+generated: 2026-09-04
+
+products:
+  platform:    {code: platform,       sellable: false}
+  crm:         {code: crm,            sellable: true}
+  cdp:         {code: cdp,            sellable: true}
+  webtracking: {code: web-tracking,   sellable: true, requires: [cdp]}
+  campaign:    {code: campaign,       sellable: true}
+  ccaas:       {code: contact-center, sellable: true}
+  ticketing:   {code: ticketing,      sellable: true}
+
+entitlement_sources:
+  tenant_products:
+    table: accounts.active_products
+    code_column: product_id
+    status_column: status
+    active_values: [active]
+  role_products:
+    table: accounts.setup_roles
+    code_column: product_id
+    list_column: accessible_products
+  user_roles:
+    table: accounts.setup_user_product_access
+  verify: "product_id uses standard slugs (crm | contact-center | web-tracking | cdp | ticketing | campaign). Reconciled to the `code` values in `products:` above."
+
+projection:
+  signature: "hash(entitled_products, industry_pack, business_type, role_access_domains)"
+  visible_label: "product == platform OR product IN entitled OR readable_by INTERSECTS entitled"
+  visible_to_role: "access.domain IN role_access_domains AND access.sensitivity <= role_max_sensitivity"
+  visible_edge: "both endpoint labels visible"
+  hub_created: "hub.product == platform OR hub.product IN entitled"
+  collection_created: "collection.product == platform OR collection.product IN entitled"
+  cache_key_must_include: [tenant, entitled_products, role_access_domains]
+  serving: "in-memory per signature; Meilisearch for concept lookup; never read the schema from Neo4j"
+
+bundles:
+  crm_only:        [crm]
+  cdp_only:        [cdp]
+  ticketing_only:  [ticketing]
+  ccaas_only:      [ccaas]
+  service_desk:    [ccaas, ticketing]
+  marketing_stack: [cdp, campaign, webtracking]
+  revenue_stack:   [crm, cdp]
+  crm_service:     [crm, ticketing]
+  suite:           [crm, cdp, webtracking, campaign, ccaas, ticketing]
+
+upper_ontology:
+
+  Party:            # any legal or natural person the tenant deals with
+    members: [Tenant, Contact, Account, AccountSite, ContactAccount, Visitor,
+              SalesProfile]
+
+  Actor:            # anything that can act and be held accountable
+    members: [User, Agent, BotSkillVersion, PredictiveModel]
+
+  Identity:         # a way to recognise or reach a Party
+    members: [ContactIdentity, PushSubscription, SenderAddress, SuppressedAddress,
+              InboundEmail]
+
+  Interaction:      # a bounded two-way exchange with a Party
+    members: [Conversation, Ticket, Meeting, EngagementActivity, Touchpoint,
+              InteractionSummary, BotSession, DealActivity, ParticipantRecord]
+
+  Event:            # something observed at a point in time, one-way
+    members: [Event, JourneyStep, ActivationSignal, ProactiveEvent,
+              AnomalySignal, AuditLog, ChatWorkflowEvent, OutcomeRecord,
+              Notification, Message, OutboundEmail]
+
+  Session:          # a bounded window of continuous presence
+    members: [Visit, ChatSession, LiveMeetingSession, ChatSession, CampaignDraft]
+
+  WorkItem:         # assigned to an Actor, has a lifecycle
+    members: [Task, Ticket, Deal, WorkAssignment, ApprovalRequest,
+              PrivacyRequest, AgentJob, Suggestion, Approval,
+              WorkTransfer, DistributionAttempt, MissedEngagement]
+
+  Offering:         # anything the tenant sells or provisions
+    members: [Offering, OfferingPlan, OfferingAddOn, PlatformModule, ModuleEntitlement,
+              PricingTier, PriceList, PriceListEntry]
+
+  Agreement:        # a binding commitment between parties
+    members: [Contract, BillingSchedule, ModuleEntitlement]
+
+  FinancialDocument:
+    members: [Proposal, Quote, SalesOrder, Invoice, Purchase, LineItem]
+
+  Policy:           # a rule the platform enforces at runtime
+    members: [SLA, DistributionPolicy, AutomationPolicy,
+              AssignmentPolicy, AutomationRule, EngagementRule, AnomalyDetector,
+              SendingLimit, AccessRole, RoutingWeightModel]
+
+  Configuration:    # tenant setup, slow-changing, human-authored
+    members: [ChannelAccount, QueueDefinition, OperatingSchedule, ScheduleShift,
+              HolidaySchedule, NonWorkingDay, VoiceNumber, VoicePromptProfile,
+              SupportPortalSettings, SendingReadiness, ChannelSendingConfig,
+              SenderComplianceProfile, SendingDomain, BounceDomain,
+              IntentRoutingProfile, VerticalProfile, ExtractedBusinessProfile,
+              IndustryPack, Website,
+              OutcomeCode, TicketStatusConfig, PresenceReason, Skill, DataSource,
+              Queue, Queue, BotSkill, BotSkillBinding, BotTool,
+              RepCapacityProfile]
+
+  Insight:          # a derived judgement about a Party or the business
+    members: [ContactInsight, NextBestAction, ContactScorecard,
+              ContactValueSummary, LeadBrief, EnrichmentSnapshot, MeetingOutcome,
+              CoachingNote, PersonaEvidence, CampaignIdea, ProactiveDecision,
+              JourneyPosition]
+
+  Memory:           # durable context an AI agent may reuse
+    members: [ExperienceMemory, KnownFact, ConversationDigest, AgentMemorySlot]
+
+  Metric:           # a measured quantity, always time-scoped
+    members: [DailyEngagementMetric, PerformanceMetric, SupportSnapshot,
+              ChannelCapacity, AdaptiveThreshold, AgentAvailability,
+              ServiceLevelClock, OutreachEngagement]
+
+  Content:          # authored material that gets shown or sent
+    members: [MessageTemplate, TemplateRevision, ApprovedTemplate, DocumentTemplate,
+              Macro, KnowledgeArticle, KnowledgeDocument, MediaAttachment,
+              InternalNote, Note, TranscriptSegment]
+
+  Grouping:         # a named set of Parties or Actors
+    members: [Segment, Persona, Team, BusinessUnit]
+
+  Program:          # a planned, bounded outreach effort
+    members: [Campaign, CampaignChannelPlan, SendBatch]
+
+  Collection:       # fan-out container. Never queried for its own sake.
+    members: [BehaviourLog, VisitLog, TouchpointLog, ConversationLog, JourneyLog,
+              MetricSeries, KnowledgeStore, InsightSet, RecommendationSet,
+              EngagementTimeline, OutreachLog, ProactiveEventLog, RoutingHistory,
+              WorkloadInbox, CaseAuditLog, DraftAudienceSet, ContentBatch, LogPeriod]
+
+  Hub:              # per-tenant domain root. Bounded fan-out by construction.
+    members: [ConfigurationHub, ServiceOperationsHub, CustomerIntelligenceHub,
+              MarketingHub, SupportHub, DigitalPresenceHub, OfferingCatalog,
+              PerformanceMetricSet, AnomalySignalSet]
+
+properties_not_nodes:
+  - {was: Channel,            now: "channel property on every fact; Channel node kept ONLY at Tenant + ChannelAccount level"}
+  - {was: GlobalTicketStatus, now: "status property; TicketStatusConfig config node carries status semantics, unlinked per row"}
+  - {was: Disposition,        now: "outcome_code property on OutcomeRecord; OutcomeCode config node unlinked per row"}
+  - {was: PresenceReasonCode, now: "reason_code property on AgentAvailability"}
+  - {was: SourceSystem,       now: "source_name property on Event; DataSource node kept at hub level only"}
+  - {was: ProactiveHistory,   now: "ProactiveEventLog collection, owned by Ticket only — never by Conversation"}
+
+hubs:
+  ConfigurationHub:        {key: organization_id, owner_edge: HAS_CONFIGURATION}
+  ServiceOperationsHub:    {key: organization_id, owner_edge: HAS_SERVICE_OPERATIONS}
+  CustomerIntelligenceHub: {key: organization_id, owner_edge: HAS_CUSTOMER_INTELLIGENCE}
+  MarketingHub:            {key: organization_id, owner_edge: HAS_MARKETING}
+  SupportHub:              {key: organization_id, owner_edge: HAS_SUPPORT}
+  DigitalPresenceHub:      {key: organization_id, owner_edge: HAS_DIGITAL_PRESENCE}
+  OfferingCatalog:         {key: organization_id, owner_edge: HAS_OFFERING_CATALOG}
+  PerformanceMetricSet:    {key: organization_id, parent: CustomerIntelligenceHub, parent_edge: HAS_PERFORMANCE_METRICS}
+  AnomalySignalSet:        {key: organization_id, parent: CustomerIntelligenceHub, parent_edge: HAS_ANOMALY_SIGNALS}
+
+collections:
+  # --- owned by Contact -----------------------------------------------------
+  BehaviourLog:
+    owner: {label: Contact, key: cdp_id}
+    owner_edge: HAS_BEHAVIOUR_LOG
+    bucket: {granularity: month, label: LogPeriod, edge: HAS_PERIOD}
+  VisitLog:
+    owner: {label: Contact, key: cdp_id}
+    owner_edge: HAS_VISIT_LOG
+    bucket: {granularity: month, label: LogPeriod, edge: HAS_PERIOD}
+  TouchpointLog:
+    owner: {label: Contact, key: cdp_id}
+    owner_edge: HAS_TOUCHPOINT_LOG
+    bucket: {granularity: month, label: LogPeriod, edge: HAS_PERIOD}
+  ConversationLog:
+    owner: {label: Contact, key: cdp_id}
+    owner_edge: HAS_CONVERSATION_LOG
+    bucket: {granularity: month, label: LogPeriod, edge: HAS_PERIOD}
+  JourneyLog:
+    owner: {label: Contact, key: cdp_id}
+    owner_edge: HAS_JOURNEY_LOG
+    bucket: {granularity: month, label: LogPeriod, edge: HAS_PERIOD}
+  MetricSeries:
+    owner: {label: Contact, key: cdp_id}
+    owner_edge: HAS_METRIC_SERIES
+    bucket: {granularity: month, label: LogPeriod, edge: HAS_PERIOD}
+  EngagementTimeline:
+    owner: {label: Contact, key: cdp_id}
+    owner_edge: HAS_ENGAGEMENT_TIMELINE
+    bucket: {granularity: month, label: LogPeriod, edge: HAS_PERIOD}
+  OutreachLog:
+    owner: {label: Contact, key: cdp_id}
+    owner_edge: HAS_OUTREACH_LOG
+    bucket: {granularity: month, label: LogPeriod, edge: HAS_PERIOD}
+  KnowledgeStore:                       # bounded — hundreds, not bucketed
+    owner: {label: Contact, key: cdp_id}
+    owner_edge: HAS_KNOWLEDGE_STORE
+  InsightSet:
+    owner: {label: Contact, key: cdp_id}
+    owner_edge: HAS_INSIGHT_SET
+  RecommendationSet:
+    owner: {label: Contact, key: cdp_id}
+    owner_edge: HAS_RECOMMENDATION_SET
+
+  # --- owned by operational entities ----------------------------------------
+  RoutingHistory:                       # was: direct edges onto Queue
+    owner: {label: Queue, key: id}
+    owner_edge: HAS_ROUTING_HISTORY
+    bucket: {granularity: month, label: LogPeriod, edge: HAS_PERIOD}
+  WorkloadInbox:                        # was: direct edges onto User
+    owner: {label: User, key: id}
+    owner_edge: HAS_WORKLOAD
+    bucket: {granularity: month, label: LogPeriod, edge: HAS_PERIOD}
+  CaseAuditLog:
+    owner: {label: Ticket, key: id}
+    owner_edge: has_audit_log
+  ProactiveEventLog:                     # ticket-scoped ONLY. Never conversations.
+    owner: {label: Ticket, key: id}
+    owner_edge: HAS_SIGNAL_LOG
+
+  # --- owned by campaign drafting -------------------------------------------
+  DraftAudienceSet:
+    owner: {label: CampaignDraft, key: id}
+    owner_edge: HAS_DRAFT_AUDIENCE
+  ContentBatch:
+    owner: {label: CampaignDraft, key: id}
+    owner_edge: HAS_CONTENT_BATCH
+    product: campaign
+
+
+# -----------------------------------------------------------------------------
+# STUB LABELS — MERGE targets with no owning table. Keys MUST be declared or
+# every merge is a label scan. Hubs, collections and LogPeriod are declared
+# above and are not repeated here.
+# -----------------------------------------------------------------------------
+stub_labels:
+  Channel:        {key: name}           # tenant-level dimension only
+  PlatformModule: {key: code}           # crm | contact-center | campaign | ticketing | cdp
+  Website:    {key: site_id}
+  LogPeriod:      {key: uid}
+
+
+# -----------------------------------------------------------------------------
+# DERIVED COLUMNS — computed at ingest. Declared, not commented. A missing
+# derivation is a load error, not a silently missing edge (v1 defect).
+# -----------------------------------------------------------------------------
+derived:
+  ticketing.tickets.customer_cdp_id:
+    lookup:
+      table: ticketing.contact_profile
+      match_local: customer_id
+      match_remote: id
+      select: cdp_id
+  campaign.campaign_send_recipients.delivery_channel:
+    from: "parent campaign_send_batches.channel"
+  campaign.website_contacts.visitor_state:
+    expr: "contact_id IS NULL ? 'anonymous' : 'identified'"
+  campaign.app_notifications.subject_kind:
+    expr: "split_part(source_key, ':', 1)"       # campaign | template | whatsapp
+  campaign.app_notifications.subject_id:
+    expr: "trailing numeric segment of source_key"
+  campaign.sms_channel_settings.channel:
+    expr: "'sms'"
+  campaign.push_channel_settings.channel:
+    expr: "settings->>'kind'"                    # web_push | app_push
+
+
+# -----------------------------------------------------------------------------
+# MERGED LABELS — one purpose, several source tables. Disjoint property sets,
+# uid keys so id spaces cannot collide. This is the ontology normalisation:
+# a query asks for the concept, not for the product that happened to store it.
+# -----------------------------------------------------------------------------
+graph_integrity:
+  enabled: true
+  default_on_missing: defer          # defer | skip | fail | create
+
+  # ---------------------------------------------------------------------------
+  # A. NODE OWNERSHIP — exactly one table may CREATE each label.
+  # ---------------------------------------------------------------------------
+  node_ownership:
+    Contact:        {owner: cdp.customer_profile,  key: cdp_id, lifecycle: contact_lifecycle}
+    User:       {owner: accounts.setup_users,  key: id}
+    Team:           {owner: accounts.setup_teams,  key: id}
+    Account:        {owner: crm.companies,         key: id}
+    AccountSite:    {owner: crm.company_locations, key: id}
+    Deal:    {owner: crm.deals,             key: id}
+    Contract:       {owner: crm.contracts,         key: id}
+    Offering:       {owner: inventory.products,    key: id}
+    Quote:          {owner: crm.quotes,            key: id}
+    Proposal:       {owner: crm.proposals,         key: id}
+    SalesOrder:     {owner: crm.sales_orders,      key: id}
+    Invoice:        {owner: crm.invoices,          key: id}
+    Purchase:       {owner: cdp.orders,            key: order_id}
+    Conversation:   {owner: ccass.conversations,   key: id}
+    Queue:          {owner: [ccass.queues, ticketing.agent_queues], key: id, merged: true}
+    QueueDefinition: {owner: accounts.setup_ccaas_queues, key: id}
+    Ticket:         {owner: ticketing.tickets, key: id}
+    ContactAccount: {owner: ticketing.ticketing_accounts, key: id}
+    SalesProfile:   {owner: crm.contact_profiles,  key: id}
+    Campaign:       {owner: campaign.campaigns,    key: id}
+    CampaignDraft:  {owner: campaign.campaign_agent_sessions, key: id}
+    SendBatch:      {owner: campaign.campaign_send_batches, key: id}
+    BusinessUnit:   {owner: campaign.branches,     key: id}
+    MessageTemplate: {owner: campaign.campaign_channel_templates, key: id}
+    ApprovedTemplate: {owner: campaign.regulated_channel_templates, key: id}
+    Visitor:     {owner: campaign.website_contacts, key: id, lifecycle: visitor_lifecycle}
+    Persona:        {owner: cdp.persona_definitions, key: persona_id}
+    Segment: {owner: cdp.segments,         key: segment_id}
+    Visit:          {owner: cdp.customer_sessions, key: session_id}
+    Skill:          {owner: ccass.skills,          key: id}
+    AnomalyDetector: {owner: cdp.anomaly_rules,    key: rule_id}
+    EngagementActivity: {owner: crm.contact_activities, key: id}
+    LiveMeetingSession: {owner: crm.meeting_assist_sessions, key: id}
+    BotSkillVersion: {owner: ccass.nlp_skill_versions, key: id}
+    ChannelAccount: {owner: accounts.setup_channel_configs, key: id}
+    HolidaySchedule: {owner: accounts.setup_holiday_calendars, key: id}
+    OperatingSchedule: {owner: accounts.setup_business_hours, key: id}
+    SendingLimit:   {owner: campaign.email_sending_caps, key: organization_id}
+    SendingDomain:  {owner: campaign.email_domains, key: id}
+    SenderComplianceProfile: {owner: campaign.email_org_profiles, key: organization_id}
+    Agent:          {owner: [ccass.agents, ticketing.agents], key: uid, merged: true}
+    SLA: {owner: [ccass.sla_policies, ticketing.sla_policies], key: uid, merged: true}
+
+  # The ONLY labels create_target is permitted on: bounded dimension stubs with
+  # no owning table.
+  create_target_allowed:
+    Channel:        {from_columns: [channel_type, channel]}
+    PlatformModule: {from_columns: [product_id, product_code]}
+    Website:    {from_columns: [site_id]}
+    LogPeriod:      {minted_by: collection_builder}
+
+  # Every edge that MERGEs a label it does not own.
+  edge_policy:
+    campaign.campaign_audience:           {target: Contact, edge: TARGETED_BY, mode: relationship_only, on_missing: defer}
+    campaign.campaign_audience_refs:      {target: Contact, edge: CONTAINS, mode: relationship_only, on_missing: defer}
+    campaign.push_endpoints:              {target: Contact, edge: HAS_PUSH_SUBSCRIPTION, on_missing: defer}
+    campaign.website_contacts:            {target: Contact, edge: RESOLVED_TO, on_missing: defer}
+    campaign.campaign_contact_engagement: {target: Contact, edge: HAS_OUTREACH_ENGAGEMENT, on_missing: defer}
+    campaign.campaign_send_recipients:    {target: Contact, collection_owner: true, on_missing: defer}
+    crm.contact_profiles:      {target: Contact, edge: sales_view_of, on_missing: defer}
+    crm.deals:                 {target: Contact, edge: primary_contact, on_missing: defer}
+    crm.sales_orders:          {target: Contact, edge: PLACED_BY, on_missing: defer}
+    crm.privacy_requests:      {target: Contact, edge: ABOUT_CUSTOMER, on_missing: defer}
+    crm.lead_scoring_jobs:     {target: Contact, edge: ABOUT_CUSTOMER, on_missing: defer}
+    crm.lead_nurture_jobs:     {target: Contact, edge: ABOUT_CUSTOMER, on_missing: defer}
+    crm.lead_lifecycle_jobs:   {target: Contact, edge: ABOUT_CUSTOMER, on_missing: defer}
+    crm.lead_enrichment_jobs:  {target: Contact, edge: ABOUT_CUSTOMER, on_missing: defer}
+    crm.contact_activities:        {target: Contact, collection_owner: true, on_missing: defer}
+    crm.lead_enrichment_snapshots: {target: Contact, collection_owner: true, on_missing: defer}
+    crm.lead_summaries:            {target: Contact, collection_owner: true, on_missing: defer}
+    ticketing.contact_profile: {target: Contact, edge: SUPPORT_VIEW_OF, on_missing: defer}
+    cdp.interactions:          {target: Contact, collection_owner: true, on_missing: defer}
+    ccass.conversations:       {target: Contact, collection_owner: true, on_missing: skip, blocked_by: V1}
+    cdp.order_items:           {target: Offering, edge: purchased, mode: relationship_only, on_missing: skip, blocked_by: V2}
+    ccass.agent_tasks:           {target: User, collection_owner: true, on_missing: defer}
+    ccass.agent_missed_contacts: {target: User, collection_owner: true, on_missing: defer, blocked_by: V7}
+    crm.notifications:           {target: User, collection_owner: true, on_missing: defer}
+    ticketing.audit_events:              {target: Ticket, collection_owner: true, on_missing: defer}
+    ticketing.outbound_email_log:        {target: Ticket, collection_owner: true, on_missing: defer}
+    ticketing.proactive_recommendations: {target: Ticket, collection_owner: true, on_missing: defer, coerce_owner_to_int: true}
+    ticketing.proactive_approvals:       {target: Ticket, collection_owner: true, on_missing: defer, coerce_owner_to_int: true}
+    ticketing.proactive_audit:           {target: Ticket, collection_owner: true, on_missing: defer, coerce_owner_to_int: true}
+
+  defer:
+    node_bearing:
+      marker_label:  "Pending{Target}Ref"
+      key_property:  "_pending_{target_lower}_key"
+      edge_property: "_pending_{target_lower}_edges"
+    relationship_only:
+      quarantine_label: PendingLink
+    max_age_days: 30
+    on_expiry: alert
+
+  reconcile:
+    trigger: on_owner_upsert
+    also_run: {schedule: "*/5 * * * *", batch_size: 5000}
+    idempotent: true
+
+  # ---------------------------------------------------------------------------
+  # B. LIFECYCLES — ordered, exclusive, forward-only label groups.
+  # ---------------------------------------------------------------------------
+  lifecycles:
+    contact_lifecycle:
+      base_label: Contact
+      column: contact_type
+      exclusive: true
+      monotonic: true
+      stages:
+        - {value: lead,     label: Lead,     rank: 1}
+        - {value: prospect, label: Prospect, rank: 2}
+        - {value: customer, label: Contact, rank: 3}
+      unclassified: {when: [null, "", unknown], label: null}
+      properties:
+        stage: _lifecycle_stage
+        rank:  _lifecycle_rank
+        reached_at: _lifecycle_reached_at
+      on_downgrade: hold_and_flag
+      downgrade_flag: _lifecycle_downgrade_attempted_at
+
+    visitor_lifecycle:
+      base_label: Visitor
+      column: visitor_state
+      exclusive: true
+      monotonic: true
+      stages:
+        - {value: anonymous,  label: AnonymousVisitor,  rank: 1}
+        - {value: identified, label: IdentifiedVisitor, rank: 2}
+      unclassified: {when: [null], label: null}
+      on_downgrade: hold_and_flag
+
+  # Exclusive but NOT ordered: clear-then-set, no rank, downgrade meaningless.
+  exclusive_label_groups:
+    accounts.setup_channel_configs: {column: channel_type, group: [EmailChannel, ChatChannel, SocialChannel, VoiceChannel]}
+    crm.deals:                      {column: stage, group: [WonDeal, LostDeal]}
+    crm.contact_activities:         {column: type, group: [EmailActivity, TaskActivity, MeetingActivity]}
+    ticketing.tickets:              {column: status, group: [BreachedCase, ResolvedCase]}
+    ticketing.ticket_notes:         {column: visibility, group: [PublicReply, PrivateNote]}
+    campaign.campaigns:             {column: status, group: [LiveCampaign, ScheduledCampaign]}
+    campaign.regulated_channel_templates: {column: status, group: [PendingApproval, RejectedTemplate]}
+    ccass.conversations:            {columns: [bot_active, lifecycle_state], group: [BotHandled, AgentHandled]}
+
+  # Independent flags: SET when true, REMOVE when false. Not a group.
+  removable_flags:
+    cdp.customer_sessions:                {AttributedVisit: "utm_campaign IS NOT NULL"}
+    crm.companies:                        {ChannelPartner: "channel_role IN ('franchise','owned_store','brand_hq')"}
+    crm.invoices:                         {OverdueInvoice: "escalation_severity IS NOT NULL"}
+    crm.contracts:                        {RenewingContract: "auto_renew = true"}
+    campaign.email_domains:               {AuthenticatedDomain: "spf_ok AND dkim_ok AND dmarc_ok"}
+    campaign.campaign_contact_engagement: {Unsubscribed: "email_unsubscribed = true"}
+    campaign.campaign_send_recipients:
+      OpenedMessage:  {expr: "opened_at IS NOT NULL",  monotonic: true}
+      ClickedMessage: {expr: "clicked_at IS NOT NULL", monotonic: true}
+      FailedDelivery: {expr: "status IN ('failed','skipped')"}
+
+  # ---------------------------------------------------------------------------
+  # C. REFERENCE PROBE — catch id-space bugs before they load empty.
+  # ---------------------------------------------------------------------------
+  reference_probe:
+    sample_size: 1000
+    min_match_rate: 0.90
+    on_below_floor: halt_table
+    report_to: pipeline_metrics
+    blocking_verifications:
+      V1: {table: ccass.conversations, column: contact_id, question: "cdp.contacts.id or customer_profile.cdp_id?"}
+      V2: {table: cdp.order_items, column: product_id, question: "cdp.products UUID or inventory.products bigint?"}
+      V3: {table: campaign.organization_products, column: product_code, question: "enum vs setup_roles.product_id slug"}
+      V4: {table: campaign.regulated_channel_templates, column: channel_config_id, question: "bigint here vs uuid in accounts"}
+      V6: {table: cdp.identity_links, question: "does the table exist?"}
+      V7: {table: ccass.agent_missed_contacts, question: "does the table exist?"}
+      V8: {table: cdp.anomaly_rules, question: "organization_id present, or detectors global?"}
+      V9: {table: ticketing.agent_queues, question: "does external_id carry the team reference?"}
+
+  # ---------------------------------------------------------------------------
+  # D. DELETION
+  # ---------------------------------------------------------------------------
+  deletion:
+    mode: cascade_owned
+    cascade_edges: [HAS_*, CONTAINS]
+    never_cascade: [FOR_*, OF_*, projection_of, role_of, "*_BY"]
+    tombstone: {enabled: true, property: _deleted_at, retention_days: 7, purge: scheduled}
+    resurrection_guard: "an upsert whose source version < _deleted_at is discarded"
+    sweep_empty_buckets: true
+  erasure:
+    trigger: crm.privacy_requests.executed_at
+    tombstone: false
+    clear_pending: true
+    null_retained_keys: true
+
+  # ---------------------------------------------------------------------------
+  # E. WRITE SEMANTICS
+  # ---------------------------------------------------------------------------
+  write_semantics:
+    version_column: [version, lifecycle_version, updated_at, source_ts]
+    version_property: _source_version
+    guard: skip_when_stale
+    counters: recompute_never_increment
+    replay: byte_identical
+
+  # ---------------------------------------------------------------------------
+  # F. POLYMORPHIC REFERENCES
+  # ---------------------------------------------------------------------------
+  polymorphic:
+    require_discriminator: true
+    campaign.app_notifications: {discriminator: subject_kind, id: subject_id, status: resolved}
+    crm.agent_memories:         {discriminator: scope_type,   id: scope_id,   status: implement}
+    ccass.conversation_participants: {discriminator: null, id: identity_ref, status: blocked,
+                                      reason: "no identity_type column; resolve through ContactIdentity once available"}
+
+  # ---------------------------------------------------------------------------
+  # COUNT INTEGRITY
+  # ---------------------------------------------------------------------------
+  count_integrity:
+    provenance_property: {name: _owner, value: "<owning table>"}
+    canonical_counts:
+      contacts:  "MATCH (c:Contact)          WHERE c._owner = 'cdp.customer_profile' AND c._deleted_at IS NULL RETURN count(c)"
+      leads:     "MATCH (c:Contact:Lead)     WHERE c._owner = 'cdp.customer_profile' AND c._deleted_at IS NULL RETURN count(c)"
+      prospects: "MATCH (c:Contact:Prospect) WHERE c._owner = 'cdp.customer_profile' AND c._deleted_at IS NULL RETURN count(c)"
+      customers: "MATCH (c:Contact:Contact) WHERE c._owner = 'cdp.customer_profile' AND c._deleted_at IS NULL RETURN count(c)"
+    invariant: "contacts = leads + prospects + customers + unclassified"
+
+merged_labels:
+  IntentRoutingProfile: [accounts.setup_queue_routing_profiles, ccass.queue_routing_profiles]
+  Agent:            [ccass.agents, ticketing.agents]
+  ContactIdentity:      [cdp.identity_keys, cdp.contact_identities]
+  SLA:   [ccass.sla_policies, ticketing.sla_policies]
+  AutomationPolicy:     [ccass.channel_automation_policies, ccass.email_mailbox_policies,
+                         ccass.whatsapp_channel_policies]
+  DocumentTemplate:     [crm.proposal_templates, crm.quote_templates, crm.invoice_templates]
+  LineItem:             [crm.quote_lines, crm.order_lines, crm.invoice_lines]
+  Notification:         [crm.notifications, ticketing.notifications, campaign.app_notifications]
+  AgentJob:             [crm.lead_scoring_jobs, crm.lead_nurture_jobs,
+                         crm.lead_lifecycle_jobs, crm.lead_enrichment_jobs]
+  InternalNote:         [ccass.conversation_notes, ccass.workspace_common_notes]
+  ChannelAccount:       [accounts.setup_channel_configs, accounts.setup_email_configs,
+                         accounts.setup_webchat_configs, accounts.setup_social_configs]
+  ChannelSendingConfig: [campaign.push_channel_settings, campaign.sms_channel_settings]
+
+
+# -----------------------------------------------------------------------------
+# SENSITIVITY RUBRIC — derived from columns, not hand-set. CI recomputes and
+# fails on drift. This replaces the v1 classification, which had PII-bearing
+# tables at L1 and a date-only billing schedule at L3.
+# -----------------------------------------------------------------------------
+sensitivity_rubric:
+  L1: "operational metadata only — ids, statuses, counts, timestamps, config"
+  L2: "contains direct PII (name, email, phone, address) OR customer-authored content"
+  L3: "special-category PII (DOB, gender, health), credentials metadata, or financial account detail"
+
+
+# =============================================================================
+# TABLES
+# Relationship direction is explicit:
+#   to:   this node -[:TYPE]-> target
+#   from: target    -[:TYPE]-> this node
+# `collection:` replaces owner edges entirely — the loader builds
+# owner -> collection -> [period] -> this node. Never add a direct owner edge
+# alongside it.
+# =============================================================================
+tables:
+
+  # ===========================================================================
+  # TENANT AND WORKFORCE  (source: accounts)
+  # ===========================================================================
+
+  accounts.organizations:
+    embed:
+      fields: [company_name, industry_type, business_type, country]
+      property: _embedding
+    product: platform
+    label: Tenant
+    key: id
+    access: {domain: common, module: identity, sensitivity: L2}
+    edge_budget: 9
+    properties: [id, tenant_id, company_name, industry_type, business_type,
+                 contact_name, designation, work_email, admin_email, tax_number,
+                 billing_address, website_url, country, company_size,
+                 mobile_country_code, mobile_number, lifecycle_status,
+                 converted_at, reseller_id, source_lead_id, created_at, updated_at]
+    creates_hubs: [SetupHub, ContactCentreHub, CustomerDataHub,
+                   MarketingHub, SupportHub, WebTrackingHub, ProductCatalog]
+    # industry_type is the ONLY input to overlay resolution. Do not read the
+    # crm or campaign copies of this value.
+    overlay_selector: industry_type
+
+  accounts.setup_users:
+    product: platform
+    label: Employee
+    key: id
+    access: {domain: common, module: identity, sensitivity: L2}
+    edge_budget: 3
+    properties: [id, organization_id, employee_id, first_name, last_name,
+                 work_email, mobile_number, primary_language, secondary_language,
+                 skills, shift_types, city, state, country, location_id, status,
+                 team_id, business_hours_id, invite_status, password_set_at,
+                 invited_at, created_at, updated_at]
+    relationships:
+      - {type: has_employee, from: SetupHub, from_column: organization_id}
+      - {type: member_of, to: Team, to_key: id, from_column: team_id}
+      - {type: follows_hours, to: BusinessHours, to_key: id, from_column: business_hours_id}
+    # v1 emitted HAS_MEMBER from a member_ids column that does not exist on
+    # this table. Membership is Employee -> Team, single edge, above.
+
+  accounts.setup_teams:
+    product: platform
+    label: Team
+    key: id
+    access: {domain: common, module: identity, sensitivity: L1}
+    edge_budget: 2
+    properties: [id, organization_id, name, description, business_hours_id,
+                 available_products, status, created_at, updated_at]
+    relationships:
+      - {type: has_team, from: SetupHub, from_column: organization_id}
+      - {type: follows_hours, to: BusinessHours, to_key: id, from_column: business_hours_id}
+    # member_ids jsonb stays a property, not an edge — Employee.team_id is the
+    # authoritative direction and avoids a list-expansion write per team save.
+
+  accounts.setup_roles:
+    product: platform
+    label: Role
+    key: id
+    access: {domain: common, module: identity, sensitivity: L1}
+    edge_budget: 2
+    properties: [id, organization_id, name, description, product_id,
+                 accessible_products, module_permission, module_permissions,
+                 can_view, can_create, can_edit, can_delete, can_export,
+                 can_approve, created_at, updated_at]
+    relationships:
+      - {type: has_role, from: SetupHub, from_column: organization_id}
+      - {type: gives_access_to, to: PlatformApp, to_key: code, from_column: product_id, create_target: true}
+
+  accounts.setup_user_product_access:
+    product: platform
+    mode: relationship_only
+    access: {domain: common, module: identity, sensitivity: L1}
+    from: {label: Employee, key: id, column: user_id}
+    to: {label: Role, key: id, column: role_id}
+    type: holds_role
+
+  # --- business hours --------------------------------------------------------
+
+  accounts.setup_business_hours:
+    product: platform
+    readable_by: [ccaas, ticketing]
+    label: BusinessHours
+    key: id
+    access: {domain: common, module: setup, sensitivity: L1}
+    edge_budget: 2
+    properties: [id, organization_id, name, description, timezone, status,
+                 open_time, close_time, timing_mode, working_days, day_timings,
+                 holiday_calendar_id, created_at, updated_at]
+    relationships:
+      - {type: has_business_hours, from: SetupHub, from_column: organization_id}
+      - {type: follows_holidays, to: HolidayCalendar, to_key: id, from_column: holiday_calendar_id}
+
+  accounts.setup_business_hour_shifts:
+    product: platform
+    readable_by: [ccaas, ticketing]
+    tenant:
+      via:
+        - {column: business_hours_id, parent: accounts.setup_business_hours, parent_key: id}
+    label: Shift
+    key: id
+    access: {domain: common, module: setup, sensitivity: L1}
+    edge_budget: 1
+    properties: [id, business_hours_id, shift_type, day_of_week, end_day_of_week,
+                 start_time, end_time, crosses_midnight, break_start_time,
+                 break_end_time, break_start_time_2, break_end_time_2, created_at]
+    relationships:
+      - {type: has_shift, from: BusinessHours, from_key: id, from_column: business_hours_id}
+
+  accounts.setup_holiday_calendars:
+    product: platform
+    readable_by: [ccaas, ticketing]
+    label: HolidayCalendar
+    key: id
+    access: {domain: common, module: setup, sensitivity: L1}
+    edge_budget: 1
+    properties: [id, organization_id, name, country, created_at, updated_at]
+    relationships:
+      - {type: has_holiday_calendar, from: SetupHub, from_column: organization_id}
+
+  accounts.setup_holidays:
+    product: platform
+    readable_by: [ccaas, ticketing]
+    tenant:
+      via:
+        - {column: calendar_id, parent: accounts.setup_holiday_calendars, parent_key: id}
+    label: Holiday
+    key: id
+    access: {domain: common, module: setup, sensitivity: L1}
+    edge_budget: 1
+    properties: [id, calendar_id, name, holiday_date, created_at]
+    relationships:
+      - {type: has_holiday, from: HolidayCalendar, from_key: id, from_column: calendar_id}
+
+  # --- connected channels ----------------------------------------------------
+  # Four tables, one concept. setup_channel_configs is the base row; the three
+  # medium-specific tables are strictly 1:1 with it and merge onto the same
+  # node keyed by channel_config_id. This removes three labels and three edges
+  # per configured channel, and makes "how is email set up here" one lookup.
+  # Medium-specific columns are prefixed on merge (L8) to avoid collision.
+
+  accounts.setup_channel_configs:
+    product: platform
+    readable_by: [ccaas, campaign, ticketing]
+    label: ConnectedChannel
+    key: id
+    access: {domain: common, module: setup, sensitivity: L1}
+    edge_budget: 2
+    sublabels:
+      column: channel_type
+      mapping: {email: EmailChannel, webchat: ChatChannel, web_chat: ChatChannel, social: SocialChannel, voice: VoiceChannel}
+    properties: [id, organization_id, channel_type, name, status, product_ids,
+                 created_at, updated_at]
+    relationships:
+      - {type: has_connected_channel, from: SetupHub, from_column: organization_id}
+      - {type: uses_channel, to: Channel, to_key: name, from_column: channel_type, create_target: true}
+
+  accounts.setup_email_configs:
+    product: platform
+    readable_by: [ccaas, campaign, ticketing]
+    tenant:
+      via:
+        - {column: channel_config_id, parent: accounts.setup_channel_configs, parent_key: id}
+    merges_into: ConnectedChannel
+    key: id
+    key_column: channel_config_id
+    access: {domain: common, module: setup, sensitivity: L2}
+    edge_budget: 0
+    properties:
+      - channel_config_id
+      - {from: provider_type,        as: email_provider_type}
+      - {from: sender_email,         as: email_sender_address}
+      - {from: sender_name,          as: email_sender_name}
+      - {from: reply_to,             as: email_reply_to}
+      - {from: domain,               as: email_domain}
+      - {from: oauth_provider,       as: email_oauth_provider}
+      - {from: ccaas_handler,        as: email_service_handler}
+      - {from: is_bot,               as: email_bot_mailbox}
+      - {from: provisioning_status,  as: email_provisioning_status}
+    # secrets excluded by policy: smtp_*, imap_*, *_encrypted, oauth_connection_id
+
+  accounts.setup_webchat_configs:
+    product: platform
+    readable_by: [ccaas]
+    tenant:
+      via:
+        - {column: channel_config_id, parent: accounts.setup_channel_configs, parent_key: id}
+    merges_into: ConnectedChannel
+    key: id
+    key_column: channel_config_id
+    access: {domain: common, module: setup, sensitivity: L1}
+    edge_budget: 1
+    custom_field: personalisation
+    custom_dynamic: true
+    properties:
+      - channel_config_id
+      - routing_queue_id
+      - {from: webchat_id,        as: chat_widget_id}
+      - {from: title,             as: chat_title}
+      - {from: alias_title,       as: chat_alias_title}
+      - {from: description,       as: chat_description}
+      - {from: greeting_message,  as: chat_greeting}
+      - {from: trigger_message,   as: chat_trigger}
+    relationships:
+      - {type: routes_to, to: QueueSetup, to_key: id, from_column: routing_queue_id}
+
+  accounts.setup_social_configs:
+    product: platform
+    readable_by: [ccaas, campaign]
+    tenant:
+      via:
+        - {column: channel_config_id, parent: accounts.setup_channel_configs, parent_key: id}
+    merges_into: ConnectedChannel
+    key: id
+    key_column: channel_config_id
+    access: {domain: common, module: setup, sensitivity: L1}
+    edge_budget: 0
+    properties:
+      - channel_config_id
+      - {from: provider,               as: social_provider}
+      - {from: bot_enabled,            as: social_bot_enabled}
+      - {from: usage_mode,             as: social_usage_mode}
+      - {from: display_number,         as: social_display_number}
+      - {from: waba_id,                as: social_waba_id}
+      - {from: phone_number_id,        as: social_phone_number_id}
+      - {from: page_id,                as: social_page_id}
+      - {from: ig_business_account_id, as: social_ig_account_id}
+      - {from: meta_auth_type,         as: social_auth_type}
+      - {from: meta_connection_status, as: social_connection_status}
+    # secrets excluded by policy: access_token_encrypted, token_expires_at
+
+  # --- voice -----------------------------------------------------------------
+
+  accounts.setup_voice_dids:
+    product: ccaas
+    label: PhoneNumber
+    key: id
+    access: {domain: common, module: setup, sensitivity: L2}
+    edge_budget: 4
+    properties: [id, organization_id, phone_number, product_id, routing_type,
+                 status, prompt_profile_id, routing_queue_id, routing_user_id,
+                 created_at, updated_at]
+    relationships:
+      - {type: has_phone_number, from: SetupHub, from_column: organization_id}
+      - {type: routes_to, to: QueueSetup, to_key: id, from_column: routing_queue_id}
+      - {type: routes_to, to: Employee, to_key: id, from_column: routing_user_id}
+      - {type: uses_prompts, to: VoicePromptSet, to_key: id, from_column: prompt_profile_id}
+    # PlatformApp reference stays a property (product_id); phone numbers are
+    # bounded per tenant but the app is an enum, not a traversal target.
+
+  accounts.setup_voice_prompt_profiles:
+    product: ccaas
+    label: VoicePromptSet
+    key: id
+    access: {domain: common, module: setup, sensitivity: L1}
+    edge_budget: 1
+    custom_field: slots
+    custom_dynamic: true
+    properties: [id, organization_id, name, description, status, created_at, updated_at]
+    relationships:
+      - {type: has_voice_prompt_set, from: SetupHub, from_column: organization_id}
+
+  # --- queue setup -----------------------------------------------------------
+
+  accounts.setup_ccaas_queues:
+    product: ccaas
+    label: QueueSetup
+    key: id
+    access: {domain: common, module: setup, sensitivity: L1}
+    edge_budget: 3
+    properties: [id, organization_id, team_id, name, description, status,
+                 business_hours_id, shift_types, skills,
+                 missed_callback_grace_minutes, created_at, updated_at]
+    relationships:
+      - {type: has_queue_setup, from: SetupHub, from_column: organization_id}
+      - {type: owned_by_team, to: Team, to_key: id, from_column: team_id}
+      - {type: follows_hours, to: BusinessHours, to_key: id, from_column: business_hours_id}
+
+  accounts.setup_ccaas_queue_agents:
+    product: ccaas
+    tenant:
+      via:
+        - {column: queue_id, parent: accounts.setup_ccaas_queues, parent_key: id}
+    mode: relationship_only
+    access: {domain: common, module: setup, sensitivity: L1}
+    from: {label: QueueSetup, key: id, column: queue_id}
+    to: {label: Employee, key: id, column: user_id}
+    type: has_member
+    properties: [shift_type, call_type, handles_calls, handles_chat, handles_email,
+                 handles_social, handles_whatsapp, handles_instagram, handles_facebook,
+                 chat_concurrency, email_concurrency, social_concurrency]
+
+  accounts.setup_queue_routing_profiles:
+    product: ccaas
+    label: RoutingProfile
+    key: uid
+    synthesize_key: "setup:{id}"
+    access: {domain: common, module: setup, sensitivity: L1}
+    edge_budget: 1
+    sublabels: {static: DraftRoutingProfile}
+    custom_field: skill_mapping
+    custom_dynamic: true
+    properties: [id, organization_id, queue_id, description, supported_intents,
+                 example_phrases, language_codes, classifier_version,
+                 created_at, updated_at]
+    relationships:
+      - {type: has_routing_profile, from: QueueSetup, from_key: id, from_column: queue_id}
+
+  # --- knowledge -------------------------------------------------------------
+
+  accounts.setup_knowledge_documents:
+    embed:
+      fields: [file_name, category, product_id]
+      property: _embedding
+    product: platform
+    readable_by: [ccaas, ticketing]
+    label: KnowledgeFile
+    key: id
+    access: {domain: common, module: setup, sensitivity: L2}
+    edge_budget: 2
+    properties: [id, organization_id, category, file_name, file_type,
+                 file_size_bytes, storage_path, product_id, ccaas_audience,
+                 all_branches, assigned_branch_ids, uploaded_by, created_at]
+    relationships:
+      - {type: has_knowledge_file, from: SetupHub, from_column: organization_id}
+      - {type: uploaded_by, to: Employee, to_key: id, from_column: uploaded_by}
+
+  accounts.setup_knowledge_org_profiles:
+    product: platform
+    readable_by: [ccaas, ticketing]
+    label: BusinessProfile
+    key: organization_id
+    access: {domain: common, module: setup, sensitivity: L1}
+    edge_budget: 1
+    custom_field: product
+    custom_dynamic: true
+    properties: [organization_id, updated_at]
+    relationships:
+      - {type: has_business_profile, from: SetupHub, from_column: organization_id}
+
+  # ===========================================================================
+  # CUSTOMER AND BEHAVIOUR  (source: cdp — the hub of the hub-and-spoke model)
+  # ===========================================================================
+
+  cdp.customer_profile:
+    embed:
+      fields: [first_name, last_name, company, city, country, contact_type, acquisition_channel]
+      property: _embedding
+    product: platform
+    readable_by: [crm, cdp, campaign, ccaas, ticketing]
+    label: Customer
+    key: cdp_id
+    access: {domain: common, module: customer, sensitivity: L3}
+    edge_budget: 11               # collection owner edges only, created once
+    sublabels:
+      column: contact_type
+      mapping: {lead: Lead, prospect: Prospect, customer: PayingCustomer}
+    custom_field: custom_fields
+    custom_dynamic: true
+    properties: [cdp_id, organization_id, first_name, last_name, gender,
+                 date_of_birth, company, city, region, country, language,
+                 timezone, contact_type, acquisition_channel, acquisition_date,
+                 first_referrer, first_seen_at, last_seen_at, created_at, updated_at]
+    owns_collections: [EventHistory, SessionHistory, TouchpointHistory,
+                       ConversationHistory, JourneyHistory, MetricHistory,
+                       ActivityHistory, MessageHistory, MemoryStore, InsightSet,
+                       NextBestActionSet]
+    # L3 because gender + date_of_birth are special-category. If an overlay
+    # removes those columns for a tenant, CI recomputes this to L2.
+    # NOT attached to Tenant: unbounded. Tenant scope is organization_id and
+    # the per-tenant database.
+
+  cdp.identity_keys:
+    product: platform
+    readable_by: [crm, cdp, campaign, ccaas, ticketing]
+    label: CustomerIdentity
+    key: uid
+    synthesize_key: "{organization_id}:{key_type}:{key_value}"
+    access: {domain: cdp, module: customer, sensitivity: L2}
+    edge_budget: 1
+    custom_field: custom_fields
+    custom_dynamic: true
+    properties:
+      - {from: identity_id,  as: source_row_id}
+      - {from: key_type,     as: identity_type}
+      - {from: key_value,    as: identity_value}
+      - cdp_id
+      - organization_id
+      - source_system
+      - {name: confidence_score, type: decimal, scale: 4}
+      - verified
+      - created_at
+    relationships:
+      - {type: identified_by, from: Customer, from_key: cdp_id, from_column: cdp_id}
+
+  cdp.contact_identities:
+    product: platform
+    readable_by: [crm, cdp, campaign, ccaas, ticketing]
+    merges_into: CustomerIdentity
+    key: uid
+    synthesize_key: "{organization_id}:{identity_type}:{identity_value}"
+    access: {domain: cdp, module: customer, sensitivity: L2}
+    edge_budget: 1
+    properties: [id, organization_id, contact_id, identity_type, identity_value,
+                 source_channel, first_seen_at, last_seen_at, created_at, updated_at]
+    relationships:
+      - {type: identified_by, from: Customer, from_key: cdp_id, from_column: contact_id}
+    # Merges onto the same natural key (org, type, value) as identity_keys.
+    # Two tables, one identity concept — v1 had ContactPoint and ChannelIdentity
+    # as separate labels describing the same thing.
+
+  cdp.identity_links:
+    product: platform
+    mode: relationship_only
+    access: {domain: cdp, module: customer, sensitivity: L2}
+    from: {label: Customer, key: cdp_id, column: cdp_id}
+    to: {label: Customer, key: cdp_id, column: linked_cdp_id}
+    type: same_person_as
+    verify: "table not present in the CDP schema reference — confirm before enabling"
+
+  # --- behaviour (high volume, bucketed) -------------------------------------
+
+  cdp.customer_events:
+    embed:
+      fields: [event_name, event_category, channel, page_title]
+      property: _embedding
+    product: cdp
+    readable_by: [campaign, crm, webtracking]
+    label: Event
+    key: event_id
+    access: {domain: cdp, module: behaviour, sensitivity: L2}
+    edge_budget: 2
+    collection: {name: EventHistory, owner_column: cdp_id, bucket_column: occurred_at}
+    extra_labels:
+      # Generic only. Commerce, lending, clinical and enrolment vocabularies
+      # belong in domains/<industry>.yaml, which may add members here.
+      - {label: OnlineEvent,  when: {channel: [web, mobile, app]}}
+      - {label: PageView,     when: {event_name: [page_view, pageview, screen_view]}}
+      - {label: FormEvent,    when: {event_category: [form]}}
+      - {label: Interaction,  when: {event_category: [interaction]}}
+      - {label: Conversion,   when: {event_category: [conversion]}}
+    custom_field: custom_fields
+    custom_dynamic: true
+    properties: [event_id, cdp_id, organization_id, site_id, event_name, event_category,
+                 source_name, source_event_id, channel, visitor_id, session_id,
+                 page_view_id, page_path, page_title, referrer, utm_source, utm_medium,
+                 utm_campaign, utm_term, utm_content, device_type, browser, country,
+                 occurred_at, ingested_at, amount, currency, quantity, status, reference_id]
+    relationships:
+      - {type: occurs_in, to: Session, to_key: session_id, from_column: session_id}
+      - {type: on_website, to: Website, to_key: site_id, from_column: site_id, create_target: true}
+    requires_migration: [site_id, page_view_id]
+    # v1 emitted FOR_CONTACT, THROUGH(Channel) and FROM_SOURCE on top of the
+    # collection edge: 5 edges/row on the highest-volume table in the platform.
+    # channel and source_name are properties; Channel and DataSource stay at
+    # hub level. extra_labels drive category queries without a per-row edge.
+
+  cdp.customer_sessions:
+    product: cdp
+    readable_by: [campaign, webtracking]
+    label: Session
+    key: session_id
+    access: {domain: cdp, module: behaviour, sensitivity: L2}
+    edge_budget: 2
+    collection: {name: SessionHistory, owner_column: cdp_id, bucket_column: started_at}
+    extra_labels:
+      - {label: OnlineSession,   when: {channel: [web, mobile, app]}}
+      - {label: CampaignSession, when: {utm_campaign: not_null}}
+    custom_field: custom_fields
+    custom_dynamic: true
+    properties: [session_id, cdp_id, organization_id, site_id, visitor_id, started_at,
+                 ended_at, duration_seconds, entry_page, exit_page, pageview_count,
+                 is_bounce, referrer, referrer_domain, utm_source, utm_medium,
+                 utm_campaign, utm_term, utm_content, campaign_ref_id, contact_ref_id,
+                 device_type, browser, platform, language, country, region, city, created_at]
+    relationships:
+      - {type: on_website, to: Website, to_key: site_id, from_column: site_id, create_target: true}
+    requires_migration: [site_id, campaign_ref_id, contact_ref_id]
+    # campaign_ref_id stays a property. One edge per attributed session would
+    # make Campaign a supernode on the second-highest-volume table; campaign
+    # attribution is answered from Message, which is already scoped.
+    # is_bounce is NOT promoted to a label. The web-tracking pipeline documents
+    # this column as stale; bounce is answered from the session-activity view,
+    # not from the graph.
+
+  cdp.customer_interactions:
+    product: cdp
+    label: Touchpoint
+    key: interaction_id
+    access: {domain: cdp, module: behaviour, sensitivity: L2}
+    edge_budget: 2
+    collection: {name: TouchpointHistory, owner_column: cdp_id, bucket_column: started_at}
+    custom_field: custom_fields
+    custom_dynamic: true
+    properties: [interaction_id, cdp_id, organization_id, interaction_source,
+                 interaction_type, channel, direction, page_path, element_name,
+                 agent_id, session_id, sentiment_score, summary, started_at, ended_at]
+    relationships:
+      - {type: occurs_in, to: Session, to_key: session_id, from_column: session_id}
+
+  cdp.customer_journey:
+    product: cdp
+    label: JourneyStep
+    key: journey_event_id
+    access: {domain: cdp, module: behaviour, sensitivity: L1}
+    edge_budget: 2
+    collection: {name: JourneyHistory, owner_column: cdp_id, bucket_column: occurred_at}
+    custom_field: custom_fields
+    custom_dynamic: true
+    properties: [journey_event_id, cdp_id, organization_id, journey_name,
+                 journey_channel, touchpoint, from_stage, to_stage, trigger_event,
+                 session_id, source, occurred_at]
+    relationships:
+      - {type: occurs_in, to: Session, to_key: session_id, from_column: session_id}
+    # Stage names are deliberately free text in core. A domain overlay may add
+    # extra_labels for its own funnel (e.g. KycStage, UnderwritingStage).
+
+  cdp.journey_states:
+    product: cdp
+    label: JourneyStatus
+    key: uid
+    synthesize_key: "{organization_id}:{cdp_id}:{journey_name}"
+    access: {domain: cdp, module: behaviour, sensitivity: L1}
+    edge_budget: 1
+    properties: [cdp_id, organization_id, journey_name, current_stage, entered_at, updated_at]
+    relationships:
+      - {type: has_journey_status, from: Customer, from_key: cdp_id, from_column: cdp_id}
+    # Bounded (one row per journey per customer) so it stays a direct edge.
+
+  # --- scores, metrics, insight ----------------------------------------------
+
+  cdp.customer_scores:
+    product: cdp
+    readable_by: [crm, campaign]
+    label: CustomerScore
+    key: cdp_id
+    access: {domain: cdp, module: intelligence, sensitivity: L1}
+    edge_budget: 1
+    properties: [cdp_id, organization_id, engagement_score, value_score,
+                 loyalty_score, churn_score, purchase_probability, retention_score,
+                 advocacy_score, web_engagement_score, intent_score,
+                 digital_activity_score, updated_at]
+    relationships:
+      - {type: has_score, from: Customer, from_key: cdp_id, from_column: cdp_id}
+
+  cdp.gold_customer_metrics:
+    product: cdp
+    readable_by: [crm, campaign]
+    label: CustomerValue
+    key: cdp_id
+    access: {domain: cdp, module: intelligence, sensitivity: L1}
+    edge_budget: 1
+    properties: [cdp_id, organization_id, total_events, total_orders,
+                 {name: total_spend, type: decimal, scale: 2},
+                 {name: avg_order_value, type: decimal, scale: 2},
+                 last_event_at, last_purchase_at, engagement_score, value_score,
+                 loyalty_score, churn_score, purchase_probability, predicted_ltv,
+                 journey_stage, segment_count, updated_at]
+    relationships:
+      - {type: has_value, from: Customer, from_key: cdp_id, from_column: cdp_id}
+
+  cdp.customer_metrics:
+    product: cdp
+    label: DailyMetric
+    key: uid
+    synthesize_key: "{cdp_id}:{metric_date}"
+    access: {domain: cdp, module: intelligence, sensitivity: L1}
+    edge_budget: 1
+    collection: {name: MetricHistory, owner_column: cdp_id, bucket_column: metric_date}
+    properties: [metric_date, cdp_id, organization_id, session_count,
+                 total_page_views, avg_session_duration, bounce_rate, avg_scroll_depth,
+                 conversion_count, engagement_score, value_score, loyalty_score,
+                 campaign_engagement_score, last_seen_days]
+
+  cdp.gold_campaign_lookup:
+    product: cdp
+    label: KeyMetric
+    key: uid
+    synthesize_key: "{organization_id}:{metric_key}"
+    access: {domain: cdp, module: intelligence, sensitivity: L1}
+    edge_budget: 1
+    properties: [organization_id, metric_key, metric_label, metric_value, updated_at]
+    relationships:
+      - {type: has_metric, from: KeyMetricSet, from_column: organization_id}
+    # v1 also emitted HAS_ORG_METRICS to the platform hub on every metric row.
+    # That edge now lives once on KeyMetricSet (see hubs:).
+
+  cdp.ai_insights:
+    product: cdp
+    readable_by: [crm, campaign]
+    label: CustomerInsight
+    key: insight_id
+    access: {domain: cdp, module: intelligence, sensitivity: L2}
+    edge_budget: 1
+    collection: {name: InsightSet, owner_column: cdp_id}
+    custom_field: custom_fields
+    custom_dynamic: true
+    properties: [insight_id, cdp_id, organization_id, insight_type, score,
+                 summary, explanation, generated_at]
+
+  cdp.customer_recommendations:
+    embed:
+      fields: [recommendation_type, recommendation]
+      property: _embedding
+    product: cdp
+    readable_by: [crm, campaign]
+    label: NextBestAction
+    key: recommendation_id
+    access: {domain: cdp, module: intelligence, sensitivity: L2}
+    edge_budget: 1
+    collection: {name: NextBestActionSet, owner_column: cdp_id}
+    custom_field: custom_fields
+    custom_dynamic: true
+    properties: [recommendation_id, cdp_id, organization_id, recommendation_type,
+                 recommendation, confidence, generated_at]
+
+  # --- grouping --------------------------------------------------------------
+
+  cdp.segments:
+    product: cdp
+    readable_by: [campaign]
+    label: Segment
+    key: segment_id
+    access: {domain: cdp, module: intelligence, sensitivity: L1}
+    edge_budget: 1
+    custom_field: custom_fields
+    custom_dynamic: true
+    properties: [segment_id, organization_id, segment_name, description, created_at]
+    relationships:
+      - {type: has_segment, from: CustomerDataHub, from_column: organization_id}
+
+  cdp.customer_segments:
+    product: cdp
+    readable_by: [campaign]
+    mode: relationship_only
+    access: {domain: cdp, module: intelligence, sensitivity: L1}
+    from: {label: Customer, key: cdp_id, column: cdp_id}
+    to: {label: Segment, key: segment_id, column: segment_id}
+    type: in_segment
+    properties: [source, assigned_at]
+    fan_in_warning: "Segment is a legitimate supernode. Never traverse out of it without a LIMIT; use segment_id as a Customer property filter for counts."
+
+  cdp.persona_definitions:
+    embed:
+      fields: [name, summary, industry, persona_type]
+      property: _embedding
+    product: cdp
+    label: Persona
+    key: persona_id
+    access: {domain: cdp, module: intelligence, sensitivity: L1}
+    edge_budget: 1
+    custom_field: custom_fields
+    custom_dynamic: true
+    properties: [persona_id, organization_id, persona_key, name, summary, industry,
+                 persona_type, status, version, confidence, evidence_count,
+                 decision_role, model_version, created_at, updated_at]
+    relationships:
+      - {type: has_persona, from: CustomerDataHub, from_column: organization_id}
+    # Persona content (goals, pain points, channels) is industry-shaped but the
+    # STRUCTURE is generic, so the label stays in core and overlays fill it.
+
+  cdp.customer_persona_assignments:
+    product: cdp
+    mode: relationship_only
+    access: {domain: cdp, module: intelligence, sensitivity: L1}
+    from: {label: Customer, key: cdp_id, column: cdp_id}
+    to: {label: Persona, key: persona_id, column: persona_id}
+    type: matches_persona
+    filter: "is_active = true"
+    properties: [confidence, drift_score, assignment_source, assigned_at]
+
+  cdp.persona_snapshots:
+    product: cdp
+    label: PersonaEvidence
+    key: snapshot_id
+    access: {domain: cdp, module: intelligence, sensitivity: L1}
+    edge_budget: 2
+    collection: {name: InsightSet, owner_column: cdp_id}
+    properties: [snapshot_id, organization_id, cdp_id, persona_id, inference_run_id,
+                 confidence, model_version, inference_path, created_at]
+    relationships:
+      - {type: evidence_for, to: Persona, to_key: persona_id, from_column: persona_id}
+
+  # --- agent memory ----------------------------------------------------------
+
+  cdp.episodic_memory:
+    product: cdp
+    table: cdp.episodic_memory
+    label: EventMemory
+    key: memory_id
+    access: {domain: cdp, module: intelligence, sensitivity: L2}
+    edge_budget: 1
+    collection: {name: MemoryStore, owner_column: cdp_id}
+    properties: [memory_id, organization_id, cdp_id, event_id, summary,
+                 importance_score, sentiment, occurred_at, recorded_at]
+
+  cdp.semantic_memory:
+    product: cdp
+    table: cdp.semantic_memory
+    label: CustomerFact
+    key: memory_id
+    access: {domain: cdp, module: intelligence, sensitivity: L2}
+    edge_budget: 1
+    collection: {name: MemoryStore, owner_column: cdp_id}
+    properties: [memory_id, organization_id, cdp_id, fact, confidence, source, created_at]
+
+  cdp.procedural_memory:
+    product: cdp
+    table: cdp.procedural_memory
+    label: EngagementRule
+    key: rule_id
+    access: {domain: cdp, module: intelligence, sensitivity: L1}
+    edge_budget: 1
+    properties: [rule_id, organization_id, name, priority, active, created_at]
+    relationships:
+      - {type: has_engagement_rule, from: CustomerDataHub, from_column: organization_id}
+
+  cdp.activation_tasks:
+    product: cdp
+    table: cdp.activation_tasks
+    label: ActivationTask
+    key: task_id
+    access: {domain: cdp, module: intelligence, sensitivity: L1}
+    edge_budget: 1
+    collection: {name: ActivityHistory, owner_column: cdp_id, bucket_column: created_at}
+    properties: [task_id, organization_id, cdp_id, channel, task_type, status,
+                 created_at, emitted_at]
+
+  # --- monitoring and models -------------------------------------------------
+
+  cdp.anomaly_rules:
+    product: cdp
+    tenant:
+      scope: global
+      replicate: all_tenants
+      note: "detector definitions are platform-wide; confirmed no organization_id in Postgres"
+    label: AlertRule
+    key: rule_id
+    access: {domain: cdp, module: intelligence, sensitivity: L1}
+    edge_budget: 1
+    properties: [rule_id, organization_id, spoke, metric_key, metric_name, condition,
+                 threshold, threshold_unit, window_minutes, severity, enabled,
+                 cooldown_minutes, threshold_mode, trigger_mode, evaluator_key,
+                 created_at, updated_at]
+    # No hub edge: the table has no organization_id and cannot get one.
+    # Detectors are replicated into every tenant database as reference data.
+    # v1 read organization_id here but never declared it. Either the column
+    # exists and was omitted from properties, or detectors are global and this
+    # edge must be dropped. Blocking — resolve before enabling.
+
+  cdp.anomaly_alerts:
+    embed:
+      fields: [severity, condition, message]
+      property: _embedding
+    product: cdp
+    label: Alert
+    key: alert_id
+    access: {domain: cdp, module: intelligence, sensitivity: L1}
+    edge_budget: 2
+    properties: [alert_id, rule_id, organization_id, spoke, metric_key, severity,
+                 observed_value, threshold, condition, message, email_status,
+                 delivery_status, handoff_status, created_at, acknowledged_at]
+    relationships:
+      - {type: has_alert, from: AlertSet, from_column: organization_id}
+      - {type: triggered_by, to: AlertRule, to_key: rule_id, from_column: rule_id}
+
+  cdp.anomaly_threshold_state:
+    product: cdp
+    label: AlertThreshold
+    key: uid
+    synthesize_key: "{organization_id}:{rule_id}"
+    access: {domain: cdp, module: intelligence, sensitivity: L1}
+    edge_budget: 1
+    properties: [organization_id, rule_id, dynamic_threshold, method,
+                 sample_size, confidence, computed_at]
+    relationships:
+      - {type: has_threshold, from: AlertRule, from_key: rule_id, from_column: rule_id}
+
+  cdp.agentic_model:
+    product: cdp
+    label: PredictionModel
+    key: uid
+    synthesize_key: "{organization_id}:{model_name}"
+    access: {domain: cdp, module: intelligence, sensitivity: L1}
+    edge_budget: 1
+    properties: [organization_id, products, model_name, job_id, model_id, status,
+                 dirty, dirty_reason, dirty_at, onboarded_at, trained_at,
+                 last_predict_at, last_error, updated_at]
+    relationships:
+      - {type: has_prediction_model, from: CustomerDataHub, from_column: organization_id}
+
+  cdp.source_systems:
+    product: cdp
+    label: DataSource
+    key: source_id
+    access: {domain: cdp, module: intelligence, sensitivity: L1}
+    edge_budget: 1
+    custom_field: custom_fields
+    custom_dynamic: true
+    properties: [source_id, organization_id, source_name, source_type, active, created_at]
+    relationships:
+      - {type: has_data_source, from: CustomerDataHub, from_column: organization_id}
+    # Hub-level only. Facts carry source_name as a property; v1 emitted
+    # FROM_SOURCE per event, which made this a supernode for zero query value.
+
+  # --- observed commerce (generic: any tenant that sells anything) -----------
+
+  cdp.orders:
+    product: cdp
+    readable_by: [crm, campaign]
+    label: Purchase
+    key: order_id
+    access: {domain: cdp, module: commerce, sensitivity: L2}
+    edge_budget: 1
+    collection: {name: ActivityHistory, owner_column: cdp_id, bucket_column: created_at}
+    custom_field: custom_fields
+    custom_dynamic: true
+    properties: [order_id, cdp_id, organization_id, order_number, status,
+                 {name: total_amount, type: decimal, scale: 2, currency_column: currency},
+                 currency, payment_status, fulfillment_status, shipping_country,
+                 created_at, updated_at]
+
+  cdp.order_items:
+    product: cdp
+    readable_by: [crm]
+    mode: relationship_only
+    access: {domain: cdp, module: commerce, sensitivity: L1}
+    from: {label: Purchase, key: order_id, column: order_id}
+    to: {label: Product, key: id, column: product_id}
+    type: includes
+    properties: [quantity, unit_price, subtotal_amount]
+    verify: "CDP reference points order_items.product_id at cdp.products (UUID), not inventory.products. Confirm the repoint before enabling."
+    fan_in_warning: "Product accumulates one includes edge per line item. Traverse purchase -> product only; never product -> purchases."
+
+  # ===========================================================================
+  # WEB TRACKING  (source: web tracking — generic, no industry assumption)
+  # ===========================================================================
+
+  digital.tracked_sites:
+    product: webtracking
+    label: Website
+    key: site_id
+    access: {domain: webtracking, module: digital, sensitivity: L1}
+    edge_budget: 1
+    properties: [site_id, organization_id, site_url, site_type, status,
+                 created_at, updated_at]
+    relationships:
+      - {type: has_website, from: WebTrackingHub, from_column: organization_id}
+    source: "v_web_tracking_ingest_registry (Postgres view) — authoritative site registry"
+    # v1 declared WebTrackingCatalog and then attached nothing to it. This is
+    # the missing writer: the hub now has a reason to exist.
+
+  # ===========================================================================
+  # CONTACT CENTRE  (source: ccass — contact centre runtime)
+  # ===========================================================================
+
+  ccass.agents:
+    product: platform
+    readable_by: [ccaas, ticketing]
+    label: Staff
+    key: uid
+    synthesize_key: "service:{id}"
+    access: {domain: ccaas, module: workforce, sensitivity: L2}
+    edge_budget: 1
+    sublabels: {static: ContactCentreStaff}
+    properties: [id, organization_id, display_name, email, status, setup_user_id,
+                 created_at, updated_at]
+    relationships:
+      - {type: role_of, to: Employee, to_key: id, from_column: setup_user_id}
+    # One label for "a role a person holds in a product". ticketing.agents
+    # merges here as SupportStaff. A query for "everything this person does"
+    # is now (:Employee)<-[:role_of]-(:Staff), not two product-specific
+    # traversals with differently named back-edges.
+
+  ccass.skills:
+    product: ccaas
+    label: Skill
+    key: id
+    access: {domain: ccaas, module: workforce, sensitivity: L1}
+    edge_budget: 1
+    properties: [id, organization_id, key, name, description, is_active,
+                 created_at, updated_at]
+    relationships:
+      - {type: has_skill, from: ContactCentreHub, from_column: organization_id}
+
+  ccass.agent_skills:
+    product: ccaas
+    mode: relationship_only
+    access: {domain: ccaas, module: workforce, sensitivity: L1}
+    from: {label: Staff, key: uid, column: agent_id, key_template: "service:{agent_id}"}
+    to: {label: Skill, key: id, column: skill_id}
+    type: skilled_in
+    properties: [proficiency, priority, verified_at, expires_at]
+
+  ccass.agent_capacity:
+    product: ccaas
+    label: ChannelCapacity
+    key: id
+    access: {domain: ccaas, module: workforce, sensitivity: L1}
+    edge_budget: 1
+    properties: [id, organization_id, agent_id, channel, max_concurrency,
+                 reserved_count, active_count, version, updated_at]
+    relationships:
+      - {type: has_capacity, from: Staff, from_key: uid, from_column: agent_id, from_key_template: "service:{agent_id}"}
+
+  ccass.agent_presence:
+    product: ccaas
+    label: StaffAvailability
+    key: id
+    access: {domain: ccaas, module: workforce, sensitivity: L1}
+    edge_budget: 1
+    properties: [id, organization_id, agent_id, status, presence_state, reason_code,
+                 heartbeat_at, lease_expires_at, version, source, updated_at]
+    relationships:
+      - {type: has_availability, from: Staff, from_key: uid, from_column: agent_id, from_key_template: "service:{agent_id}"}
+    # reason_code stays a property. StatusReason is a config node under the
+    # hub; linking it per presence row bought nothing.
+
+  ccass.presence_reason_codes:
+    product: ccaas
+    label: StatusReason
+    key: id
+    access: {domain: ccaas, module: workforce, sensitivity: L1}
+    edge_budget: 1
+    properties: [id, organization_id, code, label, presence_state, requires_note,
+                 is_active, created_at, updated_at]
+    relationships:
+      - {type: has_status_reason, from: ContactCentreHub, from_column: organization_id}
+
+  # --- routing ---------------------------------------------------------------
+
+  ccass.queues:
+    product: ccaas
+    label: Queue
+    key: id
+    access: {domain: ccaas, module: routing, sensitivity: L1}
+    edge_budget: 5
+    properties: [id, organization_id, setup_queue_id, name, team_id,
+                 business_hours_id, shift_types, skills, status, published_at, updated_at]
+    owns_collections: [RoutingHistory]
+    relationships:
+      - {type: has_queue, from: ContactCentreHub, from_column: organization_id}
+      - {type: copy_of, to: QueueSetup, to_key: id, from_column: setup_queue_id}
+      - {type: owned_by_team, to: Team, to_key: id, from_column: team_id}
+      - {type: follows_hours, to: BusinessHours, to_key: id, from_column: business_hours_id}
+    # copy_of replaces v1's PUBLISHED_FROM / MIRRORED_FROM, which named
+    # the same relation two ways across two products.
+
+  ccass.queue_members:
+    product: ccaas
+    tenant:
+      via:
+        - {column: queue_id, parent: ccass.queues, parent_key: id}
+    mode: relationship_only
+    access: {domain: ccaas, module: routing, sensitivity: L1}
+    from: {label: Queue, key: id, column: queue_id}
+    to: {label: Staff, key: uid, column: agent_id, key_template: "service:{agent_id}"}
+    type: has_member
+    properties: [shift_type, call_type, handles_calls, handles_email, handles_chat,
+                 handles_social, chat_concurrency, email_concurrency, social_concurrency]
+
+  ccass.queue_skills:
+    product: ccaas
+    mode: relationship_only
+    access: {domain: ccaas, module: routing, sensitivity: L1}
+    from: {label: Queue, key: id, column: queue_id}
+    to: {label: Skill, key: id, column: skill_id}
+    type: requires_skill
+    properties: [requirement_type, min_proficiency, weight]
+
+  ccass.queue_routing_profiles:
+    product: ccaas
+    merges_into: RoutingProfile
+    key: uid
+    synthesize_key: "live:{id}"
+    access: {domain: ccaas, module: routing, sensitivity: L1}
+    edge_budget: 1
+    sublabels: {static: LiveRoutingProfile}
+    custom_field: skill_mapping
+    custom_dynamic: true
+    properties: [id, organization_id, queue_id, description, supported_intents,
+                 example_phrases, keywords, language_codes, classifier_version, updated_at]
+    relationships:
+      - {type: has_routing_profile, from: Queue, from_key: id, from_column: queue_id}
+
+  ccass.routing_policies:
+    product: ccaas
+    label: RoutingPolicy
+    key: id
+    access: {domain: ccaas, module: routing, sensitivity: L1}
+    edge_budget: 2
+    properties: [id, organization_id, queue_id, strategy, priority,
+                 offer_timeout_seconds, max_attempts, overflow_queue_id,
+                 after_contact_work_seconds, email_offer_timeout_seconds,
+                 email_first_response_sla_seconds, email_resolution_sla_seconds,
+                 email_after_contact_work_seconds, missed_callback_grace_minutes,
+                 created_at, updated_at]
+    relationships:
+      - {type: has_routing_policy, from: Queue, from_key: id, from_column: queue_id}
+      - {type: overflows_to, to: Queue, to_key: id, from_column: overflow_queue_id}
+
+  # --- policies (three tables, one concept) ----------------------------------
+
+  ccass.channel_automation_policies:
+    product: ccaas
+    label: BotPolicy
+    key: uid
+    synthesize_key: "channel:{id}"
+    access: {domain: ccaas, module: automation, sensitivity: L1}
+    edge_budget: 3
+    sublabels: {static: ChannelBotPolicy}
+    custom_field: channel_settings
+    custom_dynamic: true
+    properties: [id, organization_id, channel_config_id, channel, bot_enabled,
+                 live_agent_enabled, automation_mode,
+                 {name: confidence_threshold, type: decimal, scale: 3},
+                 default_queue_id, handoff_message, no_agent_behavior,
+                 inactivity_close_seconds, shadow_mode, policy_version, status,
+                 created_at, updated_at]
+    relationships:
+      - {type: has_bot_policy, from: ContactCentreHub, from_column: organization_id}
+      - {type: policy_for, to: ConnectedChannel, to_key: id, from_column: channel_config_id}
+      - {type: default_queue, to: Queue, to_key: id, from_column: default_queue_id}
+
+  ccass.email_mailbox_policies:
+    product: ccaas
+    merges_into: BotPolicy
+    key: uid
+    synthesize_key: "mailbox:{id}"
+    access: {domain: ccaas, module: automation, sensitivity: L2}
+    edge_budget: 2
+    sublabels: {static: EmailBotPolicy}
+    properties: [id, organization_id, connection_id, account_email, bot_enabled,
+                 live_agent_enabled, shadow_mode, auto_send_enabled,
+                 {name: confidence_threshold, type: decimal, scale: 3},
+                 default_queue_id, business_hours_mode, policy_version, status,
+                 inactivity_close_hours, created_at, updated_at]
+    relationships:
+      - {type: has_bot_policy, from: ContactCentreHub, from_column: organization_id}
+      - {type: default_queue, to: Queue, to_key: id, from_column: default_queue_id}
+
+  ccass.whatsapp_channel_policies:
+    product: ccaas
+    merges_into: BotPolicy
+    key: uid
+    synthesize_key: "whatsapp:{id}"
+    access: {domain: ccaas, module: automation, sensitivity: L1}
+    edge_budget: 3
+    sublabels: {static: WhatsAppBotPolicy}
+    properties: [id, organization_id, channel_config_id, bot_enabled,
+                 live_agent_enabled,
+                 {name: confidence_threshold, type: decimal, scale: 3},
+                 default_queue_id, approved_handoff_message, inactivity_close_hours,
+                 status, created_at, updated_at]
+    relationships:
+      - {type: has_bot_policy, from: ContactCentreHub, from_column: organization_id}
+      - {type: policy_for, to: ConnectedChannel, to_key: id, from_column: channel_config_id}
+      - {type: default_queue, to: Queue, to_key: id, from_column: default_queue_id}
+
+  ccass.sla_policies:
+    product: platform
+    readable_by: [ccaas, ticketing]
+    label: SLA
+    key: uid
+    synthesize_key: "service:{id}"
+    access: {domain: ccaas, module: automation, sensitivity: L1}
+    edge_budget: 1
+    sublabels: {static: ConversationSLA}
+    custom_field: escalation_policy
+    custom_dynamic: true
+    properties: [id, organization_id, name, first_response_seconds, resolution_seconds,
+                 warning_threshold_pct, business_hours_mode, is_active,
+                 created_at, updated_at]
+    relationships:
+      - {type: has_sla, from: ContactCentreHub, from_column: organization_id}
+
+  ccass.dispositions:
+    product: ccaas
+    label: OutcomeCode
+    key: id
+    access: {domain: ccaas, module: automation, sensitivity: L1}
+    edge_budget: 1
+    properties: [id, organization_id, code, label, description, category, outcome,
+                 requires_note, requires_resolution, is_active, sort_order,
+                 created_at, updated_at]
+    relationships:
+      - {type: has_outcome_code, from: ContactCentreHub, from_column: organization_id}
+
+  # --- conversations ---------------------------------------------------------
+
+  ccass.conversations:
+    product: ccaas
+    label: Conversation
+    key: id
+    access: {domain: ccaas, module: conversations, sensitivity: L2}
+    edge_budget: 4
+    collection: {name: ConversationHistory, owner_column: contact_id, bucket_column: created_at}
+    extra_labels:
+      - {label: BotHandled,   when: {bot_active: [true]}}
+      - {label: StaffHandled, when: {lifecycle_state: [connected, wrap_up]}}
+    custom_field: resolution_data
+    custom_dynamic: true
+    properties: [id, organization_id, channel, external_thread_id, provider_thread_id,
+                 webchat_id, visitor_id, contact_id, profile_id, queue_id,
+                 assigned_agent_id, assigned_user_id, status, lifecycle_state,
+                 lifecycle_version, priority, subject, handoff_reason, bot_active,
+                 nlp_enabled, live_agent_enabled, automation_policy_version,
+                 disposition_code, disposition_note, resolution_code, resolution_summary,
+                 sla_status, version, queued_at, assigned_at, first_response_at,
+                 transferred_at, resolved_at, closed_at, ended_at, end_reason, end_actor,
+                 first_response_due_at, resolution_due_at, first_agent_response_at,
+                 mailbox_connection_id, channel_config_id, previous_conversation_id,
+                 created_at, updated_at]
+    relationships:
+      - {type: routed_to, to: Queue, to_key: id, from_column: queue_id}
+      - {type: handled_by, to: Staff, to_key: uid, from_column: assigned_agent_id, to_key_template: "service:{assigned_agent_id}"}
+      - {type: continues, to: Conversation, to_key: id, from_column: previous_conversation_id}
+    verify: "contact_id: the CCaaS reference points this at cdp.contacts.id, not customer_profile.cdp_id. If those id spaces differ, the ConversationHistory collection attaches under the wrong person. Blocking."
+    # v1 emitted 9 edges/row here, including THROUGH(Channel), HAS_STATUS
+    # (GlobalTicketStatus) and HAS_PROACTIVE_HISTORY — the last of which minted
+    # one dead node per conversation. All three removed.
+
+  ccass.conversation_memory:
+    product: ccaas
+    label: ConversationMemory
+    key: id
+    access: {domain: ccaas, module: conversations, sensitivity: L2}
+    edge_budget: 1
+    properties: [id, organization_id, conversation_id, rolling_summary,
+                 extracted_facts, latest_summarized_message_id, model_name,
+                 token_estimate, version, updated_at]
+    relationships:
+      - {type: has_memory, from: Conversation, from_key: id, from_column: conversation_id}
+
+  ccass.conversation_sla_state:
+    product: ccaas
+    label: SlaTimer
+    key: id
+    access: {domain: ccaas, module: conversations, sensitivity: L1}
+    edge_budget: 2
+    properties: [id, organization_id, conversation_id, sla_policy_id,
+                 first_response_due_at, resolution_due_at, first_response_warning_at,
+                 resolution_warning_at, breached_at, updated_at]
+    relationships:
+      - {type: has_sla_timer, from: Conversation, from_key: id, from_column: conversation_id}
+      - {type: governed_by, to: SLA, to_key: uid, from_column: sla_policy_id, to_key_template: "service:{sla_policy_id}"}
+
+  ccass.conversation_dispositions:
+    product: ccaas
+    label: ConversationOutcome
+    key: id
+    access: {domain: ccaas, module: conversations, sensitivity: L1}
+    edge_budget: 2
+    custom_field: resolution_data
+    custom_dynamic: true
+    properties: [id, organization_id, conversation_id, disposition_id, agent_id,
+                 applied_by_user_id, note, source, resolution_code, is_final,
+                 applied_at, updated_at]
+    relationships:
+      - {type: has_outcome, from: Conversation, from_key: id, from_column: conversation_id}
+      - {type: applied_by, to: Employee, to_key: id, from_column: applied_by_user_id}
+    # disposition_id stays a property. OutcomeCode is config; joining every
+    # wrap-up to it made a per-tenant supernode out of a picklist.
+
+  ccass.conversation_message_attachments:
+    product: ccaas
+    label: Attachment
+    key: id
+    access: {domain: ccaas, module: conversations, sensitivity: L2}
+    edge_budget: 1
+    properties: [id, organization_id, conversation_id, message_id, external_id,
+                 storage_key, file_name, content_type, byte_size, checksum_sha256,
+                 status, created_at]
+    relationships:
+      - {type: has_attachment, from: Conversation, from_key: id, from_column: conversation_id}
+    note: "message_id is a property only — conversation_messages is deliberately not in the graph (volume). Message bodies are retrieved from Postgres by id."
+
+  ccass.conversation_notes:
+    embed:
+      fields: [body]
+      property: _embedding
+    product: ccaas
+    label: InternalNote
+    key: uid
+    synthesize_key: "conversation:{id}"
+    access: {domain: ccaas, module: conversations, sensitivity: L2}
+    edge_budget: 2
+    sublabels: {static: ConversationNote}
+    properties: [id, organization_id, conversation_id, author_user_id, body,
+                 created_at, updated_at]
+    relationships:
+      - {type: has_note, from: Conversation, from_key: id, from_column: conversation_id}
+      - {type: written_by, to: Employee, to_key: id, from_column: author_user_id}
+
+  ccass.workspace_common_notes:
+    product: ccaas
+    merges_into: InternalNote
+    key: uid
+    synthesize_key: "workspace:{id}"
+    access: {domain: ccaas, module: conversations, sensitivity: L2}
+    edge_budget: 2
+    sublabels: {static: WorkspaceNote}
+    properties: [id, organization_id, author_user_id, body, created_at, updated_at]
+    relationships:
+      - {type: has_note, from: ContactCentreHub, from_column: organization_id}
+      - {type: written_by, to: Employee, to_key: id, from_column: author_user_id}
+
+  ccass.conversation_participants:
+    product: ccaas
+    label: Participant
+    key: id
+    access: {domain: ccaas, module: conversations, sensitivity: L2}
+    edge_budget: 1
+    properties: [id, organization_id, conversation_id, participant_type,
+                 identity_ref, joined_at, left_at]
+    relationships:
+      - {type: has_participant, from: Conversation, from_key: id, from_column: conversation_id}
+    resolve_later:
+      - "identity_ref is a channel identity string (email / visitor id / psid), not an agent id and not a cdp_id. Resolve through CustomerIdentity (org, type, value) once identity_type is available on this table, then add participant_is -> Customer | Staff."
+    # v1 pointed identity_ref at both Staff.id and Customer.cdp_id from the same
+    # column. Both missed on nearly every row.
+
+  ccass.conversation_assignments:
+    product: ccaas
+    label: Assignment
+    key: id
+    access: {domain: ccaas, module: routing, sensitivity: L1}
+    edge_budget: 3
+    collection: {name: RoutingHistory, owner_column: queue_id, bucket_column: offered_at}
+    properties: [id, organization_id, conversation_id, queue_id, agent_id,
+                 routing_attempt_id, state, reason, offered_at, accepted_at,
+                 rejected_at, expired_at, ended_at, expires_at]
+    relationships:
+      - {type: assigns, to: Conversation, to_key: id, from_column: conversation_id}
+      - {type: offered_to, to: Staff, to_key: uid, from_column: agent_id, to_key_template: "service:{agent_id}"}
+
+  ccass.conversation_transfers:
+    product: ccaas
+    label: Transfer
+    key: id
+    access: {domain: ccaas, module: routing, sensitivity: L1}
+    edge_budget: 3
+    collection: {name: RoutingHistory, owner_column: to_queue_id, bucket_column: requested_at}
+    properties: [id, organization_id, conversation_id, from_queue_id, from_agent_id,
+                 to_queue_id, requested_agent_id, offered_agent_id, state, notes,
+                 disposition_code, resolution_code, requested_at, offered_at,
+                 accepted_at, completed_at, cancelled_at, updated_at]
+    relationships:
+      - {type: transfers, to: Conversation, to_key: id, from_column: conversation_id}
+      - {type: from_queue, to: Queue, to_key: id, from_column: from_queue_id}
+    # v1 emitted six edges here, three of them to Staff from three different
+    # columns. from_agent_id / requested_agent_id / offered_agent_id are
+    # properties; the transfer is a queue-level fact.
+
+  ccass.routing_attempts:
+    product: ccaas
+    label: RoutingAttempt
+    key: id
+    access: {domain: ccaas, module: routing, sensitivity: L1}
+    edge_budget: 2
+    collection: {name: RoutingHistory, owner_column: queue_id, bucket_column: created_at}
+    properties: [id, organization_id, conversation_id, queue_id, agent_id,
+                 attempt_number, outcome, created_at, completed_at]
+    relationships:
+      - {type: attempt_for, to: Conversation, to_key: id, from_column: conversation_id}
+
+  ccass.webchat_sessions:
+    product: ccaas
+    label: ChatSession
+    key: id
+    access: {domain: ccaas, module: conversations, sensitivity: L2}
+    edge_budget: 1
+    custom_field: prechat_answers
+    custom_dynamic: true
+    properties: [id, organization_id, conversation_id, webchat_id, visitor_id,
+                 page_origin, page_url, created_at, updated_at, ended_at,
+                 end_reason, ended_by]
+    relationships:
+      - {type: has_chat_session, from: Conversation, from_key: id, from_column: conversation_id}
+
+  ccass.agent_missed_contacts:
+    product: ccaas
+    label: MissedConversation
+    key: id
+    access: {domain: ccaas, module: routing, sensitivity: L2}
+    edge_budget: 2
+    collection: {name: Inbox, owner_column: assigned_user_id, bucket_column: missed_at}
+    custom_field: metadata
+    custom_dynamic: true
+    properties: [id, organization_id, agent_id, assigned_user_id, conversation_id,
+                 assignment_id, contact_id, queue_id, channel, reason,
+                 customer_name, customer_email, customer_phone, offered_at,
+                 missed_at, acknowledged_at, created_at]
+    relationships:
+      - {type: missed, to: Conversation, to_key: id, from_column: conversation_id}
+    verify: "table is not present in the introspected ccass reference — confirm it exists"
+
+  ccass.agent_tasks:
+    product: ccaas
+    label: Task
+    key: id
+    access: {domain: ccaas, module: workspace, sensitivity: L1}
+    edge_budget: 3
+    collection: {name: Inbox, owner_column: assigned_user_id, bucket_column: created_at}
+    custom_field: metadata
+    custom_dynamic: true
+    properties: [id, organization_id, assigned_user_id, created_by_user_id,
+                 assigned_by_user_id, assigned_by_label, contact_id, conversation_id,
+                 task_type, status, priority, source, title, summary, notes, channel,
+                 due_at, completed_at, dismissed_at, created_at, updated_at]
+    relationships:
+      - {type: about_conversation, to: Conversation, to_key: id, from_column: conversation_id}
+      - {type: created_by, to: Employee, to_key: id, from_column: created_by_user_id}
+
+  # --- bot runtime -----------------------------------------------------------
+
+  ccass.nlp_skills:
+    product: ccaas
+    label: BotSkill
+    key: id
+    access: {domain: ccaas, module: automation, sensitivity: L1}
+    edge_budget: 2
+    properties: [id, organization_id, skill_key, name, description, skill_type,
+                 owner_user_id, state, created_at, updated_at]
+    relationships:
+      - {type: has_bot_skill, from: ContactCentreHub, from_column: organization_id}
+      - {type: owned_by, to: Employee, to_key: id, from_column: owner_user_id}
+
+  ccass.nlp_skill_versions:
+    product: ccaas
+    label: BotSkillVersion
+    key: id
+    access: {domain: ccaas, module: automation, sensitivity: L1}
+    edge_budget: 1
+    custom_field: model_policy
+    custom_dynamic: true
+    properties: [id, organization_id, skill_id, version_number, checksum, state,
+                 published_at, created_at]
+    relationships:
+      - {type: has_version, from: BotSkill, from_key: id, from_column: skill_id}
+
+  ccass.nlp_skill_bindings:
+    product: ccaas
+    label: BotDeployment
+    key: id
+    access: {domain: ccaas, module: automation, sensitivity: L1}
+    edge_budget: 1
+    custom_field: overrides
+    custom_dynamic: true
+    properties: [id, organization_id, skill_version_id, role, surface, channel,
+                 priority, effective_from, effective_to, enabled, created_at]
+    relationships:
+      - {type: deployed_as, from: BotSkillVersion, from_key: id, from_column: skill_version_id}
+
+  ccass.nlp_skill_tools:
+    product: ccaas
+    label: BotTool
+    key: id
+    access: {domain: ccaas, module: automation, sensitivity: L1}
+    edge_budget: 1
+    properties: [id, organization_id, skill_version_id, tool_key, permission_class,
+                 requires_confirmation, created_at]
+    relationships:
+      - {type: has_tool, from: BotSkillVersion, from_key: id, from_column: skill_version_id}
+
+  ccass.nlp_conversations:
+    product: ccaas
+    label: BotSession
+    key: id
+    access: {domain: ccaas, module: automation, sensitivity: L1}
+    edge_budget: 2
+    properties: [id, organization_id, conversation_id, runtime_type,
+                 skill_version_id, status, started_at, ended_at, end_reason,
+                 created_at, updated_at]
+    relationships:
+      - {type: has_bot_session, from: Conversation, from_key: id, from_column: conversation_id}
+      - {type: used_version, to: BotSkillVersion, to_key: id, from_column: skill_version_id}
+
+  # --- cross-product interaction rollup --------------------------------------
+
+  cdp.interactions:
+    product: cdp
+    readable_by: [crm, ccaas]
+    label: ConversationSummary
+    key: id
+    access: {domain: cdp, module: conversations, sensitivity: L2}
+    edge_budget: 3
+    collection: {name: TouchpointHistory, owner_column: contact_id, bucket_column: started_at}
+    custom_field: topics
+    custom_dynamic: true
+    properties: [id, organization_id, conversation_id, contact_id, profile_id,
+                 visitor_id, channel, queue_id, agent_id, status, started_at,
+                 ended_at, outcome, summary, sentiment, disposition_code,
+                 sla_result, last_activity_at, created_at, updated_at]
+    relationships:
+      - {type: summary_of, to: Conversation, to_key: id, from_column: conversation_id}
+      - {type: routed_to, to: Queue, to_key: id, from_column: queue_id}
+
+  # ===========================================================================
+  # PRODUCT CATALOG  (generic commercial spine — any tenant that sells)
+  # ===========================================================================
+
+  inventory.products:
+    embed:
+      fields: [name, tagline, description, category, subcategory, brand]
+      property: _embedding
+    product: platform
+    readable_by: [crm, cdp, campaign]
+    label: Product
+    key: id
+    access: {domain: common, module: commerce, sensitivity: L1}
+    edge_budget: 1
+    properties: [id, organization_id, name, tagline, description, specifications,
+                 image_url, product_url, sku, brand, category, subcategory, tags,
+                 stock_on_hand,
+                 {name: price, type: decimal, scale: 2, currency_column: currency},
+                 currency, max_discount_percent, status, product_type,
+                 billing_type, billing_frequency, unit_of_measure,
+                 created_at, updated_at]
+    relationships:
+      - {type: has_product, from: ProductCatalog, from_column: organization_id}
+    fan_in_warning: "Product accumulates LineItem and Purchase references. Never traverse outward from Product without a period or LIMIT filter."
+
+  crm.product_offers:
+    product: crm
+    readable_by: [cdp, campaign]
+    label: ProductPlan
+    key: id
+    access: {domain: crm, module: commerce, sensitivity: L1}
+    edge_budget: 1
+    properties: [id, organization_id, product_id, name, code, billing_type,
+                 billing_frequency, included_qty, meter_key, sort_order, status,
+                 created_at, updated_at]
+    relationships:
+      - {type: plan_for, to: Product, to_key: id, from_column: product_id}
+
+  crm.product_addons:
+    product: crm
+    readable_by: [cdp, campaign]
+    label: AddOn
+    key: id
+    access: {domain: crm, module: commerce, sensitivity: L1}
+    edge_budget: 1
+    properties: [id, organization_id, product_id, name, unit_label, meter_key,
+                 is_overage, pricing_model,
+                 {name: flat_price, type: decimal, scale: 2},
+                 {name: unit_price, type: decimal, scale: 4},
+                 step_size,
+                 {name: step_price, type: decimal, scale: 2},
+                 sort_order, created_at, updated_at]
+    relationships:
+      - {type: add_on_for, to: Product, to_key: id, from_column: product_id}
+
+  crm.product_addon_tiers:
+    product: crm
+    readable_by: [cdp]
+    label: PricingTier
+    key: id
+    access: {domain: crm, module: commerce, sensitivity: L1}
+    edge_budget: 1
+    properties: [id, organization_id, addon_id, min_qty, max_qty,
+                 {name: unit_price, type: decimal, scale: 4},
+                 created_at, updated_at]
+    relationships:
+      - {type: has_tier, from: AddOn, from_key: id, from_column: addon_id}
+
+  crm.price_books:
+    product: crm
+    label: PriceList
+    key: id
+    access: {domain: crm, module: commerce, sensitivity: L1}
+    edge_budget: 1
+    properties: [id, organization_id, name, code, currency, is_default,
+                 created_at, updated_at]
+    relationships:
+      - {type: has_price_list, from: ProductCatalog, from_column: organization_id}
+
+  crm.price_book_entries:
+    product: crm
+    label: PriceListEntry
+    key: id
+    access: {domain: crm, module: commerce, sensitivity: L1}
+    edge_budget: 4
+    properties: [id, organization_id, price_book_id, product_id, offer_id, addon_id,
+                 {name: amount, type: decimal, scale: 2},
+                 billing_frequency, created_at, updated_at]
+    relationships:
+      - {type: has_entry, from: PriceList, from_key: id, from_column: price_book_id}
+      - {type: price_for, to: Product, to_key: id, from_column: product_id}
+      - {type: price_for, to: ProductPlan, to_key: id, from_column: offer_id}
+      - {type: price_for, to: AddOn, to_key: id, from_column: addon_id}
+
+  # ===========================================================================
+  # SALES AND REVENUE  (source: crm)
+  # ===========================================================================
+
+  crm.organization_profiles:
+    product: crm
+    label: IndustryProfile
+    key: organization_id
+    access: {domain: crm, module: sales, sensitivity: L1}
+    edge_budget: 1
+    custom_field: vertical_config
+    custom_dynamic: true
+    properties: [organization_id, vertical, created_at, updated_at]
+    relationships:
+      - {type: has_industry_profile, from: SetupHub, from_column: organization_id}
+    note: "vertical here is a CRM pack override. accounts.organizations.industry_type remains the only overlay selector."
+
+  crm.companies:
+    product: crm
+    label: Account
+    key: id
+    access: {domain: crm, module: sales, sensitivity: L1}
+    edge_budget: 2
+    extra_labels:
+      - {label: Partner, when: {channel_role: [franchise, owned_store, brand_hq]}}
+    properties: [id, organization_id, name, domain, industry, employee_count,
+                 linkedin_url, logo_url, owner_user_id, channel_role,
+                 parent_company_id, expansion_signal, expansion_reason,
+                 expansion_draft, expansion_last_run_at, created_at, updated_at]
+    relationships:
+      - {type: owned_by, to: Employee, to_key: id, from_column: owner_user_id}
+      - {type: part_of, to: Account, to_key: id, from_column: parent_company_id}
+    # Not attached to Tenant: unbounded in large B2B tenants.
+
+  crm.company_locations:
+    product: crm
+    label: AccountLocation
+    key: id
+    access: {domain: crm, module: sales, sensitivity: L1}
+    edge_budget: 2
+    properties: [id, organization_id, company_id, name, type, address, city,
+                 industry, employee_count, owner_user_id, created_at, updated_at]
+    relationships:
+      - {type: has_location, from: Account, from_key: id, from_column: company_id}
+      - {type: owned_by, to: Employee, to_key: id, from_column: owner_user_id}
+
+  crm.contact_profiles:
+    embed:
+      fields: [lead_source, lead_status, crm_status, nurture_status, notes]
+      property: _embedding
+    product: crm
+    label: SalesProfile
+    key: id
+    access: {domain: crm, module: sales, sensitivity: L2}
+    edge_budget: 5
+    custom_field: custom_attributes
+    custom_dynamic: true
+    properties: [id, organization_id, account_contact_id, company_id, location_id,
+                 owner_user_id, created_by_user_id, lifecycle_stage, lead_source,
+                 lead_status, disqualify_reason, crm_status, notes, tags, is_pinned,
+                 assignment_reason, sla_deadline, assigned_at, assignment_escalated,
+                 nurture_status, nurture_sequence_step, nurture_started_at,
+                 nurture_last_touch_at, flagged_for_review, flag_reason,
+                 lifecycle_last_action, lifecycle_last_reason, lifecycle_last_run_at,
+                 bant_budget, bant_authority, bant_need, bant_timeline,
+                 converted_deal_id, marketing_opt_out, marketing_opt_out_at,
+                 created_at, updated_at]
+    relationships:
+      - {type: sales_view_of, to: Customer, to_key: cdp_id, from_column: account_contact_id}
+      - {type: works_at, to: Account, to_key: id, from_column: company_id}
+      - {type: at_location, to: AccountLocation, to_key: id, from_column: location_id}
+      - {type: owned_by, to: Employee, to_key: id, from_column: owner_user_id}
+      - {type: converted_to, to: Deal, to_key: id, from_column: converted_deal_id}
+    # sales_view_of replaces OVERLAY_OF. Ticketing's SupportProfile uses
+    # support_view_of: same pattern, one readable verb per product view.
+
+  crm.deals:
+    embed:
+      fields: [title, stage, notes, lost_reason]
+      property: _embedding
+    product: crm
+    label: Deal
+    key: id
+    access: {domain: crm, module: sales, sensitivity: L2}
+    edge_budget: 4
+    extra_labels:
+      - {label: WonDeal,  when: {stage: [closed_won]}}
+      - {label: LostDeal, when: {stage: [closed_lost]}}
+    properties: [id, organization_id, title, stage,
+                 {name: amount, type: decimal, scale: 2},
+                 company_id, location_id, contact_id, contact_name, contact_email,
+                 owner_user_id, notes, lost_reason, expected_close_date, closed_at,
+                 forecast_category, forecast_confidence_percent, forecast_flagged,
+                 forecast_reason, forecast_last_run_at, created_at, updated_at]
+    relationships:
+      - {type: with_account, to: Account, to_key: id, from_column: company_id}
+      - {type: at_location, to: AccountLocation, to_key: id, from_column: location_id}
+      - {type: primary_contact, to: Customer, to_key: cdp_id, from_column: contact_id}
+      - {type: owned_by, to: Employee, to_key: id, from_column: owner_user_id}
+
+  crm.deal_activities:
+    product: crm
+    label: DealActivity
+    key: id
+    access: {domain: crm, module: sales, sensitivity: L2}
+    edge_budget: 2
+    properties: [id, organization_id, deal_id, type, subject, body, due_at,
+                 completed_at, created_by_user_id, created_at, updated_at]
+    relationships:
+      - {type: has_activity, from: Deal, from_key: id, from_column: deal_id}
+      - {type: created_by, to: Employee, to_key: id, from_column: created_by_user_id}
+
+  crm.contact_activities:
+    product: crm
+    label: CustomerActivity
+    key: id
+    access: {domain: crm, module: sales, sensitivity: L2}
+    edge_budget: 2
+    collection: {name: ActivityHistory, owner_column: contact_id, bucket_column: created_at}
+    extra_labels:
+      - {label: EmailActivity, when: {type: [email]}}
+      - {label: TaskActivity,  when: {type: [task]}}
+      - {label: MeetingActivity, when: {type: [meeting]}}
+    custom_field: transcript_insights
+    custom_dynamic: true
+    properties: [id, organization_id, contact_id, type, folder, thread_id,
+                 provider_message_id, provider_thread_id, mail_provider,
+                 rfc_message_id, email_direction, needs_manual_response,
+                 subject, body, due_at, assignee_user_id, task_status,
+                 reminder_sent_at, reminder_24h_sent_at, reminder_1h_sent_at,
+                 miss_escalated_at, mom_sent_at, transcript_text, transcript_source,
+                 transcript_analyzed_at, completed_at, created_by_user_id,
+                 created_at, updated_at]
+    relationships:
+      - {type: assigned_to, to: Employee, to_key: id, from_column: assignee_user_id}
+
+  crm.appointments:
+    product: crm
+    label: Meeting
+    key: id
+    access: {domain: crm, module: sales, sensitivity: L2}
+    edge_budget: 2
+    properties: [id, organization_id, contact_id, host_user_id, activity_id,
+                 source, status, title, starts_at, ends_at, timezone, provider,
+                 join_url, calendar_event_id, assignment_reason, guest_emails,
+                 canceled_at, completed_at, created_at, updated_at]
+    relationships:
+      - {type: scheduled_as, from: CustomerActivity, from_key: id, from_column: activity_id}
+      - {type: hosted_by, to: Employee, to_key: id, from_column: host_user_id}
+    # Meeting hangs off its CustomerActivity record, not off ActivityHistory
+    # itself. v1 put both on the timeline, so every meeting appeared twice.
+
+  # --- documents (three template tables, one concept) ------------------------
+
+  crm.proposal_templates:
+    product: crm
+    label: DocumentTemplate
+    key: uid
+    synthesize_key: "proposal:{id}"
+    access: {domain: crm, module: sales, sensitivity: L1}
+    edge_budget: 1
+    sublabels: {static: ProposalTemplate}
+    custom_field: sections
+    custom_dynamic: true
+    properties: [id, organization_id, name, code, kind, blueprint, assets,
+                 is_default, created_at, updated_at]
+    relationships:
+      - {type: has_template, from: SetupHub, from_column: organization_id}
+
+  crm.quote_templates:
+    product: crm
+    merges_into: DocumentTemplate
+    key: uid
+    synthesize_key: "quote:{id}"
+    access: {domain: crm, module: sales, sensitivity: L1}
+    edge_budget: 1
+    sublabels: {static: QuoteTemplate}
+    custom_field: sections
+    custom_dynamic: true
+    properties: [id, organization_id, name, code, kind, blueprint, assets,
+                 is_default, created_at, updated_at]
+    relationships:
+      - {type: has_template, from: SetupHub, from_column: organization_id}
+
+  crm.invoice_templates:
+    product: crm
+    merges_into: DocumentTemplate
+    key: uid
+    synthesize_key: "invoice:{id}"
+    access: {domain: crm, module: sales, sensitivity: L1}
+    edge_budget: 1
+    sublabels: {static: InvoiceTemplate}
+    custom_field: sections
+    custom_dynamic: true
+    properties: [id, organization_id, name, code, kind, blueprint, assets,
+                 is_default, created_at, updated_at]
+    relationships:
+      - {type: has_template, from: SetupHub, from_column: organization_id}
+
+  crm.proposals:
+    product: crm
+    label: Proposal
+    key: id
+    access: {domain: crm, module: sales, sensitivity: L2}
+    edge_budget: 3
+    properties: [id, organization_id, deal_id, template_id, number, title, summary,
+                 customer_name, version, status, attachment_url, shared_at,
+                 approval_status, approved_at, approved_by_user_id,
+                 created_by_user_id, created_at, updated_at]
+    relationships:
+      - {type: for_deal, to: Deal, to_key: id, from_column: deal_id}
+      - {type: uses_template, to: DocumentTemplate, to_key: uid, from_column: template_id, to_key_template: "proposal:{template_id}"}
+      - {type: approved_by, to: Employee, to_key: id, from_column: approved_by_user_id}
+
+  crm.quotes:
+    product: crm
+    label: Quote
+    key: id
+    access: {domain: crm, module: sales, sensitivity: L2}
+    edge_budget: 4
+    properties: [id, organization_id, deal_id, proposal_id, template_id, number,
+                 version, status, currency, renewal_contract_id,
+                 {name: subtotal, type: decimal, scale: 2, currency_column: currency},
+                 {name: discount_pct, type: decimal, scale: 2},
+                 {name: total, type: decimal, scale: 2, currency_column: currency},
+                 valid_until, notes, customer_name, company_name, vendor_name,
+                 sent_at, accepted_at, approval_status, approval_note, approved_at,
+                 approved_by_user_id, created_by_user_id, created_at, updated_at]
+    relationships:
+      - {type: for_deal, to: Deal, to_key: id, from_column: deal_id}
+      - {type: from_proposal, to: Proposal, to_key: id, from_column: proposal_id}
+      - {type: renews, to: Contract, to_key: id, from_column: renewal_contract_id}
+      - {type: approved_by, to: Employee, to_key: id, from_column: approved_by_user_id}
+
+  crm.sales_orders:
+    product: crm
+    label: SalesOrder
+    key: id
+    access: {domain: crm, module: sales, sensitivity: L2}
+    edge_budget: 4
+    properties: [id, organization_id, deal_id, quote_id, company_id, contact_id,
+                 number, status, currency,
+                 {name: total, type: decimal, scale: 2, currency_column: currency},
+                 confirmed_at, created_by_user_id, created_at, updated_at]
+    relationships:
+      - {type: for_deal, to: Deal, to_key: id, from_column: deal_id}
+      - {type: from_quote, to: Quote, to_key: id, from_column: quote_id}
+      - {type: for_account, to: Account, to_key: id, from_column: company_id}
+      - {type: placed_by, to: Customer, to_key: cdp_id, from_column: contact_id}
+
+  crm.invoices:
+    product: crm
+    label: Invoice
+    key: id
+    access: {domain: crm, module: finance, sensitivity: L2}
+    edge_budget: 5
+    extra_labels:
+      - {label: OverdueInvoice, when: {escalation_severity: not_null}}
+    properties: [id, organization_id, order_id, deal_id, company_id, template_id,
+                 number, status, currency, contract_id, billing_schedule_id,
+                 voided_at, sent_at,
+                 {name: total, type: decimal, scale: 2, currency_column: currency},
+                 {name: discount_amount, type: decimal, scale: 2, currency_column: currency},
+                 {name: tax_amount, type: decimal, scale: 2, currency_column: currency},
+                 issue_date, payment_terms, notes, billing_address, lead_email,
+                 lead_phone, tax_id, due_at, paid_at, approval_status, approved_at,
+                 approved_by_user_id, created_by_user_id, escalation_severity,
+                 escalation_reason, escalation_draft, escalation_last_run_at,
+                 created_at, updated_at]
+    relationships:
+      - {type: for_order, to: SalesOrder, to_key: id, from_column: order_id}
+      - {type: for_account, to: Account, to_key: id, from_column: company_id}
+      - {type: under_contract, to: Contract, to_key: id, from_column: contract_id}
+      - {type: on_billing_schedule, to: BillingSchedule, to_key: id, from_column: billing_schedule_id}
+      - {type: approved_by, to: Employee, to_key: id, from_column: approved_by_user_id}
+
+  # --- line items (three tables, one concept) --------------------------------
+
+  crm.quote_lines:
+    product: crm
+    label: LineItem
+    key: uid
+    synthesize_key: "quote:{id}"
+    access: {domain: crm, module: sales, sensitivity: L1}
+    edge_budget: 2
+    sublabels: {static: QuoteLine}
+    properties: [id, organization_id, quote_id, product_id, name,
+                 {name: quantity, type: decimal, scale: 2},
+                 {name: unit_price, type: decimal, scale: 2},
+                 {name: amount, type: decimal, scale: 2},
+                 sort_order, created_at, updated_at]
+    relationships:
+      - {type: has_line, from: Quote, from_key: id, from_column: quote_id}
+      - {type: for_product, to: Product, to_key: id, from_column: product_id}
+
+  crm.order_lines:
+    product: crm
+    merges_into: LineItem
+    key: uid
+    synthesize_key: "order:{id}"
+    access: {domain: crm, module: sales, sensitivity: L1}
+    edge_budget: 2
+    sublabels: {static: OrderLine}
+    properties: [id, organization_id, order_id, product_id, name,
+                 {name: quantity, type: decimal, scale: 2},
+                 {name: unit_price, type: decimal, scale: 2},
+                 {name: amount, type: decimal, scale: 2},
+                 sort_order, created_at, updated_at]
+    relationships:
+      - {type: has_line, from: SalesOrder, from_key: id, from_column: order_id}
+      - {type: for_product, to: Product, to_key: id, from_column: product_id}
+
+  crm.invoice_lines:
+    product: crm
+    merges_into: LineItem
+    key: uid
+    synthesize_key: "invoice:{id}"
+    access: {domain: crm, module: finance, sensitivity: L1}
+    edge_budget: 3
+    sublabels: {static: InvoiceLine}
+    properties: [id, organization_id, invoice_id, kind, product_id, addon_id, name,
+                 description,
+                 {name: quantity, type: decimal, scale: 2},
+                 {name: unit_price, type: decimal, scale: 4},
+                 {name: tax_percent, type: decimal, scale: 2},
+                 {name: amount, type: decimal, scale: 2},
+                 sort_order, created_at, updated_at]
+    relationships:
+      - {type: has_line, from: Invoice, from_key: id, from_column: invoice_id}
+      - {type: for_product, to: Product, to_key: id, from_column: product_id}
+      - {type: for_add_on, to: AddOn, to_key: id, from_column: addon_id}
+
+  crm.contracts:
+    product: crm
+    label: Contract
+    key: id
+    access: {domain: crm, module: finance, sensitivity: L2}
+    edge_budget: 3
+    extra_labels:
+      - {label: AutoRenewContract, when: {auto_renew: [true]}}
+    properties: [id, organization_id, company_id, deal_id, title, starts_at, ends_at,
+                 {name: arr, type: decimal, scale: 2},
+                 renew_deal_id, renewal_reminded_at, auto_renew, status,
+                 source_order_id, billing_frequency, cancelled_at,
+                 created_at, updated_at]
+    relationships:
+      - {type: for_account, to: Account, to_key: id, from_column: company_id}
+      - {type: from_deal, to: Deal, to_key: id, from_column: deal_id}
+      - {type: renewed_by, to: Deal, to_key: id, from_column: renew_deal_id}
+
+  crm.contract_billing_schedules:
+    product: crm
+    label: BillingSchedule
+    key: id
+    access: {domain: crm, module: finance, sensitivity: L1}
+    edge_budget: 2
+    properties: [id, organization_id, contract_id, company_id, billing_frequency,
+                 start_date, end_date, next_billing_date, status,
+                 created_at, updated_at]
+    relationships:
+      - {type: has_billing_schedule, from: Contract, from_key: id, from_column: contract_id}
+      - {type: for_account, to: Account, to_key: id, from_column: company_id}
+    # v1 had this at L3 (the file's only L3) on date columns alone. Rubric
+    # puts it at L1.
+
+  # --- assignment policy -----------------------------------------------------
+
+  crm.org_assignment_settings:
+    product: crm
+    label: AssignmentPolicy
+    key: organization_id
+    access: {domain: crm, module: sales, sensitivity: L1}
+    edge_budget: 1
+    custom_field: lead_icp
+    custom_dynamic: true
+    properties: [organization_id, senior_amount_threshold, updated_by_user_id,
+                 created_at, updated_at]
+    relationships:
+      - {type: has_assignment_policy, from: SetupHub, from_column: organization_id}
+
+  crm.sales_user_assignment_profiles:
+    product: crm
+    label: SalesRepCapacity
+    key: id
+    access: {domain: crm, module: sales, sensitivity: L2}
+    edge_budget: 1
+    properties: [id, organization_id, user_id, accepting_leads, max_open_deals,
+                 seniority_tier, on_pto_until, country, created_at, updated_at]
+    relationships:
+      - {type: has_sales_capacity, from: Employee, from_key: id, from_column: user_id}
+
+  # --- agent output ----------------------------------------------------------
+
+  crm.lead_enrichment_snapshots:
+    product: crm
+    label: LeadEnrichment
+    key: id
+    access: {domain: crm, module: intelligence, sensitivity: L1}
+    edge_budget: 1
+    collection: {name: InsightSet, owner_column: contact_id}
+    properties: [id, organization_id, contact_id, company_name, company_size,
+                 industry, company_description, products, revenue_band,
+                 seniority_tier, geography, email_domain_type,
+                 enrichment_confidence, enrichment_source, conflict_flags,
+                 enrichment_timestamp, created_at, updated_at]
+
+  crm.lead_summaries:
+    product: crm
+    label: LeadSummary
+    key: id
+    access: {domain: crm, module: intelligence, sensitivity: L2}
+    edge_budget: 1
+    collection: {name: InsightSet, owner_column: contact_id}
+    properties: [id, organization_id, contact_id, summary, headline, intent,
+                 recommended_action, flags, signature, source, model,
+                 created_at, updated_at]
+
+  crm.meeting_assist_sessions:
+    product: crm
+    label: LiveMeeting
+    key: id
+    access: {domain: crm, module: intelligence, sensitivity: L2}
+    edge_budget: 2
+    custom_field: last_suggestions
+    custom_dynamic: true
+    properties: [id, organization_id, contact_id, activity_id, provider,
+                 external_meeting_id, join_url, host_user_id, status, started_at,
+                 ended_at, last_assist_at, meta, created_at, updated_at]
+    relationships:
+      - {type: assists, to: CustomerActivity, to_key: id, from_column: activity_id}
+      - {type: hosted_by, to: Employee, to_key: id, from_column: host_user_id}
+
+  crm.meeting_transcript_chunks:
+    product: crm
+    label: TranscriptLine
+    key: id
+    access: {domain: crm, module: intelligence, sensitivity: L2}
+    edge_budget: 1
+    properties: [id, organization_id, session_id, seq, speaker, speaker_email,
+                 text, spoken_at, source, created_at]
+    relationships:
+      - {type: has_transcript_line, from: LiveMeeting, from_key: id, from_column: session_id}
+
+  crm.meeting_analyses:
+    product: crm
+    label: MeetingOutcome
+    key: id
+    access: {domain: crm, module: intelligence, sensitivity: L2}
+    edge_budget: 2
+    custom_field: evidence
+    custom_dynamic: true
+    properties: [id, organization_id, activity_id, contact_id, deal_id, outcome,
+                 bant_budget, bant_authority, bant_need, bant_timeline_text,
+                 next_step_agreed, objections_raised, confidence, analyzed_at,
+                 created_at]
+    relationships:
+      - {type: analysis_of, to: CustomerActivity, to_key: id, from_column: activity_id}
+      - {type: for_deal, to: Deal, to_key: id, from_column: deal_id}
+
+  crm.coaching_insights:
+    product: crm
+    label: CoachingNote
+    key: id
+    access: {domain: crm, module: intelligence, sensitivity: L2}
+    edge_budget: 2
+    properties: [id, organization_id, activity_id, contact_id, deal_id, rep_user_id,
+                 interaction_type, overall_impression, discovery_quality,
+                 objection_handling, methodology_note, talk_balance_note, strengths,
+                 growth_areas, highlighted_moment, coaching_note, analyzed_at, created_at]
+    relationships:
+      - {type: about_employee, to: Employee, to_key: id, from_column: rep_user_id}
+      - {type: analysis_of, to: CustomerActivity, to_key: id, from_column: activity_id}
+    access_note: "coaching content is rep-private; RBAC must not expose about_employee traversal to peers"
+
+  crm.privacy_requests:
+    product: crm
+    label: PrivacyRequest
+    key: id
+    access: {domain: crm, module: compliance, sensitivity: L2}
+    edge_budget: 3
+    properties: [id, organization_id, activity_id, contact_id, request_type,
+                 confidence, status, reason, draft_confirmation, reviewed_by_user_id,
+                 reviewed_at, executed_at, created_at, updated_at]
+    relationships:
+      - {type: about_customer, to: Customer, to_key: cdp_id, from_column: contact_id}
+      - {type: raised_in, to: CustomerActivity, to_key: id, from_column: activity_id}
+      - {type: reviewed_by, to: Employee, to_key: id, from_column: reviewed_by_user_id}
+    erasure_note: "on execution, the graph must delete the Customer subtree (all collections, periods and members) in the tenant database. Erasure propagation is a loader responsibility, not a CDC side effect."
+
+  crm.process_confirmations:
+    product: crm
+    label: ApprovalRequest
+    key: id
+    access: {domain: crm, module: compliance, sensitivity: L1}
+    edge_budget: 3
+    custom_field: payload
+    custom_dynamic: true
+    properties: [id, organization_id, contact_id, owner_user_id, activity_id,
+                 deal_id, action_kind, title, summary, status, decided_at,
+                 decided_by_user_id, result_note, created_at, updated_at]
+    relationships:
+      - {type: for_deal, to: Deal, to_key: id, from_column: deal_id}
+      - {type: waiting_on, to: Employee, to_key: id, from_column: owner_user_id}
+      - {type: decided_by, to: Employee, to_key: id, from_column: decided_by_user_id}
+
+  crm.agent_memories:
+    product: crm
+    label: AiMemory
+    key: id
+    access: {domain: crm, module: intelligence, sensitivity: L2}
+    edge_budget: 0
+    properties: [id, organization_id, scope_type, scope_id, slot_key, slot_value,
+                 source, expires_at, created_at, updated_at]
+    resolve_later:
+      - "scope_type + scope_id is polymorphic (org | user | contact | deal). Add a resolved scoped_to edge once the loader supports conditional target labels; until then this is a property-only island by design, not by accident."
+
+  # --- lead jobs (four tables, one concept) ----------------------------------
+
+  crm.lead_scoring_jobs:
+    product: crm
+    label: LeadJob
+    key: uid
+    synthesize_key: "scoring:{id}"
+    access: {domain: crm, module: intelligence, sensitivity: L1}
+    edge_budget: 1
+    sublabels: {static: ScoringJob}
+    properties: [id, organization_id, contact_id, status, score, grade, band,
+                 rationale, fit_score, intent_score, next_best_action,
+                 trigger_reason, previous_score, created_at, updated_at, completed_at]
+    relationships:
+      - {type: about_customer, to: Customer, to_key: cdp_id, from_column: contact_id}
+
+  crm.lead_nurture_jobs:
+    product: crm
+    merges_into: LeadJob
+    key: uid
+    synthesize_key: "nurture:{id}"
+    access: {domain: crm, module: intelligence, sensitivity: L1}
+    edge_budget: 1
+    sublabels: {static: NurtureJob}
+    properties: [id, organization_id, contact_id, status, decision, nurture_status,
+                 current_sequence_step, sequence_started_at, last_sent_at,
+                 created_at, updated_at, completed_at]
+    relationships:
+      - {type: about_customer, to: Customer, to_key: cdp_id, from_column: contact_id}
+
+  crm.lead_lifecycle_jobs:
+    product: crm
+    merges_into: LeadJob
+    key: uid
+    synthesize_key: "lifecycle:{id}"
+    access: {domain: crm, module: intelligence, sensitivity: L1}
+    edge_budget: 2
+    sublabels: {static: LifecycleJob}
+    properties: [id, organization_id, contact_id, deal_id, status, ladder,
+                 from_stage, to_stage, decision, reason, trigger_reason,
+                 last_applied_at, created_at, updated_at, completed_at]
+    relationships:
+      - {type: about_customer, to: Customer, to_key: cdp_id, from_column: contact_id}
+      - {type: for_deal, to: Deal, to_key: id, from_column: deal_id}
+
+  crm.lead_enrichment_jobs:
+    product: crm
+    merges_into: LeadJob
+    key: uid
+    synthesize_key: "enrichment:{id}"
+    access: {domain: crm, module: intelligence, sensitivity: L1}
+    edge_budget: 2
+    sublabels: {static: EnrichmentJob}
+    properties: [id, organization_id, contact_id, company_id, status,
+                 created_at, updated_at, completed_at]
+    relationships:
+      - {type: about_customer, to: Customer, to_key: cdp_id, from_column: contact_id}
+      - {type: for_account, to: Account, to_key: id, from_column: company_id}
+
+  crm.notifications:
+    product: platform
+    readable_by: [crm, ticketing, campaign]
+    label: Notification
+    key: uid
+    synthesize_key: "crm:{id}"
+    access: {domain: crm, module: workspace, sensitivity: L1}
+    edge_budget: 1
+    sublabels: {static: SalesNotification}
+    custom_field: metadata
+    custom_dynamic: true
+    properties: [id, organization_id, recipient_user_id, actor_user_id, kind, title,
+                 body, href, entity_type, entity_id, contact_id, read_at, created_at]
+    collection: {name: Inbox, owner_column: recipient_user_id, bucket_column: created_at}
+
+  # ===========================================================================
+  # SUPPORT  (source: ticketing)
+  # ===========================================================================
+
+  ticketing.org_settings:
+    product: ticketing
+    label: PortalSettings
+    key: organization_id
+    access: {domain: ticketing, module: support, sensitivity: L1}
+    edge_budget: 1
+    properties: [organization_id, ticket_prefix, portal_label, display_timezone,
+                 portal_auth_mode, portal_slug, created_at, updated_at]
+    relationships:
+      - {type: has_portal_settings, from: SupportHub, from_column: organization_id}
+
+  ticketing.agents:
+    product: platform
+    readable_by: [ccaas, ticketing]
+    merges_into: Staff
+    key: uid
+    synthesize_key: "support:{id}"
+    access: {domain: ticketing, module: workforce, sensitivity: L2}
+    edge_budget: 1
+    sublabels: {static: SupportStaff}
+    properties: [id, organization_id, setup_user_id, support_email, support_phone,
+                 status, role, last_login_at, two_factor_enabled, language, timezone,
+                 date_format, notify_ticket_assignments, notify_ticket_updates,
+                 notify_security_alerts, notify_sla_alerts, notify_product_updates,
+                 created_at, updated_at]
+    relationships:
+      - {type: role_of, to: Employee, to_key: id, from_column: setup_user_id}
+
+  ticketing.contact_profile:
+    product: ticketing
+    mode: lookup_source
+    access: {domain: ticketing, module: support, sensitivity: L1}
+    key: id
+    properties: [id, organization_id, cdp_id, account_id, external_id, status,
+                 total_tickets, password_set_at, last_portal_login_at,
+                 created_at, updated_at]
+    note: "Bridge table only. Populates lookup cache; portal fields attach to Customer via reconcile."
+
+
+  ticketing.ticketing_accounts:
+    product: ticketing
+    label: Company
+    key: id
+    access: {domain: ticketing, module: support, sensitivity: L1}
+    edge_budget: 1
+    properties: [id, organization_id, name, status, created_at, updated_at]
+    relationships:
+      - {type: has_company, from: SupportHub, from_column: organization_id}
+
+  ticketing.agent_queues:
+    product: ticketing
+    label: Queue
+    key: id
+    access: {domain: ticketing, module: support, sensitivity: L1}
+    edge_budget: 1
+    properties: [id, organization_id, external_id, queue_name, description, type,
+                 open_tickets, assigned, sla_status, created_at, updated_at]
+    relationships:
+      - {type: has_queue, from: SupportHub, from_column: organization_id}
+    resolve_later:
+      - "v1 asserted MIRRORED_FROM Team joined on agent_queues.id = setup_teams.id, which is a different id space. If external_id carries the team reference, add copy_of -> Team on external_id. Otherwise support queues are independent of CCaaS teams and no edge belongs here."
+
+  ticketing.agent_queue_members:
+    product: ticketing
+    mode: relationship_only
+    access: {domain: ticketing, module: support, sensitivity: L1}
+    from: {label: Queue, key: id, column: queue_id}
+    to: {label: Staff, key: uid, column: user_id, key_template: "support:{user_id}"}
+    type: has_member
+    properties: [created_at]
+
+  ticketing.tickets:
+    embed:
+      fields: [subject, description, status, priority, category, ai_summary]
+      property: _embedding
+    product: ticketing
+    label: Ticket
+    key: id
+    access: {domain: ticketing, module: support, sensitivity: L2}
+    edge_budget: 5
+    extra_labels:
+      - {label: OverdueTicket,  when: {status: [Overdue]}}
+      - {label: ResolvedTicket, when: {status: [Resolved]}}
+    properties: [id, organization_id, ticket_number, subject, description, status,
+                 priority, customer_id, customer_name, customer_email, customer_phone,
+                 channel, assignee_id, assignee_name, resolver_id, resolver_name,
+                 queue_id, queue_name, attachments, due_at, first_response_at,
+                 resolved_at, csat_score, csat_rated_at, category, skill, ai_summary,
+                 created_by_id, created_by_name, created_at, updated_at]
+    owns_collections: [TicketHistory, ProactiveHistory]
+    relationships:
+      - {type: raised_by, to: Customer, to_key: cdp_id, from_column: customer_cdp_id}
+      - {type: routed_to, to: Queue, to_key: id, from_column: queue_id}
+      - {type: assigned_to, to: Staff, to_key: uid, from_column: assignee_id, to_key_template: "support:{assignee_id}"}
+      - {type: has_resolver, to: Staff, to_key: uid, from_column: resolver_id, to_key_template: "support:{resolver_id}"}
+      - {type: governed_by, to: SLA, match_fields: {priority: priority, organization_id: organization_id}}
+    indexes_required:
+      - "SLA(organization_id, priority) — match_fields lookup on every ticket event"
+    # status is a property. TicketStatusConfig stays a config node under the hub; v1
+    # linked every ticket to it and also to a GlobalTicketStatus stub shared
+    # with conversations, which mixed two status vocabularies in one label.
+
+  # ticketing.ticket_statuses: excluded — status is property + taxonomy (see definitions/entities.yml)
+
+  ticketing.sla_policies:
+    product: platform
+    readable_by: [ccaas, ticketing]
+    merges_into: SLA
+    key: uid
+    synthesize_key: "support:{id}"
+    access: {domain: ticketing, module: support, sensitivity: L1}
+    edge_budget: 1
+    sublabels: {static: TicketSLA}
+    properties: [id, organization_id, priority, resolution_hours,
+                 first_response_hours, display_name, is_system, sort_order, active,
+                 created_at, updated_at]
+    relationships:
+      - {type: has_sla, from: SupportHub, from_column: organization_id}
+
+  ticketing.ticket_notes:
+    product: ticketing
+    label: Note
+    key: id
+    access: {domain: ticketing, module: support, sensitivity: L2}
+    edge_budget: 2
+    extra_labels:
+      - {label: PublicReply,  when: {visibility: [public]}}
+      - {label: PrivateNote,  when: {visibility: [internal]}}
+    properties: [id, organization_id, ticket_id, author_id, author_name, body,
+                 visibility, created_at]
+    relationships:
+      - {type: has_note, from: Ticket, from_key: id, from_column: ticket_id}
+      - {type: written_by, to: Staff, to_key: uid, from_column: author_id, to_key_template: "support:{author_id}"}
+
+  ticketing.kb_articles:
+    embed:
+      fields: [title, content, category]
+      property: _embedding
+    product: ticketing
+    label: KnowledgeArticle
+    key: id
+    access: {domain: ticketing, module: support, sensitivity: L1}
+    edge_budget: 2
+    properties: [id, organization_id, external_id, title, content, category,
+                 author_name, author_id, status, views, attachments,
+                 created_at, updated_at]
+    relationships:
+      - {type: has_article, from: SupportHub, from_column: organization_id}
+      - {type: written_by, to: Staff, to_key: uid, from_column: author_id, to_key_template: "support:{author_id}"}
+
+  ticketing.macros:
+    embed:
+      fields: [title, body]
+      property: _embedding
+    product: ticketing
+    label: Macro
+    key: id
+    access: {domain: ticketing, module: support, sensitivity: L1}
+    edge_budget: 1
+    properties: [id, organization_id, title, body, created_by_id, created_by_name,
+                 created_at, updated_at]
+    relationships:
+      - {type: has_macro, from: SupportHub, from_column: organization_id}
+
+  ticketing.automation_rules:
+    product: ticketing
+    label: AutomationRule
+    key: id
+    access: {domain: ticketing, module: support, sensitivity: L1}
+    edge_budget: 1
+    properties: [id, organization_id, name, event, enabled, priority,
+                 created_by_id, created_by_name, created_at, updated_at]
+    relationships:
+      - {type: has_rule, from: SupportHub, from_column: organization_id}
+
+  # ticketing.dashboard_metrics: excluded from graph (definitions/entities.yml)
+
+  ticketing.audit_events:
+    product: ticketing
+    label: AuditEvent
+    key: id
+    access: {domain: ticketing, module: compliance, sensitivity: L1}
+    edge_budget: 2
+    collection: {name: TicketHistory, owner_column: ticket_id}
+    properties: [id, organization_id, actor_id, actor_name, action, ticket_id,
+                 ticket_number, created_at]
+    relationships:
+      - {type: performed_by, to: Staff, to_key: uid, from_column: actor_id, to_key_template: "support:{actor_id}"}
+
+  ticketing.email_message_refs:
+    product: ticketing
+    label: InboundEmail
+    key: id
+    access: {domain: ticketing, module: support, sensitivity: L2}
+    edge_budget: 1
+    properties: [id, organization_id, message_id, ticket_id, ticket_number, created_at]
+    relationships:
+      - {type: about_ticket, to: Ticket, to_key: id, from_column: ticket_id}
+
+  ticketing.outbound_email_log:
+    product: ticketing
+    label: OutboundEmail
+    key: id
+    access: {domain: ticketing, module: support, sensitivity: L2}
+    edge_budget: 1
+    collection: {name: TicketHistory, owner_column: ticket_id}
+    properties: [id, organization_id, ticket_id, ticket_number, kind, to_email,
+                 subject, body_preview, status, error, created_at]
+
+  ticketing.conversation_contexts:
+    product: ticketing
+    label: AssistantSession
+    key: id
+    access: {domain: ticketing, module: workspace, sensitivity: L2}
+    edge_budget: 1
+    properties: [id, organization_id, user_id, user_key, session_key, version,
+                 created_at, updated_at, expires_at]
+    relationships:
+      - {type: used_by, to: Staff, to_key: uid, from_column: user_id, to_key_template: "support:{user_id}"}
+    # v1 filed this under domain ccaas / module conversations. It is a
+    # ticketing workspace table; a misfiled domain is an RBAC defect.
+
+  ticketing.workflow_events:
+    product: ticketing
+    label: WorkflowEvent
+    key: id
+    access: {domain: ticketing, module: workspace, sensitivity: L1}
+    edge_budget: 1
+    properties: [id, organization_id, user_id, user_key, session_key, request_id,
+                 conversation_context_id, workflow_id, workflow_type, event_type,
+                 version, created_at, expires_at]
+    relationships:
+      - {type: has_event, from: AssistantSession, from_key: id, from_column: conversation_context_id}
+
+  # --- proactive support agents ----------------------------------------------
+
+  # ticketing.proactive_outbox: excluded from graph (definitions/entities.yml)
+
+  ticketing.proactive_recommendations:
+    embed:
+      fields: [status, reason]
+      property: _embedding
+    product: ticketing
+    label: Recommendation
+    key: id
+    access: {domain: ticketing, module: automation, sensitivity: L1}
+    edge_budget: 1
+    collection: {name: ProactiveHistory, owner_column: ticket_id, coerce_owner_to_int: true}
+    properties: [id, organization_id, agent_id, ticket_id, status, reason,
+                 dedupe_key, created_at]
+    note: "agent_id here is a proactive agent code (sema | wloa | tiaa | rcaa), not a Staff node. Property only."
+
+  ticketing.proactive_approvals:
+    product: ticketing
+    label: Approval
+    key: id
+    access: {domain: ticketing, module: automation, sensitivity: L1}
+    edge_budget: 1
+    collection: {name: ProactiveHistory, owner_column: ticket_id, coerce_owner_to_int: true}
+    properties: [id, organization_id, agent_id, ticket_id, status, tool_name, created_at]
+
+  ticketing.proactive_audit:
+    product: ticketing
+    label: ProactiveDecision
+    key: id
+    access: {domain: ticketing, module: automation, sensitivity: L1}
+    edge_budget: 2
+    collection: {name: ProactiveHistory, owner_column: ticket_id, coerce_owner_to_int: true}
+    properties: [id, organization_id, agent_id, ticket_id, event_id, decision,
+                 reason, tool_name, created_at]
+    relationships:
+      - {type: decided_on, to: ProactiveEvent, to_key: id, from_column: event_id}
+
+  # ticketing.proactive_routing_weights: excluded from graph (definitions/entities.yml)
+
+  ticketing.notifications:
+    product: platform
+    readable_by: [crm, ticketing, campaign]
+    merges_into: Notification
+    key: uid
+    synthesize_key: "support:{id}"
+    access: {domain: ticketing, module: workspace, sensitivity: L1}
+    edge_budget: 1
+    sublabels: {static: SupportNotification}
+    properties: [id, organization_id, user_id, title, message, ticket_id,
+                 customer_name, is_read, kind, created_at]
+    relationships:
+      - {type: about_ticket, to: Ticket, to_key: id, from_column: ticket_id}
+
+  # ===========================================================================
+  # MARKETING  (source: campaign)
+  # ===========================================================================
+
+  campaign.branches:
+    product: platform
+    label: Branch
+    key: id
+    access: {domain: campaign, module: marketing, sensitivity: L1}
+    edge_budget: 1
+    properties: [id, organization_id, name, is_default, created_at, updated_at]
+    relationships:
+      - {type: has_branch, from: SetupHub, from_column: organization_id}
+    # Generic scoping concept, not campaign-specific. Any product may scope to
+    # a Branch; campaign happens to be the first that does.
+
+  campaign.organization_products:
+    product: platform
+    label: Subscription
+    key: id
+    access: {domain: campaign, module: marketing, sensitivity: L1}
+    edge_budget: 2
+    properties: [id, organization_id, branch_id, product_code, status,
+                 starts_at, ends_at, created_at, updated_at]
+    relationships:
+      - {type: has_subscription, from: Branch, from_key: id, from_column: branch_id}
+      - {type: for_app, to: PlatformApp, to_key: code, from_column: product_code, create_target: true}
+    verify: "product_code is a Prisma enum (campaign | crm). Role.product_id uses slugs (crm | contact-center). Both MERGE into PlatformApp — reconcile the vocabularies or the label holds two id spaces."
+
+  campaign.campaigns:
+    embed:
+      fields: [name, description, source_channel, goal, objective, audience_summary]
+      property: _embedding
+    product: campaign
+    label: Campaign
+    key: id
+    access: {domain: campaign, module: marketing, sensitivity: L1}
+    edge_budget: 3
+    extra_labels:
+      - {label: LiveCampaign,      when: {status: [live]}}
+      - {label: ScheduledCampaign, when: {status: [scheduled]}}
+    custom_field: launch_plan
+    custom_dynamic: true
+    properties: [id, organization_id, branch_id, name, description, status,
+                 starts_at, ends_at, source_channel, created_by_user_id, goal,
+                 objective, session_id, audience_summary, audience_filters,
+                 audience_count, launch_local_date, launch_local_time, timezone,
+                 created_at, updated_at]
+    relationships:
+      - {type: has_campaign, from: MarketingHub, from_column: organization_id}
+      - {type: in_branch, to: Branch, to_key: id, from_column: branch_id}
+      - {type: from_draft, to: CampaignDraft, to_key: id, from_column: session_id}
+    # Audience membership is NOT an edge from Campaign. v1 emitted three edges
+    # per audience row (TARGETED_IN, HAS_AUDIENCE_MEMBER, MEMBER_OF_AUDIENCE),
+    # making Campaign a 1.2M-degree supernode. Membership is reachable from the
+    # customer side through MessageHistory; size is audience_count.
+
+  campaign.campaign_channels:
+    product: campaign
+    label: ChannelPlan
+    key: id
+    access: {domain: campaign, module: marketing, sensitivity: L1}
+    edge_budget: 2
+    properties: [id, campaign_id, organization_id, channel, template_id,
+                 how_it_works, planned_launch_at, status, created_at, updated_at]
+    relationships:
+      - {type: has_channel_plan, from: Campaign, from_key: id, from_column: campaign_id}
+      - {type: uses_template, to: MessageTemplate, to_key: id, from_column: template_id}
+
+  campaign.campaign_audience:
+    product: campaign
+    tenant:
+      via:
+        - {column: campaign_id, parent: campaign.campaigns, parent_key: id}
+    mode: relationship_only
+    access: {domain: campaign, module: marketing, sensitivity: L2}
+    from: {label: Customer, key: cdp_id, column: contact_id}
+    to: {label: Campaign, key: id, column: campaign_id}
+    type: targeted_by
+    properties: [created_at]
+    fan_in_warning: "Campaign is a legitimate supernode on this edge. Traverse customer -> campaign only. For 'who is in this campaign', query Postgres or use audience_count."
+
+  campaign.campaign_agent_sessions:
+    product: campaign
+    label: CampaignDraft
+    key: id
+    access: {domain: campaign, module: marketing, sensitivity: L1}
+    edge_budget: 3
+    properties: [id, organization_id, branch_id, created_by_user_id, module, stage,
+                 created_at, updated_at]
+    owns_collections: [DraftAudience, ContentBatch]
+    relationships:
+      - {type: in_branch, to: Branch, to_key: id, from_column: branch_id}
+      - {type: created_by, to: Employee, to_key: id, from_column: created_by_user_id}
+
+  campaign.campaign_audience_refs:
+    product: campaign
+    tenant:
+      via:
+        - {column: session_id, parent: campaign.campaign_agent_sessions, parent_key: id}
+    mode: relationship_only
+    access: {domain: campaign, module: marketing, sensitivity: L2}
+    from: {label: DraftAudience, key: id, column: session_id}
+    to: {label: Customer, key: cdp_id, column: contact_id}
+    type: contains
+
+  campaign.campaign_channel_templates:
+    embed:
+      fields: [channel, how_it_works]
+      property: _embedding
+    product: campaign
+    label: MessageTemplate
+    key: id
+    access: {domain: campaign, module: marketing, sensitivity: L1}
+    edge_budget: 3
+    custom_field: fields
+    custom_dynamic: true
+    properties: [id, session_id, organization_id, branch_id, channel, logo,
+                 launch_at, how_it_works, generation_batch_id, created_at, updated_at]
+    collection: {name: ContentBatch, owner_column: generation_batch_id}
+    relationships:
+      - {type: drafted_in, to: CampaignDraft, to_key: id, from_column: session_id}
+      - {type: in_branch, to: Branch, to_key: id, from_column: branch_id}
+
+  campaign.campaign_template_messages:
+    product: campaign
+    tenant:
+      via:
+        - {column: template_id, parent: campaign.campaign_channel_templates, parent_key: id}
+    label: TemplateVersion
+    key: id
+    access: {domain: campaign, module: marketing, sensitivity: L1}
+    edge_budget: 1
+    properties: [id, template_id, role, seq, kind, created_at]
+    relationships:
+      - {type: has_version, from: MessageTemplate, from_key: id, from_column: template_id}
+
+  campaign.regulated_channel_templates:
+    product: campaign
+    label: RegisteredTemplate
+    key: id
+    access: {domain: campaign, module: marketing, sensitivity: L1}
+    edge_budget: 3
+    extra_labels:
+      - {label: PendingTemplate,  when: {status: [pending]}}
+      - {label: RejectedTemplate, when: {status: [rejected]}}
+    properties: [id, organization_id, channel, name, external_id,
+                 provider_template_id, language, category, header, body, footer,
+                 buttons, status, rejected_reason, channel_config_id, submitted_at,
+                 last_status_checked_at, created_by_user_id, campaign_name, goal,
+                 objective, source_campaign_id, created_at, updated_at]
+    relationships:
+      - {type: has_registered_template, from: MarketingHub, from_column: organization_id}
+      - {type: sends_via, to: ConnectedChannel, to_key: id, from_column: channel_config_id}
+      - {type: for_campaign, to: Campaign, to_key: id, from_column: source_campaign_id}
+    verify: "channel_config_id is bigint in the campaign schema and uuid in the accounts schema per its reference. Confirm the type before enabling sends_via."
+
+  # --- sending readiness -----------------------------------------------------
+
+  campaign.channel_sending_profiles:
+    product: campaign
+    label: ChannelReadiness
+    key: id
+    access: {domain: campaign, module: marketing, sensitivity: L1}
+    edge_budget: 2
+    custom_field: checklist
+    custom_dynamic: true
+    properties: [id, organization_id, channel, status, created_at, updated_at]
+    relationships:
+      - {type: has_channel_readiness, from: MarketingHub, from_column: organization_id}
+      - {type: for_channel, to: Channel, to_key: name, from_column: channel, create_target: true}
+    # v1 emitted FOR_CHANNEL and THROUGH to the same node from the same column.
+
+  campaign.push_channel_settings:
+    product: campaign
+    label: ChannelSettings
+    key: uid
+    synthesize_key: "push:{id}"
+    access: {domain: campaign, module: marketing, sensitivity: L1}
+    edge_budget: 1
+    sublabels: {static: PushSettings}
+    properties: [id, organization_id, channel, status, created_at, updated_at]
+    relationships:
+      - {type: has_channel_settings, from: MarketingHub, from_column: organization_id}
+
+  campaign.sms_channel_settings:
+    product: campaign
+    merges_into: ChannelSettings
+    key: uid
+    synthesize_key: "sms:{id}"
+    access: {domain: campaign, module: marketing, sensitivity: L1}
+    edge_budget: 1
+    sublabels: {static: SmsSettings}
+    properties: [id, organization_id, channel, status, created_at, updated_at]
+    relationships:
+      - {type: has_channel_settings, from: MarketingHub, from_column: organization_id}
+
+  campaign.email_org_profiles:
+    product: campaign
+    label: SenderProfile
+    key: organization_id
+    access: {domain: campaign, module: marketing, sensitivity: L1}
+    edge_budget: 1
+    properties: [organization_id, legal_name, street, city, country, phone,
+                 created_at, updated_at]
+    relationships:
+      - {type: has_sender_profile, from: MarketingHub, from_column: organization_id}
+    # v1 pointed every Message at this node (COMPLIES_WITH), giving the
+    # highest-volume table in the platform an edge to a per-org singleton.
+    # Compliance is a property of the send, resolved at batch level.
+
+  campaign.email_senders:
+    product: campaign
+    label: SenderEmail
+    key: id
+    access: {domain: campaign, module: marketing, sensitivity: L2}
+    edge_budget: 2
+    properties: [id, organization_id, display_name, from_email, reply_to, status,
+                 verified_at, is_active, created_at, updated_at]
+    relationships:
+      - {type: has_sender_email, from: MarketingHub, from_column: organization_id}
+      - {type: verified_on, to: EmailDomain, match_fields: {domain: sender_domain, organization_id: organization_id}}
+    derived_here: {sender_domain: "lower(split_part(from_email, '@', 2))"}
+
+  campaign.email_domains:
+    product: campaign
+    label: EmailDomain
+    key: id
+    access: {domain: campaign, module: marketing, sensitivity: L1}
+    edge_budget: 1
+    extra_labels:
+      - {label: VerifiedDomain, when: {spf_ok: [true], dkim_ok: [true], dmarc_ok: [true]}}
+    properties: [id, organization_id, domain, spf_ok, dkim_ok, dmarc_ok, status,
+                 provider_domain_id, dns_records, dkim_selector, dkim_public_key,
+                 created_at, updated_at]
+    relationships:
+      - {type: has_email_domain, from: MarketingHub, from_column: organization_id}
+
+  campaign.email_return_paths:
+    product: campaign
+    label: BounceDomain
+    key: organization_id
+    access: {domain: campaign, module: marketing, sensitivity: L1}
+    edge_budget: 1
+    properties: [organization_id, domain, status, created_at, updated_at]
+    relationships:
+      - {type: has_bounce_domain, from: MarketingHub, from_column: organization_id}
+
+  campaign.email_sending_caps:
+    product: campaign
+    label: SendingLimit
+    key: organization_id
+    access: {domain: campaign, module: marketing, sensitivity: L1}
+    edge_budget: 1
+    custom_field: health_stats
+    custom_dynamic: true
+    properties: [organization_id, batch_size, hourly_cap, daily_cap, warmup_stage,
+                 health_status, created_at, updated_at]
+    relationships:
+      - {type: has_sending_limit, from: MarketingHub, from_column: organization_id}
+
+  campaign.email_suppressions:
+    product: campaign
+    label: BlockedEmail
+    key: uid
+    synthesize_key: "{organization_id}:{email}"
+    access: {domain: campaign, module: compliance, sensitivity: L2}
+    edge_budget: 0
+    properties: [organization_id, email, reason, created_at]
+    indexes_required: ["BlockedEmail(uid) — checked per recipient at send time"]
+    # No edge to the hub: suppression is an email-keyed lookup, not a browsable
+    # child. v1 hung every suppressed address off MarketingHub.
+
+  # --- send path (highest volume in the platform) ----------------------------
+
+  campaign.campaign_send_batches:
+    product: campaign
+    label: SendBatch
+    key: id
+    access: {domain: campaign, module: marketing, sensitivity: L1}
+    edge_budget: 3
+    properties: [id, organization_id, campaign_id, channel, seq, scheduled_for,
+                 status, size, created_at, updated_at]
+    relationships:
+      - {type: has_batch, from: Campaign, from_key: id, from_column: campaign_id}
+      - {type: limited_by, to: SendingLimit, to_key: organization_id, from_column: organization_id}
+      - {type: complies_with, to: SenderProfile, to_key: organization_id, from_column: organization_id}
+
+  campaign.campaign_send_recipients:
+    product: campaign
+    label: Message
+    key: id
+    access: {domain: campaign, module: marketing, sensitivity: L2}
+    edge_budget: 2
+    extra_labels:
+      - {label: OpenedMessage,  when: {opened_at: not_null}}
+      - {label: ClickedMessage, when: {clicked_at: not_null}}
+      - {label: FailedMessage,  when: {status: [failed, skipped]}}
+    collection: {name: MessageHistory, owner_column: contact_id, bucket_column: created_at}
+    properties: [id, organization_id, batch_id, campaign_id, contact_id, email,
+                 destination, platform, status, skip_fail_reason,
+                 provider_message_id, attempt_count, ab_variant, opened_at,
+                 clicked_at, open_count, click_count, delivery_channel,
+                 created_at, updated_at]
+    relationships:
+      - {type: in_batch, to: SendBatch, to_key: id, from_column: batch_id}
+    # 6 edges/row in v1 -> 2. On a 1.2M-recipient campaign that is 7.2M
+    # relationships down to 2.4M. campaign_id and delivery_channel are
+    # properties; the campaign is one hop up through the batch.
+
+  campaign.push_endpoints:
+    product: campaign
+    label: PushSubscription
+    key: id
+    access: {domain: campaign, module: marketing, sensitivity: L2}
+    edge_budget: 1
+    properties: [id, organization_id, contact_id, channel, platform, endpoint,
+                 label, active, created_at, updated_at]
+    relationships:
+      - {type: has_push_subscription, from: Customer, from_key: cdp_id, from_column: contact_id}
+    # Bounded per customer (a handful of devices) so this stays a direct edge.
+
+  campaign.website_contacts:
+    product: campaign
+    label: Visitor
+    key: id
+    access: {domain: campaign, module: marketing, sensitivity: L2}
+    edge_budget: 1
+    sublabels:
+      column: visitor_state
+      mapping: {anonymous: AnonymousVisitor, identified: KnownVisitor}
+    properties: [id, organization_id, visitor_id, contact_id, email, phone,
+                 first_name, last_name, origin, path, user_agent, subscribed,
+                 endpoint, platform, visit_count, first_seen_at, last_seen_at,
+                 subscribed_at, visitor_state, created_at, updated_at]
+    relationships:
+      - {type: identified_as, to: Customer, to_key: cdp_id, from_column: contact_id}
+
+  campaign.campaign_contact_engagement:
+    product: campaign
+    label: EmailEngagement
+    key: id
+    access: {domain: campaign, module: marketing, sensitivity: L1}
+    edge_budget: 1
+    extra_labels:
+      - {label: Unsubscribed, when: {email_unsubscribed: [true]}}
+    properties: [id, organization_id, contact_id, email_unsubscribed,
+                 email_unsubscribed_at, email_unsubscribe_reason,
+                 last_email_opened_at, last_email_clicked_at, email_open_count,
+                 email_click_count, created_at, updated_at]
+    relationships:
+      - {type: has_email_engagement, from: Customer, from_key: cdp_id, from_column: contact_id}
+    # One row per customer, so a direct edge is correct here.
+
+  campaign.tenant_industry_packs:
+    product: platform
+    label: IndustryPack
+    key: organization_id
+    access: {domain: campaign, module: marketing, sensitivity: L1}
+    edge_budget: 1
+    properties: [organization_id, pack_id, seed_industry_type, created_at, updated_at]
+    relationships:
+      - {type: has_industry_pack, from: SetupHub, from_column: organization_id}
+    # Moved from MarketingHub to SetupHub: the pack shapes contact
+    # fields for every product, not just campaign. This is the seam an
+    # industry overlay reads.
+
+  campaign.campaign_recommendations:
+    product: campaign
+    label: CampaignIdea
+    key: id
+    access: {domain: campaign, module: marketing, sensitivity: L1}
+    edge_budget: 2
+    properties: [id, organization_id, branch_id, created_by_user_id, public_id,
+                 status, title, created_at, updated_at]
+    relationships:
+      - {type: has_campaign_idea, from: MarketingHub, from_column: organization_id}
+      - {type: in_branch, to: Branch, to_key: id, from_column: branch_id}
+    resolve_later:
+      - "status=used has no column recording which campaign or draft consumed the idea. Persist used_campaign_id, then add used_in -> Campaign."
+
+  campaign.app_notifications:
+    embed:
+      fields: [kind, title, body]
+      property: _embedding
+    product: platform
+    readable_by: [crm, ticketing, campaign]
+    merges_into: Notification
+    key: uid
+    synthesize_key: "campaign:{id}"
+    access: {domain: campaign, module: workspace, sensitivity: L1}
+    edge_budget: 2
+    sublabels: {static: MarketingNotification}
+    properties: [id, organization_id, user_id, kind, title, body, href, source_key,
+                 subject_kind, subject_id, created_at, read_at]
+    relationships:
+      - {type: about_campaign, to: Campaign, to_key: id, from_column: subject_id, when: {subject_kind: [campaign]}}
+      - {type: about_template, to: RegisteredTemplate, to_key: id, from_column: subject_id, when: {subject_kind: [template, whatsapp]}}
+    # v1 used one ABOUT type pointing at two labels from two columns. Typed
+    # edges with a `when` guard remove the ambiguity for query authors.
+
+ci_rules:
+  - {id: R01, rule: "every table declares product, access.domain, access.sensitivity and edge_budget"}
+  - {id: R02, rule: "relationships emitted per row <= edge_budget"}
+  - {id: R03, rule: "sensitivity recomputed from columns against sensitivity_rubric; fail on drift"}
+  - {id: R04, rule: "no entry in properties_not_nodes may be re-promoted to a node"}
+  - {id: R05, rule: "a table with `collection:` may not also declare an owner edge to that collection's owner"}
+  - {id: R06, rule: "every derived column referenced by a mapping exists in `derived:`"}
+  - {id: R07, rule: "every relationship target label is declared as a table label, merged label, hub, collection or stub"}
+  - {id: R08, rule: "for each entry in `bundles:`, pairwise connectivity holds across visible labels"}
+  - {id: R09, rule: "every product: platform label is reachable in every bundle"}
+  - {id: R10, rule: "readable_by may only name sellable products; a label may not be readable_by its own product"}
+  - {id: R11, rule: "no table declares a direct edge to Tenant other than hub creation"}
+  - {id: R12, rule: "every `key: uid` declares synthesize_key, and the template references existing columns"}
+  - {id: R13, rule: "merged label contributors have disjoint property sets after rename"}
+  - {id: R14, rule: "type of from_column matches type of target key; coerce_to_int / coerce_to_string declared explicitly"}
+  - {id: R15, rule: "projection cache key includes tenant, entitled products and role access domains"}
+  - {id: R16, rule: "every unresolved `verify:` and `resolve_later:` blocks release of the table it sits on"}

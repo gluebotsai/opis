@@ -1,0 +1,30 @@
+# Sample overlay -- BFSI tenant. Filename == Neo4j database name.
+#   make_database_name("org", "a1b2c3d4") -> "orga1b2c3d4"
+version: 1
+layer: tenant
+database: orga1b2c3d4
+organization_id: "a1b2c3d4"
+industry: bfsi
+
+products: [crm, ticketing]      # NOT ccaas -- ccaas.calls events are skipped
+
+extends:
+
+  crm.contacts:
+    extra_labels: [Customer, Policyholder]
+    custom_properties:
+      - {name: policy_number, type: string}
+      - {name: risk_score,    type: integer}
+      - {name: kyc_status,    type: string}
+      - {name: premium_paid,  type: decimal, scale: 2}
+    relationships:
+      - type: HOLDS
+        direction: out
+        target_label: Policy
+        target_key: policy_id
+        from_column: policy_id
+
+  ticketing.tickets:
+    extra_labels: [ServiceRequest]
+    custom_properties:
+      - {name: sla_tier, type: string}

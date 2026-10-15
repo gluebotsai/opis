@@ -1,0 +1,18 @@
+name: ccass.conversation_transfers
+alias: t
+schema: ccass
+grain: transfer
+purpose: Transfer requests, destination queue, and completion timestamps.
+time_columns: [requested_at, offered_at, accepted_at, completed_at, cancelled_at]
+columns:
+  - { name: id, type: bigint, pk: true, description: Transfer id }
+  - { name: organization_id, type: bigint, description: Tenant id }
+  - { name: conversation_id, type: bigint, fk: ccass.conversations.id, description: Conversation }
+  - { name: from_queue_id, type: bigint, fk: ccass.queues.id, description: Source queue }
+  - { name: to_queue_id, type: bigint, fk: ccass.queues.id, description: Destination queue }
+  - { name: from_agent_id, type: bigint, fk: ccass.agents.id, description: Sending agent }
+  - { name: state, type: text, values: [requested, offered, accepted, completed, cancelled], description: Transfer state }
+  - { name: requested_at, type: timestamptz, description: Requested }
+  - { name: completed_at, type: timestamptz, description: Completed }
+sample_rows:
+  - { id: 201, conversation_id: 101, from_queue_id: 7, to_queue_id: 9, state: completed, requested_at: "2026-09-07T10:08:00Z", completed_at: "2026-09-07T10:09:00Z" }

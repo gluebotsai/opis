@@ -1,0 +1,30 @@
+{
+  "name": "telephony-platform",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "services/*",
+    "adapters/*",
+    "shared"
+  ],
+  "scripts": {
+    "start": "npx concurrently -n \"API,ADAPTER,AGENT,ADMIN\" -c \"cyan,magenta,yellow,green\" \"npm --workspace=@telephony/api run start:dev\" \"npm --workspace=@telephony/asterisk-adapter run start:dev\" \"npm --workspace=@telephony/agent-ui run dev\" \"npm --workspace=@telephony/admin-ui run dev\"",
+    "start:all": "npx concurrently -n \"API,ADAPTER,AGENT,ADMIN\" -c \"cyan,magenta,yellow,green\" \"npm --workspace=@telephony/api run start:dev\" \"npm --workspace=@telephony/asterisk-adapter run start:dev\" \"npm --workspace=@telephony/agent-ui run dev\" \"npm --workspace=@telephony/admin-ui run dev\"",
+    "start:agent": "npx concurrently -n \"API,ADAPTER,AGENT\" -c \"cyan,magenta,yellow\" \"npm --workspace=@telephony/api run start:dev\" \"npm --workspace=@telephony/asterisk-adapter run start:dev\" \"npm --workspace=@telephony/agent-ui run dev\"",
+    "start:voicebot": "python3 services/voicebot-service/main.py",
+    "e2e": "node scripts/e2e-full.mjs",
+    "e2e:ring": "node scripts/e2e-register-and-ring.mjs",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "prisma": {
+    "seed": "npx ts-node --transpile-only shared/prisma/seed.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "concurrently": "^8.2.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3",
+    "ws": "^8.21.2"
+  }
+}

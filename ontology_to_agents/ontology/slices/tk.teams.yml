@@ -1,0 +1,33 @@
+slice_id: tk.teams
+agent: Teams Specialist
+modules:
+- core
+- tk_team
+classes:
+- Party
+- Person
+- Organization
+- Contact
+- Agent
+- Consent
+- Preference
+- Channel
+- Event
+- WorkItem
+- Location
+- Team
+relations:
+- Person works_for Organization
+- Contact has_consent Consent
+- Contact has_preference Preference
+- Contact belongs_to Organization
+- Agent works_for Organization
+- Team has_member Agent
+- Ticket owned_by_team Team
+actions:
+- action.identify
+- action.route_to_specialist
+- action.create_team
+- action.add_team_members
+metric_ids: []
+note: Legal slice (tools/policy). Inject pack.as_prompt() compact, not this file.

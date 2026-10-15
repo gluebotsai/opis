@@ -1,0 +1,1763 @@
+version: 1
+layer: core
+
+# Platform / SaaS product ids (string) referenced from roles, access, knowledge, DIDs.
+# Distinct from inventory catalog Product nodes (bigint id).
+stub_labels:
+  PlatformProduct: {key: id}
+  Location: {key: id}
+  # Collection nodes: synthetic, keyed by their parent's key so both the parent
+  # mapping and the child mapping MERGE the same node and converge.
+  # These MUST be here or every collection MERGE is a full label scan.
+  InsightCollection: {key: cdp_id}
+  RecommendationCollection: {key: cdp_id}
+  ActivityTimeline: {key: cdp_id}
+  InteractionHistory: {key: cdp_id}
+  ConversationHistory: {key: cdp_id}
+
+tables:
+
+  # ---------- accounts: organisation & workforce ----------
+  accounts.organizations:
+    mode: node
+    label: Tenant
+    key: id
+    properties: [id, tenant_id, company_name, industry_type, business_type,
+                 contact_name, designation, work_email, admin_email, tax_number,
+                 billing_address, website_url, country, company_size,
+                 mobile_country_code, mobile_number, lifecycle_status,
+                 converted_at, reseller_id, source_lead_id, created_at, updated_at]
+
+  # accounts.organization_locations:
+  #   mode: node
+  #   label: Location
+  #   key: id
+  #   properties: [id, organization_id, label, address, city, country, timezone,
+  #                industry_type, contact_name, designation, work_email,
+  #                mobile_country_code, mobile_number, is_primary, status,
+  #                tax_number]
+  #   relationships:
+  #     - {type: HAS_LOCATION, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  accounts.setup_roles:
+    mode: node
+    label: Role
+    key: id
+    properties: [id, organization_id, name, description, product_id,
+                 can_view, can_create, can_edit, can_delete, can_export,
+                 can_approve, created_at, updated_at]
+    relationships:
+      - {type: DEFINES_ROLE, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: FOR_PRODUCT, direction: out, target_label: PlatformProduct, target_key: id, from_column: product_id}
+
+  accounts.setup_teams:
+    mode: node
+    label: Team
+    key: id
+    properties: [id, organization_id, name, description, business_hours_id,
+                 status, created_at, updated_at]
+    relationships:
+      - {type: HAS_TEAM, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: FOLLOWS_HOURS, direction: out, target_label: BusinessHours, target_key: id, from_column: business_hours_id}
+
+  accounts.setup_users:
+    mode: node
+    label: User
+    key: id
+    properties: [id, organization_id, employee_id, first_name, last_name,
+                 work_email, mobile_number, primary_language, secondary_language,
+                 city, state, country, location_id, status, team_id,
+                 business_hours_id, invite_status, password_set_at, invited_at,
+                 created_at, updated_at]
+    relationships:
+      - {type: EMPLOYS, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: MEMBER_OF, direction: out, target_label: Team, target_key: id, from_column: team_id}
+      - {type: FOLLOWS_HOURS, direction: out, target_label: BusinessHours, target_key: id, from_column: business_hours_id}
+      - {type: LOCATED_AT, direction: out, target_label: Location, target_key: id, from_column: location_id}
+
+  accounts.setup_user_product_access:
+    mode: relationship_only
+    from_label: User
+    from_key: id
+    from_column: user_id
+    to_label: Role
+    to_key: id
+    to_column: role_id
+    type: HAS_ROLE
+
+  accounts.setup_holiday_calendars:
+    mode: node
+    label: HolidayCalendar
+    key: id
+    properties: [id, organization_id, name, country, created_at, updated_at]
+    relationships:
+      - {type: HAS_HOLIDAY_CALENDAR, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  accounts.setup_holidays:
+    mode: node
+    label: Holiday
+    key: id
+    properties: [id, calendar_id, name, holiday_date, created_at]
+    relationships:
+      - {type: HAS_HOLIDAY, direction: in, target_label: HolidayCalendar, target_key: id, from_column: calendar_id}
+
+  accounts.setup_business_hours:
+    mode: node
+    label: BusinessHours
+    key: id
+    properties: [id, organization_id, name, description, timezone, status,
+                 open_time, close_time, timing_mode, holiday_calendar_id,
+                 created_at, updated_at]
+    relationships:
+      - {type: HAS_BUSINESS_HOURS, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: USES_HOLIDAY_CALENDAR, direction: out, target_label: HolidayCalendar, target_key: id, from_column: holiday_calendar_id}
+
+  accounts.setup_business_hour_shifts:
+    mode: node
+    label: BusinessHourShift
+    key: id
+    properties: [id, business_hours_id, shift_type, day_of_week, end_day_of_week,
+                 start_time, end_time, crosses_midnight, break_start_time,
+                 break_end_time, break_start_time_2, break_end_time_2, created_at]
+    relationships:
+      - {type: HAS_SHIFT, direction: in, target_label: BusinessHours, target_key: id, from_column: business_hours_id}
+
+  accounts.setup_channel_configs:
+    mode: node
+    label: Channel
+    key: id
+    properties: [id, organization_id, channel_type, name, status, created_at, updated_at]
+    relationships:
+      - {type: SUPPORTS_CHANNEL, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  accounts.setup_email_configs:
+    mode: node
+    label: EmailChannelConfig
+    key: id
+    properties: [id, channel_config_id, provider_type, sender_email, sender_name,
+                 reply_to, domain, oauth_provider, ccaas_handler, is_bot,
+                 provisioning_status, created_at, updated_at]
+    relationships:
+      - {type: HAS_EMAIL_CONFIG, direction: in, target_label: Channel, target_key: id, from_column: channel_config_id}
+
+  accounts.setup_webchat_configs:
+    mode: node
+    label: WebchatChannelConfig
+    key: channel_config_id
+    custom_field: personalisation
+    custom_dynamic: true
+    properties: [channel_config_id, webchat_id, title, alias_title, description,
+                 greeting_message, trigger_message, routing_queue_id,
+                 created_at, updated_at]
+    relationships:
+      - {type: HAS_WEBCHAT_CONFIG, direction: in, target_label: Channel, target_key: id, from_column: channel_config_id}
+      - {type: ROUTES_TO_SETUP_QUEUE, direction: out, target_label: SetupQueue, target_key: id, from_column: routing_queue_id}
+
+  accounts.setup_social_configs:
+    mode: node
+    label: SocialChannelConfig
+    key: channel_config_id
+    properties: [channel_config_id, provider, bot_enabled, usage_mode,
+                 display_number, waba_id, phone_number_id, page_id,
+                 ig_business_account_id, meta_auth_type, created_at, updated_at]
+    relationships:
+      - {type: HAS_SOCIAL_CONFIG, direction: in, target_label: Channel, target_key: id, from_column: channel_config_id}
+
+  accounts.setup_ccaas_queues:
+    mode: node
+    label: SetupQueue
+    key: id
+    properties: [id, organization_id, team_id, name, description, status,
+                 business_hours_id, shift_types, skills,
+                 missed_callback_grace_minutes, created_at, updated_at]
+    relationships:
+      - {type: HAS_SETUP_QUEUE, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: OWNED_BY_TEAM, direction: out, target_label: Team, target_key: id, from_column: team_id}
+      - {type: FOLLOWS_HOURS, direction: out, target_label: BusinessHours, target_key: id, from_column: business_hours_id}
+
+  accounts.setup_ccaas_queue_agents:
+    mode: relationship_only
+    from_label: SetupQueue
+    from_key: id
+    from_column: queue_id
+    to_label: User
+    to_key: id
+    to_column: user_id
+    type: HAS_SETUP_MEMBER
+
+  accounts.setup_queue_routing_profiles:
+    mode: node
+    label: SetupQueueRoutingProfile
+    key: id
+    custom_field: skill_mapping
+    custom_dynamic: true
+    properties: [id, organization_id, queue_id, description, supported_intents,
+                 example_phrases, language_codes, classifier_version,
+                 created_at, updated_at]
+    relationships:
+      - {type: HAS_SETUP_ROUTING_PROFILE, direction: in, target_label: SetupQueue, target_key: id, from_column: queue_id}
+
+  accounts.setup_voice_dids:
+    mode: node
+    label: VoiceDid
+    key: id
+    properties: [id, organization_id, phone_number, product_id, routing_type,
+                 status, prompt_profile_id, routing_queue_id, routing_user_id,
+                 created_at, updated_at]
+    relationships:
+      - {type: HAS_VOICE_DID, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: FOR_PRODUCT, direction: out, target_label: PlatformProduct, target_key: id, from_column: product_id}
+      - {type: ROUTES_TO_SETUP_QUEUE, direction: out, target_label: SetupQueue, target_key: id, from_column: routing_queue_id}
+      - {type: ROUTES_TO_USER, direction: out, target_label: User, target_key: id, from_column: routing_user_id}
+      - {type: USES_PROMPT_PROFILE, direction: out, target_label: VoicePromptProfile, target_key: id, from_column: prompt_profile_id}
+
+  accounts.setup_voice_prompt_profiles:
+    mode: node
+    label: VoicePromptProfile
+    key: id
+    custom_field: slots
+    custom_dynamic: true
+    properties: [id, organization_id, name, description, status, created_at, updated_at]
+    relationships:
+      - {type: HAS_VOICE_PROMPT_PROFILE, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  accounts.setup_knowledge_documents:
+    mode: node
+    label: KnowledgeDocument
+    key: id
+    properties: [id, organization_id, category, file_name, file_type,
+                 file_size_bytes, storage_path, product_id, ccaas_audience,
+                 all_branches, uploaded_by, created_at]
+    relationships:
+      - {type: HAS_KNOWLEDGE_DOCUMENT, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: FOR_PRODUCT, direction: out, target_label: PlatformProduct, target_key: id, from_column: product_id}
+      - {type: UPLOADED_BY, direction: out, target_label: User, target_key: id, from_column: uploaded_by}
+
+  accounts.setup_knowledge_org_profiles:
+    mode: node
+    label: KnowledgeOrgProfile
+    key: organization_id
+    custom_field: product
+    custom_dynamic: true
+    properties: [organization_id, updated_at]
+    relationships:
+      - {type: HAS_KNOWLEDGE_PROFILE, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  # ---------- ccass: workforce ----------
+  ccass.agents:
+    mode: node
+    label: Agent
+    key: id
+    properties: [id, organization_id, display_name, email, status,
+                 setup_user_id, created_at, updated_at]
+    relationships:
+      - {type: HAS_AGENT, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: IS_AGENT_FOR, direction: out, target_label: User, target_key: id, from_column: setup_user_id}
+
+  ccass.skills:
+    mode: node
+    label: Skill
+    key: id
+    properties: [id, organization_id, key, name, description, is_active, created_at, updated_at]
+    relationships:
+      - {type: DEFINES_SKILL, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  ccass.agent_skills:
+    mode: relationship_only
+    from_label: Agent
+    from_key: id
+    from_column: agent_id
+    to_label: Skill
+    to_key: id
+    to_column: skill_id
+    type: HAS_SKILL
+
+  ccass.agent_capacity:
+    mode: node
+    label: AgentCapacity
+    key: id
+    properties: [id, organization_id, agent_id, channel, max_concurrency,
+                 reserved_count, active_count, version, updated_at]
+    relationships:
+      - {type: HAS_CAPACITY, direction: in, target_label: Agent, target_key: id, from_column: agent_id}
+
+  ccass.presence_reason_codes:
+    mode: node
+    label: PresenceReasonCode
+    key: id
+    properties: [id, organization_id, code, label, presence_state,
+                 requires_note, is_active, created_at, updated_at]
+    relationships:
+      - {type: DEFINES_PRESENCE_REASON, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  ccass.agent_presence:
+    mode: node
+    label: AgentPresence
+    key: id
+    properties: [id, organization_id, agent_id, status, presence_state,
+                 reason_code, heartbeat_at, lease_expires_at, version, source,
+                 updated_at]
+    relationships:
+      - {type: HAS_PRESENCE, direction: in, target_label: Agent, target_key: id, from_column: agent_id}
+
+  # ---------- ccass: routing ----------
+  ccass.queues:
+    mode: node
+    label: Queue
+    key: id
+    properties: [id, organization_id, setup_queue_id, name, team_id,
+                 business_hours_id, status, published_at, updated_at]
+    relationships:
+      - {type: HAS_QUEUE, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: PUBLISHED_FROM, direction: out, target_label: SetupQueue, target_key: id, from_column: setup_queue_id}
+      - {type: OWNED_BY_TEAM, direction: out, target_label: Team, target_key: id, from_column: team_id}
+      - {type: FOLLOWS_HOURS, direction: out, target_label: BusinessHours, target_key: id, from_column: business_hours_id}
+
+  ccass.queue_members:
+    mode: relationship_only
+    from_label: Queue
+    from_key: id
+    from_column: queue_id
+    to_label: Agent
+    to_key: id
+    to_column: agent_id
+    type: HAS_MEMBER
+
+  ccass.queue_skills:
+    mode: relationship_only
+    from_label: Queue
+    from_key: id
+    from_column: queue_id
+    to_label: Skill
+    to_key: id
+    to_column: skill_id
+    type: REQUIRES_SKILL
+
+  ccass.queue_routing_profiles:
+    mode: node
+    label: QueueRoutingProfile
+    key: id
+    custom_field: skill_mapping
+    custom_dynamic: true
+    properties: [id, organization_id, queue_id, description, supported_intents,
+                 example_phrases, keywords, language_codes, classifier_version,
+                 updated_at]
+    relationships:
+      - {type: HAS_ROUTING_PROFILE, direction: in, target_label: Queue, target_key: id, from_column: queue_id}
+
+  ccass.routing_policies:
+    mode: node
+    label: RoutingPolicy
+    key: id
+    properties: [id, organization_id, queue_id, strategy, priority,
+                 offer_timeout_seconds, max_attempts, overflow_queue_id,
+                 after_contact_work_seconds, email_offer_timeout_seconds,
+                 email_first_response_sla_seconds, email_resolution_sla_seconds,
+                 email_after_contact_work_seconds, missed_callback_grace_minutes,
+                 created_at, updated_at]
+    relationships:
+      - {type: HAS_ROUTING_POLICY, direction: in, target_label: Queue, target_key: id, from_column: queue_id}
+      - {type: OVERFLOWS_TO, direction: out, target_label: Queue, target_key: id, from_column: overflow_queue_id}
+
+  ccass.dispositions:
+    mode: node
+    label: Disposition
+    key: id
+    properties: [id, organization_id, code, label, description, category,
+                 outcome, requires_note, requires_resolution, is_active,
+                 sort_order, created_at, updated_at]
+    relationships:
+      - {type: DEFINES_DISPOSITION, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  ccass.sla_policies:
+    mode: node
+    label: SLA
+    key: id
+    custom_field: escalation_policy
+    custom_dynamic: true
+    properties: [id, organization_id, name, first_response_seconds,
+                 resolution_seconds, warning_threshold_pct, business_hours_mode,
+                 is_active, created_at, updated_at]
+    relationships:
+      - {type: DEFINES_SLA, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  ccass.channel_automation_policies:
+    mode: node
+    label: ChannelAutomationPolicy
+    key: id
+    custom_field: channel_settings
+    custom_dynamic: true
+    properties: [id, organization_id, channel_config_id, channel, bot_enabled,
+                 live_agent_enabled, automation_mode, confidence_threshold,
+                 default_queue_id, handoff_message, no_agent_behavior,
+                 inactivity_close_seconds, shadow_mode, policy_version, status,
+                 created_at, updated_at]
+    relationships:
+      - {type: HAS_AUTOMATION_POLICY, direction: in, target_label: Channel, target_key: id, from_column: channel_config_id}
+      - {type: OWNED_BY_TENANT, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: DEFAULT_QUEUE, direction: out, target_label: Queue, target_key: id, from_column: default_queue_id}
+
+  ccass.email_mailbox_policies:
+    mode: node
+    label: EmailMailboxPolicy
+    key: id
+    properties: [id, organization_id, connection_id, account_email, bot_enabled,
+                 live_agent_enabled, shadow_mode, auto_send_enabled,
+                 confidence_threshold, default_queue_id, business_hours_mode,
+                 policy_version, status, inactivity_close_hours,
+                 created_at, updated_at]
+    relationships:
+      - {type: HAS_EMAIL_MAILBOX_POLICY, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: DEFAULT_QUEUE, direction: out, target_label: Queue, target_key: id, from_column: default_queue_id}
+
+  ccass.whatsapp_channel_policies:
+    mode: node
+    label: WhatsAppChannelPolicy
+    key: id
+    properties: [id, organization_id, channel_config_id, bot_enabled,
+                 live_agent_enabled, confidence_threshold, default_queue_id,
+                 approved_handoff_message, inactivity_close_hours, status,
+                 created_at, updated_at]
+    relationships:
+      - {type: HAS_WHATSAPP_POLICY, direction: in, target_label: Channel, target_key: id, from_column: channel_config_id}
+      - {type: DEFAULT_QUEUE, direction: out, target_label: Queue, target_key: id, from_column: default_queue_id}
+
+  # ---------- ccass: conversations ----------
+  ccass.conversations:
+    mode: node
+    label: Conversation
+    key: id
+    custom_field: resolution_data
+    custom_dynamic: true
+    properties: [id, organization_id, channel, external_thread_id,
+                 provider_thread_id, webchat_id, visitor_id, contact_id,
+                 profile_id, status, lifecycle_state, lifecycle_version,
+                 priority, subject, handoff_reason, bot_active, nlp_enabled,
+                 live_agent_enabled, automation_policy_version, disposition_code,
+                 disposition_note, resolution_code, resolution_summary,
+                 sla_status, version, queued_at, assigned_at, first_response_at,
+                 transferred_at, resolved_at, closed_at, ended_at, end_reason,
+                 end_actor, first_response_due_at, resolution_due_at,
+                 first_agent_response_at, mailbox_connection_id,
+                 channel_config_id, previous_conversation_id,
+                 created_at, updated_at]
+    relationships:
+      # - {type: HAS_CONVERSATION, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      # - {type: PARTICIPATED_IN, direction: in, target_label: Contact, target_key: cdp_id, from_column: contact_id}
+      - {type: CONTAINS, direction: in, target_label: ConversationHistory, target_key: cdp_id, from_column: contact_id}
+      - {type: IN_QUEUE, direction: out, target_label: Queue, target_key: id, from_column: queue_id}
+      - {type: THROUGH, direction: out, target_label: Channel, target_key: id, from_column: channel_config_id}
+      - {type: HANDLED_BY, direction: out, target_label: Agent, target_key: id, from_column: assigned_agent_id}
+      - {type: ASSIGNED_USER, direction: out, target_label: User, target_key: id, from_column: assigned_user_id}
+      - {type: CONTINUES_FROM, direction: out, target_label: Conversation, target_key: id, from_column: previous_conversation_id}
+
+  ccass.conversation_dispositions:
+    mode: node
+    label: DispositionEvent
+    key: id
+    custom_field: resolution_data
+    custom_dynamic: true
+    properties: [id, organization_id, conversation_id, disposition_id, agent_id,
+                 applied_by_user_id, note, source, resolution_code, is_final,
+                 applied_at, updated_at]
+    relationships:
+      - {type: HAS_DISPOSITION_EVENT, direction: in, target_label: Conversation, target_key: id, from_column: conversation_id}
+      - {type: USED_DISPOSITION, direction: out, target_label: Disposition, target_key: id, from_column: disposition_id}
+      - {type: APPLIED_BY_AGENT, direction: out, target_label: Agent, target_key: id, from_column: agent_id}
+      - {type: APPLIED_BY_USER, direction: out, target_label: User, target_key: id, from_column: applied_by_user_id}
+
+  ccass.conversation_memory:
+    mode: node
+    label: ConversationSummary
+    key: id
+    custom_field: extracted_facts
+    custom_dynamic: true
+    properties: [id, organization_id, conversation_id, rolling_summary,
+                 latest_summarized_message_id, model_name, token_estimate,
+                 version, updated_at]
+    relationships:
+      - {type: HAS_SUMMARY, direction: in, target_label: Conversation, target_key: id, from_column: conversation_id}
+
+  ccass.conversation_sla_state:
+    mode: node
+    label: SLAInstance
+    key: id
+    properties: [id, organization_id, conversation_id, sla_policy_id,
+                 first_response_due_at, resolution_due_at,
+                 first_response_warning_at, resolution_warning_at,
+                 breached_at, updated_at]
+    relationships:
+      - {type: HAS_SLA, direction: in, target_label: Conversation, target_key: id, from_column: conversation_id}
+      - {type: BASED_ON, direction: out, target_label: SLA, target_key: id, from_column: sla_policy_id}
+
+  ccass.conversation_message_attachments:
+    mode: node
+    label: Attachment
+    key: id
+    properties: [id, organization_id, conversation_id, message_id, external_id,
+                 storage_key, file_name, content_type, byte_size,
+                 checksum_sha256, download_url, status, created_at]
+    relationships:
+      - {type: HAS_ATTACHMENT, direction: in, target_label: Conversation, target_key: id, from_column: conversation_id}
+
+  ccass.conversation_notes:
+    mode: node
+    label: WorkNote
+    key: id
+    properties: [id, organization_id, conversation_id, author_user_id, title,
+                 body, created_at, updated_at]
+    relationships:
+      - {type: HAS_WORK_NOTE, direction: in, target_label: Conversation, target_key: id, from_column: conversation_id}
+      - {type: AUTHORED, direction: in, target_label: User, target_key: id, from_column: author_user_id}
+
+  ccass.conversation_participants:
+    mode: node
+    label: ConversationParticipant
+    key: id
+    properties: [id, organization_id, conversation_id, participant_type,
+                 identity_ref, joined_at, left_at]
+    relationships:
+      - {type: HAS_PARTICIPANT, direction: in, target_label: Conversation, target_key: id, from_column: conversation_id}
+
+  ccass.conversation_assignments:
+    mode: node
+    label: Assignment
+    key: id
+    properties: [id, organization_id, conversation_id, queue_id, agent_id,
+                 routing_attempt_id, state, reason, offered_at, accepted_at,
+                 rejected_at, expired_at, ended_at, expires_at]
+    relationships:
+      - {type: HAS_ASSIGNMENT, direction: in, target_label: Conversation, target_key: id, from_column: conversation_id}
+      - {type: OFFERED_TO, direction: out, target_label: Agent, target_key: id, from_column: agent_id}
+      - {type: FROM_QUEUE, direction: out, target_label: Queue, target_key: id, from_column: queue_id}
+      - {type: FROM_ATTEMPT, direction: out, target_label: RoutingAttempt, target_key: id, from_column: routing_attempt_id}
+
+  ccass.conversation_transfers:
+    mode: node
+    label: Transfer
+    key: id
+    properties: [id, organization_id, conversation_id, from_queue_id,
+                 from_agent_id, to_queue_id, requested_agent_id,
+                 offered_agent_id, state, notes, disposition_code,
+                 resolution_code, requested_at, offered_at, accepted_at,
+                 completed_at, cancelled_at, updated_at]
+    relationships:
+      - {type: HAS_TRANSFER, direction: in, target_label: Conversation, target_key: id, from_column: conversation_id}
+      - {type: FROM_QUEUE, direction: out, target_label: Queue, target_key: id, from_column: from_queue_id}
+      - {type: TRANSFERRED_TO, direction: out, target_label: Queue, target_key: id, from_column: to_queue_id}
+      - {type: FROM_AGENT, direction: out, target_label: Agent, target_key: id, from_column: from_agent_id}
+      - {type: REQUESTED_AGENT, direction: out, target_label: Agent, target_key: id, from_column: requested_agent_id}
+      - {type: OFFERED_AGENT, direction: out, target_label: Agent, target_key: id, from_column: offered_agent_id}
+
+  ccass.routing_attempts:
+    mode: node
+    label: RoutingAttempt
+    key: id
+    properties: [id, organization_id, conversation_id, queue_id, agent_id,
+                 attempt_number, outcome, created_at, completed_at]
+    relationships:
+      - {type: HAS_ROUTING_ATTEMPT, direction: in, target_label: Conversation, target_key: id, from_column: conversation_id}
+      - {type: TARGETED_QUEUE, direction: out, target_label: Queue, target_key: id, from_column: queue_id}
+      - {type: OFFERED_AGENT, direction: out, target_label: Agent, target_key: id, from_column: agent_id}
+
+  ccass.webchat_sessions:
+    mode: node
+    label: WebchatSession
+    key: id
+    custom_field: prechat_answers
+    custom_dynamic: true
+    properties: [id, organization_id, conversation_id, webchat_id, visitor_id,
+                 page_origin, page_url, created_at, updated_at, ended_at,
+                 end_reason, ended_by]
+    relationships:
+      - {type: HAS_WEBCHAT_SESSION, direction: in, target_label: Conversation, target_key: id, from_column: conversation_id}
+
+  ccass.agent_missed_contacts:
+    mode: node
+    label: MissedContact
+    key: id
+    custom_field: metadata
+    custom_dynamic: true
+    properties: [id, organization_id, agent_id, assigned_user_id, conversation_id,
+                 assignment_id, contact_id, queue_id, channel, reason,
+                 customer_name, customer_email, customer_phone, offered_at,
+                 missed_at, acknowledged_at, created_at]
+    relationships:
+      - {type: HAS_MISSED_CONTACT, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: MISSED_BY, direction: out, target_label: Agent, target_key: id, from_column: agent_id}
+      - {type: ASSIGNED_USER, direction: out, target_label: User, target_key: id, from_column: assigned_user_id}
+      - {type: FROM_CONVERSATION, direction: out, target_label: Conversation, target_key: id, from_column: conversation_id}
+      - {type: FROM_QUEUE, direction: out, target_label: Queue, target_key: id, from_column: queue_id}
+      - {type: FOR_CONTACT, direction: out, target_label: Contact, target_key: cdp_id, from_column: contact_id}
+
+  ccass.agent_tasks:
+    mode: node
+    label: Task
+    key: id
+    custom_field: metadata
+    custom_dynamic: true
+    properties: [id, organization_id, assigned_user_id, created_by_user_id,
+                 assigned_by_user_id, assigned_by_label, contact_id,
+                 conversation_id, task_type, status, priority, source, title,
+                 summary, notes, channel, due_at, completed_at, dismissed_at,
+                 created_at, updated_at]
+    relationships:
+      - {type: HAS_TASK, direction: in, target_label: User, target_key: id, from_column: assigned_user_id}
+      - {type: FROM_CONVERSATION, direction: out, target_label: Conversation, target_key: id, from_column: conversation_id}
+      - {type: FOR_CONTACT, direction: out, target_label: Contact, target_key: cdp_id, from_column: contact_id}
+      - {type: CREATED_BY, direction: out, target_label: User, target_key: id, from_column: created_by_user_id}
+      - {type: ASSIGNED_BY, direction: out, target_label: User, target_key: id, from_column: assigned_by_user_id}
+
+  ccass.workspace_common_notes:
+    mode: node
+    label: SharedNote
+    key: id
+    properties: [id, organization_id, author_user_id, title, body,
+                 created_at, updated_at]
+    relationships:
+      - {type: HAS_SHARED_NOTE, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: WROTE_SHARED_NOTE, direction: in, target_label: User, target_key: id, from_column: author_user_id}
+
+  # ---------- ccass: NLP skill catalog (not high-volume turns) ----------
+  ccass.nlp_skills:
+    mode: node
+    label: NlpSkill
+    key: id
+    properties: [id, organization_id, skill_key, name, description, skill_type,
+                 owner_user_id, state, created_at, updated_at]
+    relationships:
+      - {type: DEFINES_NLP_SKILL, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: OWNED_BY_USER, direction: out, target_label: User, target_key: id, from_column: owner_user_id}
+
+  ccass.nlp_skill_versions:
+    mode: node
+    label: NlpSkillVersion
+    key: id
+    custom_field: model_policy
+    custom_dynamic: true
+    properties: [id, organization_id, skill_id, version_number, checksum, state,
+                 published_at, created_at]
+    relationships:
+      - {type: HAS_VERSION, direction: in, target_label: NlpSkill, target_key: id, from_column: skill_id}
+
+  ccass.nlp_skill_bindings:
+    mode: node
+    label: NlpSkillBinding
+    key: id
+    custom_field: overrides
+    custom_dynamic: true
+    properties: [id, organization_id, skill_version_id, role, surface, channel,
+                 priority, effective_from, effective_to, enabled, created_at]
+    relationships:
+      - {type: BINDS_VERSION, direction: out, target_label: NlpSkillVersion, target_key: id, from_column: skill_version_id}
+      - {type: OWNED_BY_TENANT, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  ccass.nlp_skill_tools:
+    mode: node
+    label: NlpSkillTool
+    key: id
+    properties: [id, organization_id, skill_version_id, tool_key,
+                 permission_class, requires_confirmation, created_at]
+    relationships:
+      - {type: HAS_TOOL, direction: in, target_label: NlpSkillVersion, target_key: id, from_column: skill_version_id}
+
+  ccass.nlp_conversations:
+    mode: node
+    label: NlpConversation
+    key: id
+    properties: [id, organization_id, conversation_id, runtime_type,
+                 skill_version_id, status, started_at, ended_at, end_reason,
+                 created_at, updated_at]
+    relationships:
+      - {type: HAS_NLP_SESSION, direction: in, target_label: Conversation, target_key: id, from_column: conversation_id}
+      - {type: USES_SKILL_VERSION, direction: out, target_label: NlpSkillVersion, target_key: id, from_column: skill_version_id}
+
+  # ---------- cdp: customer 360 ----------
+  cdp.customer_profile:
+    mode: node
+    label: Contact
+    key: cdp_id
+    custom_field: custom_fields
+    custom_dynamic: true
+    properties: [cdp_id, organization_id, first_name, last_name, gender,
+                 date_of_birth, company, city, region, country, language,
+                 timezone, contact_type, acquisition_channel, acquisition_date,
+                 first_referrer, first_seen_at, last_seen_at, created_at, updated_at]
+    relationships:
+      - {type: HAS_CONTACT, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: HAS_INSIGHTS, direction: out, target_label: InsightCollection, target_key: cdp_id, from_column: cdp_id}
+      - {type: HAS_RECOMMENDATIONS, direction: out, target_label: RecommendationCollection, target_key: cdp_id, from_column: cdp_id}
+      - {type: HAS_ACTIVITIES, direction: out, target_label: ActivityTimeline, target_key: cdp_id, from_column: cdp_id}
+      - {type: HAS_INTERACTIONS, direction: out, target_label: InteractionHistory, target_key: cdp_id, from_column: cdp_id}
+      - {type: HAS_CONVERSATIONS, direction: out, target_label: ConversationHistory, target_key: cdp_id, from_column: cdp_id}
+
+  cdp.identity_keys:
+    mode: node
+    label: ContactPoint
+    key: identity_id
+    custom_field: custom_fields
+    custom_dynamic: true
+    properties: [identity_id, cdp_id, organization_id, key_type, key_value,
+                 source_system, confidence_score, verified, created_at]
+    relationships:
+      - {type: HAS_CONTACT_POINT, direction: in, target_label: Contact, target_key: cdp_id, from_column: cdp_id}
+
+  cdp.contact_identities:
+    mode: node
+    label: ChannelIdentity
+    key: id
+    properties: [id, organization_id, contact_id, identity_type, identity_value,
+                 source_channel, first_seen_at, last_seen_at, created_at, updated_at]
+    relationships:
+      - {type: HAS_CHANNEL_IDENTITY, direction: in, target_label: Contact, target_key: cdp_id, from_column: contact_id}
+
+  cdp.interactions:
+    mode: node
+    label: Interaction
+    key: id
+    custom_field: topics
+    custom_dynamic: true
+    properties: [id, organization_id, conversation_id, contact_id, profile_id,
+                 visitor_id, channel, queue_id, agent_id, status, started_at,
+                 ended_at, outcome, summary, sentiment, disposition_code,
+                 sla_result, last_activity_at, created_at, updated_at]
+    relationships:
+      - {type: HAS_INTERACTION, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: PROJECTED_FROM, direction: out, target_label: Conversation, target_key: id, from_column: conversation_id}
+      - {type: CONTAINS, direction: in, target_label: InteractionHistory, target_key: cdp_id, from_column: contact_id}
+      - {type: IN_QUEUE, direction: out, target_label: Queue, target_key: id, from_column: queue_id}
+      - {type: HANDLED_BY, direction: out, target_label: Agent, target_key: id, from_column: agent_id}
+
+  cdp.customer_scores:
+    mode: node
+    label: CustomerScore
+    key: cdp_id
+    properties: [cdp_id, organization_id, engagement_score, value_score,
+                 loyalty_score, churn_score, purchase_probability,
+                 retention_score, advocacy_score, web_engagement_score,
+                 intent_score, digital_activity_score, updated_at]
+    relationships:
+      - {type: HAS_SCORES, direction: in, target_label: Contact, target_key: cdp_id, from_column: cdp_id}
+
+  cdp.ai_insights:
+    mode: node
+    label: Insight
+    key: insight_id
+    custom_field: custom_fields
+    custom_dynamic: true
+    properties: [insight_id, cdp_id, organization_id, insight_type, score,
+                 summary, explanation, generated_at]
+    relationships:
+      - {type: CONTAINS, direction: in, target_label: InsightCollection, target_key: cdp_id, from_column: cdp_id}
+
+  cdp.customer_recommendations:
+    mode: node
+    label: Recommendation
+    key: recommendation_id
+    custom_field: custom_fields
+    custom_dynamic: true
+    properties: [recommendation_id, cdp_id, organization_id,
+                 recommendation_type, recommendation, confidence, generated_at]
+    relationships:
+      - {type: CONTAINS, direction: in, target_label: RecommendationCollection, target_key: cdp_id, from_column: cdp_id}
+
+  cdp.segments:
+    mode: node
+    label: Segment
+    key: segment_id
+    custom_field: custom_fields
+    custom_dynamic: true
+    properties: [segment_id, organization_id, segment_name, description, created_at]
+    relationships:
+      - {type: DEFINES_SEGMENT, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  cdp.customer_segments:
+    mode: relationship_only
+    from_label: Contact
+    from_key: cdp_id
+    from_column: cdp_id
+    to_label: Segment
+    to_key: segment_id
+    to_column: segment_id
+    type: BELONGS_TO_SEGMENT
+
+  cdp.orders:
+    mode: node
+    label: Order
+    key: order_id
+    custom_field: custom_fields
+    custom_dynamic: true
+    properties: [order_id, cdp_id, organization_id, order_number, status,
+                 {name: total_amount, type: decimal, scale: 2, currency_column: currency},
+                 currency, payment_status, fulfillment_status, shipping_country,
+                 created_at, updated_at]
+    relationships:
+      - {type: PLACED, direction: in, target_label: Contact, target_key: cdp_id, from_column: cdp_id}
+
+  cdp.order_items:
+    mode: relationship_only
+    from_label: Order
+    from_key: order_id
+    from_column: order_id
+    to_label: Product
+    to_key: id
+    to_column: product_id
+    type: CONTAINS
+
+  # ---------- inventory ----------
+  inventory.products:
+    mode: node
+    label: Product
+    key: id
+    properties: [id, organization_id, name, tagline, description,
+                 specifications, image_url, product_url, sku, brand, category,
+                 subcategory, tags, stock_on_hand,
+                 {name: price, type: decimal, scale: 2, currency_column: currency},
+                 currency, max_discount_percent, status, product_type,
+                 billing_type, billing_frequency, unit_of_measure,
+                 created_at, updated_at]
+    relationships:
+      - {type: OFFERS, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  # ---------- crm: tenant / party overlays ----------
+  crm.organization_profiles:
+    mode: node
+    label: OrgProfile
+    key: organization_id
+    custom_field: vertical_config
+    custom_dynamic: true
+    properties: [organization_id, vertical, created_at, updated_at]
+    relationships:
+      - {type: HAS_ORG_PROFILE, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  crm.companies:
+    mode: node
+    label: Company
+    key: id
+    properties: [id, organization_id, name, domain, industry, employee_count,
+                 linkedin_url, logo_url, owner_user_id, channel_role,
+                 parent_company_id, expansion_signal, expansion_reason,
+                 expansion_draft, expansion_last_run_at, created_at, updated_at]
+    relationships:
+      - {type: HAS_COMPANY, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: OWNED_BY, direction: out, target_label: User, target_key: id, from_column: owner_user_id}
+      - {type: PARENT_COMPANY, direction: out, target_label: Company, target_key: id, from_column: parent_company_id}
+
+  crm.company_locations:
+    mode: node
+    label: CompanySite
+    key: id
+    properties: [id, organization_id, company_id, name, type, address, city,
+                 industry, employee_count, owner_user_id, created_at, updated_at]
+    relationships:
+      - {type: HAS_COMPANY_SITE, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: HAS_SITE, direction: in, target_label: Company, target_key: id, from_column: company_id}
+      - {type: OWNED_BY, direction: out, target_label: User, target_key: id, from_column: owner_user_id}
+
+  # CRM overlay for a CDP person. account_contact_id = cdp.customer_profile.cdp_id
+  # B2B: usually linked to Company (+ optional CompanySite).
+  # B2C: company_id / location_id often null; lifecycle still on this overlay.
+  crm.contact_profiles:
+    mode: node
+    label: ContactProfile
+    key: id
+    custom_field: custom_attributes
+    custom_dynamic: true
+    properties: [id, organization_id, account_contact_id, company_id, location_id,
+                 owner_user_id, created_by_user_id, lead_source, lead_status,
+                 disqualify_reason, crm_status, notes, tags, is_pinned,
+                 assignment_reason, sla_deadline, assigned_at, assignment_escalated,
+                 nurture_status, nurture_sequence_step, nurture_started_at,
+                 nurture_last_touch_at, flagged_for_review, flag_reason,
+                 lifecycle_last_action, lifecycle_last_reason, lifecycle_last_run_at,
+                 bant_budget, bant_authority, bant_need, bant_timeline,
+                 converted_deal_id, marketing_opt_out, marketing_opt_out_at,
+                 created_at, updated_at]
+    relationships:
+      - {type: HAS_CONTACT_PROFILE, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: OVERLAY_OF, direction: out, target_label: Contact, target_key: cdp_id, from_column: account_contact_id}
+      - {type: WORKS_AT, direction: out, target_label: Company, target_key: id, from_column: company_id}
+      - {type: AT_SITE, direction: out, target_label: CompanySite, target_key: id, from_column: location_id}
+      - {type: ASSIGNED_TO, direction: out, target_label: User, target_key: id, from_column: owner_user_id}
+      - {type: CREATED_BY, direction: out, target_label: User, target_key: id, from_column: created_by_user_id}
+      - {type: CONVERTED_TO, direction: out, target_label: Deal, target_key: id, from_column: converted_deal_id}
+
+  # ---------- crm: sales assignment ----------
+  crm.org_assignment_settings:
+    mode: node
+    label: AssignmentSettings
+    key: organization_id
+    custom_field: lead_icp
+    custom_dynamic: true
+    properties: [id, organization_id, senior_amount_threshold,
+                 updated_by_user_id, created_at, updated_at]
+    relationships:
+      - {type: HAS_ASSIGNMENT_SETTINGS, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: UPDATED_BY, direction: out, target_label: User, target_key: id, from_column: updated_by_user_id}
+
+  crm.sales_user_assignment_profiles:
+    mode: node
+    label: AssignmentProfile
+    key: id
+    properties: [id, organization_id, user_id, accepting_leads, max_open_deals,
+                 seniority_tier, on_pto_until, country, created_at, updated_at]
+    relationships:
+      - {type: HAS_ASSIGNMENT_PROFILE, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: FOR_USER, direction: out, target_label: User, target_key: id, from_column: user_id}
+
+  # ---------- crm: pipeline (B2B primary; B2B2C shared) ----------
+  crm.deals:
+    mode: node
+    label: Deal
+    key: id
+    properties: [id, organization_id, title, stage,
+                 {name: amount, type: decimal, scale: 2},
+                 company_id, location_id, contact_id, contact_name, contact_email,
+                 owner_user_id, notes, lost_reason, expected_close_date, closed_at,
+                 forecast_category, forecast_confidence_percent, forecast_flagged,
+                 forecast_reason, forecast_last_run_at, created_at, updated_at]
+    relationships:
+      - {type: HAS_DEAL, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: WITH_COMPANY, direction: out, target_label: Company, target_key: id, from_column: company_id}
+      - {type: AT_SITE, direction: out, target_label: CompanySite, target_key: id, from_column: location_id}
+      - {type: PRIMARY_CONTACT, direction: out, target_label: Contact, target_key: cdp_id, from_column: contact_id}
+      - {type: OWNED_BY, direction: out, target_label: User, target_key: id, from_column: owner_user_id}
+
+  crm.deal_activities:
+    mode: node
+    label: DealActivity
+    key: id
+    properties: [id, organization_id, deal_id, type, subject, body, due_at,
+                 completed_at, created_by_user_id, created_at, updated_at]
+    relationships:
+      - {type: HAS_DEAL_ACTIVITY, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: HAS_ACTIVITY, direction: in, target_label: Deal, target_key: id, from_column: deal_id}
+      - {type: CREATED_BY, direction: out, target_label: User, target_key: id, from_column: created_by_user_id}
+
+  # Timeline / inbox / tasks / meetings for a CDP contact (B2B + B2C).
+  crm.contact_activities:
+    mode: node
+    label: ContactActivity
+    key: id
+    custom_field: transcript_insights
+    custom_dynamic: true
+    properties: [id, organization_id, contact_id, type, folder, thread_id,
+                 provider_message_id, provider_thread_id, mail_provider,
+                 rfc_message_id, email_direction, needs_manual_response,
+                 subject, body, due_at, assignee_user_id, task_status,
+                 reminder_sent_at, reminder_24h_sent_at, reminder_1h_sent_at,
+                 miss_escalated_at, mom_sent_at, transcript_text, transcript_source,
+                 transcript_analyzed_at, completed_at, created_by_user_id,
+                 created_at, updated_at]
+    relationships:
+      - {type: CONTAINS, direction: in, target_label: ActivityTimeline, target_key: cdp_id, from_column: contact_id}
+      - {type: FOR_CONTACT, direction: out, target_label: Contact, target_key: cdp_id, from_column: contact_id}
+      - {type: ASSIGNED_TO, direction: out, target_label: User, target_key: id, from_column: assignee_user_id}
+      - {type: CREATED_BY, direction: out, target_label: User, target_key: id, from_column: created_by_user_id}
+
+  # ---------- crm: catalog overlays (inventory.products = Product in core) ----------
+  crm.product_offers:
+    mode: node
+    label: ProductOffer
+    key: id
+    properties: [id, organization_id, product_id, name, code, billing_type,
+                 billing_frequency, included_qty, meter_key, sort_order, status,
+                 created_at, updated_at]
+    relationships:
+      - {type: HAS_PRODUCT_OFFER, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: FOR_PRODUCT, direction: out, target_label: Product, target_key: id, from_column: product_id}
+
+  crm.product_addons:
+    mode: node
+    label: Addon
+    key: id
+    properties: [id, organization_id, product_id, name, unit_label, meter_key,
+                 is_overage, pricing_model,
+                 {name: flat_price, type: decimal, scale: 2},
+                 {name: unit_price, type: decimal, scale: 4},
+                 step_size,
+                 {name: step_price, type: decimal, scale: 2},
+                 sort_order, created_at, updated_at]
+    relationships:
+      - {type: HAS_ADDON, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: FOR_PRODUCT, direction: out, target_label: Product, target_key: id, from_column: product_id}
+
+  crm.product_addon_tiers:
+    mode: node
+    label: AddonTier
+    key: id
+    properties: [id, organization_id, addon_id, min_qty, max_qty,
+                 {name: unit_price, type: decimal, scale: 4},
+                 created_at, updated_at]
+    relationships:
+      - {type: HAS_TIER, direction: in, target_label: Addon, target_key: id, from_column: addon_id}
+
+  crm.price_books:
+    mode: node
+    label: PriceBook
+    key: id
+    properties: [id, organization_id, name, code, currency, is_default,
+                 created_at, updated_at]
+    relationships:
+      - {type: HAS_PRICE_BOOK, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  crm.price_book_entries:
+    mode: node
+    label: PriceBookEntry
+    key: id
+    properties: [id, organization_id, price_book_id, product_id, offer_id,
+                 addon_id,
+                 {name: amount, type: decimal, scale: 2},
+                 billing_frequency, created_at, updated_at]
+    relationships:
+      - {type: LISTS, direction: in, target_label: PriceBook, target_key: id, from_column: price_book_id}
+      - {type: FOR_PRODUCT, direction: out, target_label: Product, target_key: id, from_column: product_id}
+      - {type: FOR_OFFER, direction: out, target_label: ProductOffer, target_key: id, from_column: offer_id}
+      - {type: FOR_ADDON, direction: out, target_label: Addon, target_key: id, from_column: addon_id}
+
+  # ---------- crm: documents (B2B finance path; B2B2C shared) ----------
+  crm.proposal_templates:
+    mode: node
+    label: ProposalTemplate
+    key: id
+    custom_field: sections
+    custom_dynamic: true
+    properties: [id, organization_id, name, code, kind, blueprint, assets,
+                 is_default, created_at, updated_at]
+    relationships:
+      - {type: HAS_PROPOSAL_TEMPLATE, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  crm.proposals:
+    mode: node
+    label: Proposal
+    key: id
+    custom_field: sections
+    custom_dynamic: true
+    properties: [id, organization_id, deal_id, template_id, number, title,
+                 summary, blueprint, assets, customer_name, version, status,
+                 attachment_url, shared_at, approval_status, approved_at,
+                 approved_by_user_id, created_by_user_id, created_at, updated_at]
+    relationships:
+      - {type: HAS_PROPOSAL, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: FOR_DEAL, direction: out, target_label: Deal, target_key: id, from_column: deal_id}
+      - {type: USES_TEMPLATE, direction: out, target_label: ProposalTemplate, target_key: id, from_column: template_id}
+      - {type: CREATED_BY, direction: out, target_label: User, target_key: id, from_column: created_by_user_id}
+      - {type: APPROVED_BY, direction: out, target_label: User, target_key: id, from_column: approved_by_user_id}
+
+  crm.quote_templates:
+    mode: node
+    label: QuoteTemplate
+    key: id
+    custom_field: sections
+    custom_dynamic: true
+    properties: [id, organization_id, name, code, kind, blueprint, assets,
+                 is_default, created_at, updated_at]
+    relationships:
+      - {type: HAS_QUOTE_TEMPLATE, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  crm.quotes:
+    mode: node
+    label: Quote
+    key: id
+    custom_field: document_sections
+    custom_dynamic: true
+    properties: [id, organization_id, deal_id, proposal_id, template_id, number,
+                 version, status, currency,
+                 {name: subtotal, type: decimal, scale: 2, currency_column: currency},
+                 {name: discount_pct, type: decimal, scale: 2},
+                 {name: total, type: decimal, scale: 2, currency_column: currency},
+                 valid_until, notes, blueprint, assets, customer_name,
+                 company_name, vendor_name, sent_at, accepted_at,
+                 approval_status, approval_note, approved_at, approved_by_user_id,
+                 created_by_user_id, created_at, updated_at]
+    relationships:
+      - {type: HAS_QUOTE, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: FOR_DEAL, direction: out, target_label: Deal, target_key: id, from_column: deal_id}
+      - {type: FROM_PROPOSAL, direction: out, target_label: Proposal, target_key: id, from_column: proposal_id}
+      - {type: USES_TEMPLATE, direction: out, target_label: QuoteTemplate, target_key: id, from_column: template_id}
+      - {type: CREATED_BY, direction: out, target_label: User, target_key: id, from_column: created_by_user_id}
+      - {type: APPROVED_BY, direction: out, target_label: User, target_key: id, from_column: approved_by_user_id}
+
+  crm.quote_lines:
+    mode: node
+    label: QuoteLine
+    key: id
+    properties: [id, organization_id, quote_id, product_id, name,
+                 {name: quantity, type: decimal, scale: 2},
+                 {name: unit_price, type: decimal, scale: 2},
+                 {name: amount, type: decimal, scale: 2},
+                 sort_order, created_at, updated_at]
+    relationships:
+      - {type: HAS_LINE, direction: in, target_label: Quote, target_key: id, from_column: quote_id}
+      - {type: FOR_PRODUCT, direction: out, target_label: Product, target_key: id, from_column: product_id}
+
+  # B2B: usually from accepted quote / deal + company.
+  # B2C: contact_id set; company_id / deal_id / quote_id often null.
+  # Distinct from CDP Order (cdp.orders) — CRM commercial order of record.
+  crm.sales_orders:
+    mode: node
+    label: SalesOrder
+    key: id
+    properties: [id, organization_id, deal_id, quote_id, company_id, contact_id,
+                 number, status, currency,
+                 {name: total, type: decimal, scale: 2, currency_column: currency},
+                 confirmed_at, created_by_user_id, created_at, updated_at]
+    relationships:
+      - {type: HAS_SALES_ORDER, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: FOR_DEAL, direction: out, target_label: Deal, target_key: id, from_column: deal_id}
+      - {type: FROM_QUOTE, direction: out, target_label: Quote, target_key: id, from_column: quote_id}
+      - {type: FOR_COMPANY, direction: out, target_label: Company, target_key: id, from_column: company_id}
+      - {type: PLACED_BY, direction: out, target_label: Contact, target_key: cdp_id, from_column: contact_id}
+      - {type: CREATED_BY, direction: out, target_label: User, target_key: id, from_column: created_by_user_id}
+
+  crm.order_lines:
+    mode: node
+    label: OrderLine
+    key: id
+    properties: [id, organization_id, order_id, product_id, name,
+                 {name: quantity, type: decimal, scale: 2},
+                 {name: unit_price, type: decimal, scale: 2},
+                 {name: amount, type: decimal, scale: 2},
+                 sort_order, created_at, updated_at]
+    relationships:
+      - {type: HAS_LINE, direction: in, target_label: SalesOrder, target_key: id, from_column: order_id}
+      - {type: FOR_PRODUCT, direction: out, target_label: Product, target_key: id, from_column: product_id}
+
+  crm.invoice_templates:
+    mode: node
+    label: InvoiceTemplate
+    key: id
+    custom_field: sections
+    custom_dynamic: true
+    properties: [id, organization_id, name, code, kind, blueprint, assets,
+                 is_default, created_at, updated_at]
+    relationships:
+      - {type: HAS_INVOICE_TEMPLATE, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  # Finance module: B2B / B2B2C. Not enabled for pure B2C tenants.
+  crm.invoices:
+    mode: node
+    label: Invoice
+    key: id
+    custom_field: tax_details
+    custom_dynamic: true
+    properties: [id, organization_id, order_id, deal_id, company_id, template_id,
+                 number, status, currency,
+                 {name: total, type: decimal, scale: 2, currency_column: currency},
+                 {name: discount_amount, type: decimal, scale: 2, currency_column: currency},
+                 {name: tax_amount, type: decimal, scale: 2, currency_column: currency},
+                 issue_date, payment_terms, notes, billing_address, lead_email,
+                 lead_phone, tax_id, due_at, paid_at, sections, blueprint, assets,
+                 approval_status, approved_at, approved_by_user_id, created_by_user_id,
+                 escalation_severity, escalation_reason, escalation_draft,
+                 escalation_last_run_at, created_at, updated_at]
+    relationships:
+      - {type: HAS_INVOICE, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: FOR_ORDER, direction: out, target_label: SalesOrder, target_key: id, from_column: order_id}
+      - {type: FOR_DEAL, direction: out, target_label: Deal, target_key: id, from_column: deal_id}
+      - {type: ISSUED_TO, direction: out, target_label: Company, target_key: id, from_column: company_id}
+      - {type: USES_TEMPLATE, direction: out, target_label: InvoiceTemplate, target_key: id, from_column: template_id}
+      - {type: CREATED_BY, direction: out, target_label: User, target_key: id, from_column: created_by_user_id}
+      - {type: APPROVED_BY, direction: out, target_label: User, target_key: id, from_column: approved_by_user_id}
+
+  crm.invoice_lines:
+    mode: node
+    label: InvoiceLine
+    key: id
+    properties: [id, organization_id, invoice_id, kind, product_id, addon_id,
+                 name, description,
+                 {name: quantity, type: decimal, scale: 2},
+                 {name: unit_price, type: decimal, scale: 4},
+                 {name: tax_percent, type: decimal, scale: 2},
+                 {name: amount, type: decimal, scale: 2},
+                 sort_order, created_at, updated_at]
+    relationships:
+      - {type: HAS_LINE, direction: in, target_label: Invoice, target_key: id, from_column: invoice_id}
+      - {type: FOR_PRODUCT, direction: out, target_label: Product, target_key: id, from_column: product_id}
+      - {type: FOR_ADDON, direction: out, target_label: Addon, target_key: id, from_column: addon_id}
+
+  crm.contracts:
+    mode: node
+    label: Contract
+    key: id
+    properties: [id, organization_id, company_id, deal_id, title, starts_at,
+                 ends_at,
+                 {name: arr, type: decimal, scale: 2},
+                 renew_deal_id, renewal_reminded_at, created_at, updated_at]
+    relationships:
+      - {type: HAS_CONTRACT, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: FOR_COMPANY, direction: out, target_label: Company, target_key: id, from_column: company_id}
+      - {type: FROM_DEAL, direction: out, target_label: Deal, target_key: id, from_column: deal_id}
+      - {type: RENEWED_BY, direction: out, target_label: Deal, target_key: id, from_column: renew_deal_id}
+
+  # ---------- crm: lead intelligence (agent outcomes, not job queues) ----------
+  crm.lead_enrichment_snapshots:
+    mode: node
+    label: LeadEnrichmentSnapshot
+    key: id
+    properties: [id, organization_id, contact_id, company_name, company_size,
+                 industry, company_description, products, revenue_band,
+                 seniority_tier, geography, email_domain_type,
+                 enrichment_confidence, enrichment_source, conflict_flags,
+                 enrichment_timestamp, created_at, updated_at]
+    relationships:
+      - {type: HAS_ENRICHMENT, direction: in, target_label: Contact, target_key: cdp_id, from_column: contact_id}
+
+  crm.lead_summaries:
+    mode: node
+    label: LeadSummary
+    key: id
+    properties: [id, organization_id, contact_id, summary, headline, intent,
+                 recommended_action, flags, signature, source, model,
+                 created_at, updated_at]
+    relationships:
+      - {type: HAS_LEAD_SUMMARY, direction: in, target_label: Contact, target_key: cdp_id, from_column: contact_id}
+
+  # ---------- crm: meetings / coaching / privacy / HITL ----------
+  crm.meeting_assist_sessions:
+    mode: node
+    label: MeetingAssistSession
+    key: id
+    custom_field: last_suggestions
+    custom_dynamic: true
+    properties: [id, organization_id, contact_id, activity_id, provider,
+                 external_meeting_id, join_url, host_user_id, status,
+                 started_at, ended_at, last_assist_at, meta, created_at, updated_at]
+    relationships:
+      - {type: FOR_ACTIVITY, direction: out, target_label: ContactActivity, target_key: id, from_column: activity_id}
+      - {type: FOR_CONTACT, direction: out, target_label: Contact, target_key: cdp_id, from_column: contact_id}
+      - {type: HOSTED_BY, direction: out, target_label: User, target_key: id, from_column: host_user_id}
+
+  crm.meeting_transcript_chunks:
+    mode: node
+    label: MeetingTranscriptChunk
+    key: id
+    properties: [id, organization_id, session_id, seq, speaker, speaker_email,
+                 text, spoken_at, source, created_at]
+    relationships:
+      - {type: HAS_CHUNK, direction: in, target_label: MeetingAssistSession, target_key: id, from_column: session_id}
+
+  crm.meeting_analyses:
+    mode: node
+    label: MeetingAnalysis
+    key: id
+    custom_field: evidence
+    custom_dynamic: true
+    properties: [id, organization_id, activity_id, contact_id, deal_id, outcome,
+                 bant_budget, bant_authority, bant_need, bant_timeline_text,
+                 next_step_agreed, objections_raised, confidence, analyzed_at,
+                 created_at]
+    relationships:
+      - {type: FOR_ACTIVITY, direction: out, target_label: ContactActivity, target_key: id, from_column: activity_id}
+      - {type: FOR_CONTACT, direction: out, target_label: Contact, target_key: cdp_id, from_column: contact_id}
+      - {type: FOR_DEAL, direction: out, target_label: Deal, target_key: id, from_column: deal_id}
+
+  crm.coaching_insights:
+    mode: node
+    label: CoachingInsight
+    key: id
+    properties: [id, organization_id, activity_id, contact_id, deal_id,
+                 rep_user_id, interaction_type, overall_impression,
+                 discovery_quality, objection_handling, methodology_note,
+                 talk_balance_note, strengths, growth_areas, highlighted_moment,
+                 coaching_note, analyzed_at, created_at]
+    relationships:
+      - {type: FOR_ACTIVITY, direction: out, target_label: ContactActivity, target_key: id, from_column: activity_id}
+      - {type: FOR_CONTACT, direction: out, target_label: Contact, target_key: cdp_id, from_column: contact_id}
+      - {type: FOR_DEAL, direction: out, target_label: Deal, target_key: id, from_column: deal_id}
+      - {type: FOR_USER, direction: out, target_label: User, target_key: id, from_column: rep_user_id}
+
+  crm.privacy_requests:
+    mode: node
+    label: PrivacyRequest
+    key: id
+    properties: [id, organization_id, activity_id, contact_id, request_type,
+                 confidence, status, reason, draft_confirmation,
+                 reviewed_by_user_id, reviewed_at, executed_at, created_at, updated_at]
+    relationships:
+      - {type: FOR_ACTIVITY, direction: out, target_label: ContactActivity, target_key: id, from_column: activity_id}
+      - {type: FOR_CONTACT, direction: out, target_label: Contact, target_key: cdp_id, from_column: contact_id}
+      - {type: REVIEWED_BY, direction: out, target_label: User, target_key: id, from_column: reviewed_by_user_id}
+
+  crm.process_confirmations:
+    mode: node
+    label: ProcessConfirmation
+    key: id
+    custom_field: payload
+    custom_dynamic: true
+    properties: [id, organization_id, contact_id, owner_user_id, activity_id,
+                 deal_id, action_kind, title, summary, status, decided_at,
+                 decided_by_user_id, result_note, created_at, updated_at]
+    relationships:
+      - {type: FOR_CONTACT, direction: out, target_label: Contact, target_key: cdp_id, from_column: contact_id}
+      - {type: FOR_ACTIVITY, direction: out, target_label: ContactActivity, target_key: id, from_column: activity_id}
+      - {type: FOR_DEAL, direction: out, target_label: Deal, target_key: id, from_column: deal_id}
+      - {type: OWNED_BY, direction: out, target_label: User, target_key: id, from_column: owner_user_id}
+      - {type: DECIDED_BY, direction: out, target_label: User, target_key: id, from_column: decided_by_user_id}
+
+  # ---------- crm: agent UX memory / notifications ----------
+  crm.notifications:
+    mode: node
+    label: Notification
+    key: id
+    custom_field: metadata
+    custom_dynamic: true
+    properties: [id, organization_id, recipient_user_id, actor_user_id, kind,
+                 title, body, href, entity_type, entity_id, contact_id,
+                 read_at, created_at]
+    relationships:
+      - {type: HAS_NOTIFICATION, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: NOTIFIES, direction: out, target_label: User, target_key: id, from_column: recipient_user_id}
+      - {type: ACTED_BY, direction: out, target_label: User, target_key: id, from_column: actor_user_id}
+      - {type: ABOUT_CONTACT, direction: out, target_label: Contact, target_key: cdp_id, from_column: contact_id}
+
+  # Coworker / agent durable slots. scope_type+scope_id are polymorphic
+  # (contact, deal, user, …) — resolve in the agent layer, not as fixed FKs.
+  crm.agent_memories:
+    mode: node
+    label: AgentMemory
+    key: id
+    properties: [id, organization_id, scope_type, scope_id, slot_key, slot_value,
+                 source, expires_at, created_at, updated_at]
+    relationships:
+      - {type: HAS_AGENT_MEMORY, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+  ticketing.organizations:
+    mode: node
+    label: TicketingWorkspace
+    key: id
+    properties: [id, name, slug, status, ticket_prefix, portal_label,
+                 display_timezone, portal_auth_mode, business_type,
+                 created_at, updated_at]
+
+  # ---------- staff (mirror of MyAccount; passwords live in accounts.setup_users) ----------
+  ticketing.users:
+    mode: node
+    label: TicketingUser
+    key: id
+    properties: [id, organization_id, name, email, initials, role, status,
+                 phone, last_login_at, password_changed_at, two_factor_enabled,
+                 language, timezone, date_format,
+                 notify_ticket_assignments, notify_ticket_updates,
+                 notify_security_alerts, notify_sla_alerts, notify_product_updates,
+                 myaccount_user_id, myaccount_organization_id,
+                 created_at, updated_at]
+    relationships:
+      - {type: BELONGS_TO_WORKSPACE, direction: out, target_label: TicketingWorkspace, target_key: id, from_column: organization_id}
+      - {type: SYNCED_FROM, direction: out, target_label: User, target_key: id, from_column: myaccount_user_id}
+      - {type: IN_TENANT, direction: out, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  ticketing.user_sessions:
+    mode: node
+    label: StaffSession
+    key: id
+    properties: [id, organization_id, user_id, device_label, browser, os, location,
+                 user_agent, ip_address, is_current, last_active_at,
+                 created_at, revoked_at]
+    relationships:
+      - {type: HAS_STAFF_SESSION, direction: in, target_label: TicketingUser, target_key: id, from_column: user_id}
+      - {type: IN_WORKSPACE, direction: out, target_label: TicketingWorkspace, target_key: id, from_column: organization_id}
+
+  ticketing.user_login_events:
+    mode: node
+    label: StaffLoginEvent
+    key: id
+    properties: [id, organization_id, user_id, device_label, location,
+                 ip_address, created_at]
+    relationships:
+      - {type: LOGGED_IN, direction: in, target_label: TicketingUser, target_key: id, from_column: user_id}
+      - {type: IN_WORKSPACE, direction: out, target_label: TicketingWorkspace, target_key: id, from_column: organization_id}
+
+  # ---------- end customers & B2B client accounts ----------
+  ticketing.customers:
+    mode: node
+    label: Customer
+    key: id
+    properties: [id, organization_id, account_id, external_id, name, email,
+                 phone, status, total_tickets, password_set_at, last_portal_login_at,
+                 created_at, updated_at]
+    relationships:
+      - {type: BELONGS_TO_WORKSPACE, direction: out, target_label: TicketingWorkspace, target_key: id, from_column: organization_id}
+      - {type: OF_ACCOUNT, direction: out, target_label: ClientAccount, target_key: id, from_column: account_id}
+
+  ticketing.customer_portal_sessions:
+    mode: node
+    label: CustomerPortalSession
+    key: id
+    properties: [id, organization_id, customer_id, device_label, ip_address,
+                 user_agent, last_active_at, created_at, revoked_at]
+    relationships:
+      - {type: HAS_PORTAL_SESSION, direction: in, target_label: Customer, target_key: id, from_column: customer_id}
+      - {type: IN_WORKSPACE, direction: out, target_label: TicketingWorkspace, target_key: id, from_column: organization_id}
+
+  ticketing.customer_otp_challenges:
+    mode: node
+    label: CustomerOtpChallenge
+    key: id
+    properties: [id, organization_id, customer_id, identifier, channel,
+                 attempts, expires_at, consumed_at, created_at]
+    relationships:
+      - {type: CHALLENGES, direction: in, target_label: Customer, target_key: id, from_column: customer_id}
+      - {type: IN_WORKSPACE, direction: out, target_label: TicketingWorkspace, target_key: id, from_column: organization_id}
+
+  ticketing.customer_password_tokens:
+    mode: node
+    label: CustomerPasswordToken
+    key: id
+    properties: [id, organization_id, customer_id, expires_at, consumed_at, created_at]
+    relationships:
+      - {type: RESETS_PASSWORD_FOR, direction: in, target_label: Customer, target_key: id, from_column: customer_id}
+      - {type: IN_WORKSPACE, direction: out, target_label: TicketingWorkspace, target_key: id, from_column: organization_id}
+
+  ticketing.accounts:
+    mode: node
+    label: ClientAccount
+    key: id
+    properties: [id, organization_id, name, status, created_at, updated_at]
+    relationships:
+      - {type: BELONGS_TO_WORKSPACE, direction: out, target_label: TicketingWorkspace, target_key: id, from_column: organization_id}
+
+  ticketing.products:
+    mode: node
+    label: SupportedProduct
+    key: id
+    properties: [id, organization_id, code, name, status, created_at, updated_at]
+    relationships:
+      - {type: BELONGS_TO_WORKSPACE, direction: out, target_label: TicketingWorkspace, target_key: id, from_column: organization_id}
+
+  ticketing.account_products:
+    mode: relationship_only
+    from_label: ClientAccount
+    from_key: id
+    from_column: account_id
+    to_label: SupportedProduct
+    to_key: id
+    to_column: product_id
+    type: SUPPORTS
+
+  ticketing.customer_products:
+    mode: relationship_only
+    from_label: Customer
+    from_key: id
+    from_column: customer_id
+    to_label: SupportedProduct
+    to_key: id
+    to_column: product_id
+    type: USES
+
+  # ---------- queues / teams (ticketing-owned; mirrored from accounts.setup_teams when synced) ----------
+  ticketing.agent_queues:
+    mode: node
+    label: TicketQueue
+    key: id
+    properties: [id, organization_id, external_id, queue_name, description,
+                 type, open_tickets, assigned, sla_status, created_at, updated_at]
+    relationships:
+      - {type: IN_WORKSPACE, direction: out, target_label: TicketingWorkspace, target_key: id, from_column: organization_id}
+      - {type: MIRRORED_FROM, direction: out, target_label: Team, target_key: id, from_column: id}
+
+  ticketing.agent_queue_members:
+    mode: relationship_only
+    from_label: TicketQueue
+    from_key: id
+    from_column: queue_id
+    to_label: TicketingUser
+    to_key: id
+    to_column: user_id
+    type: HAS_MEMBER
+
+  # ---------- tickets & thread ----------
+  ticketing.tickets:
+    mode: node
+    label: Ticket
+    key: id
+    properties: [id, organization_id, ticket_number, subject, description,
+                 status, priority, customer_id, customer_name, customer_email,
+                 customer_phone, channel, assignee_id, assignee_name,
+                 resolver_id, resolver_name, queue_id, queue_name,
+                 attachments, due_at, first_response_at, resolved_at,
+                 csat_score, csat_rated_at, category, skill, ai_summary,
+                 created_by_id, created_by_name, created_at, updated_at]
+    relationships:
+      - {type: IN_WORKSPACE, direction: out, target_label: TicketingWorkspace, target_key: id, from_column: organization_id}
+      - {type: REPORTED_BY, direction: out, target_label: Customer, target_key: id, from_column: customer_id}
+      - {type: ASSIGNED_TO, direction: out, target_label: TicketingUser, target_key: id, from_column: assignee_id}
+      - {type: RESOLVED_BY, direction: out, target_label: TicketingUser, target_key: id, from_column: resolver_id}
+      - {type: IN_QUEUE, direction: out, target_label: TicketQueue, target_key: id, from_column: queue_id}
+      - {type: CREATED_BY, direction: out, target_label: TicketingUser, target_key: id, from_column: created_by_id}
+      - {type: USES_STATUS, direction: out, target_label: TicketStatus, target_key: id, from_column: status}
+      - {type: GOVERNED_BY, direction: out, target_label: SLAPolicyDefault, target_key: priority, from_column: priority}
+
+  ticketing.ticket_notes:
+    mode: node
+    label: TicketNote
+    key: id
+    properties: [id, organization_id, ticket_id, author_id, author_name,
+                 body, visibility, created_at]
+    relationships:
+      - {type: ON_TICKET, direction: out, target_label: Ticket, target_key: id, from_column: ticket_id}
+      - {type: AUTHORED_BY, direction: out, target_label: TicketingUser, target_key: id, from_column: author_id}
+      - {type: IN_WORKSPACE, direction: out, target_label: TicketingWorkspace, target_key: id, from_column: organization_id}
+
+  ticketing.ticket_presence:
+    mode: relationship_only
+    from_label: TicketingUser
+    from_key: id
+    from_column: user_id
+    to_label: Ticket
+    to_key: id
+    to_column: ticket_id
+    type: VIEWING
+
+  # ---------- catalogs ----------
+  ticketing.ticket_statuses:
+    mode: node
+    label: TicketStatus
+    key: id
+    properties: [id, organization_id, status, display_name, is_system,
+                 is_terminal, sort_order, active, created_at, updated_at]
+    relationships:
+      - {type: DEFINED_IN, direction: out, target_label: TicketingWorkspace, target_key: id, from_column: organization_id}
+
+  ticketing.sla_policy_defaults:
+    mode: node
+    label: SLAPolicyDefault
+    key: priority
+    properties: [priority, resolution_hours, first_response_hours, updated_at]
+
+  ticketing.sla_policies:
+    mode: node
+    label: SLAPolicy
+    key: id
+    properties: [id, organization_id, priority, resolution_hours,
+                 first_response_hours, display_name, is_system, sort_order,
+                 active, created_at, updated_at]
+    relationships:
+      - {type: DEFINED_IN, direction: out, target_label: TicketingWorkspace, target_key: id, from_column: organization_id}
+
+  # ---------- knowledge & macros ----------
+  ticketing.kb_articles:
+    mode: node
+    label: KbArticle
+    key: id
+    properties: [id, organization_id, external_id, title, content, category,
+                 author_name, author_id, status, views, attachments,
+                 created_at, updated_at]
+    relationships:
+      - {type: IN_WORKSPACE, direction: out, target_label: TicketingWorkspace, target_key: id, from_column: organization_id}
+      - {type: AUTHORED_BY, direction: out, target_label: TicketingUser, target_key: id, from_column: author_id}
+
+  ticketing.macros:
+    mode: node
+    label: Macro
+    key: id
+    properties: [id, organization_id, title, body, created_by_id, created_by_name,
+                 created_at, updated_at]
+    relationships:
+      - {type: IN_WORKSPACE, direction: out, target_label: TicketingWorkspace, target_key: id, from_column: organization_id}
+      - {type: CREATED_BY, direction: out, target_label: TicketingUser, target_key: id, from_column: created_by_id}
+
+  # ---------- activity, audit, notifications ----------
+  ticketing.activity_logs:
+    mode: node
+    label: ActivityLog
+    key: id
+    properties: [id, organization_id, ticket_id, text, created_at]
+    relationships:
+      - {type: IN_WORKSPACE, direction: out, target_label: TicketingWorkspace, target_key: id, from_column: organization_id}
+      - {type: ABOUT_TICKET, direction: out, target_label: Ticket, target_key: id, from_column: ticket_id}
+
+  ticketing.audit_events:
+    mode: node
+    label: AuditEvent
+    key: id
+    custom_field: meta
+    custom_dynamic: true
+    properties: [id, organization_id, actor_id, actor_name, action,
+                 ticket_id, ticket_number, created_at]
+    relationships:
+      - {type: IN_WORKSPACE, direction: out, target_label: TicketingWorkspace, target_key: id, from_column: organization_id}
+      - {type: ACTED_BY, direction: out, target_label: TicketingUser, target_key: id, from_column: actor_id}
+      - {type: ON_TICKET, direction: out, target_label: Ticket, target_key: id, from_column: ticket_id}
+
+  ticketing.notifications:
+    mode: node
+    label: TicketingNotification
+    key: id
+    properties: [id, organization_id, user_id, title, message, ticket_id,
+                 customer_name, is_read, kind, created_at]
+    relationships:
+      - {type: IN_WORKSPACE, direction: out, target_label: TicketingWorkspace, target_key: id, from_column: organization_id}
+      - {type: SENT_TO, direction: out, target_label: TicketingUser, target_key: id, from_column: user_id}
+      - {type: ABOUT_TICKET, direction: out, target_label: Ticket, target_key: id, from_column: ticket_id}
+
+  ticketing.dashboard_metrics:
+    mode: node
+    label: DashboardMetrics
+    key: organization_id
+    properties: [id, organization_id, open_tickets, on_hold, overdue, due_today,
+                 unassigned, open_change, on_hold_change, overdue_change,
+                 due_today_change, unassigned_change, captured_at]
+    relationships:
+      - {type: SNAPSHOT_FOR, direction: out, target_label: TicketingWorkspace, target_key: id, from_column: organization_id}
+
+  # ---------- automation & integrations ----------
+  ticketing.automation_rules:
+    mode: node
+    label: AutomationRule
+    key: id
+    custom_field: conditions
+    custom_dynamic: true
+    # actions column is also jsonb on this row (if/then actions)
+    properties: [id, organization_id, name, event, enabled, priority,
+                 created_by_id, created_by_name, created_at, updated_at]
+    relationships:
+      - {type: IN_WORKSPACE, direction: out, target_label: TicketingWorkspace, target_key: id, from_column: organization_id}
+      - {type: CREATED_BY, direction: out, target_label: TicketingUser, target_key: id, from_column: created_by_id}
+
+  ticketing.org_api_keys:
+    mode: node
+    label: OrgApiKey
+    key: id
+    properties: [id, organization_id, name, key_prefix, created_by_id,
+                 created_by_name, last_used_at, revoked_at, created_at]
+    relationships:
+      - {type: IN_WORKSPACE, direction: out, target_label: TicketingWorkspace, target_key: id, from_column: organization_id}
+      - {type: CREATED_BY, direction: out, target_label: TicketingUser, target_key: id, from_column: created_by_id}
+
+  ticketing.org_widgets:
+    mode: node
+    label: OrgWidget
+    key: id
+    properties: [id, organization_id, name, public_id, allowed_origins, enabled,
+                 button_label, created_by_id, created_by_name,
+                 created_at, updated_at]
+    relationships:
+      - {type: IN_WORKSPACE, direction: out, target_label: TicketingWorkspace, target_key: id, from_column: organization_id}
+      - {type: CREATED_BY, direction: out, target_label: TicketingUser, target_key: id, from_column: created_by_id}
+
+  # ---------- email & webhooks ----------
+  ticketing.email_message_refs:
+    mode: node
+    label: InboundEmailRef
+    key: id
+    properties: [id, organization_id, message_id, ticket_id, ticket_number, created_at]
+    relationships:
+      - {type: IN_WORKSPACE, direction: out, target_label: TicketingWorkspace, target_key: id, from_column: organization_id}
+      - {type: THREADS_TO, direction: out, target_label: Ticket, target_key: id, from_column: ticket_id}
+
+  ticketing.outbound_email_log:
+    mode: node
+    label: OutboundEmail
+    key: id
+    properties: [id, organization_id, ticket_id, ticket_number, kind, to_email,
+                 subject, body_preview, status, error, created_at]
+    relationships:
+      - {type: IN_WORKSPACE, direction: out, target_label: TicketingWorkspace, target_key: id, from_column: organization_id}
+      - {type: SENT_FOR, direction: out, target_label: Ticket, target_key: id, from_column: ticket_id}
+
+  ticketing.ticket_event_outbox:
+    mode: node
+    label: TicketEventOutbox
+    key: id
+    custom_field: payload
+    custom_dynamic: true
+    properties: [id, organization_id, event_type, webhook_url, status,
+                 attempts, last_error, created_at, delivered_at]
+    relationships:
+      - {type: IN_WORKSPACE, direction: out, target_label: TicketingWorkspace, target_key: id, from_column: organization_id}
+
+  # ---------- co-worker / LangGraph session memory ----------
+  ticketing.conversation_contexts:
+    mode: node
+    label: CoworkerSession
+    key: id
+    custom_field: context
+    custom_dynamic: true
+    properties: [id, organization_id, user_id, user_key, session_key,
+                 version, created_at, updated_at, expires_at]
+    relationships:
+      - {type: IN_WORKSPACE, direction: out, target_label: TicketingWorkspace, target_key: id, from_column: organization_id}
+      - {type: OWNED_BY, direction: out, target_label: TicketingUser, target_key: id, from_column: user_id}
+
+  ticketing.workflow_events:
+    mode: node
+    label: WorkflowEvent
+    key: id
+    custom_field: event_data
+    custom_dynamic: true
+    properties: [id, organization_id, user_id, user_key, session_key,
+                 request_id, conversation_context_id, workflow_id, workflow_type,
+                 event_type, version, created_at, expires_at]
+    relationships:
+      - {type: IN_WORKSPACE, direction: out, target_label: TicketingWorkspace, target_key: id, from_column: organization_id}
+      - {type: FOR_SESSION, direction: out, target_label: CoworkerSession, target_key: id, from_column: conversation_context_id}
+      - {type: BY_USER, direction: out, target_label: TicketingUser, target_key: id, from_column: user_id}
+
+  # ---------- proactive agents ----------
+  ticketing.proactive_outbox:
+    mode: node
+    label: ProactiveOutboxEvent
+    key: id
+    custom_field: payload
+    custom_dynamic: true
+    properties: [id, organization_id, event_type, ticket_id, ticket_number,
+                 actor, created_at, processed_at]
+    relationships:
+      - {type: IN_WORKSPACE, direction: out, target_label: TicketingWorkspace, target_key: id, from_column: organization_id}
+      - {type: FOR_TICKET, direction: out, target_label: Ticket, target_key: id, from_column: ticket_id}
+
+  ticketing.proactive_recommendations:
+    mode: node
+    label: ProactiveRecommendation
+    key: id
+    custom_field: payload
+    custom_dynamic: true
+    properties: [id, organization_id, agent_id, ticket_id, ticket_number,
+                 summary, status, created_at]
+    relationships:
+      - {type: IN_WORKSPACE, direction: out, target_label: TicketingWorkspace, target_key: id, from_column: organization_id}
+      - {type: FOR_TICKET, direction: out, target_label: Ticket, target_key: id, from_column: ticket_id}
+
+  ticketing.proactive_approvals:
+    mode: node
+    label: ProactiveApproval
+    key: id
+    custom_field: payload
+    custom_dynamic: true
+    properties: [id, organization_id, agent_id, ticket_id, ticket_number,
+                 summary, tool_name, tool_args, status, created_at, decided_at]
+    relationships:
+      - {type: IN_WORKSPACE, direction: out, target_label: TicketingWorkspace, target_key: id, from_column: organization_id}
+      - {type: FOR_TICKET, direction: out, target_label: Ticket, target_key: id, from_column: ticket_id}
+
+  ticketing.proactive_audit:
+    mode: node
+    label: ProactiveAudit
+    key: id
+    custom_field: payload
+    custom_dynamic: true
+    properties: [id, organization_id, agent_id, ticket_id, event_id,
+                 decision, reason, tool_name, created_at]
+    relationships:
+      - {type: IN_WORKSPACE, direction: out, target_label: TicketingWorkspace, target_key: id, from_column: organization_id}
+      - {type: FOR_TICKET, direction: out, target_label: Ticket, target_key: id, from_column: ticket_id}
+
+  ticketing.proactive_embeddings:
+    mode: node
+    label: ProactiveEmbedding
+    key: id
+    custom_field: tokens
+    custom_dynamic: true
+    properties: [id, organization_id, source, source_id, updated_at]
+    relationships:
+      - {type: IN_WORKSPACE, direction: out, target_label: TicketingWorkspace, target_key: id, from_column: organization_id}
+
+  ticketing.proactive_routing_weights:
+    mode: node
+    label: ProactiveRoutingWeights
+    key: organization_id
+    custom_field: weights
+    custom_dynamic: true
+    properties: [organization_id, updated_at]
+    relationships:
+      - {type: CONFIG_FOR, direction: out, target_label: TicketingWorkspace, target_key: id, from_column: organization_id}

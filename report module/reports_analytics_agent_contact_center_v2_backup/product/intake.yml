@@ -1,0 +1,609 @@
+# Contact Center SQL spoke intake. Filled from ccass + accounts + cdp and Phase 1/2 plans.
+# Do not copy campaign/ticketing/CRM catalogs.
+
+spoke: contact_center
+pack: reports_analytics_agent_contact_center_v2
+
+product:
+  what_it_does: >-
+    Omnichannel contact centre: customer conversations (webchat, email, call,
+    WhatsApp, Instagram, Facebook), agents, queues, routing, SLA, bot/NLP,
+    presence, missed contacts, callbacks, and voice CDR hold.
+  dashboard_metrics:
+    - total
+    - handled
+    - handled_change
+    - avg_daily_handled
+    - avg_monthly_handled
+    - resolved
+    - resolution_rate
+    - transferred
+    - first_replies
+    - first_reply_sla
+    - avg_first_response
+    - avg_handle_time
+    - waiting
+    - active
+    - bot_active
+    - ready_agents
+    - logged_in_agents
+    - offers_ringing
+    - sla_at_risk
+    - sla_breached_live
+    - ready_hours
+    - busy_hours
+    - not_ready_hours
+    - break_hours
+  industry_metrics_not_to_miss:
+    - call_count
+    - social_count
+    - asa
+    - queue_service_level
+    - abandoned
+    - abandonment_rate
+    - missed_contacts
+    - missed_rate
+    - transfer_rate
+    - bot_containment
+    - fcr
+    - reopen_rate
+    - occupancy
+    - present_days
+    - avg_hold_time
+    - avg_messages_per_conversation
+    - negative_sentiment_rate
+    - offer_accept_rate
+    - failed_send_rate
+    - bot_grounded_rate
+    - copilot_acceptance_rate
+    - callback_count
+  neighbour_pairs:
+    - "total vs handled vs resolved"
+    - "call_count (conversations channel=call) vs CDR row count vs avg_hold_time"
+    - "abandoned vs missed_contacts"
+    - "asa (queued_at to assigned_at on conversations) vs CDR wait_duration vs avg_first_response"
+    - "first_reply_sla (60s from assigned_at) vs queue_service_level (60s from queued_at) vs routing_policies email SLA seconds"
+    - "occupancy vs avg_handle_time vs presence hours vs avg_hold_time"
+    - "fcr vs reopen_rate vs resolution_rate"
+    - "transferred vs transfer_rate vs hop count on rpt.transfers"
+    - "bot_containment vs bot_grounded_rate vs handled split handler=AI"
+    - "offer_accept_rate vs missed offer_timeout vs copilot_acceptance_rate"
+    - "failed_send_rate vs missed_contacts vs abandoned"
+    - "ready_agents (presence_state) vs agents.status (roster, not ready)"
+
+schemas:
+  in:
+    - ccass
+    - accounts
+    - cdp
+  out:
+    - name: ccass_staging_aiccaas
+      reason: dbt staging copy; not source of truth
+    - name: ccass_marts_aiccaas
+      reason: dbt marts copy; not source of truth
+    - name: inventory
+      reason: not contact centre operations
+    - name: shared
+      reason: not contact centre operations
+    - name: routing
+      reason: platform ingest, not queue routing
+    - name: campaign
+      reason: other product
+    - name: crm
+      reason: other product
+    - name: ticketing
+      reason: other product
+
+tables_in:
+  - ccass.conversations
+  - ccass.conversation_messages
+  - ccass.message_receipts
+  - ccass.message_delivery_attempts
+  - ccass.conversation_assignments
+  - ccass.conversation_transfers
+  - ccass.conversation_dispositions
+  - ccass.dispositions
+  - ccass.conversation_sentiment_turns
+  - ccass.conversation_participants
+  - ccass.conversation_notes
+  - ccass.conversation_sla_state
+  - ccass.routing_attempts
+  - ccass.nlp_turns
+  - ccass.nlp_conversations
+  - ccass.copilot_turns
+  - ccass.agent_missed_contacts
+  - ccass.missed_contact_reasons
+  - ccass.agent_tasks
+  - ccass.proactive_callback_attempts
+  - ccass.agent_not_ready_escalations
+  - ccass.agent_capacity
+  - ccass.agents
+  - ccass.queues
+  - ccass.queue_members
+  - ccass.queue_skills
+  - ccass.skills
+  - ccass.agent_skills
+  - ccass.agent_presence
+  - ccass.agent_presence_history
+  - ccass.presence_reason_codes
+  - ccass.routing_policies
+  - ccass.queue_routing_profiles
+  - ccass.live_call_queue_members_details
+  - ccass.sla_policies
+  - ccass.call_cdr
+  - ccass.voice_call_outcomes
+  - ccass.webchat_sessions
+  - ccass.channel_automation_policies
+  - ccass.email_mailbox_policies
+  - ccass.whatsapp_channel_policies
+  - ccass.sip_domains
+  - ccass.sip_extensions
+  - ccass.dashboard_analytics_incidents
+  - ccass.dashboard_analytics_forecast_runs
+  - ccass.dashboard_analytics_workforce_plans
+  - accounts.organizations
+  - accounts.setup_users
+  - accounts.setup_teams
+  - accounts.setup_ccaas_queues
+  - accounts.setup_ccaas_queue_agents
+  - accounts.setup_channel_configs
+  - accounts.setup_webchat_configs
+  - accounts.setup_email_configs
+  - accounts.setup_social_configs
+  - accounts.setup_voice_dids
+  - accounts.setup_business_hours
+  - accounts.setup_business_hour_shifts
+  - accounts.setup_holiday_calendars
+  - accounts.setup_holidays
+  - accounts.setup_organization_recording_settings
+  - accounts.setup_roles
+  - accounts.setup_user_product_access
+  - accounts.setup_knowledge_documents
+  - cdp.customer_profile
+  - cdp.identity_keys
+
+tables_out:
+  - table: ccass.conversations_old
+    reason: legacy copy; query parent conversations
+  - table: ccass.conversations_webchat
+    reason: partition; query parent
+  - table: ccass.conversations_call
+    reason: partition; query parent
+  - table: ccass.conversations_email
+    reason: partition; query parent
+  - table: ccass.conversations_whatsapp
+    reason: partition; query parent
+  - table: ccass.conversations_instagram
+    reason: partition; query parent
+  - table: ccass.conversations_facebook
+    reason: partition; query parent
+  - table: ccass.conversations_voice
+    reason: partition; query parent
+  - table: ccass.conversations_default
+    reason: partition; query parent
+  - table: ccass.a2a_tasks
+    reason: agent-to-agent plumbing
+  - table: ccass.a2a_artifacts
+    reason: plumbing
+  - table: ccass.a2a_oauth_tokens
+    reason: secrets
+  - table: ccass.a2a_task_events
+    reason: plumbing
+  - table: ccass.audit_log
+    reason: not wallboard
+  - table: ccass.schema_migrations
+    reason: migrations
+  - table: ccass.metricflow_time_spine
+    reason: dbt spine
+  - table: ccass.onboarding_dashboard_codes
+    reason: auth codes
+  - table: ccass.conversation_memory
+    reason: blob; use notes and messages
+  - table: ccass.conversation_session_state
+    reason: bot session json
+  - table: ccass.copilot_memory
+    reason: blob
+  - table: ccass.copilot_sessions
+    reason: internals; turns are enough
+  - table: ccass.copilot_skill_executions
+    reason: internals
+  - table: ccass.voice_recordings
+    reason: recording URLs out; settings view is accounts.setup_organization_recording_settings
+  - table: ccass.internal_chat_rooms
+    reason: agent-to-agent chat not customer
+  - table: ccass.internal_chat_messages
+    reason: not customer transcript
+  - table: ccass.internal_chat_room_members
+    reason: not customer
+  - table: ccass.internal_chat_dm_pairs
+    reason: not customer
+  - table: ccass.internal_chat_message_attachments
+    reason: not customer
+  - table: ccass.email_delivery_outbox
+    reason: mailer plumbing
+  - table: ccass.email_provider_events
+    reason: provider plumbing
+  - table: cdp.customer_events
+    reason: CDP identity_profile only
+  - table: cdp.customer_persona_assignments
+    reason: personas out
+  - table: cdp.orders
+    reason: orders out
+
+join_graph:
+  - grain_object: conversation
+    grain_table: ccass.conversations
+    many_to_one:
+      - ccass.queues
+      - ccass.agents
+      - accounts.setup_users
+      - accounts.setup_teams
+      - cdp.customer_profile
+      - ccass.dispositions
+      - accounts.setup_channel_configs
+    many_to_many:
+      - ccass.conversation_messages
+      - ccass.conversation_assignments
+      - ccass.conversation_transfers
+      - ccass.conversation_dispositions
+      - ccass.conversation_sentiment_turns
+      - ccass.conversation_participants
+      - ccass.nlp_turns
+      - ccass.copilot_turns
+      - ccass.agent_missed_contacts
+      - cdp.identity_keys
+  - grain_object: missed_contact
+    grain_table: ccass.agent_missed_contacts
+    many_to_one:
+      - ccass.conversations
+      - ccass.queues
+      - ccass.agents
+      - ccass.missed_contact_reasons
+    many_to_many: []
+  - grain_object: assignment
+    grain_table: ccass.conversation_assignments
+    many_to_one:
+      - ccass.conversations
+      - ccass.agents
+      - ccass.queues
+    many_to_many: []
+  - grain_object: message
+    grain_table: ccass.conversation_messages
+    many_to_one:
+      - ccass.conversations
+    many_to_many:
+      - ccass.message_receipts
+      - ccass.message_delivery_attempts
+  - grain_object: nlp_turn
+    grain_table: ccass.nlp_turns
+    many_to_one:
+      - ccass.conversations
+      - ccass.nlp_conversations
+    many_to_many: []
+  - grain_object: copilot_turn
+    grain_table: ccass.copilot_turns
+    many_to_one:
+      - ccass.conversations
+    many_to_many: []
+  - grain_object: call_cdr
+    grain_table: ccass.call_cdr
+    many_to_one:
+      - ccass.conversations
+      - ccass.queues
+    many_to_many: []
+  - grain_object: presence_interval
+    grain_table: ccass.agent_presence_history
+    many_to_one:
+      - ccass.agents
+      - accounts.setup_users
+    many_to_many:
+      - ccass.queue_members
+  - grain_object: agent
+    grain_table: ccass.agents
+    many_to_one:
+      - accounts.setup_users
+      - accounts.setup_teams
+    many_to_many:
+      - ccass.queue_members
+      - ccass.agent_skills
+  - grain_object: queue
+    grain_table: ccass.queues
+    many_to_one:
+      - accounts.setup_teams
+      - accounts.setup_ccaas_queues
+      - accounts.setup_business_hours
+    many_to_many:
+      - ccass.queue_members
+  - grain_object: task
+    grain_table: ccass.agent_tasks
+    many_to_one:
+      - accounts.setup_users
+      - ccass.conversations
+      - cdp.customer_profile
+    many_to_many: []
+  - grain_object: customer
+    grain_table: cdp.customer_profile
+    many_to_one: []
+    many_to_many:
+      - cdp.identity_keys
+
+roles:
+  admin:
+    default_scope: org
+    stored_names: [admin, administrator, manager, supervisor]
+    my_rows_column: assigned_user_id
+  agent:
+    default_scope: own
+    stored_names: [agent]
+    my_rows_column: assigned_user_id
+    also_match: assigned_agent_id
+
+objects:
+  conversation:
+    owner_table: ccass.conversations
+    user_words: [conversation, session, contact, chat, call, ticket]
+    collisions:
+      status: "inbox status bot_active/queued/assigned/active/resolved/closed — not lifecycle_state, not sla_status, not queue status, not presence"
+      wait: "queued_at to assigned_at on conversations — not CDR wait_duration"
+      sla: "60s from assigned_at to first_response_at — not first_response_due_at, not routing_policies email seconds"
+      queue: "ccass.queues.name — not setup_ccaas_queues.name as default label"
+  message:
+    owner_table: ccass.conversation_messages
+    user_words: [message, reply, transcript]
+    collisions:
+      direction: "message inbound/outbound — not conversation direction"
+      status: "delivery_state pending/delivered/read/failed — not conversation status"
+  agent:
+    owner_table: ccass.agents
+    user_words: [agent, agent name, person]
+    collisions:
+      status: "roster active/inactive — not presence_state ready/not_ready"
+  queue:
+    owner_table: ccass.queues
+    user_words: [queue]
+    collisions:
+      status: "published active/inactive — not conversation status"
+  customer:
+    owner_table: cdp.customer_profile
+    user_words: [customer, contact, caller]
+    collisions:
+      status: "blocked on profile — not conversation status"
+  missed_contact:
+    owner_table: ccass.agent_missed_contacts
+    user_words: [missed contact, miss]
+    collisions:
+      abandoned: "missed is offer timeout or no agent — not conversation abandoned in queue"
+  assignment:
+    owner_table: ccass.conversation_assignments
+    user_words: [offer, ringing]
+    collisions:
+      status: "offered/accepted/rejected/expired/ended — not conversation status"
+  presence_interval:
+    owner_table: ccass.agent_presence_history
+    user_words: [presence, occupancy, logged in]
+    collisions:
+      status: "presence_state — not agents.status"
+  call_cdr:
+    owner_table: ccass.call_cdr
+    user_words: [hold, CDR, telephony]
+    collisions:
+      wait: "CDR wait_duration is not ASA"
+      call_count: "do not count CDR rows as call_count"
+  task:
+    owner_table: ccass.agent_tasks
+    user_words: [callback, task, follow-up]
+    collisions:
+      status: "open/completed/dismissed — not conversation status"
+
+metric_wish_list:
+  - id_hint: total
+    grain: conversation
+    meaning: Conversations that started in the window including still open
+    time_column: ccass.conversations.created_at
+    not: handled
+  - id_hint: call_count
+    grain: conversation
+    meaning: Total with channel = call
+    time_column: ccass.conversations.created_at
+    not: CDR count
+  - id_hint: social_count
+    grain: conversation
+    meaning: Total with whatsapp, instagram, facebook
+    time_column: ccass.conversations.created_at
+    not: webchat or email
+  - id_hint: handled
+    grain: conversation
+    meaning: Finished conversations (resolved/closed or ended_at set)
+    time_column: ccass.conversations.ended_at
+    not: total; not closed_at
+  - id_hint: handled_change
+    grain: conversation
+    meaning: Percent change of handled vs previous window of same length
+    time_column: ccass.conversations.ended_at
+    not: change of resolution rate
+  - id_hint: avg_daily_handled
+    grain: conversation
+    meaning: Handled divided by UTC days that had at least one handled
+    time_column: ccass.conversations.ended_at
+    not: divide by empty calendar days
+  - id_hint: avg_monthly_handled
+    grain: conversation
+    meaning: Handled divided by UTC months that had at least one handled
+    time_column: ccass.conversations.ended_at
+    not: a list of monthly totals
+  - id_hint: resolved
+    grain: conversation
+    meaning: resolved_at in the window
+    time_column: ccass.conversations.resolved_at
+    not: handled
+  - id_hint: resolution_rate
+    grain: conversation
+    meaning: resolved divided by handled (mixed clocks, documented)
+    time_column: mixed ended_at and resolved_at
+    not: average of agent percents
+  - id_hint: transferred
+    grain: conversation
+    meaning: transferred_at set; not resolution_code transferred; one conversation not hops
+    time_column: ccass.conversations.transferred_at
+    not: transfer row count
+  - id_hint: transfer_rate
+    grain: conversation
+    meaning: transferred divided by handled
+    time_column: mixed
+    not: hop count
+  - id_hint: fcr
+    grain: conversation
+    meaning: resolved with previous_conversation_id null divided by resolved
+    time_column: ccass.conversations.resolved_at
+    not: resolution_rate
+  - id_hint: reopen_rate
+    grain: conversation
+    meaning: resolved with previous_conversation_id set divided by resolved (audit H3)
+    time_column: ccass.conversations.resolved_at
+    not: fcr
+  - id_hint: bot_containment
+    grain: conversation
+    meaning: handled with assigned_at null divided by handled
+    time_column: ccass.conversations.ended_at
+    not: bot_grounded_rate
+  - id_hint: first_replies
+    grain: conversation
+    meaning: first_response_at in the window
+    time_column: ccass.conversations.first_response_at
+    not: unanswered
+  - id_hint: first_reply_sla
+    grain: conversation
+    meaning: share of first replies with assigned_at to first_response_at <= 60 seconds
+    time_column: ccass.conversations.first_response_at
+    not: due_at live SLA; not queue_service_level
+  - id_hint: avg_first_response
+    grain: conversation
+    meaning: mean minutes queued_at (or created_at) to first_response_at
+    time_column: ccass.conversations.first_response_at
+    not: average of channel averages
+  - id_hint: avg_handle_time
+    grain: conversation
+    meaning: mean minutes assigned_at to coalesce(resolved_at, ended_at)
+    time_column: ccass.conversations.ended_at
+    not: occupancy; not hold
+  - id_hint: avg_hold_time
+    grain: call_cdr
+    meaning: mean hold minutes from agent_hold_duration/1000/60
+    time_column: ccass.call_cdr.created_at
+    not: AHT; not call_count
+  - id_hint: asa
+    grain: conversation
+    meaning: mean minutes queued_at to assigned_at on conversations
+    time_column: ccass.conversations.assigned_at
+    not: CDR wait; not first response
+  - id_hint: queue_service_level
+    grain: conversation
+    meaning: share assigned_at - queued_at <= 60 seconds
+    time_column: ccass.conversations.assigned_at
+    not: first_reply_sla
+  - id_hint: abandoned
+    grain: conversation
+    meaning: ended, was queued, never assigned
+    time_column: ccass.conversations.ended_at
+    not: missed
+  - id_hint: abandonment_rate
+    grain: conversation
+    meaning: abandoned divided by queued-and-finished
+    time_column: ccass.conversations.ended_at
+    not: missed_rate
+  - id_hint: missed_contacts
+    grain: missed_contact
+    meaning: count missed rows
+    time_column: ccass.agent_missed_contacts.missed_at
+    not: abandoned
+  - id_hint: missed_rate
+    grain: mixed
+    meaning: missed rows divided by total started
+    time_column: mixed missed_at and created_at
+    not: abandonment_rate
+  - id_hint: avg_messages_per_conversation
+    grain: mixed
+    meaning: message count / distinct conversations (no join fanout)
+    time_column: ccass.conversation_messages.created_at
+    not: conversation count
+  - id_hint: negative_sentiment_rate
+    grain: conversation
+    meaning: conversations with a negative or very_negative turn / conversations with any sentiment
+    time_column: ccass.conversation_sentiment_turns.created_at
+    not: average of turn scores
+  - id_hint: offer_accept_rate
+    grain: assignment
+    meaning: accepted / offered assignments
+    time_column: ccass.conversation_assignments.offered_at
+    not: copilot_acceptance_rate
+  - id_hint: failed_send_rate
+    grain: message
+    meaning: delivery_state=failed / outbound customer-visible messages (audit H4)
+    time_column: ccass.conversation_messages.created_at
+    not: missed_contacts
+  - id_hint: bot_grounded_rate
+    grain: nlp_turn
+    meaning: grounded true / nlp turns
+    time_column: ccass.nlp_turns.created_at
+    not: bot_containment
+  - id_hint: copilot_acceptance_rate
+    grain: copilot_turn
+    meaning: accepted true / turns that had a suggestion (accepted is not null)
+    time_column: ccass.copilot_turns.created_at
+    not: offer_accept_rate
+  - id_hint: callback_count
+    grain: task
+    meaning: task_type=callback
+    time_column: ccass.agent_tasks.created_at
+    not: due_at as the window
+  - id_hint: present_days
+    grain: presence_interval
+    meaning: distinct UTC dates with logged-in presence
+    time_column: ccass.agent_presence_history.started_at
+    not: ready_hours
+  - id_hint: occupancy
+    grain: presence_interval
+    meaning: (busy + after_contact_work) / logged-in time
+    time_column: clip started_at ended_at
+    not: AHT
+  - id_hint: waiting
+    grain: conversation
+    meaning: live queued not finished
+    time_column: none
+    not: handled
+  - id_hint: ready_agents
+    grain: agent
+    meaning: presence_state = ready
+    time_column: none
+    not: agents.status
+
+time:
+  zone: UTC
+  week: monday_sunday
+  last_n_days: today_plus_previous_n_minus_one
+  note: >-
+    Last / past X days is today plus the previous X-1 UTC calendar days
+    (last 7 = today + previous 6), half-open through tomorrow midnight.
+    Hours stay rolling to now. Last N months is this month plus previous N-1.
+    All time / overall has no date filter. Per-metric clocks are on
+    metric_wish_list.time_column.
+
+identity_from_ui:
+  - organization_id
+  - user_id
+  - role
+extra:
+  - queue_ids
+llm_must_not_invent: true
+
+locks:
+  reopen_rate_denominator: resolved
+  failed_send_denominator: outbound_customer_visible
+  wait_source: ccass.conversations.queued_at_to_assigned_at
+  queue_display: ccass.queues.name
+  first_reply_sla_seconds: 60
+  first_reply_sla_start: assigned_at
+  call_count_channel: call
+  social_channels: [whatsapp, instagram, facebook]
+  hold_source: ccass.call_cdr.agent_hold_duration_ms
+  out_no_tables: [csat, nps, schedule_adherence, shrinkage, personas, orders, billing]

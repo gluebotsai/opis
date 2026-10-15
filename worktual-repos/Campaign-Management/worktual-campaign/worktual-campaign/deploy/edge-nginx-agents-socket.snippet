@@ -1,0 +1,16 @@
+# Outer nginx (e.g. rebuild-campaign.worktual.com → 82.113.92.205:8080)
+# Include inside the server { } block that proxies to Campaign web :8080.
+# Without WebSocket + POST body pass-through, chat shows "Cannot reach agents".
+
+location /agents-socket/ {
+  proxy_pass http://127.0.0.1:8080/agents-socket/;
+  proxy_http_version 1.1;
+  proxy_buffering off;
+  proxy_set_header Upgrade $http_upgrade;
+  proxy_set_header Connection $connection_upgrade;
+  proxy_set_header Host $host;
+  proxy_set_header X-Real-IP $remote_addr;
+  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  proxy_set_header X-Forwarded-Proto $scheme;
+  proxy_read_timeout 86400;
+}

@@ -1,0 +1,35 @@
+# CRM account / company — onto SupportAccount + crm.companies
+module: crm_account
+layer: domain
+depends_on: [core, cdp]
+owned_by_spoke: crm
+usecase: B2B company, locations, franchise nodes.
+
+classes:
+  - id: Account
+    extends: Organization
+    definition: CRM company the tenant sells to (not the tenant org itself).
+    properties: [name, industry, parentAccountId]
+    relations:
+      hasLocation: AccountSite
+      hasContact: Contact
+
+  - id: AccountSite
+    definition: Company location or branch.
+    properties: [name, address]
+    relations:
+      of: Account
+
+relations:
+  - { from: Account, type: has_SITE, to: AccountSite }
+  - { from: Contact, type: works_for, to: Account }
+
+actions:
+  - id: action.create_company
+    operates_on: [Account]
+    requires: [userConfirmed]
+  - id: action.update_company
+    operates_on: [Account]
+    requires: [userConfirmed]
+
+metric_ids: [account_volume, franchise_node_volume, total_account_locations]

@@ -1,0 +1,34 @@
+version: 1
+ontology_domain: "CCaaS Contact Center Knowledge Graph"
+
+governance_rules:
+  read_only:
+    enforced: true
+    blocked_clauses:
+      - "CREATE"
+      - "MERGE"
+      - "SET"
+      - "DELETE"
+      - "DETACH"
+      - "DROP"
+      - "ALTER"
+
+  isolation:
+    mode: "tenant_database"
+    rule: "Do not add WHERE organization_id filters in Cypher because database-level multi-tenancy provides strict physical data isolation."
+
+  query_limits:
+    default_limit: 50
+    max_limit: 100
+
+  access_control:
+    roles:
+      admin:
+        description: "Full visibility into all queues, conversations, agent performance, and routing."
+        can_access_pii: true
+      team_lead:
+        description: "Supervisor with visibility into assigned queues, volumes, and team agent performance."
+        can_access_pii: false
+      agent:
+        description: "Support staff with visibility into queue totals and personal handled volume."
+        can_access_pii: false

@@ -1,0 +1,82 @@
+@import "tailwindcss";
+@import "../styles/tokens.css";
+
+@theme inline {
+  --color-canvas: var(--c-bg-canvas);
+  --color-canvas-inverse: var(--c-bg-canvas-inverse);
+  --color-subtle: var(--c-bg-subtle);
+  --color-subtle-inverse: var(--c-bg-subtle-inverse);
+  --color-surface: var(--c-bg-surface);
+  --color-text-primary: var(--clr-text-primary);
+  --color-text-secondary: var(--clr-text-secondary);
+  --color-text-caption: var(--clr-text-caption);
+  --color-text-placeholder: var(--clr-text-placeholder);
+  --color-text-on-dark: var(--clr-text-on-dark);
+  --color-text-on-dark-muted: var(--clr-text-on-dark-muted);
+  --color-text-link: var(--clr-text-link);
+  --color-text-danger: var(--clr-text-danger);
+  --color-border-default: var(--c-border-default);
+  --color-border-strong: var(--c-border-strong);
+  --color-border-focus: var(--c-border-focus);
+  --color-brand: var(--brand-primary);
+  --color-brand-hover: var(--brand-primary-hover);
+  --color-brand-active: var(--brand-primary-active);
+  --color-brand-dark: var(--brand-primary-dark);
+  --color-violet-0: var(--color-violet-0);
+  --color-violet-100: var(--color-violet-100);
+  --color-violet-400: var(--color-violet-400);
+  --color-violet-600: var(--color-violet-600);
+  --color-violet-700: var(--color-violet-700);
+  --color-violet-800: var(--color-violet-800);
+  --color-violet-900: var(--color-violet-900);
+  --color-neutral-900: var(--color-neutral-900);
+  --color-neutral-800: var(--color-neutral-800);
+  --color-neutral-700: var(--color-neutral-700);
+  --color-neutral-600: var(--color-neutral-600);
+  --color-neutral-500: var(--color-neutral-500);
+  --color-neutral-400: var(--color-neutral-400);
+  --color-neutral-300: var(--color-neutral-300);
+  --color-neutral-200: var(--color-neutral-200);
+  --color-neutral-100: var(--color-neutral-100);
+  --color-neutral-0: var(--color-neutral-0);
+  --color-state-hover: var(--c-state-hover);
+  --color-state-hover-on-dark: var(--c-state-hover-on-dark);
+  --color-icon-on-light: var(--c-icon-on-light);
+  --color-icon-on-dark: var(--c-icon-on-dark);
+  --font-sans: var(--font-inter);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--c-bg-canvas);
+  color: var(--clr-text-primary);
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 20px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  text-decoration: none;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}

@@ -1,0 +1,40 @@
+# SaaS B2B industry overlay — Worktual and similar product companies.
+# SaaS B2B industry pack. Does not fork Contact.
+# Usage meters / ARR waterfall / end-customer entitlements stay not_modelled.
+
+pack: saas_b2b
+extends_ontology: cc
+businessTypes: [b2b, b2b2c]
+source: ontology/industry/saas_b2b.yml
+
+labels:
+  Contact: Account
+  Contact: Contact
+  Ticket: Case
+  Appointment: Demo
+  Organization: Workspace
+
+extends:
+  Contact:
+    additional_properties: [productInterest, companySize, workspaceId]
+  Ticket:
+    additional_properties: [affectedSpoke, skillId]
+
+taxonomy_adds:
+  ticket.category:
+    - billing
+    - onboarding
+    - integration
+    - hub_a2a
+    - crm_mcp
+    - cc_routing
+    - campaign_whatsapp
+  intent:
+    - trial_question
+    - seat_expansion
+    - integration_help
+    - spoke_enablement
+
+modules: []
+# Deal / Campaign types wait on CRM/Campaign modules (catalog extension slots).
+# booking.yml already has Appointment (shown as Demo).

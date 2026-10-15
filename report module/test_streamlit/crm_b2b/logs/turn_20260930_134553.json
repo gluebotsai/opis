@@ -1,0 +1,82 @@
+{
+  "question": "how many meeting are there overall",
+  "answer": "There are 30 meetings overall.",
+  "trace": {
+    "question": "how many meeting are there overall",
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1015,
+      "role": "admin"
+    },
+    "model": "worktual-gemma",
+    "tasks": [
+      {
+        "status": "ok",
+        "store": "sql",
+        "sql": "WITH rpt_appointments AS (\nSELECT src.id, src.organization_id, src.contact_id, src.host_user_id, src.host_name, src.source, src.status, src.title, src.starts_at, src.ends_at, src.provider, src.created_at FROM (\nSELECT \n  ap.id,\n  ap.organization_id,\n  ap.contact_id,\n  ap.host_user_id,\n  su.first_name || ' ' || COALESCE(su.last_name, '') AS host_name,\n  ap.source,\n  ap.status,\n  ap.title,\n  ap.starts_at,\n  ap.ends_at,\n  ap.provider,\n  ap.created_at\nFROM crm.appointments ap\nLEFT JOIN accounts.setup_users su ON su.id = ap.host_user_id\nWHERE ap.organization_id = %(_org_id)s\n) src WHERE TRUE\n)\nSELECT COUNT(*) FROM rpt_appointments AS appointments LIMIT 500",
+        "views": [
+          "appointments"
+        ],
+        "guard_notes": [
+          "row cap 500 applied"
+        ],
+        "bound_params": {
+          "_org_id": 1003,
+          "_user_id": 1015,
+          "user_id": 1015,
+          "organization_id": 1003,
+          "org_id": 1003,
+          "tenant_id": 1003,
+          "current_user_id": 1015
+        },
+        "rows": [
+          {
+            "count": 30
+          }
+        ],
+        "attempts": [
+          {
+            "raw": "SELECT COUNT(*) FROM rpt.appointments;",
+            "call": {
+              "kind": "run_sql",
+              "sql": "SELECT COUNT(*) FROM rpt.appointments"
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "time_status": "all_time",
+        "tool": "run_sql",
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": null,
+          "goal": "Count total meetings/appointments",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "kpi",
+          "depends_on": []
+        }
+      }
+    ],
+    "domain_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"quick\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": null,\n      \"goal\": \"Count total meetings/appointments\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"answer_type\": \"kpi\",\n      \"depends_on\": []\n    }\n  ]\n}\n```",
+    "plan": {
+      "kind": "plan",
+      "depth": "quick",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": null,
+          "goal": "Count total meetings/appointments",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "kpi",
+          "depends_on": []
+        }
+      ]
+    },
+    "facts": "time_requested: all time\nperiod_applied: overall (no date filter, UTC)\ntime_status: all_time\nRESULT: count = 30",
+    "grounded": true,
+    "briefing_raw": "There are 30 meetings overall."
+  }
+}

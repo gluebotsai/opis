@@ -1,0 +1,94 @@
+# Campaign NL live (org 1012 / branch 1004 / user 1054)
+
+- HIT expect=`campaigns_ran` got=`campaigns_ran` n=1 pack_n=1 | How many campaigns ran in the last 1 day?
+  - ans=**242** All branch campaigns ran in the last 1 day.
+- HIT expect=`campaigns_ran` got=`campaigns_ran` n=1 pack_n=1 | How many campaigns ran in the last 7 days?
+  - ans=All branch campaigns had **347** campaigns run in the last 7 days.
+- HIT expect=`campaigns_ran` got=`campaigns_ran` n=1 pack_n=1 | How many campaigns ran in the last 30 days?
+  - ans=All branch campaigns had **357** campaigns run in the last 30 days.
+- HIT expect=`campaigns_sent` got=`campaigns_sent` n=1 pack_n=1 | How many campaigns were sent in the last 1 day?
+  - ans=All branch campaigns had **242** campaigns sent in the last 1 day.
+- HIT expect=`campaigns_sent` got=`campaigns_sent` n=1 pack_n=1 | How many campaigns were sent in the last 7 days?
+  - ans=All branch campaigns had **319** campaigns sent in the last 7 days.
+- HIT expect=`campaigns_sent` got=`campaigns_sent` n=1 pack_n=1 | How many campaigns were sent in the last 30 days?
+  - ans=All branch campaigns had **325** campaigns sent in the last 30 days.
+- HIT expect=`campaigns_failed` got=`campaigns_failed` n=1 pack_n=1 | How many campaigns failed in the last 1 day?
+  - ans=There were **0** failed campaigns in the last 1 day across all branch campaigns.
+- HIT expect=`campaigns_failed` got=`campaigns_failed` n=1 pack_n=1 | How many campaigns failed in the last 7 days?
+  - ans=All branch campaigns had **23** failed campaigns in the last 7 days.
+- HIT expect=`campaigns_failed` got=`campaigns_failed` n=1 pack_n=1 | How many campaigns failed in the last 30 days?
+  - ans=There were **28** failed campaigns in the last 30 days across all branch campaigns.
+- HIT expect=`email_open_rate` got=`email_open_rate` n=1 pack_n=1 | What is the unique email open rate in the last 1 day?
+  - ans=The unique email open rate for All branch campaigns in the last 1 day was **19.75%**.
+- HIT expect=`email_open_rate` got=`email_open_rate` n=1 pack_n=1 | What is the unique email open rate in the last 7 days?
+  - ans=The unique email open rate for All branch campaigns in the last 7 days was **26.11%**.
+- HIT expect=`email_open_rate` got=`email_open_rate` n=3 pack_n=1 | What is the unique email open rate in the last 30 days?
+  - ans=The unique email open rate for All branch campaigns in the last 30 days was **26.88%**.
+- HIT expect=`click_rate` got=`click_rate` n=1 pack_n=1 | What is the unique click rate in the last 1 day?
+  - ans=The unique click rate for All branch campaigns in the last 1 day was **0.41%**.
+- HIT expect=`click_rate` got=`click_rate` n=1 pack_n=1 | What is the unique click rate in the last 7 days?
+  - ans=The unique click rate for All branch campaigns in the last 7 days was **2.13%**.
+- HIT expect=`click_rate` got=`click_rate` n=1 pack_n=1 | What is the unique click rate in the last 30 days?
+  - ans=The unique click rate for All branch campaigns in the last 30 days was **2.62%**.
+- HIT expect=`delivered_by_channel` got=`delivered_by_channel` n=2 pack_n=2 | Delivered messages by channel in the last 1 day?
+  - ans=In the last 1 day, All branch campaigns delivered **243** messages via **email** and **1** message via **web**.
+- OTHER expect=`delivered_by_channel` got=`messages_delivered` n=3 pack_n=3 | Delivered messages by channel in the last 7 days?
+  - ans=In the last 7 days, All branch campaigns delivered messages across the following channels:  *   Email: **314** *   Web: **14** *   WhatsApp: **5**
+- OTHER expect=`delivered_by_channel` got=`messages_delivered` n=3 pack_n=3 | Delivered messages by channel in the last 30 days?
+  - ans=In the last 30 days, All branch campaigns delivered messages across the following channels:  *   Email: **320** *   Web: **23** *   WhatsApp: **5**
+- OTHER expect=`delivery_trend` got=`messages_delivered` n=1 pack_n=1 | Delivery trend by day in the last 1 day?
+  - ans=All branch campaigns delivered **244** messages on 2026-10-02.
+- OTHER expect=`delivery_trend` got=`messages_delivered` n=7 pack_n=7 | Delivery trend by day in the last 7 days?
+  - ans=Here is the daily delivery trend for All branch campaigns over the last 7 days:  *   2026-10-02: **244** *   2026-10-01: **45** *   2026-09-30: **13** *   2026-09-29: **12** *   2026-09-26: **14**
+- OTHER expect=`delivery_trend` got=`messages_delivered` n=8 pack_n=10 | Delivery trend by day in the last 30 days?
+  - ans=All branch campaigns delivered a total of **8** data points for messages over the last 30 days.  The daily delivery counts were: - 2026-10-02: **244** - 2026-10-01: **45** - 2026-09-25: **15** - 2026-09-26: **14** - 2026
+- HIT expect=`monitor_preview` got=`monitor_preview` n=242 pack_n=242 | Show campaign monitor preview in the last 1 day?
+  - ans=Here is a sample of the campaign performance from All branch campaigns in the last 1 day:  - Mega Sale Blast: **1** targeted, **1** delivered, **1** opened, **1** clicked - Samantha Byrne - Data Enrichment Check: **1** t
+- HIT expect=`monitor_preview` got=`monitor_preview` n=342 pack_n=340 | Show campaign monitor preview in the last 7 days?
+  - ans=Here is a sample of the campaign monitor previews from All branch campaigns in the last 7 days:  *   15 Years of You — Personal Thank-You: **3** delivered, **0** opened, **0** clicked *   Level Up Your Setup: **2** deliv
+- HIT expect=`monitor_preview` got=`monitor_preview` n=350 pack_n=351 | Show campaign monitor preview in the last 30 days?
+  - ans=Here is a sample of the campaign monitoring data for All branch campaigns from the last 30 days:  | Campaign | Targeted | Delivered | Opened | Clicked | | :--- | :--- | :--- | :--- | :--- | | Welcome Back, Reviss | **1**
+- HIT expect=`messages_delivered` got=`messages_delivered` n=1 pack_n=1 | How many messages were delivered in the last 1 day?
+  - ans=**244** messages were delivered in the last 1 day across All branch campaigns.
+- HIT expect=`messages_delivered` got=`messages_delivered` n=1 pack_n=1 | How many messages were delivered in the last 7 days?
+  - ans=**333** messages were delivered in the last 7 days across All branch campaigns.
+- HIT expect=`messages_delivered` got=`messages_delivered` n=1 pack_n=1 | How many messages were delivered in the last 30 days?
+  - ans=All branch campaigns delivered **348** messages in the last 30 days.
+- OTHER expect=`messages_sent` got=`messages_delivered` n=2 pack_n=1 | How many messages were sent in the last 1 day?
+  - ans=Based on the available data:  window: past 1 days (UTC) RESULT: 2 group(s) group_by: channel channel=email | messages_delivered=243 channel=web | messages_delivered=1  Note: 1 figure(s) in the generated answer could not 
+- OTHER expect=`messages_sent` got=`messages_delivered` n=1 pack_n=1 | How many messages were sent in the last 7 days?
+  - ans=All branch campaigns had **333** messages sent in the last 7 days.
+- OTHER expect=`messages_sent` got=`messages_delivered` n=3 pack_n=1 | How many messages were sent in the last 30 days?
+  - ans=Based on the available data:  window: past 30 days (UTC) RESULT: 3 group(s) group_by: channel channel=email | messages_delivered=320 channel=web | messages_delivered=23 channel=whatsapp | messages_delivered=5  Note: 1 fi
+- HIT expect=`unique_opens` got=`unique_opens` n=None pack_n=1 | How many unique opens in the last 1 day?
+  - ans=I cannot answer that question right now because there was an error in the calculation logic. Please try asking again.
+- HIT expect=`unique_opens` got=`unique_opens` n=None pack_n=1 | How many unique opens in the last 7 days?
+  - ans=I cannot answer that question right now because the request for unique opens could not be processed due to a technical mismatch in how the data is being measured.
+- HIT expect=`unique_opens` got=`unique_opens` n=None pack_n=1 | How many unique opens in the last 30 days?
+  - ans=I cannot answer that question right now because the request for unique opens was incompatible with the data structure requested.
+- HIT expect=`cdp_contact_count` got=`cdp_contact_count` n=1 pack_n=1 | How many CDP contacts are there in the last 1 day?
+  - ans=There are **75** CDP contacts in the last 1 day.
+- HIT expect=`cdp_contact_count` got=`cdp_contact_count` n=1 pack_n=1 | How many CDP contacts are there in the last 7 days?
+  - ans=There are **53,469** CDP contacts in the last 7 days.
+- HIT expect=`cdp_contact_count` got=`cdp_contact_count` n=1 pack_n=1 | How many CDP contacts are there in the last 30 days?
+  - ans=There are **101,308** CDP contacts in the last 30 days.
+- HIT expect=`notifications_unread` got=`notifications_unread` n=None pack_n=1 | How many unread notifications in the last 1 day?
+  - ans=I cannot answer that question because the requested metric is not available in the current reporting scope.
+- HIT expect=`notifications_unread` got=`notifications_unread` n=None pack_n=1 | How many unread notifications in the last 7 days?
+  - ans=I cannot answer that question because the requested information is not available in the current reporting data.
+- HIT expect=`notifications_unread` got=`notifications_unread` n=None pack_n=1 | How many unread notifications in the last 30 days?
+  - ans=I cannot answer that question because the requested metric is not available in the current reporting scope.
+- FAIL expect=`email_cap_health` got=`email_cap_health` n=0 pack_n=1 | Email sending cap health in the last 1 day?
+  - ans=I am unable to provide a breakdown of email sending cap health by channel at this time due to a technical limitation in the data warehouse. I can attempt to check the overall health of your email sending capacity for the
+- HIT expect=`email_cap_health` got=`email_cap_health` n=1 pack_n=1 | Email sending cap health in the last 7 days?
+  - ans=Your email sending capacity is currently **healthy**.  Over the last 7 days, your hourly cap is **500** and your daily cap is **1,000**. You are not currently in a warmup stage.
+- FAIL expect=`email_cap_health` got=`email_cap_health` n=0 pack_n=1 | Email sending cap health in the last 30 days?
+  - ans=I am unable to provide a health assessment for your email sending capacity at this time due to a technical limitation in the data warehouse regarding the requested breakdown.
+- HIT expect=`campaigns_ran` got=`campaigns_ran` n=2 pack_n=2 | How many campaigns ran in the last 7 days by status?
+  - ans=In the last 7 days, there were **344** completed campaigns and **3** live campaigns.
+- HIT expect=`messages_delivered` got=`messages_delivered` n=3 pack_n=3 | How many messages were delivered in the last 7 days by channel?
+  - ans=In the last 7 days, the messages delivered by channel were: - Email: **314** - Web: **14** - WhatsApp: **5**
+- HIT expect=`email_open_rate` got=`email_open_rate` n=3 pack_n=3 | Unique email open rate in the last 7 days by channel?
+  - ans=The unique email open rate for All branch campaigns in the last 7 days was **26.11%** for **email**. No data was available for **web** or **whatsapp**.
+- INV expect=`None` got=`campaigns_ran` n=1 pack_n=0 | How many campaigns are there?
+  - ans=There are **1,051** campaigns in the branch.

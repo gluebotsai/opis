@@ -1,0 +1,25 @@
+{
+  "name": "@telephony/shared",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "dotenv -e ../.env -e .env -- prisma generate && tsc",
+    "db:generate": "dotenv -e ../.env -e .env -- prisma generate",
+    "db:push": "dotenv -e ../.env -e .env -- prisma db push",
+    "db:seed": "dotenv -e ../.env -e .env -- prisma db seed"
+  },
+  "prisma": {
+    "seed": "npx ts-node --transpile-only prisma/seed.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "dotenv-cli": "^8.0.0",
+    "prisma": "^5.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.0.0"
+  }
+}

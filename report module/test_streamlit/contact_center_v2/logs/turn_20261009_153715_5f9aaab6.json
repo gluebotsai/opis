@@ -1,0 +1,60 @@
+{
+  "turn_id": "5f9aaab6",
+  "timestamp": "2026-10-09T10:07:15.387288+00:00",
+  "question": "how many total converstions are there?",
+  "identity": {
+    "organization_id": 1012,
+    "user_id": 1016,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Total conversations</strong></p><p>There have been <strong>702</strong> total conversations started all time.</p><p>Would you like to see this broken down by channel?</p>",
+  "card": "card: kpi r1",
+  "facts": "result_id: r1\nwindow: all time\nkpi: total\ncertified: true\nunit: conversations\ntask_goal: Count the total number of conversations started.\nanswer_type: number\nrow_count: 1\nrow 1: total=702",
+  "trace": {
+    "identity": {
+      "organization_id": 1012,
+      "user_id": 1016,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "how many total converstions are there?",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants to know the total number of conversations started.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Count the total number of conversations started.",
+          "time": "all time",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "total",
+        "row_count": 1
+      }
+    ],
+    "facts": "result_id: r1\nwindow: all time\nkpi: total\ncertified: true\nunit: conversations\ntask_goal: Count the total number of conversations started.\nanswer_type: number\nrow_count: 1\nrow 1: total=702",
+    "grounded": true,
+    "card": "card: kpi r1"
+  },
+  "error": null
+}

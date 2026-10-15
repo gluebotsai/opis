@@ -1,0 +1,66 @@
+{
+  "contractVersion": "1.0",
+  "agentRun": {
+    "pathTemplate": "/ai/v1/agents/:name/run",
+    "names": [
+      "hello",
+      "enrich-lead",
+      "score-lead",
+      "summarize-lead",
+      "nurture-lead",
+      "lifecycle-lead",
+      "hygiene",
+      "assign-sales",
+      "audit-forecast",
+      "compliance-privacy",
+      "invoice-escalation",
+      "expansion-matcher",
+      "analyze-transcript",
+      "auto-reply-email",
+      "assist-meeting",
+      "meeting-brief-email",
+      "meeting-mom",
+      "meeting-miss-escalation",
+      "post-meeting-process",
+      "sales-coach",
+      "compose-email",
+      "document-template",
+      "proposal-content",
+      "chat",
+      "crm-agent"
+    ],
+    "representativeRequest": {
+      "intent": "agent_turn",
+      "messages": [{"role": "user", "text": "Open contacts"}],
+      "context": {"module": "dashboard", "surface": "list", "pathname": "/dashboard"},
+      "catalog": {},
+      "sessionMemory": {},
+      "organizationId": "org-1",
+      "role": "sales_rep",
+      "businessType": "b2b",
+      "actingUserId": "user-1"
+    }
+  },
+  "coworker": {
+    "path": "/api/coworker/agent-turn",
+    "success": {
+      "ok": true,
+      "assistantText": "I’ll take you to Contacts.",
+      "patch": {"firstName": "Asha"},
+      "toolProposals": [{
+        "id": "nav-1",
+        "name": "navigate",
+        "label": "Open Contacts",
+        "args": {"href": "/contact", "auto": true},
+        "risk": "low"
+      }],
+      "sessionMemory": {"activeAgent": "contact"},
+      "uiRefresh": {
+        "modules": ["contact"],
+        "entityIds": ["contact-1"],
+        "reason": "record_updated"
+      }
+    },
+    "failure": {"ok": false, "error": "Agent turn failed."}
+  }
+}

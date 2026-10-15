@@ -1,0 +1,58 @@
+{
+  "turn_id": "e2e70778",
+  "timestamp": "2026-10-12T13:09:17.966671+00:00",
+  "question": "why the chat bot resolution rate is 0%?",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1036,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>One check before I answer</strong></p><p>Would you like the resolution rate or the handled conversation count for the chatbot?</p>",
+  "card": "card: none",
+  "facts": "",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1036,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "why the chat bot resolution rate is 0%?",
+    "plan": {
+      "kind": "plan",
+      "understanding": "Investigate why the chatbot resolution rate is 0% by looking for the routing paths and resolution codes associated with the chatbot.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Find the chatbot resolution rate and the count of conversations handled by the chatbot.",
+          "time": "all time",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "number"
+        },
+        {
+          "id": "t2",
+          "executor": "kg",
+          "path": "why_links",
+          "goal": "Follow the routing path of chatbot conversations to see how they are being resolved or if they are being transferred/closed without a resolution code.",
+          "time": "all time",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "list"
+        }
+      ]
+    },
+    "clarify": "Would you like the resolution rate or the handled conversation count for the chatbot?"
+  },
+  "error": null
+}

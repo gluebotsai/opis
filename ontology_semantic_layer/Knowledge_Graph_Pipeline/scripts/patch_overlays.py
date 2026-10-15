@@ -1,0 +1,165 @@
+import os
+import re
+
+RENAMES = {
+    "Contact": "Customer",
+    "CustomerEvent": "BehaviourEvent",
+    "CustomerSession": "Visit",
+    "CustomerInteraction": "Touchpoint",
+    "CustomerJourney": "JourneyStep",
+    "CustomerJourneyState": "JourneyPosition",
+    "CustomerScore": "CustomerScorecard",
+    "CustomerMetricSummary": "CustomerValueSummary",
+    "CustomerMetric": "DailyEngagementMetric",
+    "CustomerCampaignMetric": "PerformanceMetric",
+    "CustomerRecommendation": "NextBestAction",
+    "Segment": "AudienceSegment",
+    "PersonaDefinition": "Persona",
+    "PersonaSnapshot": "PersonaEvidence",
+    "EpisodicMemory": "ExperienceMemory",
+    "SemanticMemory": "KnownFact",
+    "ProceduralMemory": "EngagementRule",
+    "ActivationTask": "ActivationSignal",
+    "AnomalyRule": "AnomalyDetector",
+    "AnomalyAlert": "AnomalySignal",
+    "AnomalyThresholdState": "AdaptiveThreshold",
+    "AgenticModel": "PredictiveModel",
+    "SourceSystem": "DataSource",
+    "CustomerOrder": "Purchase",
+    
+    "User": "Employee",
+    "Role": "AccessRole",
+    "HolidayCalendar": "HolidaySchedule",
+    "Holiday": "NonWorkingDay",
+    "BusinessHours": "OperatingSchedule",
+    "BusinessHourShift": "ScheduleShift",
+    "ChannelConfig": "ChannelAccount",
+    "SetupQueue": "QueueDefinition",
+    "VoiceDid": "VoiceNumber",
+    "KnowledgeOrgProfile": "ExtractedBusinessProfile",
+    
+    "Agent": "StaffRole",
+    "AgentCapacity": "ChannelCapacity",
+    "AgentPresence": "AgentAvailability",
+    "PresenceReasonCode": "PresenceReason",
+    "Queue": "ServiceQueue",
+    "RoutingPolicy": "DistributionPolicy",
+    "ChannelAutomationPolicy": "AutomationPolicy",
+    "SlaPolicy": "ServiceLevelPolicy",
+    "Disposition": "OutcomeCode",
+    
+    "ConversationMemory": "ConversationDigest",
+    "ConversationSlaState": "ServiceLevelClock",
+    "ConversationDisposition": "OutcomeRecord",
+    "ConversationMessageAttachment": "MediaAttachment",
+    "ConversationNote": "InternalNote",
+    "ConversationParticipant": "ParticipantRecord",
+    "ConversationAssignment": "WorkAssignment",
+    "ConversationTransfer": "WorkTransfer",
+    "RoutingAttempt": "DistributionAttempt",
+    "WebchatSession": "ChatSession",
+    "AgentMissedContact": "MissedEngagement",
+    "AgentTask": "WorkTask",
+    
+    "NlpSkill": "BotSkill",
+    "NlpSkillVersion": "BotSkillVersion",
+    "NlpSkillBinding": "BotSkillBinding",
+    "NlpSkillTool": "BotTool",
+    "NlpConversation": "BotSession",
+    
+    "ProductOffer": "OfferingPlan",
+    "ProductAddon": "OfferingAddOn",
+    "ProductAddonTier": "PricingTier",
+    "PriceBook": "PriceList",
+    "PriceBookEntry": "PriceListEntry",
+    "CrmOrganizationProfile": "VerticalProfile",
+    "Company": "Account",
+    "CompanyLocation": "AccountSite",
+    "CrmContactProfile": "SalesProfile",
+    "Deal": "Opportunity",
+    "DealActivity": "OpportunityActivity",
+    "ContactActivity": "EngagementActivity",
+    "Appointment": "Meeting",
+    "ProposalTemplate": "DocumentTemplate",
+    "QuoteLine": "LineItem",
+    "ContractBillingSchedule": "BillingSchedule",
+    "OrgAssignmentSettings": "AssignmentPolicy",
+    "SalesUserAssignmentProfile": "RepCapacityProfile",
+    "LeadEnrichmentSnapshot": "EnrichmentSnapshot",
+    "LeadSummary": "LeadBrief",
+    "MeetingAssistSession": "LiveMeetingSession",
+    "MeetingTranscriptChunk": "TranscriptSegment",
+    "MeetingAnalysis": "MeetingOutcome",
+    "CoachingInsight": "CoachingNote",
+    "ProcessConfirmation": "ActionApproval",
+    "AgentMemory": "AgentMemorySlot",
+    "CrmNotification": "Notification",
+    
+    "TicketingOrgSettings": "SupportPortalSettings",
+    "TicketingContactProfile": "SupportProfile",
+    "TicketingAccount": "SupportAccount",
+    "TicketingQueue": "SupportQueue",
+    "Ticket": "SupportCase",
+    "TicketStatus": "CaseStatus",
+    "TicketNote": "CaseNote",
+    "KbArticle": "KnowledgeArticle",
+    "TicketingMacro": "CannedReply",
+    "TicketingAutomationRule": "WorkflowRule",
+    "TicketingDashboardMetric": "SupportSnapshot",
+    "TicketAuditEvent": "AuditRecord",
+    "EmailMessageRef": "EmailThreadRef",
+    "OutboundEmailLog": "EmailDispatchRecord",
+    "TicketConversationContext": "InteractionSummary",
+    "WorkflowEvent": "AssistantWorkflowEvent",
+    "ProactiveOutbox": "ProactiveSuggestion",
+    "ProactiveRecommendation": "ProactiveDecision",
+    "ProactiveApproval": "ApprovalRequest",
+    "ProactiveAudit": "SupportSignal",
+    "ProactiveRoutingWeight": "RoutingWeightModel",
+    
+    "Branch": "BusinessUnit",
+    "CampaignOrgProduct": "ModuleEntitlement",
+    "CampaignChannel": "CampaignChannelPlan",
+    "CampaignAgentSession": "CampaignDraft",
+    "CampaignChannelTemplate": "MessageTemplate",
+    "CampaignTemplateMessage": "TemplateRevision",
+    "RegulatedChannelTemplate": "ApprovedTemplate",
+    "ChannelSendingProfile": "SendingReadiness",
+    "PushChannelSetting": "ChannelSendingConfig",
+    "EmailOrgProfile": "SenderComplianceProfile",
+    "EmailSender": "SenderAddress",
+    "EmailDomain": "SendingDomain",
+    "EmailReturnPath": "BounceDomain",
+    "EmailSendingCap": "SendingLimit",
+    "EmailSuppression": "SuppressedAddress",
+    "CampaignSendBatch": "SendBatch",
+    "CampaignSendRecipient": "MessageDelivery",
+    "PushEndpoint": "PushSubscription",
+    "WebsiteContact": "WebVisitor",
+    "CampaignContactEngagement": "OutreachEngagement",
+    "TenantIndustryPack": "IndustryPack",
+    "CampaignRecommendation": "CampaignIdea",
+    "Product": "Offering",
+    "Order": "Purchase"  # custom addition for ecommerce
+}
+
+DIR = "config/mappings/domains"
+for fname in os.listdir(DIR):
+    if not fname.endswith(".yaml"): continue
+    path = os.path.join(DIR, fname)
+    with open(path, "r") as f:
+        content = f.read()
+    
+    # Simple word boundary replacement for the old labels
+    for old, new in RENAMES.items():
+        content = re.sub(r'\b' + old + r'\b', new, content)
+        
+    # Also fix target_label / direction
+    # - {type: ABOUT_PRODUCT, direction: out, target_label: Product, target_key: id,
+    # to: - {type: ABOUT_PRODUCT, to: Offering, to_key: id,
+    content = re.sub(r'direction: out,\s*target_label:\s*(\w+),\s*target_key:\s*(\w+)', r'to: \1, to_key: \2', content)
+    
+    with open(path, "w") as f:
+        f.write(content)
+
+print("Patched all overlays.")

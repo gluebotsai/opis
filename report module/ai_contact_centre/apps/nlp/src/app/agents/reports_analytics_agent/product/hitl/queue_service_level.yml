@@ -1,0 +1,850 @@
+kpi_id: queue_service_level
+object: conversation
+grain_table: ccass.conversations
+joined_tables:
+- ccass.queues
+- ccass.agents
+- accounts.setup_users
+- accounts.setup_teams
+- cdp.customer_profile
+- ccass.dispositions
+- accounts.setup_channel_configs
+- ccass.conversation_messages
+- ccass.conversation_assignments
+- ccass.conversation_transfers
+- ccass.conversation_dispositions
+- ccass.conversation_sentiment_turns
+- ccass.conversation_participants
+- ccass.nlp_turns
+- ccass.copilot_turns
+- ccass.agent_missed_contacts
+- cdp.identity_keys
+columns:
+- column: accounts.setup_users.business_hours_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: accounts.setup_users.city
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_users.country
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_users.created_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_users.employee_id
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_users.ext
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_users.first_name
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_users.id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: accounts.setup_users.invite_status
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_users.invited_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_users.last_name
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_users.location_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: accounts.setup_users.organization_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: accounts.setup_users.primary_language
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_users.secondary_language
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_users.sip_domain_name
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_users.state
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_users.status
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_users.team_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: accounts.setup_teams.business_hours_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: accounts.setup_teams.created_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_teams.description
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_teams.id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: accounts.setup_teams.name
+  use: both
+  reason: Filter and GROUP BY on conversation-grain period KPIs.
+- column: accounts.setup_teams.organization_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: accounts.setup_teams.status
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_channel_configs.channel_type
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_channel_configs.created_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: accounts.setup_channel_configs.id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: accounts.setup_channel_configs.name
+  use: filter
+  reason: Filter only. Not a clean volume GROUP BY.
+- column: accounts.setup_channel_configs.organization_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: accounts.setup_channel_configs.status
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: cdp.customer_profile.acquisition_channel
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: cdp.customer_profile.acquisition_date
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: cdp.customer_profile.blocked
+  use: filter
+  reason: Filter/lists. Not a Total GROUP BY.
+- column: cdp.customer_profile.cdp_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: cdp.customer_profile.city
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: cdp.customer_profile.company
+  use: filter
+  reason: Filter/lists. Not a Total GROUP BY.
+- column: cdp.customer_profile.contact_type
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: cdp.customer_profile.country
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: cdp.customer_profile.created_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: cdp.customer_profile.first_name
+  use: filter
+  reason: Filter/lists. Not a Total GROUP BY.
+- column: cdp.customer_profile.first_referrer
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: cdp.customer_profile.first_seen_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: cdp.customer_profile.gender
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: cdp.customer_profile.industry
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: cdp.customer_profile.language
+  use: filter
+  reason: Filter/lists. Not a Total GROUP BY.
+- column: cdp.customer_profile.last_name
+  use: filter
+  reason: Filter/lists. Not a Total GROUP BY.
+- column: cdp.customer_profile.last_seen_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: cdp.customer_profile.organization_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: cdp.customer_profile.primary_product
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: cdp.customer_profile.region
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: cdp.customer_profile.tenant_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: cdp.customer_profile.timezone
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: cdp.identity_keys.cdp_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: cdp.identity_keys.confidence_score
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: cdp.identity_keys.created_at
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: cdp.identity_keys.identity_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: cdp.identity_keys.key_type
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: cdp.identity_keys.organization_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: cdp.identity_keys.source_system
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: cdp.identity_keys.verified
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversations.assigned_agent_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversations.assigned_at
+  use: not_this_metric
+  reason: Time window. Python time.py binds :start/:end. Not a filter slot.
+- column: ccass.conversations.assigned_user_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversations.bot_active
+  use: not_this_metric
+  reason: Live flag. Period AI split uses handler / is_bot_only.
+- column: ccass.conversations.channel_config_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversations.channel
+  use: both
+  reason: Filter and GROUP BY on conversation-grain period KPIs.
+- column: ccass.conversations.closed_at
+  use: not_this_metric
+  reason: Wrong clock for this metric. Not a filter slot.
+- column: ccass.conversations.contact_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversations.created_at
+  use: not_this_metric
+  reason: Wrong clock for this metric. Not a filter slot.
+- column: ccass.conversations.direction
+  use: both
+  reason: Filter and GROUP BY on conversation-grain period KPIs.
+- column: ccass.conversations.disposition_code
+  use: not_this_metric
+  reason: Disposition split is the catalog label, not the raw code.
+- column: ccass.conversations.disposition_note
+  use: not_this_metric
+  reason: Free text for lists.
+- column: ccass.conversations.end_actor
+  use: both
+  reason: Filter and GROUP BY on conversation-grain period KPIs.
+- column: ccass.conversations.end_reason
+  use: both
+  reason: Filter and GROUP BY on conversation-grain period KPIs.
+- column: ccass.conversations.ended_at
+  use: not_this_metric
+  reason: Wrong clock for this metric. Not a filter slot.
+- column: ccass.conversations.external_thread_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversations.first_agent_response_at
+  use: not_this_metric
+  reason: Wrong clock for this metric. Not a filter slot.
+- column: ccass.conversations.first_response_at
+  use: not_this_metric
+  reason: Wrong clock for this metric. Not a filter slot.
+- column: ccass.conversations.first_response_due_at
+  use: not_this_metric
+  reason: Wrong clock for this metric. Not a filter slot.
+- column: ccass.conversations.handoff_reason
+  use: filter
+  reason: Filter only. Not a clean volume GROUP BY.
+- column: ccass.conversations.id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversations.lifecycle_state
+  use: not_this_metric
+  reason: Finer phase. Do not use for handled or volume.
+- column: ccass.conversations.live_agent_enabled
+  use: not_this_metric
+  reason: Config flag on the session. Would not change this formula.
+- column: ccass.conversations.mailbox_connection_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversations.nlp_enabled
+  use: not_this_metric
+  reason: Config flag. Not bot containment.
+- column: ccass.conversations.organization_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversations.previous_conversation_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversations.priority
+  use: both
+  reason: Filter and GROUP BY on conversation-grain period KPIs.
+- column: ccass.conversations.provider_thread_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversations.queue_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversations.queued_at
+  use: not_this_metric
+  reason: Wrong clock for this metric. Not a filter slot.
+- column: ccass.conversations.resolution_code
+  use: both
+  reason: Filter and GROUP BY on conversation-grain period KPIs.
+- column: ccass.conversations.resolution_due_at
+  use: not_this_metric
+  reason: Wrong clock for this metric. Not a filter slot.
+- column: ccass.conversations.resolution_summary
+  use: not_this_metric
+  reason: Free text for lists.
+- column: ccass.conversations.resolved_at
+  use: not_this_metric
+  reason: Wrong clock for this metric. Not a filter slot.
+- column: ccass.conversations.sla_status
+  use: not_this_metric
+  reason: Product flag. Certified 60s SLA does not read this.
+- column: ccass.conversations.status
+  use: both
+  reason: Filter and GROUP BY on conversation-grain period KPIs.
+- column: ccass.conversations.subject
+  use: not_this_metric
+  reason: Free text for lists.
+- column: ccass.conversations.transferred_at
+  use: not_this_metric
+  reason: Wrong clock for this metric. Not a filter slot.
+- column: ccass.conversations.visitor_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversations.webchat_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversation_messages.attachment_count
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_messages.body
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_messages.conversation_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversation_messages.created_at
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_messages.delivered_at
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_messages.delivery_state
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_messages.direction
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_messages.external_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversation_messages.id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversation_messages.message_type
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_messages.organization_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversation_messages.provider_received_at
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_messages.recipient_type
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_messages.reply_to_message_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversation_messages.sender_type
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_messages.sent_at
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_messages.visibility
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_assignments.accepted_at
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_assignments.agent_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversation_assignments.conversation_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversation_assignments.ended_at
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_assignments.expired_at
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_assignments.expires_at
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_assignments.id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversation_assignments.offered_at
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_assignments.organization_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversation_assignments.queue_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversation_assignments.reason
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_assignments.rejected_at
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_assignments.routing_attempt_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversation_assignments.state
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_transfers.accepted_agent_id
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversation_transfers.accepted_at
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_transfers.accepted_user_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversation_transfers.cancelled_at
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_transfers.channel
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_transfers.completed_at
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_transfers.conversation_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversation_transfers.disposition_code
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_transfers.expired_at
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_transfers.from_agent_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversation_transfers.from_queue_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversation_transfers.from_user_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversation_transfers.id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversation_transfers.notes
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_transfers.offered_agent_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversation_transfers.offered_at
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_transfers.organization_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversation_transfers.outcome_reason
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_transfers.rejected_at
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_transfers.requested_agent_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversation_transfers.requested_at
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_transfers.requested_by_user_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversation_transfers.resolution_code
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_transfers.routing_attempt_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversation_transfers.state
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_transfers.to_queue_id
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversation_dispositions.agent_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversation_dispositions.applied_at
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_dispositions.applied_by_user_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversation_dispositions.conversation_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversation_dispositions.disposition_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversation_dispositions.id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversation_dispositions.is_final
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_dispositions.note
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_dispositions.organization_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversation_dispositions.resolution_code
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_dispositions.source
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_dispositions.transfer_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.dispositions.category
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.dispositions.code
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.dispositions.created_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.dispositions.description
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.dispositions.id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.dispositions.is_active
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.dispositions.label
+  use: both
+  reason: Disposition split is the catalog label, not the raw code.
+- column: ccass.dispositions.organization_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.dispositions.outcome
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.dispositions.requires_note
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.dispositions.requires_resolution
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.dispositions.sort_order
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversation_sentiment_turns.agent_label
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_sentiment_turns.agent_score
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_sentiment_turns.conversation_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversation_sentiment_turns.created_at
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_sentiment_turns.customer_label
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_sentiment_turns.customer_score
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_sentiment_turns.id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversation_sentiment_turns.message_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversation_sentiment_turns.model_name
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_sentiment_turns.organization_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversation_sentiment_turns.trigger_role
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_participants.conversation_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversation_participants.id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversation_participants.joined_at
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_participants.left_at
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.conversation_participants.organization_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversation_participants.participant_type
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.nlp_turns.bot_message_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.nlp_turns.bot_reply
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.nlp_turns.confidence
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.nlp_turns.conversation_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.nlp_turns.created_at
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.nlp_turns.customer_message_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.nlp_turns.customer_text
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.nlp_turns.delivery_message_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.nlp_turns.grounded
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.nlp_turns.guard_passed
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.nlp_turns.handoff_reason
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.nlp_turns.handoff_recommended
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.nlp_turns.id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.nlp_turns.intent
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.nlp_turns.latency_ms
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.nlp_turns.model_name
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.nlp_turns.nlp_conversation_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.nlp_turns.organization_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.nlp_turns.queue_profile_version
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.nlp_turns.selected_queue_key
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.nlp_turns.sentiment
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.nlp_turns.skill_key
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.nlp_turns.status
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.nlp_turns.summary
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.nlp_turns.turn_number
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.copilot_turns.accepted
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.copilot_turns.agent_input
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.copilot_turns.conversation_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.copilot_turns.copilot_response
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.copilot_turns.created_at
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.copilot_turns.final_text
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.copilot_turns.id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.copilot_turns.latency_ms
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.copilot_turns.model_name
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.copilot_turns.organization_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.copilot_turns.sent_message_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.copilot_turns.session_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.copilot_turns.skill_key
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.copilot_turns.status
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.copilot_turns.suggestion_text
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.copilot_turns.surface
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.copilot_turns.turn_type
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.agent_missed_contacts.acknowledged_at
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.agent_missed_contacts.agent_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.agent_missed_contacts.assigned_user_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.agent_missed_contacts.assignment_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.agent_missed_contacts.channel
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.agent_missed_contacts.contact_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.agent_missed_contacts.conversation_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.agent_missed_contacts.created_at
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.agent_missed_contacts.customer_name
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.agent_missed_contacts.id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.agent_missed_contacts.missed_at
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.agent_missed_contacts.offered_at
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.agent_missed_contacts.organization_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.agent_missed_contacts.queue_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.agent_missed_contacts.reason
+  use: not_this_metric
+  reason: Child-grain column. Fanout. Lists/EXISTS only; not a certified GROUP BY on this metric.
+- column: ccass.agents.created_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.agents.display_name
+  use: both
+  reason: Filter and GROUP BY on conversation-grain period KPIs.
+- column: ccass.agents.id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.agents.organization_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.agents.setup_user_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.agents.status
+  use: not_this_metric
+  reason: Roster status is not ready and not a volume split. Ready is presence_state. Agent split is display_name.
+- column: ccass.queues.business_hours_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.queues.id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.queues.name
+  use: both
+  reason: Filter and GROUP BY on conversation-grain period KPIs.
+- column: ccass.queues.organization_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.queues.published_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.queues.setup_queue_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.queues.status
+  use: not_this_metric
+  reason: Published queue active/inactive is not a volume split. Queue split is ccass.queues.name.
+- column: ccass.queues.team_id
+  use: not_this_metric
+  reason: Internal id. Answers show names. Python resolves names to ids.
+- column: ccass.conversations.is_reopened
+  use: both
+  reason: Filter and GROUP BY on conversation-grain period KPIs.
+- column: ccass.conversations.is_bot_only
+  use: both
+  reason: Filter and GROUP BY on conversation-grain period KPIs.
+- column: ccass.conversations.handler
+  use: both
+  reason: Filter and GROUP BY on conversation-grain period KPIs.
+- column: cdp.customer_profile.customer_name
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.

@@ -1,0 +1,39 @@
+---
+description: CDP and accounts schemas are external — no DDL; contacts via customer_profile + identity_keys
+alwaysApply: true
+---
+
+# Shared DB boundaries (cdp / accounts / inventory)
+
+`cdp`, `accounts`, and **`inventory`** live on the shared Worktual DB. This CRM must **not** own their schema.
+
+`inventory.products` is the common product catalog — see `.cursor/rules/inventory-catalog.mdc`.
+
+## Forbidden
+
+- `CREATE` / `ALTER` / `DROP` (or equivalent migrations) on **any** table or column in `cdp`, `accounts`, or **`inventory`**
+- Adding indexes, constraints, enums, or views in those schemas as part of CRM work
+- Assuming local/dev can change shared schema to “make CRM work”
+
+**Approved exception (enrich signal only):** CRM may own a trigger + function on `cdp.customer_profile` that writes into **`crm.*` only** (`contact_profiles`, `lead_enrichment_jobs`) and `NOTIFY` — never new CDP columns/tables. See `prisma/migrations/20260811033000_cdp_customer_enrich_trigger/`.
+
+**Approved exception (A2A Hub clients only):** `accounts.a2a_spoke_clients` — one Hub `client_id` / `client_secret` per A2A spoke, plus the live access/refresh tokens Hub reads. No other `accounts.*` DDL. See `prisma/migrations/20260827180000_a2a_spoke_clients/`.
+
+## Allowed
+
+- **SELECT** (and, only if product already does so via existing columns) row-level DML on **existing** columns — never invent new columns
+- CRM-owned state in **`crm.*`** (Prisma): `contact_profiles`, deals, activities, proposals, etc. Product **rows** live only in `inventory.products` (DML only; `Product` uses `@@schema("inventory")`).
+
+## Contacts identity (hereafter)
+
+Prefer:
+
+| Concern | Source |
+|--------|--------|
+| Customer / person profile | `cdp.customer_profile` |
+| Emails, phones, identity keys | `cdp.identity_keys` |
+| CRM overlays (owner, lifecycle, lead status, company link, BANT, …) | `crm.contact_profiles` |
+
+Do **not** add new CRM features that depend on **`cdp.contacts`** (legacy; removed on Worktual). Use `customer_profile` + `identity_keys` only.
+
+When unsure about a column: **query `information_schema` / existing code** — do not invent columns or “fix” shared schema with a migration.

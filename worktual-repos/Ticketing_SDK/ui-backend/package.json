@@ -1,0 +1,47 @@
+{
+  "name": "ui-backend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "DOTENV_CONFIG_PATH=../.env tsx server.ts",
+    "dev:api": "DOTENV_CONFIG_PATH=../.env TICKETING_API_ONLY=1 PORT=3001 tsx server.ts",
+    "build": "esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs --banner:js=\"var __import_meta_url=require('url').pathToFileURL(__filename).href;\" --define:import.meta.url=__import_meta_url",
+    "start": "DOTENV_CONFIG_PATH=../.env node dist/server.cjs",
+    "lint": "tsc --noEmit -p tsconfig.json",
+    "test": "DATABASE_URL=\"${DATABASE_URL:-postgresql://intake-test:intake-test@127.0.0.1:9/intake_test}\" node --import tsx --test src/server/criticalAlerts.test.ts src/server/kbEmbed.test.ts src/server/intake.test.ts src/server/ccaasEmailConversation.test.ts src/server/integrationToolApi.test.ts src/server/portalConversation.test.ts"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.1.14",
+    "@vitejs/plugin-react": "^5.0.4",
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^17.2.3",
+    "exceljs": "^4.4.0",
+    "express": "^4.21.2",
+    "imapflow": "^2.0.5",
+    "jsonwebtoken": "^9.0.3",
+    "mailparser": "^3.9.28",
+    "multer": "^2.2.0",
+    "mysql2": "^3.24.4",
+    "nodemailer": "^9.0.4",
+    "pg": "^8.22.0",
+    "react": "^19.0.1",
+    "react-dom": "^19.0.1",
+    "vite": "^6.2.3"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/mailparser": "^3.4.6",
+    "@types/multer": "^2.2.0",
+    "@types/node": "^22.14.0",
+    "@types/nodemailer": "^8.0.1",
+    "@types/pg": "^8.20.0",
+    "esbuild": "^0.25.0",
+    "tsx": "^4.21.0",
+    "typescript": "~5.8.2"
+  }
+}

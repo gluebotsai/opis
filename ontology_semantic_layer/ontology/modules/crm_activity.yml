@@ -1,0 +1,29 @@
+# CRM activities on contacts and deals
+module: crm_activity
+layer: domain
+depends_on: [core, cdp, crm_deal]
+owned_by_spoke: crm
+usecase: Tasks, calls, emails logged against contact or deal.
+
+classes:
+  - id: CrmActivity
+    definition: Logged sales or service activity.
+    properties: [type, subject, completed]
+    relations:
+      aboutContact: Contact
+      aboutDeal: Deal
+
+relations:
+  - { from: CrmActivity, type: about, to: Contact }
+  - { from: CrmActivity, type: about, to: Deal }
+
+actions:
+  - id: action.log_activity
+    operates_on: [CrmActivity]
+    requires: [userConfirmed]
+
+metric_ids:
+  - deal_activity_volume
+  - deal_activity_completion_rate
+  - contact_activity_volume
+  - open_task_volume

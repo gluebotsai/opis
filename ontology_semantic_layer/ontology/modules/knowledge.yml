@@ -1,0 +1,41 @@
+# Module: knowledge
+module: knowledge
+layer: domain
+depends_on: [core]
+usecase: >
+  Grounded FAQ and org directory. support_bot, inbox, general coworker, Lola sales/service.
+
+classes:
+  - id: KnowledgeArticle
+    definition: Retrievable org/product/support content. Agents must not invent beyond this.
+    properties: [title, body, module]
+    classified_by: [knowledge.module]
+    relations:
+      ownedBy: Organization
+
+  - id: OrganizationDirectory
+    definition: Address, hours, phone, website from get_organization_details.
+    relations:
+      of: Organization
+
+relations:
+  - { from: KnowledgeArticle, type: owned_by, to: Organization }
+  - { from: OrganizationDirectory, type: of, to: Organization }
+
+actions:
+  - id: action.get_organization_details
+    operates_on: [OrganizationDirectory]
+    mutates: false
+    maps_to_tools: [get_organization_details]
+
+  - id: action.get_organization_knowledge
+    operates_on: [KnowledgeArticle]
+    mutates: false
+    definition: Call once per turn with a single knowledge.module term. Do not retry another module on empty.
+    maps_to_tools: [get_organization_knowledge, GET_SALES_KNOWLEDGE, GET_SERVICE_KNOWLEDGE]
+
+  - id: action.navigate
+    operates_on: []
+    mutates: false
+    definition: Open a coworker UI path. Not a customer-visible action.
+    maps_to_tools: [navigate]

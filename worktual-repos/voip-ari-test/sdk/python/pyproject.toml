@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "telephony-sdk"
+version = "1.0.0"
+description = "Official Python SDK for Telephony Platform Integration"
+authors = [{ name = "Telephony Dev Team" }]
+dependencies = [
+    "requests>=2.28.0",
+    "python-socketio[client]>=5.8.0"
+]
+requires-python = ">=3.8"

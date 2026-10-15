@@ -1,0 +1,112 @@
+{
+  "turn_id": "42af8842",
+  "timestamp": "2026-10-03T17:47:39.992913+00:00",
+  "question": "Email sending cap health in the last 7 days?",
+  "identity": {
+    "organization_id": 1012,
+    "user_id": 1054,
+    "branch_id": 1004,
+    "role": "admin"
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma",
+    "dsn_set": true
+  },
+  "answer": "Your email sending capacity is currently **healthy**.\n\nOver the last 7 days, your hourly cap is **500** and your daily cap is **1,000**. You are not currently in a warmup stage.",
+  "facts": "window: past 7 days (UTC)\nRESULT: email_cap_health\nhourly_cap=500\ndaily_cap=1000\nwarmup_stage=0\nhealth_status=healthy",
+  "trace": {
+    "identity": {
+      "organization_id": 1012,
+      "user_id": 1054,
+      "branch_id": 1004,
+      "role": "admin",
+      "scope_label": "All branch campaigns",
+      "timezone": "UTC"
+    },
+    "question": "Email sending cap health in the last 7 days?",
+    "supervisor": {
+      "kind": "route",
+      "target": "domain"
+    },
+    "supervisor_raw": "```json\n{\"kind\": \"route\", \"target\": \"domain\"}\n```",
+    "interpret_raw": "```json\n{\n  \"kind\": \"interpret\",\n  \"need\": \"Determine if email sending volume is approaching or exceeding capacity limits over the last 7 days.\",\n  \"object\": \"channel-config\",\n  \"metric_family\": \"diagnosis\",\n  \"slice\": \"\",\n  \"time\": \"last 7 days\",\n  \"scope_words\": \"all branch campaigns\",\n  \"echo\": \"Check the health of email sending capacity for the last 7 days.\",\n  \"ask_user\": \"\"\n}\n```",
+    "interpret": {
+      "kind": "interpret",
+      "need": "Determine if email sending volume is approaching or exceeding capacity limits over the last 7 days.",
+      "object": "channel-config",
+      "metric_family": "diagnosis",
+      "slice": "",
+      "time": "last 7 days",
+      "scope_words": "all branch campaigns",
+      "echo": "Check the health of email sending capacity for the last 7 days.",
+      "ask_user": ""
+    },
+    "retrieved_kpis": [
+      "email_cap_health",
+      "domain_auth",
+      "mailbox_send_ready",
+      "bounce_rate",
+      "delivery_trend",
+      "email_open_rate",
+      "channel_readiness",
+      "click_rate"
+    ],
+    "task_results": [
+      {
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "email_cap_health",
+          "goal": "Check email sending caps and health status for the last 7 days",
+          "time": "last 7 days",
+          "scope": "org",
+          "dimensions": [],
+          "answer_type": "kpi",
+          "depends_on": []
+        },
+        "status": "ok",
+        "error_type": null,
+        "error": null,
+        "kpi_id": "email_cap_health",
+        "store": "sql",
+        "sql": "SELECT\n    \n    hourly_cap,\n    daily_cap,\n    warmup_stage,\n    health_status\nFROM campaign.email_sending_caps\nWHERE organization_id = 1012\n\n",
+        "row_count": 1,
+        "time_echo": "past 7 days (UTC)"
+      }
+    ],
+    "plan": {
+      "kind": "plan",
+      "understanding": {
+        "need": "Determine if email sending volume is approaching or exceeding capacity limits over the last 7 days.",
+        "object": "channel-config",
+        "metric_family": "diagnosis",
+        "slice": "",
+        "time": "last 7 days",
+        "scope_words": "all branch campaigns",
+        "echo": "Check the health of email sending capacity for the last 7 days.",
+        "ask_user": ""
+      },
+      "depth": "quick",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "email_cap_health",
+          "goal": "Check email sending caps and health status for the last 7 days",
+          "time": "last 7 days",
+          "scope": "org",
+          "dimensions": [],
+          "answer_type": "kpi",
+          "depends_on": []
+        }
+      ]
+    },
+    "plan_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"understanding\": {\n    \"need\": \"Determine if email sending volume is approaching or exceeding capacity limits over the last 7 days.\",\n    \"object\": \"channel-config\",\n    \"metric_family\": \"diagnosis\",\n    \"slice\": \"\",\n    \"time\": \"last 7 days\",\n    \"scope_words\": \"all branch campaigns\",\n    \"echo\": \"Check the health of email sending capacity for the last 7 days.\",\n    \"ask_user\": \"\"\n  },\n  \"depth\": \"quick\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"email_cap_health\",\n      \"goal\": \"Check email sending caps and health status for the last 7 days\",\n      \"time\": \"last 7 days\",\n      \"scope\": \"org\",\n      \"dimensions\": [],\n      \"answer_type\": \"kpi\",\n      \"depends_on\": []\n    }\n  ]\n}\n```",
+    "facts": "window: past 7 days (UTC)\nRESULT: email_cap_health\nhourly_cap=500\ndaily_cap=1000\nwarmup_stage=0\nhealth_status=healthy",
+    "loop_errors": [],
+    "briefing_raw": "Your email sending capacity is currently **healthy**.\n\nOver the last 7 days, your hourly cap is **500** and your daily cap is **1,000**. You are not currently in a warmup stage.",
+    "grounded": true
+  },
+  "error": null
+}

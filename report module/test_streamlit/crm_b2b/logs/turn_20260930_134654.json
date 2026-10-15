@@ -1,0 +1,281 @@
+{
+  "question": "when the meeting are scheduled in this  month ",
+  "answer": "There are 25 meetings scheduled for this month.",
+  "trace": {
+    "question": "when the meeting are scheduled in this  month",
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1015,
+      "role": "admin"
+    },
+    "model": "worktual-gemma",
+    "tasks": [
+      {
+        "status": "ok",
+        "store": "sql",
+        "sql": "WITH rpt_appointments AS (\nSELECT src.id, src.organization_id, src.contact_id, src.host_user_id, src.host_name, src.source, src.status, src.title, src.starts_at, src.ends_at, src.provider, src.created_at FROM (\nSELECT \n  ap.id,\n  ap.organization_id,\n  ap.contact_id,\n  ap.host_user_id,\n  su.first_name || ' ' || COALESCE(su.last_name, '') AS host_name,\n  ap.source,\n  ap.status,\n  ap.title,\n  ap.starts_at,\n  ap.ends_at,\n  ap.provider,\n  ap.created_at\nFROM crm.appointments ap\nLEFT JOIN accounts.setup_users su ON su.id = ap.host_user_id\nWHERE ap.organization_id = %(_org_id)s\n) src WHERE TRUE\n)\nSELECT title, starts_at, ends_at, status, host_name, provider FROM rpt_appointments AS appointments WHERE starts_at >= %(start)s AND starts_at < %(end)s ORDER BY starts_at ASC LIMIT 500",
+        "views": [
+          "appointments"
+        ],
+        "guard_notes": [
+          "row cap 500 applied"
+        ],
+        "bound_params": {
+          "_org_id": 1003,
+          "_user_id": 1015,
+          "user_id": 1015,
+          "organization_id": 1003,
+          "org_id": 1003,
+          "tenant_id": 1003,
+          "current_user_id": 1015,
+          "start": "2026-09-01T00:00:00+00:00",
+          "end": "2026-10-01T00:00:00+00:00"
+        },
+        "rows": [
+          {
+            "title": "Product consultation \u2014 AI\u2011Native CRM",
+            "starts_at": "2026-09-01 07:30:00+00:00",
+            "ends_at": "2026-09-01 08:00:00+00:00",
+            "status": "scheduled",
+            "host_name": "Yaswanth MG",
+            "provider": "google_meet"
+          },
+          {
+            "title": "Product consultation \u2014 AI-Native CRM",
+            "starts_at": "2026-09-01 10:30:00+00:00",
+            "ends_at": "2026-09-01 11:00:00+00:00",
+            "status": "scheduled",
+            "host_name": "Manoj M",
+            "provider": "google_meet"
+          },
+          {
+            "title": "Product demo with George",
+            "starts_at": "2026-09-02 06:15:00+00:00",
+            "ends_at": "2026-09-02 06:45:00+00:00",
+            "status": "scheduled",
+            "host_name": "Manoj M",
+            "provider": "google_meet"
+          },
+          {
+            "title": "Product consultation \u2014 AI Native CRM",
+            "starts_at": "2026-09-02 11:10:00+00:00",
+            "ends_at": "2026-09-02 11:40:00+00:00",
+            "status": "scheduled",
+            "host_name": "Manoj M",
+            "provider": "google_meet"
+          },
+          {
+            "title": "Product consultation \u2014 AI Contact Centre",
+            "starts_at": "2026-09-03 08:30:00+00:00",
+            "ends_at": "2026-09-03 09:00:00+00:00",
+            "status": "scheduled",
+            "host_name": "Manoj M",
+            "provider": "google_meet"
+          },
+          {
+            "title": "Product demo with Fathima",
+            "starts_at": "2026-09-03 20:30:00+00:00",
+            "ends_at": "2026-09-03 21:00:00+00:00",
+            "status": "scheduled",
+            "host_name": "Manoj M",
+            "provider": "google_meet"
+          },
+          {
+            "title": "Meeting with Hansa Test",
+            "starts_at": "2026-09-04 05:55:00+00:00",
+            "ends_at": "2026-09-04 06:25:00+00:00",
+            "status": "scheduled",
+            "host_name": "Raghuram M",
+            "provider": "google_meet"
+          },
+          {
+            "title": "Product demo with annamalai sri",
+            "starts_at": "2026-09-04 11:40:00+00:00",
+            "ends_at": "2026-09-04 12:10:00+00:00",
+            "status": "scheduled",
+            "host_name": "Manoj M",
+            "provider": "google_meet"
+          },
+          {
+            "title": "Meeting with Santhosh saravanan",
+            "starts_at": "2026-09-07 04:41:00+00:00",
+            "ends_at": "2026-09-07 05:11:00+00:00",
+            "status": "scheduled",
+            "host_name": "Raghuram M",
+            "provider": "google_meet"
+          },
+          {
+            "title": "Product demo with Mohamed Fazil",
+            "starts_at": "2026-09-08 12:00:00+00:00",
+            "ends_at": "2026-09-08 12:30:00+00:00",
+            "status": "scheduled",
+            "host_name": "Raghuram M",
+            "provider": "google_meet"
+          },
+          {
+            "title": "Product demo with Nandha Kumar",
+            "starts_at": "2026-09-08 13:00:00+00:00",
+            "ends_at": "2026-09-08 13:30:00+00:00",
+            "status": "scheduled",
+            "host_name": "Manoj M",
+            "provider": "google_meet"
+          },
+          {
+            "title": "Product consultation \u2014 AI Native CRM",
+            "starts_at": "2026-09-10 04:00:00+00:00",
+            "ends_at": "2026-09-10 04:30:00+00:00",
+            "status": "scheduled",
+            "host_name": "Manoj M",
+            "provider": "google_meet"
+          },
+          {
+            "title": "Product consultation \u2014 AI Contact Centre",
+            "starts_at": "2026-09-11 11:30:00+00:00",
+            "ends_at": "2026-09-11 12:00:00+00:00",
+            "status": "scheduled",
+            "host_name": "Manoj M",
+            "provider": "google_meet"
+          },
+          {
+            "title": "Meeting with yaswanth M G",
+            "starts_at": "2026-09-12 06:45:00+00:00",
+            "ends_at": "2026-09-12 07:15:00+00:00",
+            "status": "scheduled",
+            "host_name": "Raghuram M",
+            "provider": "google_meet"
+          },
+          {
+            "title": "Product consultation \u2014 AI Native CRM",
+            "starts_at": "2026-09-16 06:30:00+00:00",
+            "ends_at": "2026-09-16 07:00:00+00:00",
+            "status": "scheduled",
+            "host_name": "Manoj M",
+            "provider": "google_meet"
+          },
+          {
+            "title": "Product demo with hansa Solanki",
+            "starts_at": "2026-09-16 09:30:00+00:00",
+            "ends_at": "2026-09-16 10:00:00+00:00",
+            "status": "scheduled",
+            "host_name": "Manoj M",
+            "provider": "google_meet"
+          },
+          {
+            "title": "Product demo with Mark Henry",
+            "starts_at": "2026-09-16 13:00:00+00:00",
+            "ends_at": "2026-09-16 13:30:00+00:00",
+            "status": "scheduled",
+            "host_name": "Raghuram M",
+            "provider": "google_meet"
+          },
+          {
+            "title": "Product consultation \u2014 Ticketing System and AI Contact Centre",
+            "starts_at": "2026-09-16 13:30:00+00:00",
+            "ends_at": "2026-09-16 14:00:00+00:00",
+            "status": "scheduled",
+            "host_name": "Manoj M",
+            "provider": "google_meet"
+          },
+          {
+            "title": "Meeting with ravi r",
+            "starts_at": "2026-09-18 05:31:00+00:00",
+            "ends_at": "2026-09-18 06:01:00+00:00",
+            "status": "scheduled",
+            "host_name": "Raghuram M",
+            "provider": "google_meet"
+          },
+          {
+            "title": "Meeting with Lucifer S",
+            "starts_at": "2026-09-22 14:38:00+00:00",
+            "ends_at": "2026-09-22 15:08:00+00:00",
+            "status": "scheduled",
+            "host_name": "Raghuram M",
+            "provider": "google_meet"
+          },
+          {
+            "title": "Product demo with Kirti Patidar",
+            "starts_at": "2026-09-25 11:30:00+00:00",
+            "ends_at": "2026-09-25 12:00:00+00:00",
+            "status": "scheduled",
+            "host_name": "Raghuram M",
+            "provider": "google_meet"
+          },
+          {
+            "title": "Meeting with Divya Prasath",
+            "starts_at": "2026-09-26 08:49:00+00:00",
+            "ends_at": "2026-09-26 09:19:00+00:00",
+            "status": "scheduled",
+            "host_name": "Raghuram M",
+            "provider": "google_meet"
+          },
+          {
+            "title": "Meeting with Zaman Malik",
+            "starts_at": "2026-09-26 12:31:00+00:00",
+            "ends_at": "2026-09-26 13:01:00+00:00",
+            "status": "scheduled",
+            "host_name": "Manoj M",
+            "provider": "google_meet"
+          },
+          {
+            "title": "Meeting with Divya Prasath",
+            "starts_at": "2026-09-28 11:39:00+00:00",
+            "ends_at": "2026-09-28 12:09:00+00:00",
+            "status": "scheduled",
+            "host_name": "Raghuram M",
+            "provider": "google_meet"
+          },
+          {
+            "title": "Meeting with Ashika Antony",
+            "starts_at": "2026-09-29 13:45:00+00:00",
+            "ends_at": "2026-09-29 14:15:00+00:00",
+            "status": "scheduled",
+            "host_name": "Raghuram M",
+            "provider": "google_meet"
+          }
+        ],
+        "attempts": [
+          {
+            "raw": "```sql\nSELECT\n  title,\n  starts_at,\n  ends_at,\n  status,\n  host_name,\n  provider\nFROM rpt.appointments\nWHERE starts_at >= :start\n  AND starts_at < :end\nORDER BY starts_at ASC;\n```",
+            "call": {
+              "kind": "run_sql",
+              "sql": "SELECT\n  title,\n  starts_at,\n  ends_at,\n  status,\n  host_name,\n  provider\nFROM rpt.appointments\nWHERE starts_at >= :start\n  AND starts_at < :end\nORDER BY starts_at ASC"
+            }
+          }
+        ],
+        "time_echo": "this month (UTC)",
+        "time_status": "bounded",
+        "tool": "run_sql",
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": null,
+          "goal": "List scheduled meetings for this month",
+          "time": "this month",
+          "scope": "org",
+          "answer_type": "list",
+          "depends_on": []
+        }
+      }
+    ],
+    "domain_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"quick\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": null,\n      \"goal\": \"List scheduled meetings for this month\",\n      \"time\": \"this month\",\n      \"scope\": \"org\",\n      \"answer_type\": \"list\",\n      \"depends_on\": []\n    }\n  ]\n}\n```",
+    "plan": {
+      "kind": "plan",
+      "depth": "quick",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": null,
+          "goal": "List scheduled meetings for this month",
+          "time": "this month",
+          "scope": "org",
+          "answer_type": "list",
+          "depends_on": []
+        }
+      ]
+    },
+    "facts": "time_requested: this month\nperiod_applied: this month (UTC)\ntime_status: bounded\nRESULT: 25 row(s)\ntask_goal: List scheduled meetings for this month\n  title=Product consultation \u2014 AI\u2011Native CRM | starts_at=2026-09-01 07:30:00+00:00 | ends_at=2026-09-01 08:00:00+00:00 | status=scheduled | host_name=Yaswanth MG | provider=google_meet\n  title=Product consultation \u2014 AI-Native CRM | starts_at=2026-09-01 10:30:00+00:00 | ends_at=2026-09-01 11:00:00+00:00 | status=scheduled | host_name=Manoj M | provider=google_meet\n  title=Product demo with George | starts_at=2026-09-02 06:15:00+00:00 | ends_at=2026-09-02 06:45:00+00:00 | status=scheduled | host_name=Manoj M | provider=google_meet\n  title=Product consultation \u2014 AI Native CRM | starts_at=2026-09-02 11:10:00+00:00 | ends_at=2026-09-02 11:40:00+00:00 | status=scheduled | host_name=Manoj M | provider=google_meet\n  title=Product consultation \u2014 AI Contact Centre | starts_at=2026-09-03 08:30:00+00:00 | ends_at=2026-09-03 09:00:00+00:00 | status=scheduled | host_name=Manoj M | provider=google_meet\n  title=Product demo with Fathima | starts_at=2026-09-03 20:30:00+00:00 | ends_at=2026-09-03 21:00:00+00:00 | status=scheduled | host_name=Manoj M | provider=google_meet\n  title=Meeting with Hansa Test | starts_at=2026-09-04 05:55:00+00:00 | ends_at=2026-09-04 06:25:00+00:00 | status=scheduled | host_name=Raghuram M | provider=google_meet\n  title=Product demo with annamalai sri | starts_at=2026-09-04 11:40:00+00:00 | ends_at=2026-09-04 12:10:00+00:00 | status=scheduled | host_name=Manoj M | provider=google_meet\n  title=Meeting with Santhosh saravanan | starts_at=2026-09-07 04:41:00+00:00 | ends_at=2026-09-07 05:11:00+00:00 | status=scheduled | host_name=Raghuram M | provider=google_meet\n  title=Product demo with Mohamed Fazil | starts_at=2026-09-08 12:00:00+00:00 | ends_at=2026-09-08 12:30:00+00:00 | status=scheduled | host_name=Raghuram M | provider=google_meet\n  ... 15 more rows not listed",
+    "grounded": true,
+    "briefing_raw": "There are 25 meetings scheduled for this month."
+  }
+}

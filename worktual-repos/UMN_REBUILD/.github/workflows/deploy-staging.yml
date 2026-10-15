@@ -1,0 +1,169 @@
+name: Manual Deploy (self-hosted)
+
+# GitHub → Actions → Manual Deploy (self-hosted) → Run workflow
+# Runner labels must match the host runner (default: self-hosted, Linux, X64).
+
+on:
+  workflow_dispatch:
+    inputs:
+      git_ref:
+        description: "Branch or tag to deploy (leave empty = current branch selected in UI)"
+        type: string
+        required: false
+        default: ""
+      install_dir:
+        description: "Absolute path on the runner host to install/run from"
+        type: string
+        required: false
+        default: "/home/worktual/UMN_REBUILD/SGW_IGR/ur-signaling"
+      config:
+        description: "Config file relative to ur-signaling root"
+        type: string
+        required: false
+        default: "configs/ur-signaling.staging.conf.json"
+      sip_host:
+        description: "UR_SIP_HOST (empty = auto-detect primary IPv4 on runner)"
+        type: string
+        required: false
+        default: ""
+      udp_only:
+        description: "UR_SIP_UDP_ONLY=1 (skip WSS — leave OFF to listen on :57344)"
+        type: boolean
+        default: false
+      install_wss_sofia:
+        description: "Install/build WSS Sofia if missing (uses vendored third_party tarball; optional sofia_src override)"
+        type: boolean
+        default: true
+      sofia_src:
+        description: "Optional SOFIA_SRC path on the runner (leave empty = vendored tarball / SGW auto-detect)"
+        type: string
+        required: false
+        default: ""
+      skip_apt:
+        description: "Skip apt-get (faster redeploy)"
+        type: boolean
+        default: false
+      use_systemd:
+        description: "Restart via systemd unit ur-signaling.service"
+        type: boolean
+        default: true
+
+concurrency:
+  group: ur-signaling-staging-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to staging runner
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout selected ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.git_ref != '' && inputs.git_ref || github.ref }}
+          fetch-depth: 1
+
+      - name: Resolve ur-signaling source tree
+        id: src
+        run: |
+          set -euo pipefail
+          if [[ -f scripts/deploy-self-hosted.sh ]]; then
+            echo "dir=${GITHUB_WORKSPACE}" >> "$GITHUB_OUTPUT"
+          elif [[ -f ur-signaling/scripts/deploy-self-hosted.sh ]]; then
+            echo "dir=${GITHUB_WORKSPACE}/ur-signaling" >> "$GITHUB_OUTPUT"
+          else
+            echo "ur-signaling tree not found under ${GITHUB_WORKSPACE}" >&2
+            ls -la "${GITHUB_WORKSPACE}" >&2 || true
+            exit 1
+          fi
+          echo "Resolved source: $(cat "$GITHUB_OUTPUT" | grep '^dir=')"
+
+      - name: Sync checkout → install_dir
+        env:
+          INSTALL_DIR: ${{ inputs.install_dir }}
+          SRC_DIR: ${{ steps.src.outputs.dir }}
+        run: |
+          set -euo pipefail
+          echo "SRC_DIR=${SRC_DIR}"
+          echo "INSTALL_DIR=${INSTALL_DIR}"
+          mkdir -p "${INSTALL_DIR}"
+          # Preserve local build/logs/data and host-only files; refresh source from Actions checkout.
+          rsync -a --delete \
+            --exclude '/build/' \
+            --exclude '/logs/' \
+            --exclude '/data/' \
+            --exclude '/certs/' \
+            --exclude '/.cache/' \
+            --exclude '.git/' \
+            "${SRC_DIR}/" "${INSTALL_DIR}/"
+          test -x "${INSTALL_DIR}/scripts/deploy-self-hosted.sh" \
+            || chmod +x "${INSTALL_DIR}/scripts/deploy-self-hosted.sh"
+          echo "Synced OK → ${INSTALL_DIR}"
+          git -C "${GITHUB_WORKSPACE}" rev-parse --short HEAD || true
+
+      - name: Deploy (build + restart)
+        working-directory: ${{ inputs.install_dir }}
+        env:
+          INSTALL_DIR: ${{ inputs.install_dir }}
+          CONFIG: ${{ inputs.config }}
+          CERT_DIR: ${{ vars.UR_SIGNALING_CERT_DIR || '/etc/ur-signaling/certs' }}
+          SERVICE_NAME: ${{ vars.UR_SIGNALING_SERVICE || 'ur-signaling' }}
+          # Leave empty unless repo Variable is set — scripts default to $HOME/.local/sofia-sip-1.13.17.
+          # Do NOT default to /root/... (self-hosted runners often run as nlp_umn, not root).
+          UR_SOFIA_PREFIX: ${{ vars.UR_SOFIA_PREFIX || '' }}
+          UR_SIP_HOST: ${{ inputs.sip_host != '' && inputs.sip_host || vars.UR_SIP_HOST || '' }}
+          UR_SIP_UDP_ONLY: ${{ inputs.udp_only && '1' || '0' }}
+          INSTALL_WSS_SOFIA: ${{ inputs.install_wss_sofia && '1' || '0' }}
+          SOFIA_SRC: ${{ inputs.sofia_src }}
+          SKIP_APT: ${{ inputs.skip_apt && '1' || '0' }}
+          USE_SYSTEMD: ${{ inputs.use_systemd && '1' || '0' }}
+        run: |
+          set -euo pipefail
+          # Empty / unset → deploy-self-hosted.sh + install-wss-sofia.sh use ${HOME}/.local/...
+          if [[ -z "${UR_SOFIA_PREFIX:-}" ]]; then
+            unset UR_SOFIA_PREFIX
+          fi
+          echo "Deploy flags: UDP_ONLY=${UR_SIP_UDP_ONLY} INSTALL_WSS_SOFIA=${INSTALL_WSS_SOFIA} USE_SYSTEMD=${USE_SYSTEMD}"
+          echo "Config=${CONFIG} Sofia=${UR_SOFIA_PREFIX:-"(default: ${HOME}/.local/sofia-sip-1.13.17)"} (user=$(id -un) HOME=${HOME}) UR_SIP_HOST=${UR_SIP_HOST:-'(auto)'} SOFIA_SRC=${SOFIA_SRC:-'(auto)'}"
+          if [[ -n "${UR_SOFIA_PREFIX:-}" && "${UR_SOFIA_PREFIX}" == /root/* && "$(id -u)" -ne 0 ]]; then
+            echo "WARN: UR_SOFIA_PREFIX=${UR_SOFIA_PREFIX} is under /root but runner is $(id -un)." >&2
+            echo "WARN: Clear repo Variable UR_SOFIA_PREFIX (recommended) so install uses \$HOME/.local/sofia-sip-1.13.17" >&2
+          fi
+          if [[ -z "${SOFIA_SRC}" ]]; then
+            unset SOFIA_SRC
+          fi
+          test -f third_party/sofia-sip-1.13.17.tar.gz \
+            || echo "WARN: vendored Sofia tarball missing — install needs SOFIA_SRC or SGW tree"
+          chmod +x scripts/deploy-self-hosted.sh scripts/build.sh \
+            scripts/gen-sofia-certs.sh scripts/install-wss-sofia.sh || true
+          ./scripts/deploy-self-hosted.sh
+
+      - name: Verify process
+        working-directory: ${{ inputs.install_dir }}
+        run: |
+          set -euo pipefail
+          sleep 2
+          if ! pgrep -af 'build/ur-signaling' >/dev/null; then
+            echo "ERROR: ur-signaling not running" >&2
+            if systemctl list-unit-files ur-signaling.service &>/dev/null; then
+              sudo systemctl status ur-signaling --no-pager || true
+              sudo journalctl -u ur-signaling -n 100 --no-pager || true
+            fi
+            tail -n 100 logs/deploy.out 2>/dev/null || true
+            tail -n 100 logs/ur-signaling-staging.log 2>/dev/null || true
+            exit 1
+          fi
+          pgrep -af 'build/ur-signaling' || true
+          ss -ulnp | grep -E ':5060\b' || echo "WARN: UDP 5060 not listening"
+          if [[ "${{ inputs.udp_only }}" != "true" ]]; then
+            ss -ltnp | grep -E ':57344\b' || {
+              echo "ERROR: WSS :57344 not listening" >&2
+              exit 1
+            }
+            echo "WSS :57344 OK"
+          else
+            echo "INFO: udp_only=true — WSS skipped"
+          fi
+          echo "Manual deploy finished OK"

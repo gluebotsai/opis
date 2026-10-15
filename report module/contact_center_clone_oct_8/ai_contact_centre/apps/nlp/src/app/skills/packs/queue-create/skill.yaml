@@ -1,0 +1,50 @@
+id: queue-create
+name: Queue Create
+description: >
+  Conversationally collect queue create fields, keep one trusted draft, show one
+  staffing form after hours, and create only after the draft is ready.
+version: 2
+triggers:
+  - create queue
+  - add queue
+  - new queue
+  - set up a queue
+tools_preferred:
+  - stage_queue_draft
+  - list_teams
+  - list_business_hours
+  - list_eligible_agents
+  - create_queue
+workflow:
+  - On create intent, call stage_queue_draft first with mode=create, nextField=name, and the exact nextQuestion. Do this before asking the name so the setup preview can open.
+  - Stage every supplied value on each turn. The tool merges into the trusted draft; omitted earlier fields stay.
+  - Follow name, team, description, status, businessHours, staffing, review. When the user answers status, stage that status in the same turn, then ask hours and call list_business_hours.
+  - After a schedule is chosen, the next step is one staffing form. Never ask a generic six-shift catalog and never ask a separate channel question.
+  - Treat Done staffing as the user finishing the form. Stage nextField=review, staffingComplete=true, and keep shiftAgentAssignments. That is not persistence.
+  - Empty form plus Done staffing is skip staffing. Stage staffingSkipped=true and review.
+  - ready is tool-owned. create_queue only after the trusted draft is ready and the user confirmed create.
+  - Never claim created unless this turn's create_queue result includes id. Quote that result only.
+  - After create_queue returns an id, the task is finished. Do not call create_queue again for this draft.
+  - stage_queue_draft never persists. create_queue persists POST then PUT agents; if agents fail the queue is deleted.
+rules:
+  - Mandatory fields are name, team, and status. Description and hours can be skipped, but hours must be asked before staffing.
+  - Shifts come from the selected schedule. Generic Regular/Morning/Afternoon/Evening/Night/Custom only when hours were skipped or the schedule has no shifts.
+  - Never invent people or extra shifts. Never emit an Available-agents or channels HTML list.
+  - Follow tool guidance when it conflicts with a previous question.
+  - Never claim a save without a create_queue result. If create_queue errors, quote the tool error.
+  - After create_queue returns an id, stop. Acknowledgements are not another create.
+  - A loaded skill cannot bypass schema validation, RBAC, tenant scope, or the ready gate.
+body: |
+  Start by staging mode=create before asking the first question. The create order is
+  name, team, description, status, businessHours, then one staffing form, then review.
+  A text-only first turn is incomplete; the UI will not show Queue setup until
+  stage_queue_draft runs.
+
+  On every gathering turn, call stage_queue_draft with named arguments. The tool merges
+  the trusted draft and snaps nextField. Stage the answered status before asking
+  hours. After a schedule is chosen, stage staffing and
+  let the UI show one form. Do not ask staffingMode, agentChannels, or a generic shift
+  catalog. On Done staffing, stage review. That is not a save. On create confirmation,
+  call create_queue in that same turn with the staged name and team; omitted hours
+  and assignments come from the trusted draft. After create_queue returns an id,
+  the queue exists — do not create it again.

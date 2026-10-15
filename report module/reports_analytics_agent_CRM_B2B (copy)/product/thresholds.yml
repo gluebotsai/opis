@@ -1,0 +1,30 @@
+# Default Thresholds & Constants for B2B CRM Reporting
+
+stage_weights:
+  qualification: 0.10
+  discover: 0.25
+  propose: 0.50
+  negotiate: 0.75
+  closed_won: 1.00
+  closed_lost: 0.00
+
+high_probability_threshold: 0.75
+
+aging_bands:
+  - { label: "0–30 days", min_days: 0, max_days: 30 }
+  - { label: "31–60 days", min_days: 31, max_days: 60 }
+  - { label: "61–90 days", min_days: 61, max_days: 90 }
+  - { label: "91+ days", min_days: 91, max_days: 999999 }
+
+deal_size_bands:
+  - { label: "< 500,000", min_val: 0, max_val: 500000 }
+  - { label: "500,000 – 2,500,000", min_val: 500000, max_val: 2500000 }
+  - { label: "> 2,500,000", min_val: 2500000, max_val: 999999999999 }
+
+stale_touch_days: 14
+
+small_sample_threshold: 5
+
+limits:
+  max_export_rows: 500
+  default_top_n: 10

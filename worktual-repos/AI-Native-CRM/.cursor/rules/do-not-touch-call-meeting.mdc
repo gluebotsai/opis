@@ -1,0 +1,21 @@
+---
+description: Do not change calls, call assist, meeting assist, or meeting transcripts unless the user explicitly asks
+alwaysApply: true
+---
+
+# Leave calls and meetings alone
+
+Remote `main` at **`4dcbc5f`** is the known-good state for phone calls, call assist, meeting assist, and meeting transcripts. Those flows are working. Do not change them unless the user explicitly asks to change that area in the current request.
+
+A task about reports, contacts, CRM data, or anything else is not permission to edit these paths, even a small "while I am here" fix.
+
+## Frozen unless the user asks
+
+- Phone calls: SIP registration, Ready / Not Ready presence, inbound and outbound calls
+- Call assist and live call transcripts
+- Meeting assist, Meet / Zoom / Teams panels, and meeting transcripts
+- The Vexa live-PCM notetaker patch and meeting-service audio path
+
+Typical files: `backend/src/service/voice/**`, `frontend/src/features/voice/**`, `backend/src/service/ai/meeting-assist*`, `backend/src/lib/meeting-assist*`, `backend/src/lib/meeting-attendee-identity*`, `frontend/src/components/meeting-assist/**`, `meeting-service/**`, `meeting-service/scripts/patch-vexa-live-pcm.sh`, `meeting-service/patches/vexa-live-pcm-forward.ts`.
+
+Reading these files to answer a question is fine. Editing, refactoring, or committing them is not, until the user names that change.

@@ -1,0 +1,171 @@
+version: 1
+# User language -> dimension id. Applied in Python. Not an intent router.
+
+aliases:
+  status: status
+  stage: status
+  lifecycle: status
+  state: status
+  campaign_status: status
+  outcome: outcome
+  delivery_outcome: outcome
+  result: outcome
+  channel: channel
+  channels: channel
+  variant: ab_variant
+  ab: ab_variant
+  ab_variant: ab_variant
+  campaign: campaign
+  campaign_name: campaign
+  day: day
+  date: day
+  week: week
+  month: month
+  created_by: created_by
+  owner: created_by
+  creator: created_by
+  source: source_channel
+  source_channel: source_channel
+  contact: contact
+  person: contact
+  city: city
+  country: country
+  acquisition: acquisition_channel
+  acquisition_channel: acquisition_channel
+  platform: platform
+  event: event
+  reason: reason
+  key_type: key_type
+  verified: verified
+  batch_status: batch_status
+  template_status: template_status
+
+dimensions:
+  status:
+    meaning: Lifecycle of the saved campaign (draft/scheduled/live/completed/cancelled). Not send outcome.
+    user_phrases: [status, stage, lifecycle, state]
+    sql_expr:
+      campaign: "campaigns.status"
+      event: "status"
+      default: "status"
+  outcome:
+    meaning: Shared delivery outcome on a recipient (sent, failed, skipped, stub, pending, bounce).
+    user_phrases: [outcome, delivery status, result, bounce vs sent]
+    sql_expr:
+      recipient: "CASE WHEN lower(coalesce(r.status,'')) IN ('failed','cancelled') THEN 'failed' WHEN lower(coalesce(r.status,'')) = 'skipped' THEN 'skipped' WHEN lower(coalesce(r.status,'')) IN ('stub','stub_sent') THEN 'stub' WHEN lower(coalesce(r.provider_message_id,'')) LIKE 'stub-%' OR lower(coalesce(r.provider_message_id,'')) LIKE 'stub://%' THEN 'stub' WHEN lower(coalesce(r.status,'')) IN ('bounced','hard_bounce','soft_bounce') THEN 'bounce' WHEN lower(coalesce(r.skip_fail_reason,'')) LIKE '%bounce%' THEN 'bounce' WHEN lower(coalesce(r.status,'')) IN ('sent','delivered') THEN 'sent' ELSE 'pending' END"
+      default: "CASE WHEN lower(coalesce(r.status,'')) IN ('failed','cancelled') THEN 'failed' WHEN lower(coalesce(r.status,'')) = 'skipped' THEN 'skipped' WHEN lower(coalesce(r.status,'')) IN ('stub','stub_sent') THEN 'stub' WHEN lower(coalesce(r.provider_message_id,'')) LIKE 'stub-%' OR lower(coalesce(r.provider_message_id,'')) LIKE 'stub://%' THEN 'stub' WHEN lower(coalesce(r.status,'')) IN ('bounced','hard_bounce','soft_bounce') THEN 'bounce' WHEN lower(coalesce(r.skip_fail_reason,'')) LIKE '%bounce%' THEN 'bounce' WHEN lower(coalesce(r.status,'')) IN ('sent','delivered') THEN 'sent' ELSE 'pending' END"
+  channel:
+    meaning: Agent-canonical channel on the batch or planned channel row.
+    user_phrases: [channel, email, whatsapp, sms, push, web]
+    sql_expr:
+      campaign: "cc.channel"
+      recipient: "b.channel"
+      batch: "b.channel"
+      library: "primary_channel"
+      default: "channel"
+  campaign:
+    meaning: Saved campaign display name.
+    user_phrases: [campaign, campaign name]
+    sql_expr:
+      default: "campaigns.name"
+      campaign: "campaigns.name"
+      recipient: "campaigns.name"
+  ab_variant:
+    meaning: Email A/B assignment on the recipient.
+    user_phrases: [variant, a/b, holdout, winner]
+    sql_expr:
+      recipient: "r.ab_variant"
+      default: "r.ab_variant"
+  created_by:
+    meaning: Marketer who saved the campaign. Admin breakdown only.
+    user_phrases: [created by, owner, creator]
+    sql_expr:
+      campaign: "campaigns.created_by_user_id"
+      default: "campaigns.created_by_user_id"
+  source_channel:
+    meaning: Whether the campaign was created in Campaign SPA or CRM embed.
+    user_phrases: [source, standalone, crm]
+    sql_expr:
+      campaign: "campaigns.source_channel"
+      default: "campaigns.source_channel"
+  day:
+    meaning: UTC calendar day of the KPI time column.
+    user_phrases: [day, daily, date]
+    sql_expr:
+      campaign: "campaigns.launch_local_date"
+      recipient: "campaigns.launch_local_date"
+      default: "DATE_TRUNC('day', created_at)::date"
+  week:
+    meaning: UTC ISO week start of the KPI time column.
+    user_phrases: [week, weekly]
+    sql_expr:
+      campaign: "DATE_TRUNC('week', campaigns.launch_local_date::date)::date"
+      recipient: "DATE_TRUNC('week', campaigns.launch_local_date::date)::date"
+      default: "DATE_TRUNC('week', created_at)::date"
+  month:
+    meaning: UTC month of the KPI time column.
+    user_phrases: [month, monthly]
+    sql_expr:
+      campaign: "DATE_TRUNC('month', campaigns.launch_local_date::date)::date"
+      recipient: "DATE_TRUNC('month', campaigns.launch_local_date::date)::date"
+      default: "DATE_TRUNC('month', created_at)::date"
+  contact:
+    meaning: Campaign bigint contact_id (not CDP text id).
+    user_phrases: [contact, person, recipient]
+    sql_expr:
+      recipient: "r.contact_id"
+      default: "contact_id"
+  city:
+    meaning: CDP city on the profile view only.
+    user_phrases: [city]
+    sql_expr:
+      default: "city"
+  country:
+    meaning: CDP country on the profile view only.
+    user_phrases: [country]
+    sql_expr:
+      default: "country"
+  acquisition_channel:
+    meaning: How the CDP person entered the directory.
+    user_phrases: [acquisition, source]
+    sql_expr:
+      default: "acquisition_channel"
+  platform:
+    meaning: Device or browser on push endpoints / recipients.
+    user_phrases: [platform, ios, android]
+    sql_expr:
+      recipient: "r.platform"
+      default: "platform"
+  event:
+    meaning: Opportunity event public id.
+    user_phrases: [event, form]
+    sql_expr:
+      event: "public_id"
+      form_submission: "event_public_id"
+      default: "public_id"
+  reason:
+    meaning: Suppression or skip reason.
+    user_phrases: [reason, why skipped]
+    sql_expr:
+      default: "reason"
+  key_type:
+    meaning: CDP identity key type.
+    user_phrases: [email key, phone key]
+    sql_expr:
+      default: "key_type"
+  verified:
+    meaning: Whether a CDP identity key is verified.
+    user_phrases: [verified]
+    sql_expr:
+      default: "verified"
+  batch_status:
+    meaning: Send batch worker status.
+    user_phrases: [batch status, queued, sending]
+    sql_expr:
+      batch: "b.status"
+      default: "b.status"
+  template_status:
+    meaning: Regulated template approval status.
+    user_phrases: [approval status, pending, rejected]
+    sql_expr:
+      default: "status"

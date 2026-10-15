@@ -1,0 +1,60 @@
+{
+  "turn_id": "139a1b8a",
+  "timestamp": "2026-10-09T05:37:42.550537+00:00",
+  "question": "list me the agents who are all ready now",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1016,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong><br>Agents currently ready</strong></p><p>The following agents are currently in a ready state:</p><ul><li>Raghuram M</li><li>Lokesh B</li></ul><p>Would you like to see their current status or how long they have been ready?</p>",
+  "card": "card: table r1",
+  "facts": "result_id: r1\nwindow: now (live)\ncertified: false\ntask_goal: List the names of agents who are currently in a ready state.\nanswer_type: list\nrow_count: 2\nrow 1: display_name=Raghuram M\nrow 2: display_name=Lokesh B",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1016,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "list me the agents who are all ready now",
+    "plan": {
+      "kind": "plan",
+      "understanding": "A list of agents who are currently in a ready state.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "free_sql",
+          "goal": "List the names of agents who are currently in a ready state.",
+          "time": "now",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "list"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": false,
+        "kpi_id": null,
+        "row_count": 2
+      }
+    ],
+    "facts": "result_id: r1\nwindow: now (live)\ncertified: false\ntask_goal: List the names of agents who are currently in a ready state.\nanswer_type: list\nrow_count: 2\nrow 1: display_name=Raghuram M\nrow 2: display_name=Lokesh B",
+    "grounded": true,
+    "card": "card: table r1"
+  },
+  "error": null
+}

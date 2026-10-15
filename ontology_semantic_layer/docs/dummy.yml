@@ -1,0 +1,344 @@
+ontology:
+  name: campaign_complete_ontology
+  purpose: >
+    Give the Campaign super agent a complete and simple understanding of the
+    Worktual AI Campaign product so it can guide specialist agents and answer
+    B2B and B2C campaign questions accurately.
+
+  entities:
+    Tenant:
+      definition: A company that uses Worktual AI Campaign to run its marketing.
+      identifier: accounts.organizations.id
+      main_attributes: [name, business_type, industry_type]
+
+    Staff:
+      definition: A person from the tenant who logs in to create campaigns, add contacts and view reports.
+      identifier: accounts.setup_users.id
+      main_attributes: [first_name, last_name, work_email, status]
+
+    Role:
+      definition: A named set of permissions given to a staff member, it decides what the staff member can see and do.
+      identifier: accounts.setup_roles.id
+      main_attributes: [name]
+
+    Contact:
+      definition: A person saved in the tenant's contact database (CDP) who can receive campaigns.
+      identifier: cdp.customer_profile.cdp_id
+      main_attributes: [first_name, last_name, company, city, custom_fields, acquisition_channel]
+
+    ContactIdentity:
+      definition: One email address or phone number that belongs to a contact. Used to find duplicates and to send messages.
+      identifier: cdp.identity_keys.identity_id
+      main_attributes: [type, value, verified, source_system]
+
+    TemporaryContact:
+      definition: A person uploaded from a sheet (Excel/CSV) for one campaign session only. Not saved in the contact database.
+      identifier: campaign.campaign_session_temp_contacts.id
+      main_attributes: [first_name, last_name, email, phone, company_name, city]
+
+    WebsiteVisitor:
+      definition: Someone tracked visiting the tenant's website, who may have allowed web push. Not a contact until matched or promoted.
+      identifier: campaign.website_contacts.id
+      main_attributes: [visitor_id, email, phone, origin, path, subscribed, visit_count, first_seen_at, last_seen_at]
+
+    CampaignSession:
+      definition: A draft conversation between the campaign agent and a staff member while building a campaign.
+      identifier: campaign.campaign_agent_sessions.id
+      main_attributes: [module, stage, payload, created_at, updated_at]
+
+    Campaign:
+      definition: A named marketing program that sends messages to a group of contacts on one or more channels at a planned time.
+      identifier: campaign.campaigns.id
+      main_attributes: [name, description, goal, objective, status, source, audience_count, audience_summary, launch_local_date, launch_local_time, timezone, created_at]
+
+    Channel:
+      definition: A platform a campaign uses to send its message, such as email, WhatsApp or SMS.
+      identifier: campaign.campaign_channels.id
+      main_attributes: [channel, status, planned_launch_at]
+
+    ChannelSetup:
+      definition: The tenant's configuration and readiness for sending on a channel.
+      identifier: [campaign.channel_sending_profiles.id, campaign.sms_channel_settings.id, campaign.push_channel_settings.id, accounts.setup_channel_configs.id]
+      main_attributes: [channel, status, checklist]
+
+    EmailSender:
+      definition: A "From" name and address the tenant uses to send email campaigns.
+      identifier: campaign.email_senders.id
+      main_attributes: [display_name, from_email, reply_to, status, is_active]
+
+    SendingDomain:
+      definition: A domain the tenant sends email from, with its DNS health checks (SPF, DKIM, DMARC) and bounce domain.
+      identifier: [campaign.email_domains.id, campaign.email_return_paths.id]
+      main_attributes: [domain, spf_ok, dkim_ok, dmarc_ok, status]
+
+    BusinessAddress:
+      definition: The tenant's legal name and postal address shown in the footer of marketing emails.
+      identifier: campaign.email_org_profiles.id
+      main_attributes: [legal_name, street, city, country, phone]
+
+    SendingLimit:
+      definition: The limits on how many emails the tenant may send per batch, hour and day, plus sending health.
+      identifier: campaign.email_sending_caps.id
+      main_attributes: [batch_size, hourly_cap, daily_cap, warmup_stage, health_status]
+
+    Audience:
+      definition: The fixed list of contacts a campaign is meant for, locked when the campaign is saved or launched.
+      identifier: [campaign.campaign_audience.campaign_id, campaign.campaign_audience.contact_id]
+      main_attributes: [contact, created_at]
+
+    DraftAudience:
+      definition: Contacts picked inside a campaign session before the campaign is saved.
+      identifier: [campaign.campaign_audience_refs.session_id, campaign.campaign_audience_refs.contact_id]
+      main_attributes: [contact]
+
+    ChannelTemplate:
+      definition: The message content made for one channel inside a campaign session, such as email HTML, a WhatsApp body or push text.
+      identifier: campaign.campaign_channel_templates.id
+      main_attributes: [channel, fields, logo, launch_at, how_it_works]
+
+    TemplateMessage:
+      definition: One chat message in the template editing space, from the staff member or the assistant.
+      identifier: campaign.campaign_template_messages.id
+      main_attributes: [role, seq, kind, payload, created_at]
+
+    LibraryTemplate:
+      definition: A ready-made, reusable campaign design in the Template Library, provided by the system or uploaded by staff.
+      identifier: campaign.campaign_library_templates.id
+      main_attributes: [name, description, goal, primary_channel, channels, audience, source, approval_status, used_count]
+
+    ApprovalTemplate:
+      definition: An SMS or WhatsApp template that must be approved by an outside authority before it can be sent (DLT for SMS, Meta for WhatsApp).
+      identifier: campaign.regulated_channel_templates.id
+      main_attributes: [name, channel, external_id, language, category, header, body, footer, buttons, status, rejected_reason, submitted_at]
+
+    SendBatch:
+      definition: One timed slice of a campaign send on a channel, sized to stay within sending limits.
+      identifier: campaign.campaign_send_batches.id
+      main_attributes: [channel, seq, size, scheduled_for, status]
+
+    Delivery:
+      definition: One attempt to send a campaign message to one person or device, with its result, opens and clicks.
+      identifier: campaign.campaign_send_recipients.id
+      main_attributes: [email, destination, platform, status, skip_fail_reason, ab_variant, opened_at, clicked_at, open_count, click_count, attempt_count]
+
+    ContactEngagement:
+      definition: A contact's overall email activity across all campaigns, including whether they unsubscribed.
+      identifier: campaign.campaign_contact_engagement.id
+      main_attributes: [email_unsubscribed, email_unsubscribed_at, email_unsubscribe_reason, last_email_opened_at, last_email_clicked_at, email_open_count, email_click_count]
+
+    Suppression:
+      definition: An email address that must never be mailed again by this tenant.
+      identifier: campaign.email_suppressions.id
+      main_attributes: [email, reason, created_at]
+
+    PushSubscription:
+      definition: A mobile app device or browser that has agreed to receive push notifications.
+      identifier: campaign.push_endpoints.id
+      main_attributes: [channel, platform, endpoint, active]
+
+    Recommendation:
+      definition: An AI-suggested campaign idea shown as a card on the recommendation board.
+      identifier: campaign.campaign_recommendations.id
+      main_attributes: [title, status, payload, created_at]
+
+    GalleryIdea:
+      definition: An AI-generated campaign idea card in the Template Gallery, personalised to the tenant's industry.
+      identifier: campaign.campaign_gallery_ideas.id
+      main_attributes: [title, summary, industry, pack_id, image_url, status]
+
+    ImageAsset:
+      definition: A reusable marketing image in the Image Gallery.
+      identifier: campaign.campaign_image_gallery_assets.id
+      main_attributes: [image_url, short_description, channel, source, status]
+
+    Form:
+      definition: A public form or event page launched to collect replies from people.
+      identifier: campaign.campaign_opportunity_events.id
+      main_attributes: [title, kind, status, public_slug, launched_at, submission_count, open_count]
+
+    FormSubmission:
+      definition: One reply submitted to a public form.
+      identifier: campaign.campaign_form_submissions.id
+      main_attributes: [answers, form_slug, created_at]
+
+    Notification:
+      definition: An in-app bell message that tells staff about activity, such as a template waiting for approval.
+      identifier: campaign.app_notifications.id
+      main_attributes: [kind, title, body, link, read_at, created_at]
+
+    IndustryPack:
+      definition: Tenant-level hints about which contact fields matter and company rules, based on B2B or B2C business type.
+      identifier: campaign.tenant_industry_packs.id
+      main_attributes: [pack_id, industry_type, fields, rules]
+
+    DailyReport:
+      definition: A daily performance summary email sent to a staff member, at most once per day.
+      identifier: campaign.daily_report_email_deliveries.id
+      main_attributes: [report_date, recipient_email, status, sent_at]
+
+  relations:
+    - Tenant - has_branch -> Branch
+    - Tenant - has_staff -> Staff
+    - Tenant - has_contact -> Contact
+    - Tenant - has_visitor -> WebsiteVisitor
+    - Tenant - has_channel_setup -> ChannelSetup
+    - Tenant - has_sender -> EmailSender
+    - Tenant - has_domain -> SendingDomain
+    - Tenant - has_address -> BusinessAddress
+    - Tenant - has_limit -> SendingLimit
+    - Tenant - has_suppression -> Suppression
+    - Tenant - has_library_template -> LibraryTemplate
+    - Tenant - has_approval_template -> ApprovalTemplate
+    - Tenant - has_gallery_idea -> GalleryIdea
+    - Tenant - has_image -> ImageAsset
+    - Tenant - has_industry_pack -> IndustryPack
+
+    - Branch - has_access -> ProductAccess
+    - Branch - has_campaign -> Campaign
+    - Branch - has_session -> CampaignSession
+
+    - Staff - has_role -> Role
+    - Staff - creates -> Campaign
+    - Staff - starts -> CampaignSession
+    - Staff - adds -> Contact
+    - Staff - receives -> Notification
+    - Staff - receives -> DailyReport
+
+    - Contact - identified_by -> ContactIdentity
+    - Contact - has_engagement -> ContactEngagement
+    - Contact - has_device -> PushSubscription
+    - WebsiteVisitor - promoted_to -> Contact
+
+    - CampaignSession - has_draft_audience -> DraftAudience
+    - CampaignSession - has_temporary_contact -> TemporaryContact
+    - CampaignSession - has_template -> ChannelTemplate
+    - CampaignSession - saved_as -> Campaign
+    - DraftAudience - refers_to -> Contact
+
+    - ChannelTemplate - has_message -> TemplateMessage
+    - ChannelTemplate - started_from -> LibraryTemplate
+
+    - Campaign - has_channel -> Channel
+    - Campaign - targets -> Audience
+    - Campaign - has_batch -> SendBatch
+    - Audience - includes -> Contact
+    - Channel - uses -> ChannelTemplate
+    - Channel - uses -> ApprovalTemplate
+    - Channel - depends_on -> ChannelSetup
+    - ApprovalTemplate - made_for -> Campaign
+
+    - SendBatch - has_delivery -> Delivery
+    - Delivery - sent_to -> Contact
+    - Delivery - sent_to -> PushSubscription
+    - Delivery - sent_from -> EmailSender
+
+    - Recommendation - suggests -> Campaign
+    - Recommendation - shown_to -> Staff
+    - Form - has_submission -> FormSubmission
+    - Notification - about -> ApprovalTemplate
+    - Notification - about -> Campaign
+
+  synonyms:
+    Tenant: [organization, org, company, client_company]
+    Branch: [workspace]
+    Staff: [user, marketer, team_member, employee]
+    Role: [permission, access_level]
+    Contact: [customer, lead, person, subscriber, crm_contact]
+    ContactIdentity: [email, phone, mobile_number, identity_key]
+    TemporaryContact: [temp_contact, uploaded_contact, sheet_contact, one_time_contact]
+    WebsiteVisitor: [visitor, site_visitor, web_visitor, anonymous_visitor]
+    CampaignSession: [draft, campaign_draft, agent_session, chat_session]
+    Campaign: [marketing_campaign, blast, broadcast, promotion]
+    Channel: [send_channel, platform, medium]
+    ChannelSetup: [channel_config, channel_configuration, channel_connection, integration]
+    EmailSender: [from_address, sender, sender_email]
+    SendingDomain: [email_domain, domain, return_path, bounce_domain]
+    BusinessAddress: [legal_address, footer_address, company_address]
+    SendingLimit: [sending_cap, rate_limit, warmup, email_limit]
+    Audience: [target_list, send_list, segment, target_audience]
+    DraftAudience: [selected_contacts, draft_list]
+    ChannelTemplate: [creative, message_content, draft_template, email_template, message_template]
+    LibraryTemplate: [template_library, saved_template, reusable_template]
+    ApprovalTemplate: [regulated_template, dlt_template, whatsapp_template, meta_template]
+    SendBatch: [batch, send_slice]
+    Delivery: [recipient, send_recipient, message_sent, send_record]
+    ContactEngagement: [engagement, contact_activity]
+    Suppression: [do_not_email, blocklist, suppression_list]
+    PushSubscription: [push_endpoint, device_token, web_push_subscription]
+    Recommendation: [suggestion, campaign_suggestion, ai_suggestion]
+    GalleryIdea: [template_gallery, idea_card]
+    ImageAsset: [image, image_gallery, media]
+    Form: [opportunity, event, signup_form, landing_form]
+    FormSubmission: [form_reply, response, submission]
+    Notification: [alert, bell_notification]
+    DailyReport: [daily_kpi_email, daily_summary]
+
+  taxonomy:
+    tenant.business_type: [b2b, b2c]
+    product_access.product: [campaign, crm]
+    product_access.status: [active, inactive]
+    staff.status: [active, inactive]
+    role.scope: [all_branch_campaigns, own_campaigns_only]   # admin = all_branch_campaigns, every other role = own_campaigns_only
+    contact_identity.type: [email, primary_email, phone, primary_phone, mobile]
+    campaign.status: [draft, scheduled, live, completed, cancelled]
+    campaign.source: [standalone_campaign, crm_marketing]
+    channel.type: [email, whatsapp, sms, push, web, ppc]    # push = mobile app push, web = browser web push
+    channel_setup.status: [not_started, in_progress, ready, blocked]
+    email_sender.status: [pending_verification, verified]
+    template_message.role: [user, assistant, system]
+    template_message.kind: [text, template]
+    library_template.source: [system, user]
+    approval_template.channel: [sms, whatsapp]
+    approval_template.approver: [dlt, meta]                  # sms -> dlt, whatsapp -> meta
+    approval_template.status: [draft, pending, approved, rejected, paused, disabled]
+    send_batch.status: [queued, sending, sent, failed, cancelled]
+    delivery.status: [pending, queued, sending, sent, delivered, failed, cancelled, skipped, bounced, hard_bounce, soft_bounce, stub, stub_sent]
+    delivery.ab_variant: [a, b, holdout, winner]
+    delivery.platform: [ios, android, web]
+    suppression.reason: [unsubscribe, hard_bounce, complaint]
+    push_subscription.channel: [push, web]
+    recommendation.status: [open, used, dismissed]
+    image_asset.source: [ai_generated, uploaded, imported]
+    image_asset.status: [active, archived]
+    form.status: [draft, launched]
+    industry_pack.type: [generic-b2b, generic-b2c]
+
+  business_rules:
+    # What counts as what
+    - Campaign is the only thing counted as a campaign. Sessions, templates, recommendations and gallery ideas are not campaigns.
+    - A campaign session is a draft. It becomes a campaign only when it is saved.
+    - A recommendation or gallery idea is only a suggestion. It is not a campaign until staff create one from it.
+    - Channel template, library template and approval template are three different things. A channel template is draft content in a session, a library template is a reusable design, and an approval template is SMS/WhatsApp copy checked by DLT or Meta.
+
+    # People
+    - Contacts and staff are different people and must never be swapped.
+    - A contact lives in the contact database (CDP). Campaign stores only the contact id, not a copy of the person.
+    - A temporary contact belongs only to its own session. It is never reused in another campaign and is not a CRM contact.
+    - A website visitor is not a contact and cannot be in an audience until it is matched or promoted to a contact.
+    - A contact's company is only what is recorded on the contact. Never guess it from an email domain.
+    - A contact marked as deleted in Campaign must be treated as deleted and never targeted.
+
+    # Audience and sending
+    - Audience is who the campaign is meant for. Deliveries are who it was actually sent to. Audience count is never the same as sent count.
+    - A draft audience is not final. Only the audience saved with the campaign is used to send.
+    - Status says where a campaign stands. Live means it is running, not that every message was delivered.
+    - A message counts as sent or delivered only when its delivery status says so.
+    - A delivery with status stub or stub_sent, or a provider id starting with "stub", is a demo and not a real message.
+    - A channel can send only when its channel setup is ready.
+    - Email is sent only from a verified, active sender, and always within the sending limits.
+    - SMS and WhatsApp can use only an approved template. Draft, pending, rejected, paused and disabled templates cannot be sent.
+    - An unsubscribed contact or a suppressed email address must never be mailed.
+    - Web push goes only to visitors and devices that opted in and are still active.
+
+    # Results and reports
+    - opened_at and clicked_at mean unique opens and clicks. open_count and click_count are total hits. Never mix them.
+    - Campaign results come from deliveries. Contact engagement is a person's activity across all campaigns, not one campaign.
+    - An admin can see all campaigns in the branch. Every other role sees only the campaigns they created.
+
+    # Safety and truth
+    - All data belongs to one tenant. Never show or mix data from another tenant.
+    - Say an action is done only when there is a recorded result showing it ran.
+    - Notifications and logs describe the past. Current state always comes from the main record, such as the campaign or template.
+    - A form submission is a reply, not a contact, until it is linked to one.
+    - Secrets such as API keys, tokens, provider settings and private keys are never shown to anyone.
+    - Campaign dates and times are given in the campaign's timezone (default Asia/Kolkata).

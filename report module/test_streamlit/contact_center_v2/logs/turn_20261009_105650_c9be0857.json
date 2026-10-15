@@ -1,0 +1,60 @@
+{
+  "turn_id": "c9be0857",
+  "timestamp": "2026-10-09T05:26:50.581217+00:00",
+  "question": "how many conversations happend this week.. ",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1016,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Total conversations this week</strong></p>\n<p>There were <strong>296</strong> conversations during this week (Monday\u2013Sunday UTC).</p>\n<p>Would you like to see this broken down by channel?</p>",
+  "card": "card: kpi r1",
+  "facts": "result_id: r1\nwindow: this week Monday\u2013Sunday (UTC)\nkpi: total\ncertified: true\ntask_goal: Count the total number of conversations.\nanswer_type: number\nrow_count: 1\nrow 1: total=296",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1016,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "how many conversations happend this week.. ",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants to know the total number of conversations that occurred during the current week.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Count the total number of conversations.",
+          "time": "this week",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "total",
+        "row_count": 1
+      }
+    ],
+    "facts": "result_id: r1\nwindow: this week Monday\u2013Sunday (UTC)\nkpi: total\ncertified: true\ntask_goal: Count the total number of conversations.\nanswer_type: number\nrow_count: 1\nrow 1: total=296",
+    "grounded": true,
+    "card": "card: kpi r1"
+  },
+  "error": null
+}

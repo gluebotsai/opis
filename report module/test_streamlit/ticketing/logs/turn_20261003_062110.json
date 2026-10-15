@@ -1,0 +1,85 @@
+{
+  "question": "how many agents are there?",
+  "answer": "There are **3** active agents.",
+  "trace": {
+    "question": "how many agents are there?",
+    "identity": {
+      "organization_id": 1012,
+      "user_id": 1038,
+      "role": "admin",
+      "queue_ids": [
+        1060,
+        1061,
+        1062,
+        1063,
+        1064,
+        1065,
+        1066,
+        1071,
+        1072,
+        1073,
+        1074,
+        1075,
+        1076
+      ]
+    },
+    "model": "worktual-gemma",
+    "tasks": [
+      {
+        "status": "ok",
+        "store": "sql",
+        "kpi_id": "active_agents",
+        "sql": "SELECT COUNT(*)::bigint AS active_agents\nFROM ticketing.agents\nWHERE organization_id = 1012\n  AND status = 'Active'\n  AND role = 'agent'\n",
+        "rows": [
+          {
+            "active_agents": 3
+          }
+        ],
+        "attempts": [
+          {
+            "raw": "```json\n{\"tool\": \"run_kpi\", \"kpi_id\": \"active_agents\"}\n```",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "active_agents"
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "time_status": "all_time",
+        "tool": "run_kpi",
+        "requested_kpi": "active_agents",
+        "requested_dimension": null,
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "active_agents",
+          "dimension": null,
+          "goal": "Count of active agents",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "kpi"
+        }
+      }
+    ],
+    "domain_raw": "{\n  \"kind\": \"plan\",\n  \"depth\": \"quick\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"active_agents\",\n      \"dimension\": null,\n      \"goal\": \"Count of active agents\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"answer_type\": \"kpi\"\n    }\n  ]\n}",
+    "plan": {
+      "kind": "plan",
+      "depth": "quick",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "active_agents",
+          "dimension": null,
+          "goal": "Count of active agents",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "kpi"
+        }
+      ]
+    },
+    "facts": "window: overall (no date filter, UTC)\nRESULT: active_agents = 3",
+    "grounded": true,
+    "briefing_raw": "There are **3** active agents."
+  }
+}

@@ -1,0 +1,80 @@
+product: contact_center
+# Directed hops allowed for contact center reports on the unified org graph.
+# Contact is a shared node. It may be reached from Conversation or have history traversed.
+
+start_labels:
+  - Conversation
+  - ChatConversation
+  - EmailConversation
+  - WhatsAppConversation
+  - FacebookConversation
+  - InstagramConversation
+  - MissedContact
+  - ContactCentreQueue
+  - Queue
+  - LiveRoutingProfile
+  - ContactCentreAgent
+  - Staff
+  - ContactCentreStaff
+  - SupportStaff
+  - ConversationSummary
+  - BusinessHours
+  - HolidayCalendar
+  - Contact
+  - Transfer
+  - ConversationNote
+  - InternalNote
+  - Task
+
+leaf_labels: []
+
+edges:
+  - {from: Conversation, rel: ROUTED_TO, to: ContactCentreQueue}
+  - {from: Conversation, rel: ROUTED_TO, to: Queue}
+  - {from: Conversation, rel: ROUTED_TO, to: LiveRoutingProfile}
+  - {from: Conversation, rel: HANDLED_BY, to: ContactCentreAgent}
+  - {from: Conversation, rel: HANDLED_BY, to: Staff}
+  - {from: Conversation, rel: HANDLED_BY, to: ContactCentreStaff}
+  - {from: Conversation, rel: HANDLED_BY, to: SupportStaff}
+  - {from: Conversation, rel: HAS, to: MissedContact}
+  - {from: Conversation, rel: HAS, to: Transfer}
+  - {from: Conversation, rel: HAS, to: ConversationNote}
+  - {from: Conversation, rel: HAS, to: InternalNote}
+  - {from: Conversation, rel: HAS, to: Task}
+  - {from: Transfer, rel: ROUTED_TO, to: ContactCentreQueue}
+  - {from: Transfer, rel: ROUTED_TO, to: Queue}
+  - {from: Transfer, rel: HANDLED_BY, to: ContactCentreAgent}
+  - {from: Transfer, rel: HANDLED_BY, to: Staff}
+  - {from: Conversation, rel: CONTINUES, to: Conversation}
+  - {from: Conversation, rel: SUMMARY_OF, to: ConversationSummary}
+  - {from: ConversationSummary, rel: SUMMARY_OF, to: Conversation}
+  - {from: BusinessHours, rel: HAS_SHIFT, to: Shift}
+  - {from: HolidayCalendar, rel: HAS_HOLIDAY, to: Holiday}
+  - {from: Contact, rel: HAS_CONVERSATION_HISTORY, to: ConversationHistory}
+  - {from: ConversationHistory, rel: HAS_CONVERSATION, to: Conversation}
+  - {from: ContactCentreQueue, rel: FOLLOWS_HOURS, to: BusinessHours}
+  - {from: Queue, rel: FOLLOWS_HOURS, to: BusinessHours}
+  - {from: ContactCentreAgent, rel: FOLLOWS_HOURS, to: BusinessHours}
+  - {from: ContactCentreQueue, rel: HAS_SHIFT, to: Shift}
+  - {from: Queue, rel: HAS_SHIFT, to: Shift}
+  - {from: Conversation, rel: HAS_OUTCOME, to: OutcomeCode}
+  - {from: Conversation, rel: HAS_PARTICIPANT, to: Participant}
+
+forbidden_labels:
+  - Ticket
+  - TicketSLA
+  - TicketAuditTrail
+  - ProactiveHistory
+  - ProactiveDecision
+  - ProactiveEvent
+  - ProactiveRecommendation
+  - InboundEmail
+  - SupportNotification
+  - TicketNotification
+  - Deal
+  - Campaign
+  - OpenTicket
+  - PendingTicket
+  - OverdueTicket
+  - ReopenedTicket
+  - ResolvedTicket

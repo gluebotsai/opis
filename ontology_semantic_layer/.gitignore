@@ -1,0 +1,35 @@
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Runtime logs
+logs/*.log
+ticketing_reports_test_setup/logs/*.jsonl
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# dbt build artifacts (regenerate with dbt deps / dbt parse)
+semantic/dbt/**/target/
+semantic/dbt/**/logs/
+semantic/dbt/**/dbt_packages/
+semantic/dbt/**/package-lock.yml
+
+# Auto-generated profiles (contains DB credentials)
+profiles/profiles.yml
+
+# IDE
+.cursor/
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Large reference trees (not part of runtime — do not commit)
+vibecoding_files/

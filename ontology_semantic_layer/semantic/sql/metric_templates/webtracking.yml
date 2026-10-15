@@ -1,0 +1,969 @@
+metrics:
+  average_order_value:
+    product: webtracking
+    result_column: average_order_value
+    time_column: created_at
+    table: mart_conversion_events
+    sql: |
+      SELECT
+        sum(value)
+        / nullIf(countIf(conversion_type = 'purchase'), 0) AS average_order_value
+      FROM webtracking_marts.mart_conversion_events
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+    default_zero: true
+  average_session_duration:
+    product: webtracking
+    engine: clickhouse
+    result_column: average_session_duration
+    time_column: started_at
+    table: mart_web_sessions
+    sql: |
+      SELECT avgIf(duration_seconds, page_view_count > 0) AS average_session_duration
+      FROM webtracking_marts.mart_web_sessions
+      WHERE organization_id = %s{{extra_where}}
+  avg_cls:
+    product: webtracking
+    result_column: avg_cls
+    time_column: created_at
+    table: mart_performance_events
+    sql: |
+      SELECT avg(case when metric_name = 'CLS' then metric_value end) AS avg_cls
+      FROM webtracking_marts.mart_performance_events
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+  avg_fcp_ms:
+    product: webtracking
+    result_column: avg_fcp_ms
+    time_column: created_at
+    table: mart_performance_events
+    sql: |
+      SELECT avg(case when metric_name = 'FCP' then metric_value end) AS avg_fcp_ms
+      FROM webtracking_marts.mart_performance_events
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+  avg_inp_ms:
+    product: webtracking
+    result_column: avg_inp_ms
+    time_column: created_at
+    table: mart_performance_events
+    sql: |
+      SELECT avg(case when metric_name = 'INP' then metric_value end) AS avg_inp_ms
+      FROM webtracking_marts.mart_performance_events
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+  avg_lcp_ms:
+    product: webtracking
+    result_column: avg_lcp_ms
+    time_column: created_at
+    table: mart_performance_events
+    sql: |
+      SELECT avg(case when metric_name = 'LCP' then metric_value end) AS avg_lcp_ms
+      FROM webtracking_marts.mart_performance_events
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+  avg_scroll_depth:
+    product: webtracking
+    result_column: avg_scroll_depth
+    time_column: created_at
+    table: mart_page_views
+    sql: |
+      SELECT avgIf(max_scroll_depth, max_scroll_depth > 0) AS avg_scroll_depth
+      FROM webtracking_marts.mart_page_views
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+  avg_time_on_page_seconds:
+    product: webtracking
+    result_column: avg_time_on_page_seconds
+    time_column: created_at
+    table: mart_page_views
+    sql: |
+      SELECT avgIf(time_on_page_sec, time_on_page_sec > 0) AS avg_time_on_page_seconds
+      FROM webtracking_marts.mart_page_views
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+  avg_ttfb_ms:
+    product: webtracking
+    result_column: avg_ttfb_ms
+    time_column: created_at
+    table: mart_performance_events
+    sql: |
+      SELECT avg(case when metric_name = 'TTFB' then metric_value end) AS avg_ttfb_ms
+      FROM webtracking_marts.mart_performance_events
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+  bounce_count:
+    product: webtracking
+    engine: clickhouse
+    result_column: bounce_count
+    time_column: started_at
+    table: mart_web_sessions
+    default_zero: true
+    sql: |
+      SELECT sum(is_bounce_flag) AS bounce_count
+      FROM webtracking_marts.mart_web_sessions
+      WHERE organization_id = %s{{extra_where}}
+  bounce_rate:
+    product: webtracking
+    engine: clickhouse
+    result_column: bounce_rate
+    time_column: started_at
+    table: mart_web_sessions
+    default_zero: true
+    sql: |
+      SELECT
+        sum(is_bounce_flag) * 100.0
+        / nullIf(uniqExactIf(session_id, page_view_count > 0), 0) AS bounce_rate
+      FROM webtracking_marts.mart_web_sessions
+      WHERE organization_id = %s{{extra_where}}
+  campaign_attributed_session_rate:
+    product: webtracking
+    result_column: campaign_attributed_session_rate
+    time_column: started_at
+    table: mart_web_sessions
+    sql: |
+      SELECT
+        sum(is_campaign_attributed) * 100.0 / nullIf(uniqExact(session_id), 0) AS campaign_attributed_session_rate
+      FROM webtracking_marts.mart_web_sessions
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+    default_zero: true
+  campaign_attributed_sessions:
+    product: webtracking
+    result_column: campaign_attributed_sessions
+    time_column: started_at
+    table: mart_web_sessions
+    sql: |
+      SELECT sum(is_campaign_attributed) AS campaign_attributed_sessions
+      FROM webtracking_marts.mart_web_sessions
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+  cart_add_count:
+    product: webtracking
+    engine: clickhouse
+    result_column: cart_add_count
+    time_column: created_at
+    table: mart_product_interactions
+    default_zero: true
+    sql: |
+      SELECT countIf(section = 'add_to_cart') AS cart_add_count
+      FROM webtracking_marts.mart_product_interactions
+      WHERE organization_id = %s{{extra_where}}
+  cart_add_rate:
+    product: webtracking
+    result_column: cart_add_rate
+    time_column: started_at
+    table: mart_web_sessions
+    sql: |
+      SELECT
+        sum(has_cart_add) * 100.0 / nullIf(uniqExact(session_id), 0) AS cart_add_rate
+      FROM webtracking_marts.mart_web_sessions
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+    default_zero: true
+  checkout_conversion_rate:
+    product: webtracking
+    result_column: checkout_conversion_rate
+    time_column: created_at
+    table: mart_conversion_events
+    sql: |
+      SELECT
+        countIf(conversion_type = 'purchase') * 100.0 / nullIf(countIf(conversion_type = 'begin_checkout'), 0) AS checkout_conversion_rate
+      FROM webtracking_marts.mart_conversion_events
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+    default_zero: true
+  checkout_start_count:
+    product: webtracking
+    engine: clickhouse
+    result_column: checkout_start_count
+    time_column: created_at
+    table: mart_product_interactions
+    default_zero: true
+    sql: |
+      SELECT countIf(section = 'begin_checkout') AS checkout_start_count
+      FROM webtracking_marts.mart_product_interactions
+      WHERE organization_id = %s{{extra_where}}
+  checkout_start_rate:
+    product: webtracking
+    result_column: checkout_start_rate
+    time_column: started_at
+    table: mart_web_sessions
+    sql: |
+      SELECT
+        sum(has_checkout_start) * 100.0 / nullIf(uniqExact(session_id), 0) AS checkout_start_rate
+      FROM webtracking_marts.mart_web_sessions
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+    default_zero: true
+  clicks_per_session:
+    product: webtracking
+    result_column: clicks_per_session
+    time_column: created_at
+    time_column_events: created_at
+    time_column_sessions: started_at
+    table: mart_interaction_events
+    sql: |
+      SELECT
+        (SELECT countIf(event_type = 'click') FROM webtracking_marts.mart_interaction_events WHERE organization_id = %s{{extra_where_events}})
+        / nullIf((SELECT uniqExact(session_id) FROM webtracking_marts.mart_web_sessions WHERE organization_id = %s{{extra_where_sessions}}), 0)
+        AS clicks_per_session
+    engine: clickhouse
+    default_zero: true
+  consent_action_count:
+    product: webtracking
+    result_column: consent_action_count
+    time_column: created_at
+    table: mart_cookie_operations
+    sql: |
+      SELECT count(event_id) AS consent_action_count
+      FROM webtracking_marts.mart_cookie_operations
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+  conversion_rate:
+    product: webtracking
+    result_column: conversion_rate
+    time_column: started_at
+    table: mart_web_sessions
+    sql: |
+      SELECT
+        sum(has_conversion) * 100.0 / nullIf(uniqExact(session_id), 0) AS conversion_rate
+      FROM webtracking_marts.mart_web_sessions
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+    default_zero: true
+  custom_event_session_count:
+    product: webtracking
+    result_column: custom_event_session_count
+    time_column: created_at
+    table: mart_custom_events
+    sql: |
+      SELECT uniqExact(session_id) AS custom_event_session_count
+      FROM webtracking_marts.mart_custom_events
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+  custom_event_session_rate:
+    product: webtracking
+    result_column: custom_event_session_rate
+    time_column: created_at
+    time_column_events: created_at
+    time_column_sessions: started_at
+    table: mart_custom_events
+    sql: |
+      SELECT
+        (SELECT uniqExact(session_id) FROM webtracking_marts.mart_custom_events WHERE organization_id = %s{{extra_where_events}}) * 100.0 / nullIf((SELECT uniqExact(session_id) FROM webtracking_marts.mart_web_sessions WHERE organization_id = %s{{extra_where_sessions}}), 0)
+        AS custom_event_session_rate
+    engine: clickhouse
+    default_zero: true
+  dead_click_rate:
+    product: webtracking
+    engine: clickhouse
+    result_column: dead_click_rate
+    time_column: started_at
+    table: mart_web_sessions
+    default_zero: true
+    sql: |
+      SELECT
+        sum(has_dead_clicks) * 100.0 / nullIf(uniqExact(session_id), 0) AS dead_click_rate
+      FROM webtracking_marts.mart_web_sessions
+      WHERE organization_id = %s{{extra_where}}
+  dead_click_session_count:
+    product: webtracking
+    engine: clickhouse
+    result_column: dead_click_session_count
+    time_column: started_at
+    table: mart_web_sessions
+    default_zero: true
+    sql: |
+      SELECT sum(has_dead_clicks) AS dead_click_session_count
+      FROM webtracking_marts.mart_web_sessions
+      WHERE organization_id = %s{{extra_where}}
+  dead_clicks:
+    product: webtracking
+    result_column: dead_clicks
+    time_column: created_at
+    table: mart_interaction_events
+    sql: |
+      SELECT countIf(event_type = 'dead_click') AS dead_clicks
+      FROM webtracking_marts.mart_interaction_events
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+  distinct_custom_event_types:
+    product: webtracking
+    result_column: distinct_custom_event_types
+    time_column: created_at
+    table: mart_custom_events
+    sql: |
+      SELECT uniqExact(event_name) AS distinct_custom_event_types
+      FROM webtracking_marts.mart_custom_events
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+  engaged_session_count:
+    product: webtracking
+    result_column: engaged_session_count
+    time_column: started_at
+    table: mart_web_sessions
+    sql: |
+      SELECT sum(is_engaged_flag) AS engaged_session_count
+      FROM webtracking_marts.mart_web_sessions
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+  engagement_rate:
+    product: webtracking
+    result_column: engagement_rate
+    time_column: started_at
+    table: mart_web_sessions
+    sql: |
+      SELECT
+        sum(is_engaged_flag) * 100.0 / nullIf(uniqExact(session_id), 0) AS engagement_rate
+      FROM webtracking_marts.mart_web_sessions
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+    default_zero: true
+  error_count:
+    product: webtracking
+    result_column: error_count
+    time_column: created_at
+    table: mart_error_events
+    sql: |
+      SELECT count(event_id) AS error_count
+      FROM webtracking_marts.mart_error_events
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+  error_session_count:
+    product: webtracking
+    result_column: error_session_count
+    time_column: started_at
+    table: mart_web_sessions
+    sql: |
+      SELECT sum(has_error) AS error_session_count
+      FROM webtracking_marts.mart_web_sessions
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+  error_session_rate:
+    product: webtracking
+    result_column: error_session_rate
+    time_column: started_at
+    table: mart_web_sessions
+    sql: |
+      SELECT
+        sum(has_error) * 100.0 / nullIf(uniqExact(session_id), 0) AS error_session_rate
+      FROM webtracking_marts.mart_web_sessions
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+    default_zero: true
+  events_per_session:
+    product: webtracking
+    result_column: events_per_session
+    time_column: created_at
+    time_column_events: created_at
+    time_column_sessions: started_at
+    table: mart_interaction_events
+    sql: |
+      SELECT
+        (SELECT count(event_id) FROM webtracking_marts.mart_interaction_events WHERE organization_id = %s{{extra_where_events}})
+        / nullIf((SELECT uniqExact(session_id) FROM webtracking_marts.mart_web_sessions WHERE organization_id = %s{{extra_where_sessions}}), 0)
+        AS events_per_session
+    engine: clickhouse
+    default_zero: true
+  form_abandon_rate:
+    product: webtracking
+    result_column: form_abandon_rate
+    time_column: created_at
+    table: mart_form_events
+    sql: |
+      SELECT
+        countIf(event_type = 'form_abandon') * 100.0 / nullIf(countIf(event_type = 'form_start'), 0) AS form_abandon_rate
+      FROM webtracking_marts.mart_form_events
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+    default_zero: true
+  form_abandons:
+    product: webtracking
+    result_column: form_abandons
+    time_column: created_at
+    table: mart_form_events
+    sql: |
+      SELECT countIf(event_type = 'form_abandon') AS form_abandons
+      FROM webtracking_marts.mart_form_events
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+  form_failures:
+    product: webtracking
+    result_column: form_failures
+    time_column: created_at
+    table: mart_form_events
+    sql: |
+      SELECT countIf(event_type = 'form_failure') AS form_failures
+      FROM webtracking_marts.mart_form_events
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+  form_starts:
+    product: webtracking
+    result_column: form_starts
+    time_column: created_at
+    table: mart_form_events
+    sql: |
+      SELECT countIf(event_type = 'form_start') AS form_starts
+      FROM webtracking_marts.mart_form_events
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+  form_submit_rate:
+    product: webtracking
+    result_column: form_submit_rate
+    time_column: created_at
+    table: mart_form_events
+    sql: |
+      SELECT
+        countIf(event_type = 'form_submit') * 100.0 / nullIf(countIf(event_type = 'form_view'), 0) AS form_submit_rate
+      FROM webtracking_marts.mart_form_events
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+    default_zero: true
+  form_submits:
+    product: webtracking
+    result_column: form_submits
+    time_column: created_at
+    table: mart_form_events
+    sql: |
+      SELECT countIf(event_type = 'form_submit') AS form_submits
+      FROM webtracking_marts.mart_form_events
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+  form_success_rate:
+    product: webtracking
+    result_column: form_success_rate
+    time_column: created_at
+    table: mart_form_events
+    sql: |
+      SELECT
+        countIf(event_type = 'form_success') * 100.0 / nullIf(countIf(event_type = 'form_submit'), 0) AS form_success_rate
+      FROM webtracking_marts.mart_form_events
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+    default_zero: true
+  form_successes:
+    product: webtracking
+    result_column: form_successes
+    time_column: created_at
+    table: mart_form_events
+    sql: |
+      SELECT countIf(event_type = 'form_success') AS form_successes
+      FROM webtracking_marts.mart_form_events
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+  form_views:
+    product: webtracking
+    result_column: form_views
+    time_column: created_at
+    table: mart_form_events
+    sql: |
+      SELECT countIf(event_type = 'form_view') AS form_views
+      FROM webtracking_marts.mart_form_events
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+  identified_session_count:
+    product: webtracking
+    result_column: identified_session_count
+    time_column: started_at
+    table: mart_web_sessions
+    sql: |
+      SELECT sum(is_identified) AS identified_session_count
+      FROM webtracking_marts.mart_web_sessions
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+  identified_session_rate:
+    product: webtracking
+    result_column: identified_session_rate
+    time_column: started_at
+    table: mart_web_sessions
+    sql: |
+      SELECT
+        sum(is_identified) * 100.0 / nullIf(uniqExact(session_id), 0) AS identified_session_rate
+      FROM webtracking_marts.mart_web_sessions
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+    default_zero: true
+  identified_visitor_count:
+    product: webtracking
+    result_column: identified_visitor_count
+    time_column: started_at
+    table: mart_web_sessions
+    sql: |
+      SELECT uniqExactIf(visitor_id, is_identified = 1) AS identified_visitor_count
+      FROM webtracking_marts.mart_web_sessions
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+    default_zero: true
+  landing_page_conversion_rate:
+    product: webtracking
+    result_column: landing_page_conversion_rate
+    time_column: started_at
+    time_column_sessions: started_at
+    time_column_events: created_at
+    table: mart_web_sessions
+    engine: clickhouse
+    default_zero: true
+    sql: |
+      SELECT
+        uniqExactIf(
+          s.session_id,
+          c.conversion_id IS NOT NULL AND c.conversion_id != ''
+        ) * 100.0
+        / nullIf(uniqExact(s.session_id), 0) AS landing_page_conversion_rate
+      FROM webtracking_marts.mart_web_sessions s
+      LEFT JOIN webtracking_marts.mart_conversion_events c
+        ON s.session_id = c.session_id
+       AND s.organization_id = c.organization_id
+       AND s.website_id = c.website_id
+      WHERE s.organization_id = %s{{extra_where_sessions}}
+  lifetime_new_visitor_count:
+    product: webtracking
+    result_column: lifetime_new_visitor_count
+    time_column: last_seen_at
+    table: mart_web_visitors
+    sql: |
+      SELECT countIf(is_returning_visitor = 0) AS lifetime_new_visitor_count
+      FROM webtracking_marts.mart_web_visitors
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+  lifetime_returning_visitor_count:
+    product: webtracking
+    result_column: lifetime_returning_visitor_count
+    time_column: last_seen_at
+    table: mart_web_visitors
+    sql: |
+      SELECT countIf(is_returning_visitor = 1) AS lifetime_returning_visitor_count
+      FROM webtracking_marts.mart_web_visitors
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+  new_visitor_count:
+    product: webtracking
+    engine: clickhouse
+    result_column: new_visitor_count
+    time_column: started_at
+    table: mart_web_sessions
+    default_zero: true
+    sql: |
+      SELECT uniqExact(visitor_id) AS new_visitor_count
+      FROM (
+        SELECT visitor_id
+        FROM webtracking_marts.mart_web_sessions
+        WHERE organization_id = %s{{extra_where}}
+        GROUP BY visitor_id
+        HAVING uniqExact(session_id) = 1
+      )
+  new_visitor_rate:
+    product: webtracking
+    engine: clickhouse
+    result_column: new_visitor_rate
+    time_column: started_at
+    time_column_events: created_at
+    time_column_sessions: started_at
+    table: mart_web_sessions
+    default_zero: true
+    sql: |
+      SELECT
+        (SELECT uniqExact(visitor_id)
+         FROM (
+           SELECT visitor_id
+           FROM webtracking_marts.mart_web_sessions
+           WHERE organization_id = %s{{extra_where_sessions}}
+           GROUP BY visitor_id
+           HAVING uniqExact(session_id) = 1
+         )) * 100.0 / nullIf((SELECT uniqExact(visitor_id)
+                  FROM webtracking_marts.mart_web_sessions
+                  WHERE organization_id = %s{{extra_where_sessions}}), 0)
+        AS new_visitor_rate
+  online_visitors:
+    product: webtracking
+    engine: clickhouse
+    result_column: online_visitors
+    time_column: updated_at
+    table: mart_web_sessions
+    default_zero: true
+    sql: |
+      SELECT uniqExact(visitor_id) AS online_visitors
+      FROM webtracking_marts.mart_web_sessions
+      WHERE organization_id = %s
+        AND is_online_flag = 1{{extra_where}}
+  page_views:
+    product: webtracking
+    result_column: page_views
+    time_column: created_at
+    table: mart_page_views
+    sql: |
+      SELECT count(page_view_id) AS page_views
+      FROM webtracking_marts.mart_page_views
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+  pages_per_session:
+    product: webtracking
+    result_column: pages_per_session
+    time_column: created_at
+    time_column_events: created_at
+    time_column_sessions: started_at
+    table: mart_page_views
+    sql: |
+      SELECT
+        (SELECT count(page_view_id) FROM webtracking_marts.mart_page_views WHERE organization_id = %s{{extra_where_events}})
+        / nullIf((SELECT uniqExact(session_id) FROM webtracking_marts.mart_web_sessions WHERE organization_id = %s{{extra_where_sessions}}), 0)
+        AS pages_per_session
+    engine: clickhouse
+    default_zero: true
+  performance_event_count:
+    product: webtracking
+    result_column: performance_event_count
+    time_column: created_at
+    table: mart_performance_events
+    sql: |
+      SELECT count(event_id) AS performance_event_count
+      FROM webtracking_marts.mart_performance_events
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+  poor_vitals_event_count:
+    product: webtracking
+    result_column: poor_vitals_event_count
+    time_column: created_at
+    table: mart_performance_events
+    sql: |
+      SELECT countIf(rating = 'poor') AS poor_vitals_event_count
+      FROM webtracking_marts.mart_performance_events
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+  poor_vitals_rate:
+    product: webtracking
+    result_column: poor_vitals_rate
+    time_column: created_at
+    table: mart_performance_events
+    sql: |
+      SELECT
+        countIf(rating = 'poor') * 100.0 / nullIf(count(event_id), 0) AS poor_vitals_rate
+      FROM webtracking_marts.mart_performance_events
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+    default_zero: true
+  product_interaction_count:
+    product: webtracking
+    result_column: product_interaction_count
+    time_column: created_at
+    table: mart_product_interactions
+    sql: |
+      SELECT count(interaction_id) AS product_interaction_count
+      FROM webtracking_marts.mart_product_interactions
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+  product_view_rate:
+    product: webtracking
+    result_column: product_view_rate
+    time_column: started_at
+    table: mart_web_sessions
+    sql: |
+      SELECT
+        sum(has_product_view) * 100.0 / nullIf(uniqExact(session_id), 0) AS product_view_rate
+      FROM webtracking_marts.mart_web_sessions
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+    default_zero: true
+  purchase_count:
+    product: webtracking
+    result_column: purchase_count
+    time_column: created_at
+    table: mart_conversion_events
+    sql: |
+      SELECT countIf(conversion_type = 'purchase') AS purchase_count
+      FROM webtracking_marts.mart_conversion_events
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+  rage_click_rate:
+    product: webtracking
+    result_column: rage_click_rate
+    time_column: started_at
+    table: mart_web_sessions
+    sql: |
+      SELECT
+        sum(has_rage_clicks) * 100.0 / nullIf(uniqExact(session_id), 0) AS rage_click_rate
+      FROM webtracking_marts.mart_web_sessions
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+    default_zero: true
+  rage_click_session_count:
+    product: webtracking
+    result_column: rage_click_session_count
+    time_column: started_at
+    table: mart_web_sessions
+    sql: |
+      SELECT sum(has_rage_clicks) AS rage_click_session_count
+      FROM webtracking_marts.mart_web_sessions
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+  rage_clicks:
+    product: webtracking
+    result_column: rage_clicks
+    time_column: created_at
+    table: mart_interaction_events
+    sql: |
+      SELECT countIf(event_type = 'rage_click') AS rage_clicks
+      FROM webtracking_marts.mart_interaction_events
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+  returning_visitor_count:
+    product: webtracking
+    engine: clickhouse
+    result_column: returning_visitor_count
+    time_column: started_at
+    table: mart_web_sessions
+    default_zero: true
+    sql: |
+      SELECT uniqExact(visitor_id) AS returning_visitor_count
+      FROM (
+        SELECT visitor_id
+        FROM webtracking_marts.mart_web_sessions
+        WHERE organization_id = %s{{extra_where}}
+        GROUP BY visitor_id
+        HAVING uniqExact(session_id) > 1
+      )
+  returning_visitor_rate:
+    product: webtracking
+    engine: clickhouse
+    result_column: returning_visitor_rate
+    time_column: started_at
+    time_column_events: created_at
+    time_column_sessions: started_at
+    table: mart_web_sessions
+    default_zero: true
+    sql: |
+      SELECT
+        (SELECT uniqExact(visitor_id)
+         FROM (
+           SELECT visitor_id
+           FROM webtracking_marts.mart_web_sessions
+           WHERE organization_id = %s{{extra_where_sessions}}
+           GROUP BY visitor_id
+           HAVING uniqExact(session_id) > 1
+         )) * 100.0 / nullIf((SELECT uniqExact(visitor_id)
+                  FROM webtracking_marts.mart_web_sessions
+                  WHERE organization_id = %s{{extra_where_sessions}}), 0)
+        AS returning_visitor_rate
+  scroll_engagement_rate:
+    product: webtracking
+    result_column: scroll_engagement_rate
+    time_column: started_at
+    table: mart_web_sessions
+    sql: |
+      SELECT
+        sum(has_deep_scroll) * 100.0 / nullIf(uniqExact(session_id), 0) AS scroll_engagement_rate
+      FROM webtracking_marts.mart_web_sessions
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+    default_zero: true
+  search_session_count:
+    product: webtracking
+    result_column: search_session_count
+    time_column: started_at
+    table: mart_web_sessions
+    sql: |
+      SELECT sum(has_search) AS search_session_count
+      FROM webtracking_marts.mart_web_sessions
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+  search_usage_rate:
+    product: webtracking
+    result_column: search_usage_rate
+    time_column: started_at
+    table: mart_web_sessions
+    sql: |
+      SELECT
+        sum(has_search) * 100.0 / nullIf(uniqExact(session_id), 0) AS search_usage_rate
+      FROM webtracking_marts.mart_web_sessions
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+    default_zero: true
+  sessions_with_cart_add:
+    product: webtracking
+    result_column: sessions_with_cart_add
+    time_column: started_at
+    table: mart_web_sessions
+    sql: |
+      SELECT sum(has_cart_add) AS sessions_with_cart_add
+      FROM webtracking_marts.mart_web_sessions
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+  sessions_with_checkout_start:
+    product: webtracking
+    result_column: sessions_with_checkout_start
+    time_column: started_at
+    table: mart_web_sessions
+    sql: |
+      SELECT sum(has_checkout_start) AS sessions_with_checkout_start
+      FROM webtracking_marts.mart_web_sessions
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+  sessions_with_conversions:
+    product: webtracking
+    result_column: sessions_with_conversions
+    time_column: started_at
+    table: mart_web_sessions
+    sql: |
+      SELECT sum(has_conversion) AS sessions_with_conversions
+      FROM webtracking_marts.mart_web_sessions
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+  sessions_with_deep_scroll:
+    product: webtracking
+    result_column: sessions_with_deep_scroll
+    time_column: started_at
+    table: mart_web_sessions
+    sql: |
+      SELECT sum(has_deep_scroll) AS sessions_with_deep_scroll
+      FROM webtracking_marts.mart_web_sessions
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+  sessions_with_product_views:
+    product: webtracking
+    result_column: sessions_with_product_views
+    time_column: started_at
+    table: mart_web_sessions
+    sql: |
+      SELECT sum(has_product_view) AS sessions_with_product_views
+      FROM webtracking_marts.mart_web_sessions
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+  signup_count:
+    product: webtracking
+    result_column: signup_count
+    time_column: created_at
+    table: mart_conversion_events
+    sql: |
+      SELECT countIf(conversion_type = 'signup') AS signup_count
+      FROM webtracking_marts.mart_conversion_events
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+  total_clicks:
+    product: webtracking
+    result_column: total_clicks
+    time_column: created_at
+    table: mart_interaction_events
+    sql: |
+      SELECT countIf(event_type = 'click') AS total_clicks
+      FROM webtracking_marts.mart_interaction_events
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+  total_conversion_value:
+    product: webtracking
+    engine: clickhouse
+    result_column: total_conversion_value
+    time_column: created_at
+    table: mart_conversion_events
+    default_zero: true
+    sql: |
+      SELECT sum(value) AS total_conversion_value
+      FROM webtracking_marts.mart_conversion_events
+      WHERE organization_id = %s{{extra_where}}
+  total_conversions:
+    product: webtracking
+    result_column: total_conversions
+    time_column: created_at
+    table: mart_conversion_events
+    sql: |
+      SELECT count(conversion_id) AS total_conversions
+      FROM webtracking_marts.mart_conversion_events
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+  total_custom_events:
+    product: webtracking
+    result_column: total_custom_events
+    time_column: created_at
+    table: mart_custom_events
+    sql: |
+      SELECT count(event_id) AS total_custom_events
+      FROM webtracking_marts.mart_custom_events
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+  total_events:
+    product: webtracking
+    result_column: total_events
+    time_column: created_at
+    table: mart_interaction_events
+    sql: |
+      SELECT count(event_id) AS total_events
+      FROM webtracking_marts.mart_interaction_events
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+  total_revenue:
+    product: webtracking
+    result_column: total_revenue
+    time_column: created_at
+    table: mart_conversion_events
+    sql: |
+      SELECT sum(value) AS total_revenue
+      FROM webtracking_marts.mart_conversion_events
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+  tracking_consent_denied_count:
+    product: webtracking
+    result_column: tracking_consent_denied_count
+    time_column: created_at
+    table: mart_cookie_operations
+    sql: |
+      SELECT countIf(action = 'consent_denied') AS tracking_consent_denied_count
+      FROM webtracking_marts.mart_cookie_operations
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+  tracking_consent_grant_rate:
+    product: webtracking
+    result_column: tracking_consent_grant_rate
+    time_column: created_at
+    table: mart_cookie_operations
+    sql: |
+      SELECT
+        countIf(action = 'consent_granted') * 100.0 / nullIf(count(event_id), 0) AS tracking_consent_grant_rate
+      FROM webtracking_marts.mart_cookie_operations
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+    default_zero: true
+  tracking_consent_granted_count:
+    product: webtracking
+    result_column: tracking_consent_granted_count
+    time_column: created_at
+    table: mart_cookie_operations
+    sql: |
+      SELECT countIf(action = 'consent_granted') AS tracking_consent_granted_count
+      FROM webtracking_marts.mart_cookie_operations
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+  unique_visitors:
+    product: webtracking
+    engine: clickhouse
+    result_column: unique_visitors
+    time_column: started_at
+    table: mart_web_sessions
+    default_zero: true
+    sql: |
+      SELECT uniqExact(visitor_id) AS unique_visitors
+      FROM webtracking_marts.mart_web_sessions
+      WHERE organization_id = %s{{extra_where}}
+  visitor_identification_rate:
+    product: webtracking
+    result_column: visitor_identification_rate
+    time_column: started_at
+    table: mart_web_sessions
+    sql: |
+      SELECT
+        uniqExactIf(visitor_id, is_identified = 1) * 100.0
+        / nullIf(uniqExact(visitor_id), 0) AS visitor_identification_rate
+      FROM webtracking_marts.mart_web_sessions
+      WHERE organization_id = %s{{extra_where}}
+    engine: clickhouse
+    default_zero: true
+  web_session_volume:
+    product: webtracking
+    engine: clickhouse
+    result_column: web_session_volume
+    time_column: started_at
+    table: mart_web_sessions
+    default_zero: true
+    sql: |
+      SELECT uniqExact(session_id) AS web_session_volume
+      FROM webtracking_marts.mart_web_sessions
+      WHERE organization_id = %s{{extra_where}}

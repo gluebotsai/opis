@@ -1,0 +1,308 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Worktual Chat Service API",
+    "version": "0.1.0",
+    "description": "CCaaS chat-service — webchat WebSocket gateway and internal HTTP endpoints. WebSocket contract is documented under `x-websockets`."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3002",
+      "description": "Local development"
+    },
+    {
+      "url": "https://engraving-flatness-dime.ngrok-free.dev",
+      "description": "ngrok dev tunnel (example — update when tunnel restarts)"
+    }
+  ],
+  "tags": [
+    { "name": "Health", "description": "Liveness and readiness probes" },
+    { "name": "Internal", "description": "Service-to-service ingest (not public)" }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Health check",
+        "operationId": "getHealth",
+        "responses": {
+          "200": {
+            "description": "Service is up",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HealthResponse" },
+                "example": {
+                  "status": "ok",
+                  "service": "chat-service",
+                  "channel": "webchat",
+                  "webchatWsPath": "/ws/webchat",
+                  "timestamp": "2026-07-24T13:45:00.000Z"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Readiness check",
+        "operationId": "getHealthReady",
+        "responses": {
+          "200": {
+            "description": "Service is ready to accept traffic",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ReadyResponse" },
+                "example": {
+                  "status": "ok",
+                  "service": "chat-service",
+                  "timestamp": "2026-07-24T13:45:00.000Z"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/messages": {
+      "post": {
+        "tags": ["Internal"],
+        "summary": "Ingest inbound message event",
+        "description": "Internal endpoint for channel message ingest. `channel_type` is forced to `webchat` by the service.",
+        "operationId": "postInternalMessage",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/InboundMessageEvent" },
+              "example": {
+                "schema_version": "1.0",
+                "event_id": "550e8400-e29b-41d4-a716-446655440000",
+                "tenant_id": "660e8400-e29b-41d4-a716-446655440001",
+                "external_thread_id": "wc_5d80cd9b1ace4080bc70717552472611:v_test1",
+                "external_message_id": "msg_001",
+                "customer_ref": "v_test1",
+                "direction": "inbound",
+                "body": "hello",
+                "occurred_at": "2026-07-24T13:45:00.000Z"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Message accepted",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/InboundMessageAccepted" },
+                "example": {
+                  "accepted": true,
+                  "event_id": "550e8400-e29b-41d4-a716-446655440000"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "required": ["status", "service", "channel", "webchatWsPath", "timestamp"],
+        "properties": {
+          "status": { "type": "string", "enum": ["ok"] },
+          "service": { "type": "string", "example": "chat-service" },
+          "channel": { "type": "string", "enum": ["webchat"] },
+          "webchatWsPath": { "type": "string", "example": "/ws/webchat" },
+          "timestamp": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ReadyResponse": {
+        "type": "object",
+        "required": ["status", "service", "timestamp"],
+        "properties": {
+          "status": { "type": "string", "enum": ["ok"] },
+          "service": { "type": "string" },
+          "timestamp": { "type": "string", "format": "date-time" }
+        }
+      },
+      "InboundMessageEvent": {
+        "type": "object",
+        "required": [
+          "schema_version",
+          "event_id",
+          "tenant_id",
+          "external_thread_id",
+          "external_message_id",
+          "customer_ref",
+          "direction",
+          "body",
+          "occurred_at"
+        ],
+        "properties": {
+          "schema_version": { "type": "string", "enum": ["1.0"] },
+          "event_id": { "type": "string", "format": "uuid" },
+          "tenant_id": { "type": "string", "format": "uuid" },
+          "channel_type": {
+            "type": "string",
+            "enum": ["webchat", "email", "sms", "voice", "whatsapp", "instagram", "facebook"],
+            "description": "Ignored on input — service sets `webchat`"
+          },
+          "external_thread_id": { "type": "string" },
+          "external_message_id": { "type": "string" },
+          "customer_ref": { "type": "string" },
+          "direction": { "type": "string", "enum": ["inbound", "outbound"] },
+          "body": { "type": "string" },
+          "attachments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["url", "mime_type"],
+              "properties": {
+                "url": { "type": "string", "format": "uri" },
+                "mime_type": { "type": "string" }
+              }
+            }
+          },
+          "metadata": { "type": "object", "additionalProperties": true },
+          "occurred_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "InboundMessageAccepted": {
+        "type": "object",
+        "required": ["accepted", "event_id"],
+        "properties": {
+          "accepted": { "type": "boolean" },
+          "event_id": { "type": "string", "format": "uuid" }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string" },
+          "message": { "type": "string" },
+          "statusCode": { "type": "integer" }
+        }
+      },
+      "WebchatId": {
+        "type": "string",
+        "pattern": "^wc_[a-f0-9]{32}$",
+        "example": "wc_5d80cd9b1ace4080bc70717552472611"
+      },
+      "SessionStartFrame": {
+        "type": "object",
+        "required": ["type", "webchatId", "visitorId"],
+        "properties": {
+          "type": { "type": "string", "enum": ["session.start"] },
+          "webchatId": { "$ref": "#/components/schemas/WebchatId" },
+          "visitorId": { "type": "string", "minLength": 1 },
+          "pageUrl": { "type": "string", "format": "uri" },
+          "consent": {
+            "type": "object",
+            "properties": {
+              "accepted": { "type": "boolean" }
+            }
+          },
+          "prechatAnswers": {
+            "type": "object",
+            "additionalProperties": { "type": "string" }
+          }
+        }
+      },
+      "InboundMessageFrame": {
+        "type": "object",
+        "required": ["type", "webchatId", "visitorId", "text"],
+        "properties": {
+          "type": { "type": "string", "enum": ["message"] },
+          "webchatId": { "$ref": "#/components/schemas/WebchatId" },
+          "visitorId": { "type": "string", "minLength": 1 },
+          "text": { "type": "string", "minLength": 1 },
+          "pageUrl": { "type": "string", "format": "uri" }
+        }
+      },
+      "SessionReadyFrame": {
+        "type": "object",
+        "required": ["type", "webchatId", "visitorId"],
+        "properties": {
+          "type": { "type": "string", "enum": ["session.ready"] },
+          "webchatId": { "$ref": "#/components/schemas/WebchatId" },
+          "visitorId": { "type": "string" },
+          "conversationId": { "type": "string", "format": "uuid" },
+          "stub": { "type": "boolean" }
+        }
+      },
+      "OutboundMessageFrame": {
+        "type": "object",
+        "required": ["type", "from", "text"],
+        "properties": {
+          "type": { "type": "string", "enum": ["message"] },
+          "from": { "type": "string", "enum": ["bot", "agent", "user"] },
+          "text": { "type": "string" },
+          "stub": { "type": "boolean" }
+        }
+      },
+      "SystemFrame": {
+        "type": "object",
+        "required": ["type", "text"],
+        "properties": {
+          "type": { "type": "string", "enum": ["system"] },
+          "text": { "type": "string" }
+        }
+      }
+    }
+  },
+  "x-websockets": {
+    "/ws/webchat": {
+      "summary": "Webchat realtime gateway",
+      "description": "JSON text frames. Connect with webchatId and visitorId query params. Path configurable via WEBCHAT_WS_PATH env (default /ws/webchat).",
+      "protocol": "wss",
+      "connectUrl": "wss://{host}/ws/webchat?webchatId={webchatId}&visitorId={visitorId}",
+      "queryParameters": {
+        "webchatId": {
+          "required": true,
+          "schema": { "$ref": "#/components/schemas/WebchatId" }
+        },
+        "visitorId": {
+          "required": true,
+          "schema": { "type": "string", "minLength": 1 },
+          "example": "v_test1"
+        }
+      },
+      "clientToServer": {
+        "oneOf": [
+          { "$ref": "#/components/schemas/SessionStartFrame" },
+          { "$ref": "#/components/schemas/InboundMessageFrame" }
+        ]
+      },
+      "serverToClient": {
+        "oneOf": [
+          { "$ref": "#/components/schemas/SessionReadyFrame" },
+          { "$ref": "#/components/schemas/OutboundMessageFrame" },
+          { "$ref": "#/components/schemas/SystemFrame" }
+        ]
+      },
+      "flow": [
+        "Client connects with webchatId + visitorId query params",
+        "Client sends session.start",
+        "Server sends session.ready, then bot greeting message (stub: true in v1)",
+        "Client sends message frames; server replies with bot message (stub: true in v1)"
+      ],
+      "errors": {
+        "400": "Missing or invalid webchatId/visitorId on upgrade — connection rejected",
+        "system": "Invalid JSON, validation errors, or session not started — sent as system frame"
+      }
+    }
+  }
+}

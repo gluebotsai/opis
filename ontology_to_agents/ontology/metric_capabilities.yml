@@ -1,0 +1,119 @@
+# Explicit capability overrides. Unlisted metrics infer from registry source + policy dims.
+# See semantic/capabilities.py
+
+version: 2026.09.1
+
+metrics:
+  total_conversations:
+    product: ccaas
+    engine: postgres
+    grain: operational
+    channel_scoped: true
+    requires_skus: [contact-center]
+    min_role: agent
+
+  missed_contact_rate:
+    product: ccaas
+    engine: postgres
+    channel_scoped: true
+    requires_skus: [contact-center]
+    min_role: agent
+
+  open_conversations:
+    product: ccaas
+    engine: postgres
+    channel_scoped: true
+    requires_skus: [contact-center]
+    min_role: agent
+
+  sla_breach_rate:
+    product: ccaas
+    engine: postgres
+    requires_skus: [contact-center]
+    min_role: agent
+
+  human_agent_occupancy_rate_presence:
+    product: ccaas
+    engine: postgres
+    requires_skus: [contact-center]
+    requires_features: [wfm]
+    min_role: supervisor
+
+  human_agent_occupancy_rate_capacity:
+    product: ccaas
+    engine: postgres
+    requires_skus: [contact-center]
+    requires_features: [wfm]
+    min_role: supervisor
+
+  whatsapp_volume:
+    product: ccaas
+    requires_skus: [contact-center]
+    requires_channels: [whatsapp]
+    min_role: agent
+
+  instagram_volume:
+    product: ccaas
+    requires_skus: [contact-center]
+    requires_channels: [instagram]
+    min_role: agent
+
+  email_volume:
+    product: ccaas
+    requires_skus: [contact-center]
+    requires_channels: [email]
+    min_role: agent
+
+  call_volume:
+    product: ccaas
+    requires_skus: [contact-center]
+    requires_channels: [call]
+    min_role: agent
+
+  open_rate:
+    product: campaign
+    engine: postgres
+    requires_skus: [campaign]
+    min_role: agent
+
+  click_rate:
+    product: campaign
+    engine: postgres
+    requires_skus: [campaign]
+    min_role: agent
+
+  web_session_volume:
+    product: webtracking
+    engine: clickhouse
+    requires_skus: [web-tracking]
+    min_role: agent
+
+  bounce_rate:
+    product: webtracking
+    engine: clickhouse
+    requires_skus: [web-tracking]
+    min_role: agent
+
+  open_tickets_metric:
+    product: ticketing
+    engine: postgres
+    requires_skus: [ticketing]
+    min_role: agent
+
+  average_resolution_time_hours:
+    product: ticketing
+    engine: postgres
+    requires_skus: [ticketing]
+    min_role: agent
+
+  average_csat_score:
+    product: ticketing
+    engine: postgres
+    requires_skus: [ticketing]
+    min_role: agent
+
+  high_priority_ticket_volume:
+    product: ticketing
+    engine: postgres
+    requires_skus: [ticketing]
+    min_role: agent

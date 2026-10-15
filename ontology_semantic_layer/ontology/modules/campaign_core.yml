@@ -1,0 +1,52 @@
+# Campaign strategist — create, launch, monitor
+module: campaign_core
+layer: domain
+depends_on: [core, cdp, crm_account]
+owned_by_spoke: campaign
+readable_by: [crm, hub]
+usecase: Planned outreach effort with audience and channels.
+
+classes:
+  - id: Campaign
+    definition: Bounded marketing program with goal and channels.
+    properties: [name, goal, status]
+    classified_by: [campaign.goal, campaign.status]
+    relations:
+      targets: AudienceSegment
+      hasBatch: SendBatch
+
+  - id: SendBatch
+    definition: Scheduled or running send batch.
+    properties: [channel, status]
+    relations:
+      of: Campaign
+
+  - id: MessageDelivery
+    definition: Single send to a contact (campaign_send_recipients).
+    properties: [channel, deliveryStatus]
+    relations:
+      to: Contact
+      of: Campaign
+
+relations:
+  - { from: Campaign, type: targets, to: AudienceSegment }
+  - { from: MessageDelivery, type: TO, to: Contact }
+
+actions:
+  - id: action.build_campaign
+    operates_on: [Campaign]
+    requires: [userConfirmed]
+  - id: action.launch_campaign
+    operates_on: [Campaign]
+    requires: [userConfirmed]
+  - id: action.stop_campaign
+    operates_on: [Campaign]
+    requires: [userConfirmed]
+
+metric_ids:
+  - campaign_volume
+  - audience_reached
+  - delivery_rate
+  - open_rate
+  - click_rate
+  - failure_rate

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>CRM embed host (local dev)</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; display: grid; grid-template-rows: auto 1fr; height: 100vh; }
+    header { padding: 12px 16px; background: #111; color: #fff; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    header input { flex: 1; min-width: 240px; padding: 8px 10px; border-radius: 6px; border: 1px solid #444; background: #222; color: #fff; }
+    header button { padding: 8px 14px; border-radius: 6px; border: none; background: #2563eb; color: #fff; cursor: pointer; }
+    iframe { width: 100%; height: 100%; border: 0; background: #f3f4f6; }
+    .hint { font-size: 12px; opacity: 0.8; }
+  </style>
+</head>
+<body>
+  <header>
+    <strong>CRM host mock</strong>
+    <input id="spa-url" type="url" placeholder="Ticketing SPA embed URL" />
+    <input id="jwt" type="text" placeholder="JWT (CRM or staff Bearer)" style="min-width:320px" />
+    <button id="load">Load iframe</button>
+    <button id="auth">Send auth postMessage</button>
+    <span class="hint">Use split: http://127.0.0.1:5173/dashboard?embed=1</span>
+  </header>
+  <iframe id="ticketing" title="Ticketing embed"></iframe>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const spaInput = document.getElementById('spa-url');
+    const jwtInput = document.getElementById('jwt');
+    const frame = document.getElementById('ticketing');
+
+    spaInput.value = params.get('spa') || localStorage.getItem('dev.crm.spa') ||
+      'http://127.0.0.1:5173/dashboard?embed=1';
+    jwtInput.value = params.get('jwt') || localStorage.getItem('dev.crm.jwt') || '';
+
+    function targetOrigin() {
+      try { return new URL(spaInput.value).origin; } catch { return '*'; }
+    }
+
+    document.getElementById('load').onclick = () => {
+      localStorage.setItem('dev.crm.spa', spaInput.value.trim());
+      frame.src = spaInput.value.trim();
+    };
+
+    document.getElementById('auth').onclick = () => {
+      const token = jwtInput.value.trim();
+      if (!token) return alert('Paste a JWT first');
+      localStorage.setItem('dev.crm.jwt', token);
+      frame.contentWindow?.postMessage(
+        { type: 'worktual:ticketing-auth', token },
+        targetOrigin()
+      );
+    };
+
+    if (spaInput.value) frame.src = spaInput.value.trim();
+  </script>
+</body>
+</html>

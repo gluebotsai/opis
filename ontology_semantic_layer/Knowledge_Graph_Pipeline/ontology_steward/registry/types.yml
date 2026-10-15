@@ -1,0 +1,51 @@
+# Canonical type registry — Aligner searches here first.
+# class_id is plain human name (no wt: prefix). graph_label is Neo4j PascalCase.
+
+types:
+  - class_id: Contact
+    graph_label: Contact
+    pack: core
+    status: core
+    definition: Party the tenant engages with; CDP profile anchor.
+
+  - class_id: Offering
+    graph_label: Offering
+    pack: core
+    status: core
+    definition: Sellable good or service SKU; classified by external product taxonomy.
+
+  - class_id: Vehicle
+    graph_label: Vehicle
+    pack: automotive
+    status: pack
+    definition: Maintained vehicle asset (VIN, make, model); not a retail SKU category.
+
+  - class_id: ClinicalObservation
+    graph_label: ClinicalObservation
+    pack: healthcare
+    status: pack
+    definition: FHIR Observation — measurements (BP, glucose) with LOINC codes and units.
+
+  - class_id: MedicalCondition
+    graph_label: MedicalCondition
+    pack: healthcare
+    status: pack
+    definition: FHIR Condition — diagnoses (diabetes, hypertension), not vital signs.
+
+  - class_id: Ticket
+    graph_label: Ticket
+    pack: ticketing
+    status: core
+    definition: Customer service request tracked to resolution.
+
+  - class_id: Note
+    graph_label: Note
+    pack: ticketing
+    status: core
+    definition: Internal or customer-visible note on a ticket.
+
+  - class_id: Agent
+    graph_label: Agent
+    pack: platform
+    status: core
+    definition: Human agent (admin, agent, or resolver).

@@ -1,0 +1,6 @@
+[Unit]
+Description=Worktual Accounts application
+Wants=worktual-mail-api.service worktual-frontend.service
+
+[Install]
+WantedBy=multi-user.target

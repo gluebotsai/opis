@@ -1,0 +1,1049 @@
+product: ticketing
+engine: postgres
+default_schema: ticketing_marts
+tenant_column: organization_id
+tables:
+- name: mart_agent_queue_members
+  schema: ticketing_marts
+  engine: postgres
+  tenant_column: organization_id
+  sql_agent_only: false
+  columns:
+  - name: queue_membership_id
+  - name: organization_id
+  semantic_model: agent_queue_member
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - queue_name
+  - queue_type
+  - sla_status
+  - user_name
+  - user_role
+  - myaccount_team_name
+  - team_supports_ticketing
+  semantic_measures:
+  - queue_membership_count
+  - distinct_agents_in_queues_count
+  - distinct_queues_covered_count
+- name: mart_agent_queues
+  schema: ticketing_marts
+  engine: postgres
+  tenant_column: organization_id
+  sql_agent_only: false
+  columns:
+  - name: queue_id
+  - name: organization_id
+  semantic_model: agent_queue
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - queue_name
+  - queue_type
+  - sla_status
+  semantic_measures:
+  - agent_queue_count
+  - queues_at_risk_count
+- name: mart_audit_events
+  schema: ticketing_marts
+  engine: postgres
+  tenant_column: organization_id
+  sql_agent_only: false
+  columns:
+  - name: audit_event_id
+  - name: organization_id
+  - name: ticket_id
+  - name: action
+  - name: queue_name
+  - name: created_at
+  - name: actor_name
+  - name: assignee_name
+  - name: ticket_priority
+  - name: ticket_status
+  semantic_model: audit_event
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - action
+  - ticket_priority
+  - ticket_status
+  - queue_name
+  - assignee_name
+  - actor_name
+  semantic_measures:
+  - audit_event_count
+  - escalation_count
+  - assignment_change_count
+  - creation_event_count
+- name: mart_customers
+  schema: ticketing_marts
+  engine: postgres
+  tenant_column: organization_id
+  sql_agent_only: false
+  columns:
+  - name: customer_id
+  - name: organization_id
+  semantic_model: customer
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - status
+  semantic_measures:
+  - active_customer_count
+  - total_customer_count
+- name: mart_kb_articles
+  schema: ticketing_marts
+  engine: postgres
+  tenant_column: organization_id
+  sql_agent_only: false
+  columns:
+  - name: kb_article_id
+  - name: organization_id
+  semantic_model: kb_article
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - category
+  - status
+  - author_name
+  semantic_measures:
+  - kb_article_count
+  - kb_published_article_count
+  - kb_views_sum
+- name: mart_macros
+  schema: ticketing_marts
+  engine: postgres
+  tenant_column: organization_id
+  sql_agent_only: false
+  columns:
+  - name: macro_id
+  - name: organization_id
+  semantic_model: macro
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  semantic_measures:
+  - macro_count
+- name: mart_notifications
+  schema: ticketing_marts
+  engine: postgres
+  tenant_column: organization_id
+  sql_agent_only: false
+  columns:
+  - name: notification_id
+  - name: organization_id
+  semantic_model: notification
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - kind
+  - is_read
+  semantic_measures:
+  - notification_count
+  - unread_notification_count
+- name: mart_outbound_emails
+  schema: ticketing_marts
+  engine: postgres
+  tenant_column: organization_id
+  sql_agent_only: false
+  columns:
+  - name: outbound_email_id
+  - name: organization_id
+  semantic_model: outbound_email
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - kind
+  - status
+  semantic_measures:
+  - outbound_email_count
+- name: mart_proactive_approvals
+  schema: ticketing_marts
+  engine: postgres
+  tenant_column: organization_id
+  sql_agent_only: false
+  columns:
+  - name: approval_id
+  - name: organization_id
+  semantic_model: proactive_approval
+  semantic_dimensions:
+  - organization_id
+  - agent_id
+  - created_at
+  - status
+  - tool_name
+  - ticket_priority
+  - ticket_status
+  - queue_name
+  semantic_measures:
+  - approval_count
+  - approved_count
+  - rejected_count
+  - pending_approval_count
+  - decided_count
+  - decision_hours_sum
+- name: mart_proactive_audit
+  schema: ticketing_marts
+  engine: postgres
+  tenant_column: organization_id
+  sql_agent_only: false
+  columns:
+  - name: proactive_audit_id
+  - name: organization_id
+  semantic_model: proactive_audit
+  semantic_dimensions:
+  - organization_id
+  - agent_id
+  - decision
+  - created_at
+  semantic_measures:
+  - proactive_audit_count
+- name: mart_proactive_recommendations
+  schema: ticketing_marts
+  engine: postgres
+  tenant_column: organization_id
+  sql_agent_only: false
+  columns:
+  - name: recommendation_id
+  - name: organization_id
+  semantic_model: proactive_recommendation
+  semantic_dimensions:
+  - organization_id
+  - agent_id
+  - created_at
+  - status
+  - ticket_priority
+  - ticket_status
+  - queue_name
+  semantic_measures:
+  - recommendation_count
+  - accepted_count
+  - dismissed_count
+  - open_recommendation_count
+- name: mart_ticket_notes
+  schema: ticketing_marts
+  engine: postgres
+  tenant_column: organization_id
+  sql_agent_only: false
+  columns:
+  - name: ticket_note_id
+  - name: organization_id
+  semantic_model: ticket_note
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - visibility
+  - is_internal_note
+  - ticket_priority
+  - ticket_status
+  - queue_name
+  - assignee_name
+  - author_name
+  semantic_measures:
+  - note_count
+  - internal_note_count
+  - customer_visible_note_count
+- name: mart_tickets
+  schema: ticketing_marts
+  engine: postgres
+  description: One row per support ticket; queue, assignee, SLA flags denormalized.
+  grain: ticket
+  purpose: Primary ticketing fact for open count, SLA, CSAT, resolution metrics.
+  tenant_column: organization_id
+  row_scope_column: assignee_id
+  sql_agent_only: false
+  columns:
+  - name: ticket_id
+  - name: organization_id
+  - name: status
+    description: Open tickets metric uses lower(status) = 'open' only.
+  - name: priority
+    description: High-priority open uses high, urgent, p1.
+  semantic_model: ticket
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - resolved_at
+  - due_at
+  - status
+  - status_display_name
+  - is_closed_by_status
+  - priority
+  - channel
+  - category
+  - skill
+  - assignee_name
+  - assignee_role
+  - resolver_name
+  - queue_name
+  - queue_type
+  - account_name
+  - organization_name
+  - organization_business_type
+  - team_supports_ticketing
+  - created_by_name
+  - customer_name
+  - has_assignee
+  - has_resolver
+  - has_first_response
+  - has_csat_rating
+  - is_overdue
+  semantic_measures:
+  - ticket_count
+  - resolved_ticket_count
+  - open_ticket_count
+  - active_ticket_count
+  - closed_ticket_count
+  - pending_ticket_count
+  - reopened_ticket_count
+  - high_priority_ticket_count
+  - assigned_ticket_count
+  - unassigned_ticket_count
+  - tickets_with_resolver_count
+  - tickets_without_resolver_count
+  - due_today_ticket_count
+  - current_overdue_ticket_count
+  - sla_at_risk_ticket_count
+  - unanswered_ticket_count
+  - tickets_created_today_count
+  - tickets_last_7_days_count
+  - tickets_last_30_days_count
+  - days_since_last_ticket_val
+  - breached_ticket_count
+  - resolution_hours_sum
+  - resolved_ticket_count_for_avg
+  - first_response_hours_sum
+  - first_response_minutes_sum
+  - tickets_with_first_response_count
+  - first_response_met_count
+  - tickets_with_first_response_sla_target_count
+  - resolution_sla_met_count
+  - tickets_with_resolution_sla_target_count
+  - resolution_hours_variance_sum
+  - tickets_with_sla_target_count
+  - overdue_hours_sum
+  - open_ticket_age_days_sum
+  - distinct_customers_served
+  - distinct_accounts_served
+  - csat_score_sum
+  - csat_rated_count
+  - csat_promoter_count
+  - csat_neutral_count
+  - csat_detractor_count
+  - average_overdue_hours_val
+- name: mart_users
+  schema: ticketing_marts
+  engine: postgres
+  tenant_column: organization_id
+  sql_agent_only: false
+  columns:
+  - name: user_id
+  - name: organization_id
+  semantic_model: user
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - role
+  - status
+  semantic_measures:
+  - active_agent_count
+  - total_user_count
+certified_metrics:
+- id: accepted_recommendations_metric
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: accounts_served
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: active_agents_metric
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: active_customers_metric
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: active_tickets_metric
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: approval_rate
+  label: null
+  'on': null
+  dims: null
+  kind: rate
+  direction: higher_is_worse
+  via: ask_semantic
+- id: approval_volume
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: approved_metric
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: assigned_tickets_metric
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: assignment_rate
+  label: null
+  'on': null
+  dims: null
+  kind: rate
+  direction: higher_is_worse
+  via: ask_semantic
+- id: audit_event_volume
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: average_csat_score
+  label: Average CSAT
+  'on': Ticket
+  dims:
+  - queue_name
+  - agent_name
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: average_decision_hours
+  label: null
+  'on': null
+  dims: null
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: average_first_response_hours
+  label: null
+  'on': null
+  dims: null
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: average_first_response_minutes
+  label: null
+  'on': null
+  dims: null
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: average_notes_per_ticket
+  label: null
+  'on': null
+  dims: null
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: average_open_ticket_age_days
+  label: null
+  'on': null
+  dims: null
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: average_overdue_hours
+  label: null
+  'on': null
+  dims: null
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: average_resolution_hours_variance
+  label: null
+  'on': null
+  dims: null
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: average_resolution_time_hours
+  label: Average Resolution Time
+  'on': Ticket
+  dims:
+  - priority
+  - queue_name
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: average_tickets_per_day
+  label: null
+  'on': null
+  dims: null
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: breached_tickets_metric
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: closed_tickets_metric
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: csat_detractor_metric
+  label: null
+  'on': null
+  dims: null
+  kind: score
+  direction: lower_is_worse
+  via: ask_semantic
+- id: csat_detractor_rate
+  label: null
+  'on': null
+  dims: null
+  kind: rate
+  direction: higher_is_better
+  via: ask_semantic
+- id: csat_neutral_metric
+  label: null
+  'on': null
+  dims: null
+  kind: score
+  direction: lower_is_worse
+  via: ask_semantic
+- id: csat_promoter_metric
+  label: null
+  'on': null
+  dims: null
+  kind: score
+  direction: lower_is_worse
+  via: ask_semantic
+- id: csat_promoter_rate
+  label: null
+  'on': null
+  dims: null
+  kind: rate
+  direction: higher_is_better
+  via: ask_semantic
+- id: csat_rated_metric
+  label: null
+  'on': null
+  dims: null
+  kind: rate
+  direction: higher_is_better
+  via: ask_semantic
+- id: csat_response_rate
+  label: null
+  'on': null
+  dims: null
+  kind: rate
+  direction: higher_is_better
+  via: ask_semantic
+- id: csat_score_total
+  label: null
+  'on': null
+  dims: null
+  kind: score
+  direction: lower_is_worse
+  via: ask_semantic
+- id: current_overdue_tickets_metric
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: customer_reply_volume
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: customers_served
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: days_since_last_ticket
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: decided_approvals_metric
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: decision_hours_total
+  label: null
+  'on': null
+  dims: null
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: dismissed_recommendations_metric
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: distinct_agents_in_queues
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: distinct_queues_covered
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: due_today_tickets_metric
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: escalation_rate
+  label: null
+  'on': null
+  dims: null
+  kind: rate
+  direction: higher_is_worse
+  via: ask_semantic
+- id: escalation_volume
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: first_response_coverage_rate
+  label: null
+  'on': null
+  dims: null
+  kind: rate
+  direction: higher_is_better
+  via: ask_semantic
+- id: first_response_hours_total
+  label: null
+  'on': null
+  dims: null
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: first_response_sla_compliance_rate
+  label: null
+  'on': null
+  dims: null
+  kind: rate
+  direction: higher_is_worse
+  via: ask_semantic
+- id: first_response_sla_met_metric
+  label: null
+  'on': null
+  dims: null
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: high_priority_ticket_volume
+  label: High-Priority Ticket Volume
+  'on': Ticket
+  dims:
+  - created_at
+  - resolved_at
+  - due_at
+  - status
+  - status_display_name
+  - is_closed_by_status
+  - priority
+  - channel
+  - category
+  - skill
+  - assignee_name
+  - assignee_role
+  - resolver_name
+  - queue_name
+  - queue_type
+  - account_name
+  - organization_name
+  - organization_business_type
+  - team_supports_ticketing
+  - created_by_name
+  - customer_name
+  - has_assignee
+  - has_resolver
+  - has_first_response
+  - has_csat_rating
+  - is_overdue
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: internal_note_ratio
+  label: null
+  'on': null
+  dims: null
+  kind: rate
+  direction: higher_is_worse
+  via: ask_semantic
+- id: internal_note_volume
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: kb_article_volume
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: kb_published_article_metric
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: kb_views_total
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: macro_volume
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: note_volume
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: notification_volume
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: open_recommendations_metric
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: open_ticket_age_days_total
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: open_tickets_metric
+  label: Open Tickets
+  'on': Ticket
+  dims:
+  - priority
+  - queue_name
+  - status
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: outbound_email_volume
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: pending_approvals_metric
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: pending_tickets_metric
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: proactive_audit_volume
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: queue_count
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: queue_coverage_count
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: queues_at_risk_metric
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: reassignment_volume
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: recommendation_acceptance_rate
+  label: null
+  'on': null
+  dims: null
+  kind: rate
+  direction: higher_is_better
+  via: ask_semantic
+- id: recommendation_volume
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: rejected_metric
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: reopen_rate
+  label: Reopen Rate
+  'on': Ticket
+  dims:
+  - queue_name
+  - priority
+  kind: rate
+  direction: higher_is_better
+  via: ask_semantic
+- id: reopened_tickets_metric
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: resolution_hours_total
+  label: null
+  'on': null
+  dims: null
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: resolution_hours_variance_total
+  label: null
+  'on': null
+  dims: null
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: resolution_rate
+  label: Resolution Rate
+  'on': Ticket
+  dims:
+  - queue_name
+  - priority
+  kind: rate
+  direction: higher_is_better
+  via: ask_semantic
+- id: resolution_sla_compliance_rate
+  label: null
+  'on': null
+  dims: null
+  kind: rate
+  direction: higher_is_better
+  via: ask_semantic
+- id: resolution_sla_met_metric
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: resolved_for_avg
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: resolved_tickets_metric
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: sla_at_risk_tickets_metric
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: sla_breach_rate
+  label: SLA Breach Rate
+  'on': Ticket
+  dims:
+  - priority
+  - queue_name
+  - channel
+  kind: rate
+  direction: higher_is_worse
+  via: ask_semantic
+- id: ticket_volume
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: tickets_created_today_metric
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: tickets_last_30_days
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: tickets_last_7_days
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: tickets_with_first_response_metric
+  label: null
+  'on': null
+  dims: null
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: tickets_with_first_response_sla_target_metric
+  label: null
+  'on': null
+  dims: null
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: tickets_with_resolver_metric
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: tickets_with_sla_target_metric
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: tickets_without_resolver_metric
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: unanswered_tickets_metric
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: unassigned_tickets_metric
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: unassignment_rate
+  label: null
+  'on': null
+  dims: null
+  kind: rate
+  direction: higher_is_worse
+  via: ask_semantic
+- id: unread_notifications_metric
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic

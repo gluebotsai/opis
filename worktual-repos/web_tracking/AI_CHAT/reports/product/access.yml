@@ -1,0 +1,12 @@
+version: 1
+product: webtracking
+# Single-website scope: runtime injects websiteId on every semantic / ClickHouse query.
+
+roles:
+  admin:
+    default_scope: website
+  agent:
+    default_scope: website
+
+matrix:
+  website: admin=allow, agent=allow

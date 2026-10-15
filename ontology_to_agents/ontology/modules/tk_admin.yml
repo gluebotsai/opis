@@ -1,0 +1,31 @@
+# Ticketing Admin specialist — mas-agents-guide.md A6.
+# Priority display names map to taxonomy ticket.priority; resolution hours feed SLA.
+module: tk_admin
+layer: product
+depends_on: [core, ticket]
+owned_by_spoke: ticketing
+usecase: >
+  Org-configurable ticket priorities (with resolution hours) and statuses. Analytics reads use semantic layer.
+
+classes:
+  - id: TicketPriorityDef
+    definition: Tenant display name + resolution SLA hours. Instances classify Ticket.
+    properties: [displayName, resolutionHours]
+    classified_by: [ticket.priority]
+
+  - id: TicketStatusDef
+    definition: Tenant display name for lifecycle (Open, Pending, …).
+    properties: [displayName, active]
+    classified_by: [ticket.status]
+
+relations:
+  - { from: Ticket, type: classified_by, to: TicketPriorityDef }
+  - { from: Ticket, type: classified_by, to: TicketStatusDef }
+
+actions:
+  - id: action.create_priority
+    operates_on: [TicketPriorityDef]
+    requires: [userConfirmed]
+  - id: action.create_status
+    operates_on: [TicketStatusDef]
+    requires: [userConfirmed]

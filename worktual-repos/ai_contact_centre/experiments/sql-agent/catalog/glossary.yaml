@@ -1,0 +1,156 @@
+version: 1
+description: >
+  Canonical terms and spelling variants for vector-less query expansion.
+  Applied before catalog search. Does not route tools or decide intent.
+
+terms:
+  aht:
+    canonical: avg_handle_time
+    tokens: [average, handle, time]
+  handle_time:
+    canonical: avg_handle_time
+    tokens: [average, handle, time]
+  handel:
+    canonical: handle
+    tokens: [handle]
+  handleing:
+    canonical: handle
+    tokens: [handle]
+  handling:
+    canonical: handle
+    tokens: [handle]
+  frt:
+    canonical: avg_first_response
+    tokens: [first, response, time]
+  first_response:
+    canonical: avg_first_response
+    tokens: [first, response]
+  sla:
+    canonical: response_sla_60s
+    tokens: [sla, response, sixty]
+  service_level:
+    canonical: response_sla_60s
+    tokens: [sla, response]
+  resolution:
+    canonical: resolution_rate
+    tokens: [resolution, rate]
+  resolusion:
+    canonical: resolution
+    tokens: [resolution]
+  resolved:
+    canonical: resolution_rate
+    tokens: [resolved, resolution]
+  handled:
+    canonical: conversations_handled
+    tokens: [handled, conversations, volume]
+  volume:
+    canonical: conversations_handled
+    tokens: [handled, volume, count]
+  tickets:
+    canonical: conversations
+    tokens: [conversations]
+  chats:
+    canonical: conversations
+    tokens: [conversations]
+  chat:
+    canonical: conversations
+    tokens: [conversations, count]
+  calls:
+    canonical: conversations
+    tokens: [conversations]
+  conversaton:
+    canonical: conversations
+    tokens: [conversations]
+  conversatons:
+    canonical: conversations
+    tokens: [conversations]
+  whatsap:
+    canonical: whatsapp
+    tokens: [whatsapp]
+  whatsapp:
+    canonical: whatsapp
+    tokens: [whatsapp]
+  "whats app":
+    canonical: whatsapp
+    tokens: [whatsapp]
+  wa:
+    canonical: whatsapp
+    tokens: [whatsapp]
+  web_chat:
+    canonical: webchat
+    tokens: [webchat]
+  "web chat":
+    canonical: webchat
+    tokens: [webchat]
+  insta:
+    canonical: instagram
+    tokens: [instagram]
+  fb:
+    canonical: facebook
+    tokens: [facebook]
+  disposition:
+    canonical: disposition
+    tokens: [disposition]
+  dispostion:
+    canonical: disposition
+    tokens: [disposition]
+  dispositions:
+    canonical: disposition
+    tokens: [disposition]
+  outcome:
+    canonical: disposition
+    tokens: [disposition, outcome]
+  channel_mix:
+    canonical: channel_mix
+    tokens: [channel, mix, share, breakdown]
+  mix:
+    canonical: mix
+    tokens: [mix, breakdown, share]
+  transfer:
+    canonical: transfers
+    tokens: [transfer, transferred]
+  transfers:
+    canonical: transfers
+    tokens: [transfers]
+  missed:
+    canonical: missed_contacts
+    tokens: [missed, contacts, timeout]
+  missed_contact:
+    canonical: missed_contacts
+    tokens: [missed, contacts]
+  occupancy:
+    canonical: occupancy
+    tokens: [occupancy, ready, busy, presence]
+  queue:
+    canonical: queue
+    tokens: [queue]
+  agent:
+    canonical: agent
+    tokens: [agent]
+  message:
+    canonical: conversation_messages
+    tokens: [messages]
+  messages:
+    canonical: conversation_messages
+    tokens: [messages]
+  sentiment:
+    canonical: sentiment
+    tokens: [sentiment]
+  sla_breach:
+    canonical: sla_breach
+    tokens: [sla, breach, breached]
+  chanel:
+    canonical: channel
+    tokens: [channel]
+  channnel:
+    canonical: channel
+    tokens: [channel]
+
+enum_aliases:
+  webchat: [web chat, web_chat, live chat]
+  whatsapp: [whats app, whatsap, whatsApp]
+  email: [e-mail]
+  instagram: [insta]
+  facebook: [fb]
+  voice: [phone]
+  sms: [text, texts]

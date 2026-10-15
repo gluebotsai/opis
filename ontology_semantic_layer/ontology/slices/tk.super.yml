@@ -1,0 +1,104 @@
+slice_id: tk.super
+agent: Ticketing Super Agent
+modules:
+- core
+- identity
+- ticket
+- tk_team
+- knowledge
+- tk_kb
+- tk_macro
+- tk_admin
+- tk_proactive
+- performance
+- hub
+classes:
+- Party
+- Person
+- Organization
+- Contact
+- Agent
+- Consent
+- Preference
+- Channel
+- Event
+- WorkItem
+- Location
+- Identity
+- ContactProfile
+- Contact
+- ContactDraft
+- ContactSkill
+- Ticket
+- SLA
+- Note
+- TicketDraft
+- Team
+- KnowledgeArticle
+- OrganizationDirectory
+- KbCategory
+- Macro
+- TicketPriorityDef
+- TicketStatusDef
+- Suggestion
+- Approval
+- Anomaly
+- PerformanceReport
+- Spoke
+- Skill
+- HubRequest
+- Strategy
+- DispatchAction
+relations:
+- Person works_for Organization
+- Contact has_consent Consent
+- Contact has_preference Preference
+- Contact belongs_to Organization
+- Agent works_for Organization
+- Identity identifies Party
+- Contact resolves_to Contact
+- Contact has_skill ContactSkill
+- Ticket raised_by Contact
+- Ticket belongs_to Organization
+- Ticket related_to Conversation
+- Ticket has_sla SLA
+- Ticket assigned_to Agent
+- Ticket resolved_by Agent
+- Ticket owned_by_team Team
+- Contact has Ticket
+- Note of Ticket
+- Team has_member Agent
+- KnowledgeArticle owned_by Organization
+- OrganizationDirectory of Organization
+- KnowledgeArticle in_category KbCategory
+- Macro owned_by Organization
+- Ticket classified_by TicketPriorityDef
+- Ticket classified_by TicketStatusDef
+- Suggestion about Ticket
+- Approval of Suggestion
+- Anomaly about Queue
+- Anomaly triggers HubRequest
+- PerformanceReport about Agent
+- HubRequest about Contact
+- HubRequest about Conversation
+- Strategy PRODUCES DispatchAction
+- DispatchAction targets Spoke
+- DispatchAction USES Skill
+actions:
+- action.identify
+- action.route_to_specialist
+- action.list_contacts
+- action.get_contact
+- action.stage_contact_draft
+- action.get_ticket_status
+- action.get_organization_details
+- action.get_organization_knowledge
+- action.ask_semantic
+- action.ask_ontology
+- action.generate_report
+- action.investigate_anomaly
+- action.spoke_query
+- action.run_pipeline
+- action.dispatch
+metric_ids: []
+note: Legal slice (tools/policy). Inject pack.as_prompt() compact, not this file.

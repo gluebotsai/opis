@@ -1,0 +1,30 @@
+{
+  "version": "0.1.0",
+  "logging": {
+    "level": "info",
+    "file": ""
+  },
+  "redis": {
+    "pubsub": {
+      "host": "127.0.0.1",
+      "port": 6379,
+      "password": ""
+    },
+    "store": {
+      "host": "127.0.0.1",
+      "port": 6379,
+      "password": ""
+    },
+    "pubsub_channel": "InterrogatorEvent",
+    "pbx_alive_ttl_sec": 30,
+    "call_live_ttl_sec": 3600
+  },
+  "pbx": {
+    "snapshot_path": "data/pbx_snapshot.json"
+  },
+  "sip": {
+    "udp_listen": "127.0.0.1:15060",
+    "tcp_listen": "127.0.0.1:15060",
+    "tls_listen": "127.0.0.1:15061"
+  }
+}

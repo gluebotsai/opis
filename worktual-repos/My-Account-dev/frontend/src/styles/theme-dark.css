@@ -1,0 +1,1289 @@
+/**
+ * Dark theme — remaps semantic tokens + overrides hardcoded light surfaces.
+ * Keep --color-neutral-* intact so inverse sidebar hover washes stay dark.
+ * Accent pills/charts unchanged. Sidebar stays inverse; active nav uses purple wash.
+ *
+ * Primary CTA in dark: purple #7423D7 (hover #8650DE, active #5F1FB0).
+ */
+
+html[data-theme="dark"] {
+  --text-primary: #f4f4f6;
+  --text-secondary: #c9c9cf;
+  --text-caption: #a7a7af;
+  --text-placeholder: #7e7e88;
+  --text-disabled: #5e5e69;
+  --text-on-primary: #ffffff;
+  --text-on-dark: #f4f4f6;
+  --text-on-dark-muted: #a7a7af;
+  --text-accent: #f4f4f6;
+
+  /* Canvas ~#0B0B10 · surface ~#15151C · muted ~#20202A · border ~#343442 */
+  --bg-canvas: #15151c;
+  --bg-canvas-subtle: #0b0b10;
+  --bg-canvas-inverse: #0b0b10;
+  --bg-surface: #15151c;
+  --bg-subtle: #20202a;
+  --bg-hover: #23232b;
+  --bg-disabled: #20202a;
+
+  --border-default: #343442;
+  --border-strong: #5e5e69;
+  --border-focus: #8650de;
+
+  --btn-primary-bg: #7423d7;
+  --btn-primary-bg-hover: #8650de;
+  --btn-primary-bg-active: #5f1fb0;
+  --btn-primary-text: #ffffff;
+  --btn-alt-bg: #7423d7;
+  --btn-alt-bg-hover: #8650de;
+  --btn-alt-bg-active: #5f1fb0;
+  --btn-secondary-bg: transparent;
+  --btn-secondary-border: #343442;
+  --btn-secondary-border-hover: #a7a7af;
+  --btn-secondary-text: #f4f4f6;
+
+  --color-success-bg: #0f2a1c;
+  --color-warning-bg: #2a220f;
+  --color-danger-bg: #2a1412;
+  --color-neutral-100: #20202a;
+  --color-neutral-50: #15151c;
+
+  --icon-on-light: var(--text-primary);
+  --icon-button-bg-hover: #23232b;
+  --icon-button-bg-active: #f4f4f6;
+  --icon-button-bg-focus: #15151c;
+  --icon-button-color-active: #0b0b10;
+
+  --mail-accent-soft: color-mix(in srgb, #653ae0 22%, #15151c);
+
+  color-scheme: dark;
+}
+
+/* Shell sidebar — active nav pill (all portals; hover stays grey) */
+html[data-theme="dark"] .app-shell .sidebar__link.is-active {
+  background: color-mix(in srgb, #7423d7 36%, #0b0b10);
+  color: var(--text-on-dark);
+}
+
+html[data-theme="dark"] .app-shell .sidebar__link.is-active svg {
+  color: var(--icon-on-dark);
+}
+
+/* ─── Admin / portal local tokens (--au-*) ─── */
+html[data-theme="dark"] .admin-users-page,
+html[data-theme="dark"] .admin-users-page.admin-users-credentials-page,
+html[data-theme="dark"] .admin-users-page.admin-cpu-page,
+html[data-theme="dark"] .admin-users-page.admin-partners-page,
+html[data-theme="dark"] .admin-users-page.admin-resellers-page,
+html[data-theme="dark"] .admin-users-page.admin-commission-slabs-page,
+html[data-theme="dark"] .admin-users-page.admin-cancellation-queue-page,
+html[data-theme="dark"] .admin-cancellation-queue-page,
+html[data-theme="dark"] .partner-dashboard-page,
+html[data-theme="dark"] .partner-leads-page,
+html[data-theme="dark"] .partner-commissions-page,
+html[data-theme="dark"] .partner-bank-page,
+html[data-theme="dark"] .partner-lead-detail-page,
+html[data-theme="dark"] .reseller-portal-page,
+html[data-theme="dark"] .reseller-lead-detail-page,
+html[data-theme="dark"] .finance-partner-commissions-page,
+html[data-theme="dark"] .sa-agents-page,
+html[data-theme="dark"] .sa-agent-detail-page,
+html[data-theme="dark"] .sa-lead-detail-page,
+html[data-theme="dark"] .sa-dashboard,
+html[data-theme="dark"] .lead-dashboard-page,
+html[data-theme="dark"] .sales-dashboard-page {
+  --au-canvas: #0b0b10;
+  --au-subtle: #20202a;
+  --au-border: #343442;
+  --au-text: #f4f4f6;
+  --au-text-secondary: #c9c9cf;
+  --au-text-caption: #a7a7af;
+  --au-text-placeholder: #7e7e88;
+  --au-shadow-md: 0 8px 24px rgba(0, 0, 0, 0.45);
+  --au-surface: #15151c;
+  --au-focus: #8650de;
+  background: var(--au-canvas);
+  color: var(--au-text);
+}
+
+/* ─── Shell canvas (beat :has() light rules in admin-users-light.css) ─── */
+html[data-theme="dark"] .app-content,
+html[data-theme="dark"] .app-shell--admin .app-content:has(.admin-users-page),
+html[data-theme="dark"] .app-shell--admin .app-content:has(.admin-users-credentials-page),
+html[data-theme="dark"] .app-shell--admin .app-content:has(.admin-cpu-page),
+html[data-theme="dark"] .app-shell--admin .app-content:has(.admin-partners-page),
+html[data-theme="dark"] .app-shell--admin .app-content:has(.admin-resellers-page),
+html[data-theme="dark"] .app-shell--admin .app-content:has(.admin-commission-slabs-page),
+html[data-theme="dark"] .app-shell--admin .app-content:has(.admin-cancellation-queue-page),
+html[data-theme="dark"] .app-shell--admin .app-content:has(.admin-pricing-page),
+html[data-theme="dark"] .app-shell .app-content {
+  background: var(--bg-canvas-subtle);
+  color: var(--text-primary);
+}
+
+/* ─── Shared panels / overlays / modals ─── */
+html[data-theme="dark"] .admin-users-panel,
+html[data-theme="dark"] .admin-side-overlay__panel,
+html[data-theme="dark"] .admin-users-modal__card,
+html[data-theme="dark"] .confirm-modal,
+html[data-theme="dark"] .nm-available-modal__card,
+html[data-theme="dark"] .admin-users-kpi-card,
+html[data-theme="dark"] .portal-kpi-card,
+html[data-theme="dark"] .onboarding-card,
+html[data-theme="dark"] .lead-dashboard-panel,
+html[data-theme="dark"] .sales-dashboard-card,
+html[data-theme="dark"] .pricing-form,
+html[data-theme="dark"] .pricing-summary,
+html[data-theme="dark"] .products-panel,
+html[data-theme="dark"] .mail-page__panel,
+html[data-theme="dark"] .mail-workspace,
+html[data-theme="dark"] .mail-list,
+html[data-theme="dark"] .mail-sidebar,
+html[data-theme="dark"] .mail-folders,
+html[data-theme="dark"] .mail-compose,
+html[data-theme="dark"] .mail-empty,
+html[data-theme="dark"] .account-settings-overlay__panel,
+html[data-theme="dark"] .admin-wizard-panel,
+html[data-theme="dark"] .admin-wizard-step,
+html[data-theme="dark"] .ccaas-plan-picker,
+html[data-theme="dark"] .ccaas-pricing-panel {
+  background: var(--bg-surface);
+  border-color: var(--border-default);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .admin-users-page__header h1,
+html[data-theme="dark"] .admin-users-panel__section-header h2,
+html[data-theme="dark"] .page-header h1,
+html[data-theme="dark"] .admin-side-overlay__header h2,
+html[data-theme="dark"] .admin-pricing-page__header h1,
+html[data-theme="dark"] .admin-pricing-panel__header h2 {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .admin-users-page__subtitle,
+html[data-theme="dark"] .admin-users-panel__section-header p,
+html[data-theme="dark"] .page-header__copy,
+html[data-theme="dark"] .admin-side-overlay__header p,
+html[data-theme="dark"] .admin-pricing-page__subtitle,
+html[data-theme="dark"] .admin-pricing-page__meta,
+html[data-theme="dark"] .admin-pricing-panel__lede,
+html[data-theme="dark"] .admin-pricing-panel__note {
+  color: var(--text-secondary);
+}
+
+html[data-theme="dark"] .admin-users-panel__footer,
+html[data-theme="dark"] .admin-side-overlay__footer,
+html[data-theme="dark"] .products-actions.pricing-actions {
+  background: var(--bg-surface);
+  border-color: var(--border-default);
+  color: var(--text-secondary);
+}
+
+html[data-theme="dark"] .admin-side-overlay__backdrop,
+html[data-theme="dark"] .admin-users-modal__backdrop,
+html[data-theme="dark"] .confirm-modal-overlay__backdrop {
+  background: rgba(0, 0, 0, 0.62);
+}
+
+/* Overlay / panel header icon buttons (Close X, etc.): dark canvas + light icon */
+html[data-theme="dark"] .admin-users-panel__icon-button,
+html[data-theme="dark"] .admin-users-page .admin-users-panel__icon-button,
+html[data-theme="dark"] .admin-side-overlay .admin-users-panel__icon-button,
+html[data-theme="dark"] .admin-users-modal__card .admin-users-panel__icon-button {
+  background: var(--bg-canvas-subtle);
+  border-color: var(--border-default);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .admin-users-panel__icon-button:hover,
+html[data-theme="dark"] .admin-users-panel__icon-button:focus-visible,
+html[data-theme="dark"] .admin-users-panel__icon-button:active,
+html[data-theme="dark"] .admin-users-page .admin-users-panel__icon-button:hover,
+html[data-theme="dark"] .admin-users-page .admin-users-panel__icon-button:focus-visible,
+html[data-theme="dark"] .admin-users-page .admin-users-panel__icon-button:active,
+html[data-theme="dark"] .admin-side-overlay .admin-users-panel__icon-button:hover,
+html[data-theme="dark"] .admin-side-overlay .admin-users-panel__icon-button:focus-visible,
+html[data-theme="dark"] .admin-side-overlay .admin-users-panel__icon-button:active,
+html[data-theme="dark"] .admin-users-modal__card .admin-users-panel__icon-button:hover,
+html[data-theme="dark"] .admin-users-modal__card .admin-users-panel__icon-button:focus-visible,
+html[data-theme="dark"] .admin-users-modal__card .admin-users-panel__icon-button:active {
+  background: var(--bg-hover);
+  border-color: var(--border-strong);
+  box-shadow: none;
+  color: var(--text-primary);
+}
+
+/* Text-link back controls inside overlays (avoid remapped violet = dark grey) */
+html[data-theme="dark"] .admin-users-bulk__back {
+  color: var(--text-secondary);
+}
+
+html[data-theme="dark"] .admin-users-bulk__back:hover,
+html[data-theme="dark"] .admin-users-bulk__back:focus-visible {
+  color: var(--text-primary);
+}
+
+/* ─── Tables ─── */
+html[data-theme="dark"] .admin-users-table thead th,
+html[data-theme="dark"] .admin-users-table tbody td,
+html[data-theme="dark"] .admin-pricing-table th,
+html[data-theme="dark"] .admin-pricing-table td {
+  background: var(--bg-surface);
+  border-color: var(--border-default);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .admin-users-table thead th,
+html[data-theme="dark"] .admin-pricing-table th {
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+}
+
+html[data-theme="dark"] .admin-users-table tbody tr.is-clickable:hover td {
+  background: var(--bg-hover);
+}
+
+/*
+ * Nested table / page copy that hardcodes light-theme greys (e.g. Status toggle).
+ * More specific than tbody td so Active/Inactive stays readable on dark surfaces.
+ */
+html[data-theme="dark"] .admin-slab-toggle,
+html[data-theme="dark"] .admin-slab-toggle__label,
+html[data-theme="dark"] .admin-users-table tbody td .admin-users-meta,
+html[data-theme="dark"] .admin-users-table tbody td .admin-users-muted,
+html[data-theme="dark"] .admin-cancellation-empty,
+html[data-theme="dark"] .admin-cancellation-detail__grid dt,
+html[data-theme="dark"] .admin-cancellation-detail__note p,
+html[data-theme="dark"] .admin-cancellation-detail__info,
+html[data-theme="dark"] .admin-cancellation-detail__info svg {
+  color: var(--text-secondary);
+}
+
+html[data-theme="dark"] .admin-slab-toggle.is-on,
+html[data-theme="dark"] .admin-slab-toggle.is-on .admin-slab-toggle__label,
+html[data-theme="dark"] .admin-cancellation-detail__grid dd,
+html[data-theme="dark"] .admin-cancellation-detail__note h3 {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .admin-commission-slabs-page__hint {
+  color: var(--text-caption);
+}
+
+html[data-theme="dark"] .admin-cancellation-empty,
+html[data-theme="dark"] .admin-cancellation-detail__note,
+html[data-theme="dark"] .admin-cancellation-detail__info {
+  background: var(--bg-subtle);
+  border-color: var(--border-default);
+}
+
+/* ─── Form controls + search ───
+ * Use background-color (not background shorthand) so custom select chevrons survive.
+ */
+html[data-theme="dark"] .admin-users-panel__search,
+html[data-theme="dark"] .admin-users-field input,
+html[data-theme="dark"] .admin-users-field textarea,
+html[data-theme="dark"] .admin-users-field select,
+html[data-theme="dark"] .admin-field-select__trigger,
+html[data-theme="dark"] .admin-pricing-field input,
+html[data-theme="dark"] .admin-pricing-region-select select,
+html[data-theme="dark"] .mobile-field,
+html[data-theme="dark"] .portal-search,
+html[data-theme="dark"] .portal-chrome-search,
+html[data-theme="dark"] input[type="text"],
+html[data-theme="dark"] input[type="email"],
+html[data-theme="dark"] input[type="password"],
+html[data-theme="dark"] input[type="number"],
+html[data-theme="dark"] input[type="search"],
+html[data-theme="dark"] input[type="tel"],
+html[data-theme="dark"] input[type="date"],
+html[data-theme="dark"] input[type="url"],
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] select {
+  background-color: var(--bg-canvas-subtle);
+  border-color: var(--border-default);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] input::placeholder,
+html[data-theme="dark"] textarea::placeholder {
+  color: var(--text-placeholder);
+}
+
+/* ─── Buttons ─── */
+html[data-theme="dark"] .primary-button,
+html[data-theme="dark"] button.primary-button,
+html[data-theme="dark"] .admin-pricing-page__header .primary-button {
+  background: var(--btn-primary-bg);
+  border-color: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+}
+
+html[data-theme="dark"] .primary-button:hover:not(:disabled),
+html[data-theme="dark"] button.primary-button:hover:not(:disabled) {
+  background: var(--btn-primary-bg-hover);
+  border-color: var(--btn-primary-bg-hover);
+  color: var(--btn-primary-text);
+}
+
+html[data-theme="dark"] .primary-button:active:not(:disabled),
+html[data-theme="dark"] button.primary-button:active:not(:disabled) {
+  background: var(--btn-primary-bg-active);
+  border-color: var(--btn-primary-bg-active);
+  color: var(--btn-primary-text);
+}
+
+html[data-theme="dark"] .primary-button:disabled,
+html[data-theme="dark"] .secondary-button:disabled {
+  background: var(--bg-disabled);
+  border-color: var(--border-default);
+  color: var(--text-disabled);
+  opacity: 1;
+}
+
+html[data-theme="dark"] .secondary-button,
+html[data-theme="dark"] button.secondary-button {
+  background: var(--btn-secondary-bg);
+  border-color: var(--btn-secondary-border);
+  color: var(--btn-secondary-text);
+}
+
+html[data-theme="dark"] .secondary-button:hover:not(:disabled) {
+  border-color: var(--btn-secondary-border-hover);
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* ─── Menus / popovers / filters (incl. body-portaled selects) ─── */
+html[data-theme="dark"] .admin-users-row-menu,
+html[data-theme="dark"] .admin-users-row-menu--portal,
+html[data-theme="dark"] .admin-field-select__menu,
+html[data-theme="dark"] .admin-users-filter-menu,
+html[data-theme="dark"] .admin-users-filter-dropdown,
+html[data-theme="dark"] .sidebar-preferences-menu,
+html[data-theme="dark"] .lead-dashboard-row-menu,
+html[data-theme="dark"] .products-row-menu,
+html[data-theme="dark"] .sa-agent-detail-export__menu,
+html[data-theme="dark"] .sa-agent-detail-table__menu-panel,
+html[data-theme="dark"] .workspace-view-select__menu,
+html[data-theme="dark"] .checkbox-dropdown__menu,
+html[data-theme="dark"] .mail-topbar__menu {
+  background: var(--bg-surface);
+  border-color: var(--border-default);
+  color: var(--text-primary);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+html[data-theme="dark"] .sidebar-preferences-menu__label,
+html[data-theme="dark"] .sa-agent-detail-export__title,
+html[data-theme="dark"] .sa-agent-detail-panel-menu__hint,
+html[data-theme="dark"] .mail-topbar__menu-section > span {
+  color: var(--text-caption);
+}
+
+/* Option rows: never keep light #fff — portaled menus escape page wrappers */
+html[data-theme="dark"] .sidebar-preferences-menu__option,
+html[data-theme="dark"] .admin-field-select__option,
+html[data-theme="dark"] .admin-users-filter-menu__option,
+html[data-theme="dark"] .admin-users-row-menu__item,
+html[data-theme="dark"] .admin-users-row-menu button,
+html[data-theme="dark"] .admin-users-page .admin-users-row-menu button,
+html[data-theme="dark"] .workspace-view-select__option,
+html[data-theme="dark"] .checkbox-dropdown__option,
+html[data-theme="dark"] .sa-agent-detail-export__menu button,
+html[data-theme="dark"] .sa-agent-detail-export__scope,
+html[data-theme="dark"] .sa-agent-detail-table__menu-panel button,
+html[data-theme="dark"] .mail-topbar__menu button,
+html[data-theme="dark"] .lead-dashboard-row-menu button,
+html[data-theme="dark"] .products-row-menu button {
+  background: transparent;
+  background-color: transparent;
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .sidebar-preferences-menu__option:hover,
+html[data-theme="dark"] .admin-field-select__option:hover,
+html[data-theme="dark"] .admin-users-filter-menu__option:hover,
+html[data-theme="dark"] .admin-users-row-menu__item:hover,
+html[data-theme="dark"] .admin-users-row-menu button:hover,
+html[data-theme="dark"] .admin-users-page .admin-users-row-menu button:hover,
+html[data-theme="dark"] .workspace-view-select__option:hover,
+html[data-theme="dark"] .checkbox-dropdown__option:hover,
+html[data-theme="dark"] .sa-agent-detail-export__menu button:hover,
+html[data-theme="dark"] .sa-agent-detail-table__menu-panel button:hover,
+html[data-theme="dark"] .mail-topbar__menu button:hover,
+html[data-theme="dark"] .mail-topbar__menu button.is-active,
+html[data-theme="dark"] .lead-dashboard-row-menu button:hover,
+html[data-theme="dark"] .products-row-menu button:hover {
+  background: var(--bg-hover);
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .sidebar-preferences-menu__option.is-selected,
+html[data-theme="dark"] .admin-field-select__option.is-selected,
+html[data-theme="dark"] .workspace-view-select__option.is-selected {
+  background: color-mix(in srgb, #653ae0 22%, var(--bg-surface));
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .admin-field-select__option.is-selected svg,
+html[data-theme="dark"] .sidebar-preferences-menu__check {
+  color: #8650de;
+}
+
+html[data-theme="dark"] .admin-field-select__option:disabled,
+html[data-theme="dark"] .admin-users-row-menu button:disabled,
+html[data-theme="dark"] .admin-users-page .admin-users-row-menu button:disabled {
+  color: var(--text-disabled);
+  cursor: not-allowed;
+}
+
+html[data-theme="dark"] .admin-field-select__chevron {
+  color: var(--text-caption);
+}
+
+html[data-theme="dark"] .admin-field-select__value.is-placeholder {
+  color: var(--text-placeholder);
+}
+
+html[data-theme="dark"] .admin-users-row-menu__danger,
+html[data-theme="dark"] .admin-users-page .admin-users-row-menu__danger {
+  color: #e06e3a;
+}
+
+html[data-theme="dark"] .admin-users-row-menu__danger:hover,
+html[data-theme="dark"] .admin-users-page .admin-users-row-menu__danger:hover {
+  background: color-mix(in srgb, #e06e3a 14%, var(--bg-surface));
+  background-color: color-mix(in srgb, #e06e3a 14%, var(--bg-surface));
+  color: #e06e3a;
+}
+
+html[data-theme="dark"] .sidebar-preferences-menu__divider {
+  background: var(--border-default);
+}
+
+/* Hardcoded white search on grey-canvas admin pages */
+html[data-theme="dark"] .admin-users-credentials-page .admin-users-panel__search,
+html[data-theme="dark"] .admin-cpu-page .admin-users-panel__search,
+html[data-theme="dark"] .admin-partners-page .admin-users-panel__search,
+html[data-theme="dark"] .admin-resellers-page .admin-users-panel__search,
+html[data-theme="dark"] .admin-commission-slabs-page .admin-users-panel__search {
+  background: var(--bg-canvas-subtle);
+  border-color: var(--border-default);
+  color: var(--text-primary);
+}
+
+/* ─── Admin Product Pricing ─── */
+html[data-theme="dark"] .admin-pricing-page {
+  background: var(--bg-canvas-subtle);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .admin-pricing-nav__item,
+html[data-theme="dark"] .admin-pricing-nav__item.is-active,
+html[data-theme="dark"] .admin-pricing-panel,
+html[data-theme="dark"] .admin-pricing-section,
+html[data-theme="dark"] .admin-pricing-section--one-time,
+html[data-theme="dark"] .admin-pricing-plan-fee,
+html[data-theme="dark"] .admin-pricing-add-row--expanded,
+html[data-theme="dark"] .admin-pricing-table-wrap,
+html[data-theme="dark"] .admin-plan-addons,
+html[data-theme="dark"] .admin-plan-addons__block,
+html[data-theme="dark"] .admin-pricing-empty {
+  background: var(--bg-surface);
+  border-color: var(--border-default);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .admin-pricing-nav__item:hover {
+  background: var(--bg-hover);
+}
+
+html[data-theme="dark"] .admin-pricing-nav__item.is-active {
+  background: var(--bg-subtle);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .admin-pricing-subtabs {
+  background: var(--bg-subtle);
+  border-color: var(--border-default);
+}
+
+html[data-theme="dark"] .admin-pricing-subtabs__item {
+  color: var(--text-secondary);
+}
+
+html[data-theme="dark"] .admin-pricing-subtabs__item:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .admin-pricing-subtabs__item.is-active {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border-color: var(--border-default);
+}
+
+html[data-theme="dark"] .admin-pricing-section h3,
+html[data-theme="dark"] .admin-pricing-field > span:first-child,
+html[data-theme="dark"] .admin-pricing-plan-fee__label,
+html[data-theme="dark"] .admin-pricing-nav__label {
+  color: var(--text-secondary);
+}
+
+html[data-theme="dark"] .admin-pricing-section__desc,
+html[data-theme="dark"] .admin-pricing-hint {
+  color: var(--text-caption);
+}
+
+html[data-theme="dark"] .admin-pricing-page .icon-button,
+html[data-theme="dark"] .admin-pricing-add-row__trigger {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .admin-pricing-table__input,
+html[data-theme="dark"] .admin-pricing-table input,
+html[data-theme="dark"] .admin-pricing-sticky-bar,
+html[data-theme="dark"] .admin-pricing-page__unsaved {
+  background: var(--bg-surface);
+  border-color: var(--border-default);
+  color: var(--text-primary);
+}
+
+/* Destructive / delete accents stay palette orange */
+html[data-theme="dark"] .admin-pricing-page [class*="delete"],
+html[data-theme="dark"] .admin-pricing-page .danger-button {
+  color: #e06e3a;
+}
+
+/* ─── Sales / Sales Admin ─── */
+html[data-theme="dark"] .sales-dashboard-page,
+html[data-theme="dark"] .lead-dashboard-page,
+html[data-theme="dark"] .leads-page,
+html[data-theme="dark"] .products-page,
+html[data-theme="dark"] .sales-support-page,
+html[data-theme="dark"] .customer-support-page {
+  background: var(--bg-canvas-subtle);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .sales-dashboard-card,
+html[data-theme="dark"] .lead-dashboard-kpi,
+html[data-theme="dark"] .lead-dashboard-panel,
+html[data-theme="dark"] .lead-dashboard-table-wrap,
+html[data-theme="dark"] .products-toolbar,
+html[data-theme="dark"] .configured-product,
+html[data-theme="dark"] .ccaas-collapse-toggle {
+  background: var(--bg-surface);
+  border-color: var(--border-default);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .ccaas-collapse-toggle:hover:not(:disabled) {
+  background: var(--bg-hover);
+}
+
+html[data-theme="dark"] .customer-support-list__item.is-active {
+  background: var(--bg-hover);
+  border-color: var(--border-strong);
+}
+
+/* ─── Finance ─── */
+html[data-theme="dark"] .finance-queue-page,
+html[data-theme="dark"] .finance-partner-commissions-page {
+  background: var(--bg-canvas-subtle);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .finance-queue-item,
+html[data-theme="dark"] .finance-queue-item.is-active {
+  background: var(--bg-surface);
+  border-color: var(--border-default);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .finance-queue-item.is-active {
+  box-shadow: 0 0 0 1px var(--btn-primary-bg);
+}
+
+/* ─── Partner / Reseller / Number Management ─── */
+html[data-theme="dark"] .partner-dashboard-page,
+html[data-theme="dark"] .partner-leads-page,
+html[data-theme="dark"] .partner-commissions-page,
+html[data-theme="dark"] .partner-bank-page,
+html[data-theme="dark"] .reseller-portal-page,
+html[data-theme="dark"] .nm-dashboard-page,
+html[data-theme="dark"] .nm-mapping-page,
+html[data-theme="dark"] .nm-customer-page {
+  background: var(--bg-canvas-subtle);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .partner-commissions-card,
+html[data-theme="dark"] .reseller-empty-state,
+html[data-theme="dark"] .nm-dashboard-card,
+html[data-theme="dark"] .portal-empty-state {
+  background: var(--bg-surface);
+  border-color: var(--border-default);
+  color: var(--text-primary);
+}
+
+/* ─── Mail (keep email HTML body readable — do not force dark on iframe/html content) ─── */
+html[data-theme="dark"] .mail-page,
+html[data-theme="dark"] .mail-topbar,
+html[data-theme="dark"] .mail-list-item,
+html[data-theme="dark"] .mail-read,
+html[data-theme="dark"] .mail-read__header,
+html[data-theme="dark"] .mail-compose__toolbar {
+  background: var(--bg-surface);
+  border-color: var(--border-default);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .mail-list-item.is-active {
+  background: var(--mail-accent-soft);
+}
+
+html[data-theme="dark"] .mail-folders__item.is-active,
+html[data-theme="dark"] .mail-sidebar__item.is-active {
+  background: var(--mail-accent-soft);
+  color: var(--text-primary);
+}
+
+/* Intentionally leave .mail-read__body / email HTML surfaces alone when white */
+
+/* ─── Portal chrome shared controls ─── */
+html[data-theme="dark"] .portal-chrome-card,
+html[data-theme="dark"] .portal-chrome-panel,
+html[data-theme="dark"] .portal-chrome-empty,
+html[data-theme="dark"] .account-card {
+  background: var(--bg-surface);
+  border-color: var(--border-default);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .admin-overlay-steps,
+html[data-theme="dark"] .admin-overlay-steps__item {
+  background: var(--bg-subtle);
+  border-color: var(--border-default);
+  color: var(--text-secondary);
+}
+
+html[data-theme="dark"] .admin-overlay-steps__item.is-active,
+html[data-theme="dark"] .admin-overlay-steps__item.is-done {
+  color: var(--text-primary);
+}
+
+/*
+ * Sticky Actions / last columns — must stay opaque while the table scrolls.
+ * Cover shared admin tables + page-specific action cols (unassigned leads, NM, etc.).
+ */
+html[data-theme="dark"] .admin-users-table th:last-child,
+html[data-theme="dark"] .admin-users-table td:last-child,
+html[data-theme="dark"] .admin-users-table th[class*="__col--actions"],
+html[data-theme="dark"] .admin-users-table td[class*="__col--actions"],
+html[data-theme="dark"] .admin-users-table th.admin-users-table__actions,
+html[data-theme="dark"] .admin-users-table td.admin-users-table__actions,
+html[data-theme="dark"] .sa-unassigned-leads .admin-users-table th.sa-unassigned-leads__col--actions,
+html[data-theme="dark"] .sa-unassigned-leads .admin-users-table td.sa-unassigned-leads__col--actions,
+html[data-theme="dark"] .sa-unassigned-leads .admin-users-table th:last-child,
+html[data-theme="dark"] .sa-unassigned-leads .admin-users-table td:last-child,
+html[data-theme="dark"] .sa-agent-detail-page .sa-agent-detail-table th.sa-agent-detail-table__col--actions,
+html[data-theme="dark"] .sa-agent-detail-page .sa-agent-detail-table td.sa-agent-detail-table__col--actions,
+html[data-theme="dark"] .nm-customer-page .nm-customer-table th:last-child,
+html[data-theme="dark"] .nm-customer-page .nm-customer-table td:last-child,
+html[data-theme="dark"] .leads-table__action-header,
+html[data-theme="dark"] .leads-table__action,
+html[data-theme="dark"] .admin-pricing-table--config-defaults td:first-child,
+html[data-theme="dark"] .admin-pricing-table--slabs td:first-child {
+  background: var(--bg-surface) !important;
+  box-shadow: -6px 0 12px rgba(0, 0, 0, 0.35);
+  color: var(--text-primary);
+}
+
+/* Row ⋯ trigger: black canvas (not sticky-cell surface); light icon */
+html[data-theme="dark"] .admin-users-table__menu-trigger,
+html[data-theme="dark"] .admin-users-page .admin-users-table__menu-trigger {
+  background: var(--bg-canvas-subtle) !important;
+  box-shadow: none;
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .admin-users-table__menu-trigger:hover,
+html[data-theme="dark"] .admin-users-table__menu-trigger:focus-visible,
+html[data-theme="dark"] .admin-users-table__menu-trigger[aria-expanded="true"],
+html[data-theme="dark"] .admin-users-page .admin-users-table__menu-trigger:hover,
+html[data-theme="dark"] .admin-users-page .admin-users-table__menu-trigger:focus-visible,
+html[data-theme="dark"] .admin-users-page .admin-users-table__menu-trigger[aria-expanded="true"] {
+  background: var(--bg-hover) !important;
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .admin-users-table thead th:last-child,
+html[data-theme="dark"] .admin-users-table thead th[class*="__col--actions"],
+html[data-theme="dark"] .admin-users-table thead th.admin-users-table__actions,
+html[data-theme="dark"] .sa-unassigned-leads .admin-users-table thead th:last-child,
+html[data-theme="dark"] .sa-unassigned-leads .admin-users-table thead th.sa-unassigned-leads__col--actions,
+html[data-theme="dark"] .nm-customer-page .nm-customer-table th:last-child,
+html[data-theme="dark"] .leads-table thead th.leads-table__action-header,
+html[data-theme="dark"] .admin-pricing-table--config-defaults th:first-child,
+html[data-theme="dark"] .admin-pricing-table--slabs th:first-child,
+html[data-theme="dark"] .admin-users-page .admin-users-table thead th {
+  background: var(--bg-subtle) !important;
+  color: var(--text-secondary);
+}
+
+html[data-theme="dark"] .sa-unassigned-leads__company strong {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .sa-unassigned-leads__select select {
+  background-color: var(--bg-canvas-subtle);
+  border-color: var(--border-default);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .sa-unassigned-leads__select select:hover {
+  background-color: var(--bg-hover);
+  border-color: var(--border-strong);
+}
+
+html[data-theme="dark"] .sa-unassigned-leads__assign {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .sa-unassigned-leads__assign:disabled {
+  color: var(--text-disabled);
+}
+
+html[data-theme="dark"] .sa-unassigned-leads__empty h3 {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .sa-unassigned-leads__empty p,
+html[data-theme="dark"] .sa-unassigned-leads__empty svg {
+  color: var(--text-secondary);
+}
+
+/* Page CSS that hardcodes light washes on sticky last cols */
+html[data-theme="dark"] .sa-agent-detail-page .sa-agent-detail-table tbody tr.is-clickable:hover td:last-child,
+html[data-theme="dark"] .sa-agent-detail-page .sa-agent-detail-table tbody tr.sa-agent-detail-table__row--stale td:last-child {
+  background: var(--bg-surface) !important;
+}
+
+/* ─── Beat portal-chrome / late page CSS (higher specificity) ─── */
+html[data-theme="dark"] .app-shell:not(.app-shell--admin) .app-content,
+html[data-theme="dark"] .app-shell--partner .app-content,
+html[data-theme="dark"] .app-shell--reseller .app-content,
+html[data-theme="dark"] .app-shell--finance .app-content,
+html[data-theme="dark"] .app-shell--customer .app-content,
+html[data-theme="dark"] .app-shell--sales-admin .app-content,
+html[data-theme="dark"] .app-content:has(.sales-dashboard-page),
+html[data-theme="dark"] .app-content:has(.lead-dashboard-page),
+html[data-theme="dark"] .app-content:has(.nm-dashboard-page),
+html[data-theme="dark"] .app-content:has(.nm-mapping-page),
+html[data-theme="dark"] .app-content:has(.nm-customer-page) {
+  background: var(--bg-canvas-subtle);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .admin-users-page .admin-users-panel,
+html[data-theme="dark"] .admin-users-page .admin-users-table thead th,
+html[data-theme="dark"] .admin-users-page .admin-users-table th:last-child,
+html[data-theme="dark"] .admin-users-page .admin-users-table td:last-child,
+html[data-theme="dark"] .admin-users-page .admin-users-row-menu,
+html[data-theme="dark"] .admin-users-page .admin-users-filter-dropdown,
+html[data-theme="dark"] .admin-users-page .admin-users-panel__search,
+html[data-theme="dark"] .admin-users-page .admin-users-field input,
+html[data-theme="dark"] .admin-users-page .admin-users-field select,
+html[data-theme="dark"] .admin-users-page .admin-users-field textarea,
+html[data-theme="dark"] .admin-users-page .admin-field-select__trigger,
+html[data-theme="dark"] .admin-users-page .admin-users-modal__card,
+html[data-theme="dark"] .admin-users-page .secondary-button,
+html[data-theme="dark"] .lead-create-draft-island {
+  background: var(--bg-surface);
+  border-color: var(--border-default);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .admin-users-page .admin-users-table thead th {
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+}
+
+html[data-theme="dark"] .admin-users-page .admin-users-panel__search,
+html[data-theme="dark"] .admin-users-page .admin-users-field input,
+html[data-theme="dark"] .admin-users-page .admin-users-field select,
+html[data-theme="dark"] .admin-users-page .admin-users-field textarea,
+html[data-theme="dark"] .admin-users-page .admin-field-select__trigger {
+  background: var(--bg-canvas-subtle);
+}
+
+html[data-theme="dark"] .sa-kpi-card,
+html[data-theme="dark"] .sales-dashboard-stat-card,
+html[data-theme="dark"] .sales-dashboard-page .sales-dashboard-panel,
+html[data-theme="dark"] .sales-dashboard-table th,
+html[data-theme="dark"] .sales-dashboard-table-tools__search,
+html[data-theme="dark"] .lead-dashboard-page .onboarding-card.lead-dashboard-panel,
+html[data-theme="dark"] .lead-dashboard-page .sales-dashboard-stat-card.onboarding-card,
+html[data-theme="dark"] .app-shell:not(.app-shell--admin) .sales-dashboard-stat-card.onboarding-card,
+html[data-theme="dark"] .app-shell:not(.app-shell--admin) .table-card,
+html[data-theme="dark"] .app-shell:not(.app-shell--admin) .finance-queue-panel,
+html[data-theme="dark"] .app-shell--partner .admin-directory-panel,
+html[data-theme="dark"] .app-shell--reseller .admin-directory-panel,
+html[data-theme="dark"] .leads-panel,
+html[data-theme="dark"] .leads-panel__footer,
+html[data-theme="dark"] .leads-table thead th,
+html[data-theme="dark"] .finance-queue-panel,
+html[data-theme="dark"] .finance-queue-panel__search,
+html[data-theme="dark"] .finance-queue-table th,
+html[data-theme="dark"] .sales-support-panel,
+html[data-theme="dark"] .customer-support-list,
+html[data-theme="dark"] .customer-support-detail,
+html[data-theme="dark"] .customer-support-list__item,
+html[data-theme="dark"] .nm-customer-info-panel,
+html[data-theme="dark"] .nm-customer-panel,
+html[data-theme="dark"] .mail-templates-panel,
+html[data-theme="dark"] .mail-signature-panel,
+html[data-theme="dark"] .mail-signature-panel__editor,
+html[data-theme="dark"] .mail-signature-panel__preview,
+html[data-theme="dark"] .mail-compose__signature,
+html[data-theme="dark"] .mail-folders,
+html[data-theme="dark"] .login-stage,
+html[data-theme="dark"] .login-card__form-panel,
+html[data-theme="dark"] .admin-plan-channel-card,
+html[data-theme="dark"] .admin-pricing-savebar,
+html[data-theme="dark"] .admin-pricing-panel__note,
+html[data-theme="dark"] .admin-pricing-subtabs {
+  background: var(--bg-surface);
+  border-color: var(--border-default);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .login-stage {
+  background: var(--bg-canvas-subtle);
+}
+
+html[data-theme="dark"] .sales-dashboard-table-tools__search,
+html[data-theme="dark"] .finance-queue-panel__search,
+html[data-theme="dark"] .leads-filter-dropdown__field select,
+html[data-theme="dark"] .finance-partner-commissions-filter select,
+html[data-theme="dark"] .finance-partner-commissions-payout-form input {
+  background: var(--bg-canvas-subtle);
+  border-color: var(--border-default);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"]
+  .finance-partner-commissions-payout-form__field.field--invalid
+  > input {
+  border-color: #db4437;
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, #c73e32 22%, transparent),
+    0 6px 16px color-mix(in srgb, #c73e32 18%, transparent);
+}
+
+html[data-theme="dark"] .finance-partner-commissions-payout-form__field .field__error {
+  color: #c73e32;
+}
+
+html[data-theme="dark"] .leads-table thead th,
+html[data-theme="dark"] .finance-queue-table th,
+html[data-theme="dark"] .sales-dashboard-table th {
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+}
+
+/*
+ * Number Management + Mail — beat late page CSS (admin-users-light / styles.css)
+ * that hardcodes light greys for captions, empty states, and filter selects.
+ */
+html[data-theme="dark"] .admin-users-page.nm-dashboard-page,
+html[data-theme="dark"] .admin-users-page.nm-inventory-page,
+html[data-theme="dark"] .admin-users-page.nm-mapping-page,
+html[data-theme="dark"] .admin-users-page.nm-customer-page {
+  --au-canvas: #0b0b10;
+  --au-subtle: #20202a;
+  --au-border: #343442;
+  --au-text: #f4f4f6;
+  --au-text-secondary: #c9c9cf;
+  --au-text-caption: #a7a7af;
+  --au-text-placeholder: #7e7e88;
+  --au-surface: #15151c;
+  --au-focus: #8650de;
+  background: var(--au-canvas);
+  color: var(--au-text);
+}
+
+html[data-theme="dark"] .nm-dashboard-page .page-header h1,
+html[data-theme="dark"] .nm-inventory-page .page-header h1,
+html[data-theme="dark"] .nm-mapping-page .page-header h1,
+html[data-theme="dark"] .nm-customer-page .page-header h1 {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .nm-dashboard-page .page-header__copy,
+html[data-theme="dark"] .nm-dashboard-page .admin-users-page__subtitle,
+html[data-theme="dark"] .nm-inventory-page .page-header__copy,
+html[data-theme="dark"] .nm-inventory-page .admin-users-page__subtitle,
+html[data-theme="dark"] .nm-mapping-page .page-header__copy,
+html[data-theme="dark"] .nm-customer-page .page-header__copy,
+html[data-theme="dark"] .nm-mapping-page .admin-users-panel__section-header p,
+html[data-theme="dark"] .nm-dashboard-page .admin-users-panel__section-header p,
+html[data-theme="dark"] .nm-inventory-page .admin-users-panel__section-header p,
+html[data-theme="dark"] .nm-customer-page .admin-users-panel__section-header p,
+html[data-theme="dark"] .admin-users-page.nm-mapping-page .admin-users-panel__section-header p,
+html[data-theme="dark"] .admin-users-page.nm-dashboard-page .admin-users-panel__section-header p,
+html[data-theme="dark"] .admin-users-page.nm-inventory-page .admin-users-panel__section-header p,
+html[data-theme="dark"] .admin-users-page.nm-customer-page .admin-users-panel__section-header p {
+  color: var(--text-secondary);
+}
+
+html[data-theme="dark"] .nm-mapping-empty-state h3,
+html[data-theme="dark"] .nm-dashboard-empty-state h3,
+html[data-theme="dark"] .nm-customer-empty-state h3,
+html[data-theme="dark"] .nm-inventory-empty strong {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .nm-mapping-empty-state p,
+html[data-theme="dark"] .nm-dashboard-empty-state p,
+html[data-theme="dark"] .nm-customer-empty-state p,
+html[data-theme="dark"] .nm-mapping-empty-state svg,
+html[data-theme="dark"] .nm-dashboard-empty-state svg,
+html[data-theme="dark"] .nm-customer-empty-state svg,
+html[data-theme="dark"] .nm-customer-empty-state,
+html[data-theme="dark"] .nm-inventory-empty,
+html[data-theme="dark"] .nm-inventory-empty p,
+html[data-theme="dark"] .nm-inventory-empty svg {
+  color: var(--text-secondary);
+}
+
+html[data-theme="dark"] .nm-inventory-provider-card {
+  background: var(--au-surface);
+  border-color: var(--au-border);
+}
+
+html[data-theme="dark"] .nm-inventory-provider-card:hover {
+  background: var(--au-subtle);
+  border-color: var(--au-text-secondary);
+}
+
+html[data-theme="dark"] .nm-inventory-provider-card.is-active,
+html[data-theme="dark"] .nm-inventory-provider-card.is-active:hover {
+  background: var(--au-subtle);
+  border-color: var(--au-text);
+  box-shadow: none;
+}
+
+html[data-theme="dark"] .nm-inventory-provider-card__avatar {
+  background: var(--surface-muted, #20202a);
+  color: var(--text-secondary, #a0a0ab);
+}
+
+html[data-theme="dark"] .nm-inventory-image-field__preview {
+  background: var(--surface-muted, #20202a);
+  border-color: var(--border-default, #343442);
+  color: var(--text-secondary, #a0a0ab);
+}
+
+html[data-theme="dark"] .nm-inventory-image-field__preview:hover {
+  background: #262632;
+  border-color: #5a5a6a;
+}
+
+html[data-theme="dark"] .nm-inventory-image-field__preview-label {
+  color: var(--text-secondary, #a0a0ab);
+}
+
+html[data-theme="dark"] .nm-inventory-image-field__preview-hint {
+  color: var(--text-caption, #80808c);
+}
+
+html[data-theme="dark"] .nm-mapping-page .admin-users-panel__search,
+html[data-theme="dark"] .nm-dashboard-page .admin-users-panel__search,
+html[data-theme="dark"] .nm-inventory-page .admin-users-panel__search,
+html[data-theme="dark"] .admin-users-page.nm-mapping-page .admin-users-panel__search,
+html[data-theme="dark"] .admin-users-page.nm-dashboard-page .admin-users-panel__search,
+html[data-theme="dark"] .admin-users-page.nm-inventory-page .admin-users-panel__search {
+  background: var(--bg-canvas-subtle);
+  border-color: var(--border-default);
+  color: var(--text-placeholder);
+}
+
+html[data-theme="dark"] .nm-mapping-page .admin-users-panel__search input,
+html[data-theme="dark"] .nm-dashboard-page .admin-users-panel__search input,
+html[data-theme="dark"] .nm-inventory-page .admin-users-panel__search input,
+html[data-theme="dark"] .admin-users-page.nm-mapping-page .admin-users-panel__search input,
+html[data-theme="dark"] .admin-users-page.nm-inventory-page .admin-users-panel__search input {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .nm-mapping-page .admin-users-panel__search input::placeholder,
+html[data-theme="dark"] .nm-dashboard-page .admin-users-panel__search input::placeholder,
+html[data-theme="dark"] .nm-inventory-page .admin-users-panel__search input::placeholder,
+html[data-theme="dark"] .admin-users-page.nm-mapping-page .admin-users-panel__search input::placeholder,
+html[data-theme="dark"] .admin-users-page.nm-inventory-page .admin-users-panel__search input::placeholder {
+  color: var(--text-placeholder);
+}
+
+html[data-theme="dark"] .nm-mapping-status-filter select {
+  background-color: var(--bg-canvas-subtle);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23A7A7AF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  border-color: var(--border-default);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .nm-mapping-status-filter select:hover:not(:disabled) {
+  background-color: var(--bg-hover);
+  border-color: var(--border-strong);
+}
+
+html[data-theme="dark"] .nm-mapping-number-fields__title,
+html[data-theme="dark"] .nm-available-modal__header h2,
+html[data-theme="dark"] .nm-available-modal__section-head h3 {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .nm-mapping-number-fields__copy,
+html[data-theme="dark"] .nm-available-modal__header p,
+html[data-theme="dark"] .nm-available-modal__section-head p,
+html[data-theme="dark"] .nm-available-modal__meta,
+html[data-theme="dark"] .nm-available-modal__search svg,
+html[data-theme="dark"] .nm-available-modal__search input::placeholder {
+  color: var(--text-secondary);
+}
+
+html[data-theme="dark"] .nm-available-modal__search,
+html[data-theme="dark"] .nm-available-modal__meta {
+  background: var(--bg-canvas-subtle);
+  border-color: var(--border-default);
+}
+
+html[data-theme="dark"] .nm-available-modal__search input {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .nm-available-modal__provider-tag {
+  background: var(--bg-canvas-subtle);
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
+}
+
+/* AdminPageToast — keep error/success readable without a stark white card */
+html[data-theme="dark"] .admin-users-toast.is-error {
+  background: var(--color-danger-bg);
+  border-color: color-mix(in srgb, #db4437 40%, var(--border-default));
+  color: #f0a8a0;
+}
+
+html[data-theme="dark"] .admin-users-toast.is-success {
+  background: var(--color-success-bg);
+  border-color: color-mix(in srgb, #0e8f50 40%, var(--border-default));
+  color: #7dcea0;
+}
+
+/* Mail — same caption/empty-state contrast pattern */
+html[data-theme="dark"] .mail-list-pane__status,
+html[data-theme="dark"] .mail-list-pane__status--subtle,
+html[data-theme="dark"] .mail-list-footer,
+html[data-theme="dark"] .mail-read-pane__empty,
+html[data-theme="dark"] .mail-read-pane__empty p,
+html[data-theme="dark"] .mail-templates-panel__empty,
+html[data-theme="dark"] .mail-templates-panel__empty-state,
+html[data-theme="dark"] .mail-templates-panel__empty-state p,
+html[data-theme="dark"] .mail-templates-panel__empty-state svg {
+  color: var(--text-secondary);
+}
+
+html[data-theme="dark"] .mail-read-pane__empty strong,
+html[data-theme="dark"] .mail-templates-panel__empty-state strong {
+  color: var(--text-primary);
+}
+
+/*
+ * Native <select> safety net — late page CSS often hardcodes #fff / #f4f4f6 on
+ * rest / hover / focus. Keep dark surface + light text + chevron (never wipe
+ * background-image with the background shorthand). Covers admin pricing Region,
+ * toolbar filters, period/sort, page-size, partner/finance/NM selects.
+ */
+html[data-theme="dark"] .admin-pricing-region-select select,
+html[data-theme="dark"] .admin-pricing-region-select select:hover:not(:disabled),
+html[data-theme="dark"] .admin-pricing-region-select select:focus,
+html[data-theme="dark"] .admin-pricing-region-select select:focus-visible,
+html[data-theme="dark"] .admin-pricing-region-select select:active,
+html[data-theme="dark"] .admin-users-field select,
+html[data-theme="dark"] .admin-users-field select:hover:not(:disabled),
+html[data-theme="dark"] .admin-users-field select:focus,
+html[data-theme="dark"] .admin-users-field select:focus-visible,
+html[data-theme="dark"] .admin-users-filter-dropdown__field select,
+html[data-theme="dark"] .admin-users-filter-dropdown__field select:hover:not(:disabled),
+html[data-theme="dark"] .admin-users-filter-dropdown__field select:focus,
+html[data-theme="dark"] .admin-users-filter-dropdown__field select:focus-visible,
+html[data-theme="dark"] .admin-field-select__trigger,
+html[data-theme="dark"] .admin-field-select__trigger:hover:not(:disabled),
+html[data-theme="dark"] .admin-field-select__trigger:focus,
+html[data-theme="dark"] .admin-field-select__trigger:focus-visible,
+html[data-theme="dark"] .nm-mapping-status-filter select,
+html[data-theme="dark"] .nm-mapping-status-filter select:hover:not(:disabled),
+html[data-theme="dark"] .nm-mapping-status-filter select:focus,
+html[data-theme="dark"] .nm-mapping-status-filter select:focus-visible,
+html[data-theme="dark"] .leads-filter-dropdown__field select,
+html[data-theme="dark"] .leads-filter-dropdown__field select:hover:not(:disabled),
+html[data-theme="dark"] .leads-filter-dropdown__field select:focus,
+html[data-theme="dark"] .leads-filter-dropdown__field select:focus-visible,
+html[data-theme="dark"] .finance-queue-panel__filter select,
+html[data-theme="dark"] .finance-queue-panel__filter select:hover:not(:disabled),
+html[data-theme="dark"] .finance-queue-panel__filter select:focus,
+html[data-theme="dark"] .finance-queue-panel__filter select:focus-visible,
+html[data-theme="dark"] .finance-partner-commissions-filter .admin-users-filter-dropdown__field select,
+html[data-theme="dark"] .finance-partner-commissions-filter .admin-users-filter-dropdown__field select:hover:not(:disabled),
+html[data-theme="dark"] .finance-partner-commissions-filter .admin-users-filter-dropdown__field select:focus,
+html[data-theme="dark"] .finance-partner-commissions-filter .admin-users-filter-dropdown__field select:focus-visible,
+html[data-theme="dark"] .partner-leads-filter select,
+html[data-theme="dark"] .partner-leads-filter select:hover:not(:disabled),
+html[data-theme="dark"] .partner-leads-filter select:focus,
+html[data-theme="dark"] .partner-leads-filter select:focus-visible,
+html[data-theme="dark"] .partner-commissions-filter select,
+html[data-theme="dark"] .partner-commissions-filter select:hover:not(:disabled),
+html[data-theme="dark"] .partner-commissions-filter select:focus,
+html[data-theme="dark"] .partner-commissions-filter select:focus-visible,
+html[data-theme="dark"] .partner-bank-page .partner-bank-country select,
+html[data-theme="dark"] .partner-bank-page .partner-bank-country select:hover:not(:disabled),
+html[data-theme="dark"] .partner-bank-page .partner-bank-country select:focus,
+html[data-theme="dark"] .partner-bank-page .partner-bank-country select:focus-visible,
+html[data-theme="dark"] .sa-agents-period select,
+html[data-theme="dark"] .sa-agents-period select:hover:not(:disabled),
+html[data-theme="dark"] .sa-agents-period select:focus,
+html[data-theme="dark"] .sa-agents-period select:focus-visible,
+html[data-theme="dark"] .sa-agents-sort select,
+html[data-theme="dark"] .sa-agents-sort select:hover:not(:disabled),
+html[data-theme="dark"] .sa-agents-sort select:focus,
+html[data-theme="dark"] .sa-agents-sort select:focus-visible,
+html[data-theme="dark"] .sa-dashboard__period select,
+html[data-theme="dark"] .sa-dashboard__period select:hover:not(:disabled),
+html[data-theme="dark"] .sa-dashboard__period select:focus,
+html[data-theme="dark"] .sa-dashboard__period select:focus-visible,
+html[data-theme="dark"] .sa-agent-detail-filter-dropdown .admin-users-filter-dropdown__field select,
+html[data-theme="dark"] .sa-agent-detail-filter-dropdown .admin-users-filter-dropdown__field select:hover:not(:disabled),
+html[data-theme="dark"] .sa-agent-detail-filter-dropdown .admin-users-filter-dropdown__field select:focus,
+html[data-theme="dark"] .sa-agent-detail-filter-dropdown .admin-users-filter-dropdown__field select:focus-visible,
+html[data-theme="dark"] .sa-unassigned-leads__select select,
+html[data-theme="dark"] .sa-unassigned-leads__select select:hover:not(:disabled),
+html[data-theme="dark"] .sa-unassigned-leads__select select:focus,
+html[data-theme="dark"] .sa-unassigned-leads__select select:focus-visible,
+html[data-theme="dark"] .app-shell:not(.app-shell--admin) select,
+html[data-theme="dark"] .app-shell:not(.app-shell--admin) select:hover:not(:disabled),
+html[data-theme="dark"] .app-shell:not(.app-shell--admin) select:focus,
+html[data-theme="dark"] .app-shell:not(.app-shell--admin) select:focus-visible,
+html[data-theme="dark"] .login-screen select,
+html[data-theme="dark"] .login-screen select:hover:not(:disabled),
+html[data-theme="dark"] .login-screen select:focus,
+html[data-theme="dark"] .login-screen select:focus-visible {
+  background-color: var(--bg-canvas-subtle);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23A7A7AF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-position: right 16px center;
+  background-repeat: no-repeat;
+  background-size: 16px 16px;
+  border-color: var(--border-default);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .admin-pricing-region-select select:hover:not(:disabled),
+html[data-theme="dark"] .admin-users-field select:hover:not(:disabled),
+html[data-theme="dark"] .admin-users-filter-dropdown__field select:hover:not(:disabled),
+html[data-theme="dark"] .admin-field-select__trigger:hover:not(:disabled),
+html[data-theme="dark"] .nm-mapping-status-filter select:hover:not(:disabled),
+html[data-theme="dark"] .leads-filter-dropdown__field select:hover:not(:disabled),
+html[data-theme="dark"] .finance-queue-panel__filter select:hover:not(:disabled),
+html[data-theme="dark"] .finance-partner-commissions-filter .admin-users-filter-dropdown__field select:hover:not(:disabled),
+html[data-theme="dark"] .partner-leads-filter select:hover:not(:disabled),
+html[data-theme="dark"] .partner-commissions-filter select:hover:not(:disabled),
+html[data-theme="dark"] .partner-bank-page .partner-bank-country select:hover:not(:disabled),
+html[data-theme="dark"] .sa-agents-period select:hover:not(:disabled),
+html[data-theme="dark"] .sa-agents-sort select:hover:not(:disabled),
+html[data-theme="dark"] .sa-dashboard__period select:hover:not(:disabled),
+html[data-theme="dark"] .sa-agent-detail-filter-dropdown .admin-users-filter-dropdown__field select:hover:not(:disabled),
+html[data-theme="dark"] .sa-unassigned-leads__select select:hover:not(:disabled),
+html[data-theme="dark"] .app-shell:not(.app-shell--admin) select:hover:not(:disabled),
+html[data-theme="dark"] .login-screen select:hover:not(:disabled) {
+  background-color: var(--bg-hover);
+  border-color: var(--border-strong);
+}
+
+/* Custom triggers keep Lucide chevron — do not force CSS chevron image */
+html[data-theme="dark"] .admin-field-select__trigger,
+html[data-theme="dark"] .admin-field-select__trigger:hover:not(:disabled),
+html[data-theme="dark"] .admin-field-select__trigger:focus,
+html[data-theme="dark"] .admin-field-select__trigger:focus-visible {
+  background-image: none;
+}
+
+/* Focus: keep dark fill; violet ring only (no white flash) */
+html[data-theme="dark"] .admin-pricing-region-select select:focus,
+html[data-theme="dark"] .admin-pricing-region-select select:focus-visible,
+html[data-theme="dark"] .admin-pricing-region-select select:active,
+html[data-theme="dark"] .admin-users-field select:focus,
+html[data-theme="dark"] .admin-users-field select:focus-visible,
+html[data-theme="dark"] .admin-users-filter-dropdown__field select:focus,
+html[data-theme="dark"] .admin-users-filter-dropdown__field select:focus-visible,
+html[data-theme="dark"] .admin-field-select__trigger:focus,
+html[data-theme="dark"] .admin-field-select__trigger:focus-visible,
+html[data-theme="dark"] .nm-mapping-status-filter select:focus,
+html[data-theme="dark"] .nm-mapping-status-filter select:focus-visible,
+html[data-theme="dark"] .leads-filter-dropdown__field select:focus,
+html[data-theme="dark"] .leads-filter-dropdown__field select:focus-visible,
+html[data-theme="dark"] .finance-queue-panel__filter select:focus,
+html[data-theme="dark"] .finance-queue-panel__filter select:focus-visible,
+html[data-theme="dark"] .partner-leads-filter select:focus,
+html[data-theme="dark"] .partner-leads-filter select:focus-visible,
+html[data-theme="dark"] .partner-commissions-filter select:focus,
+html[data-theme="dark"] .partner-commissions-filter select:focus-visible,
+html[data-theme="dark"] .partner-bank-page .partner-bank-country select:focus,
+html[data-theme="dark"] .partner-bank-page .partner-bank-country select:focus-visible,
+html[data-theme="dark"] .sa-agents-period select:focus,
+html[data-theme="dark"] .sa-agents-period select:focus-visible,
+html[data-theme="dark"] .sa-agents-sort select:focus,
+html[data-theme="dark"] .sa-agents-sort select:focus-visible,
+html[data-theme="dark"] .sa-dashboard__period select:focus,
+html[data-theme="dark"] .sa-dashboard__period select:focus-visible,
+html[data-theme="dark"] .sa-agent-detail-filter-dropdown .admin-users-filter-dropdown__field select:focus,
+html[data-theme="dark"] .sa-agent-detail-filter-dropdown .admin-users-filter-dropdown__field select:focus-visible,
+html[data-theme="dark"] .app-shell:not(.app-shell--admin) select:focus,
+html[data-theme="dark"] .app-shell:not(.app-shell--admin) select:focus-visible,
+html[data-theme="dark"] .login-screen select:focus,
+html[data-theme="dark"] .login-screen select:focus-visible {
+  background-color: var(--bg-canvas-subtle);
+  border-color: var(--border-focus);
+  color: var(--text-primary);
+}
+
+/* Transparent page-size / inline period controls — beat broad shell select rules */
+html[data-theme="dark"] .app-shell .admin-users-panel__page-size-control select,
+html[data-theme="dark"] .app-shell .admin-users-panel__page-size-control select:hover:not(:disabled),
+html[data-theme="dark"] .app-shell .admin-users-panel__page-size-control select:focus,
+html[data-theme="dark"] .app-shell .admin-users-panel__page-size-control select:focus-visible,
+html[data-theme="dark"] .app-shell .sa-agents-page__period-control select,
+html[data-theme="dark"] .app-shell .sa-agents-page__period-control select:hover:not(:disabled),
+html[data-theme="dark"] .app-shell .sa-agents-page__period-control select:focus,
+html[data-theme="dark"] .app-shell .sa-agents-page__period-control select:focus-visible,
+html[data-theme="dark"] .app-shell .sa-agents-panel__sort-control select,
+html[data-theme="dark"] .app-shell .sa-agents-panel__sort-control select:hover:not(:disabled),
+html[data-theme="dark"] .app-shell .sa-agents-panel__sort-control select:focus,
+html[data-theme="dark"] .app-shell .sa-agents-panel__sort-control select:focus-visible,
+html[data-theme="dark"] .app-shell .sa-agent-detail-leads__page-size select,
+html[data-theme="dark"] .app-shell .sa-agent-detail-leads__page-size select:hover:not(:disabled),
+html[data-theme="dark"] .app-shell .sa-agent-detail-leads__page-size select:focus,
+html[data-theme="dark"] .app-shell .sa-agent-detail-leads__page-size select:focus-visible {
+  background-color: transparent;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23A7A7AF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  border-color: transparent;
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] select option {
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+}

@@ -1,0 +1,17 @@
+# Industry overlay — extracted from core, does not fork Contact.
+# Tenant semantic labels win over these defaults.
+
+pack: generic
+extends_ontology: cc
+
+labels:
+  Contact: Customer
+  Contact: Contact
+  Ticket: Ticket
+  Appointment: Appointment
+
+# Optional packs (uncomment / copy per tenant industry)
+# healthcare: { Contact: Patient, Appointment: Appointment }
+# bfsi:       { Contact: Client }
+# ecommerce:  { Contact: Buyer }
+# saas_b2b:   { Contact: Account }

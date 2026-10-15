@@ -1,0 +1,18 @@
+name: ccass.agent_presence_history
+alias: h
+schema: ccass
+grain: presence_interval
+purpose: Presence intervals for occupancy (ready/busy/away time).
+aliases: [occupancy, ready time]
+time_columns: [started_at, ended_at]
+columns:
+  - { name: id, type: bigint, pk: true, description: Interval id }
+  - { name: organization_id, type: bigint, description: Tenant id }
+  - { name: agent_id, type: bigint, fk: ccass.agents.id, description: Agent }
+  - { name: previous_state, type: text, description: Prior state }
+  - { name: new_state, type: text, values: [offline, ready, busy, away, not_ready, acw], description: State for this interval }
+  - { name: started_at, type: timestamptz, description: Interval start }
+  - { name: ended_at, type: timestamptz, description: Interval end. Null means still current. }
+sample_rows:
+  - { id: 10, agent_id: 12, new_state: ready, started_at: "2026-09-07T09:00:00Z", ended_at: "2026-09-07T12:00:00Z" }
+  - { id: 11, agent_id: 12, new_state: busy, started_at: "2026-09-07T12:00:00Z", ended_at: "2026-09-07T12:18:00Z" }

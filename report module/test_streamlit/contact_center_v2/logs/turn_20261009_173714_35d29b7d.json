@@ -1,0 +1,62 @@
+{
+  "turn_id": "35d29b7d",
+  "timestamp": "2026-10-09T12:07:14.722202+00:00",
+  "question": "what is the conversation abandoned rate  broken down by channel?",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1018,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Conversation abandonment rate by channel</strong></p>\n<p>The conversation abandonment rate for all time is <strong>0%</strong> across all channels with finished volume. The breakdown is as follows:</p>\n<ul>\n<li><strong>webchat</strong>: 0%</li>\n<li><strong>facebook</strong>: 0%</li>\n<li><strong>instagram</strong>: 0%</li>\n<li><strong>whatsapp</strong>: 0%</li>\n</ul>\n<p>Note: email and call channels show no finished volume for this period.</p>\n<p>Would you like to see the total number of conversations started per channel instead?</p>",
+  "card": "card: bar r1",
+  "facts": "result_id: r1\nwindow: all time\nkpi: abandonment_rate\ncertified: true\nunit: percent\ntask_goal: Calculate the conversation abandonment rate broken down by channel.\nanswer_type: number\nrow_count: 6\nrow 1: channel=email; abandoned_n=0; queued_finished_n=0; rate_pct=None\nrow 2: channel=facebook; abandoned_n=0; queued_finished_n=4; rate_pct=0\nrow 3: channel=instagram; abandoned_n=0; queued_finished_n=2; rate_pct=0\nrow 4: channel=webchat; abandoned_n=0; queued_finished_n=46; rate_pct=0\nrow 5: channel=whatsapp; abandoned_n=0; queued_finished_n=2; rate_pct=0\nrow 6: channel=call; abandoned_n=0; queued_finished_n=0; rate_pct=None",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1018,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "what is the conversation abandoned rate  broken down by channel?",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants the conversation abandonment rate broken down by channel for all time.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Calculate the conversation abandonment rate broken down by channel.",
+          "time": "all time",
+          "scope": "org",
+          "slice": [
+            "channel"
+          ],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "abandonment_rate",
+        "row_count": 6
+      }
+    ],
+    "facts": "result_id: r1\nwindow: all time\nkpi: abandonment_rate\ncertified: true\nunit: percent\ntask_goal: Calculate the conversation abandonment rate broken down by channel.\nanswer_type: number\nrow_count: 6\nrow 1: channel=email; abandoned_n=0; queued_finished_n=0; rate_pct=None\nrow 2: channel=facebook; abandoned_n=0; queued_finished_n=4; rate_pct=0\nrow 3: channel=instagram; abandoned_n=0; queued_finished_n=2; rate_pct=0\nrow 4: channel=webchat; abandoned_n=0; queued_finished_n=46; rate_pct=0\nrow 5: channel=whatsapp; abandoned_n=0; queued_finished_n=2; rate_pct=0\nrow 6: channel=call; abandoned_n=0; queued_finished_n=0; rate_pct=None",
+    "grounded": true,
+    "card": "card: bar r1"
+  },
+  "error": null
+}

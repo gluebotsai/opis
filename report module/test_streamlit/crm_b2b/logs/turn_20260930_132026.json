@@ -1,0 +1,85 @@
+{
+  "question": "what is the day since last activity'",
+  "answer": "The days since last activity is 0.0.",
+  "trace": {
+    "question": "what is the day since last activity'",
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1015,
+      "role": "admin"
+    },
+    "model": "worktual-gemma",
+    "tasks": [
+      {
+        "status": "ok",
+        "store": "sql",
+        "sql": "WITH rpt_deal_facts AS (\nSELECT src.deal_id, src.organization_id, src.title, src.stage, src.amount, src.currency_code, src.weighted_amount, src.company_id, src.company_name, src.owner_user_id, src.owner_name, src.created_at, src.closed_at, src.close_ts, src.aging_days, src.total_activities, src.total_calls, src.total_meetings, src.total_emails, src.days_since_last_touch, src.quote_count, src.accepted_quote_total, src.avg_discount_pct FROM (\nSELECT \n  d.id AS deal_id,\n  d.organization_id,\n  d.title,\n  d.stage,\n  COALESCE(d.amount, 0) AS amount,\n  CASE\n    WHEN pq.currency IS NOT NULL AND pq.currency <> 'USD' THEN pq.currency\n    WHEN o.country IS NOT NULL AND o.country <> 'US' AND cc.curr IS NOT NULL THEN cc.curr\n    WHEN pq.currency = 'USD' THEN 'USD'\n    WHEN o.country = 'US' THEN 'USD'\n    ELSE 'USD'\n  END AS currency_code,\n  ROUND(COALESCE(d.amount, 0) * (\n    CASE d.stage\n      WHEN 'qualification' THEN 0.10\n      WHEN 'discover' THEN 0.25\n      WHEN 'propose' THEN 0.50\n      WHEN 'negotiate' THEN 0.75\n      WHEN 'closed_won' THEN 1.00\n      WHEN 'closed_lost' THEN 0.00\n      ELSE 0.00\n    END\n  ), 2) AS weighted_amount,\n  d.company_id,\n  c.name AS company_name,\n  d.owner_user_id,\n  su.first_name || ' ' || COALESCE(su.last_name, '') AS owner_name,\n  d.created_at,\n  d.closed_at,\n  COALESCE(d.closed_at, d.created_at) AS close_ts,\n  FLOOR(EXTRACT(EPOCH FROM (NOW() - d.created_at))/86400)::integer AS aging_days,\n  COALESCE(act.total_activities, 0)::integer AS total_activities,\n  COALESCE(act.total_calls, 0)::integer AS total_calls,\n  COALESCE(act.total_meetings, 0)::integer AS total_meetings,\n  COALESCE(act.total_emails, 0)::integer AS total_emails,\n  act.days_since_last_touch::integer AS days_since_last_touch,\n  COALESCE(q_agg.quote_count, 0)::integer AS quote_count,\n  COALESCE(q_agg.accepted_quote_total, 0) AS accepted_quote_total,\n  COALESCE(q_agg.avg_discount_pct, 0) AS avg_discount_pct\nFROM crm.deals d\nLEFT JOIN crm.companies c ON c.id = d.company_id AND c.organization_id = d.organization_id\nLEFT JOIN accounts.setup_users su ON su.id = d.owner_user_id\nLEFT JOIN accounts.organizations o ON o.id = d.organization_id\nLEFT JOIN LATERAL (\n  SELECT q.currency \n  FROM crm.quotes q \n  WHERE q.deal_id = d.id AND q.organization_id = d.organization_id \n  ORDER BY CASE WHEN q.status = 'accepted' THEN 1 WHEN q.status = 'sent' THEN 2 ELSE 3 END, q.updated_at DESC \n  LIMIT 1\n) pq ON TRUE\nLEFT JOIN LATERAL (\n  SELECT CASE o.country \n    WHEN 'India' THEN 'INR' \n    WHEN 'United Kingdom' THEN 'GBP' \n    WHEN 'Germany' THEN 'EUR' \n    WHEN 'Canada' THEN 'CAD' \n    WHEN 'Australia' THEN 'AUD' \n    ELSE 'USD' \n  END AS curr\n) cc ON TRUE\nLEFT JOIN LATERAL (\n  SELECT \n    COUNT(*) AS total_activities,\n    COUNT(*) FILTER (WHERE da.type = 'call') AS total_calls,\n    COUNT(*) FILTER (WHERE da.type = 'meeting') AS total_meetings,\n    COUNT(*) FILTER (WHERE da.type = 'email') AS total_emails,\n    FLOOR(EXTRACT(EPOCH FROM (NOW() - MAX(da.created_at)))/86400) AS days_since_last_touch\n  FROM crm.deal_activities da \n  WHERE da.deal_id = d.id AND da.organization_id = d.organization_id\n) act ON TRUE\nLEFT JOIN LATERAL (\n  SELECT \n    COUNT(*) AS quote_count,\n    SUM(CASE WHEN q.status = 'accepted' THEN q.total ELSE 0 END) AS accepted_quote_total,\n    AVG(q.discount_pct) AS avg_discount_pct\n  FROM crm.quotes q \n  WHERE q.deal_id = d.id AND q.organization_id = d.organization_id\n) q_agg ON TRUE\nWHERE d.organization_id = %(_org_id)s\n) src WHERE TRUE\n)\nSELECT COALESCE(ROUND(CAST(AVG(days_since_last_touch) AS DECIMAL), 1), 0.0) AS avg_days_since_last_touch FROM rpt_deal_facts AS deal_facts WHERE stage IN ('qualification', 'discover', 'propose', 'negotiate') AND days_since_last_touch IS NOT NULL AND TRUE AND TRUE AND TRUE LIMIT 500",
+        "views": [
+          "deal_facts"
+        ],
+        "guard_notes": [
+          "row cap 500 applied"
+        ],
+        "bound_params": {
+          "_org_id": 1003,
+          "_user_id": 1015,
+          "user_id": 1015,
+          "organization_id": 1003,
+          "org_id": 1003,
+          "tenant_id": 1003,
+          "current_user_id": 1015
+        },
+        "rows": [
+          {
+            "avg_days_since_last_touch": "0.0"
+          }
+        ],
+        "kpi_id": "days_since_last_touch",
+        "time_status": "all_time",
+        "attempts": [
+          {
+            "raw": "{\"tool\":\"run_kpi\",\"kpi_id\":\"days_since_last_touch\",\"dimension\":null}",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "days_since_last_touch"
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "tool": "run_kpi",
+        "requested_kpi": "days_since_last_touch",
+        "requested_dimension": null,
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "days_since_last_touch",
+          "goal": "Calculate the number of days since the last activity recorded",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "kpi",
+          "depends_on": []
+        }
+      }
+    ],
+    "domain_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"quick\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"days_since_last_touch\",\n      \"goal\": \"Calculate the number of days since the last activity recorded\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"answer_type\": \"kpi\",\n      \"depends_on\": []\n    }\n  ]\n}\n```",
+    "plan": {
+      "kind": "plan",
+      "depth": "quick",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "days_since_last_touch",
+          "goal": "Calculate the number of days since the last activity recorded",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "kpi",
+          "depends_on": []
+        }
+      ]
+    },
+    "facts": "time_requested: all time\nperiod_applied: overall (no date filter, UTC)\ntime_status: all_time\ncatalog_kpi: days_since_last_touch\nRESULT: days_since_last_touch = 0.0",
+    "grounded": true,
+    "briefing_raw": "The days since last activity is 0.0."
+  }
+}

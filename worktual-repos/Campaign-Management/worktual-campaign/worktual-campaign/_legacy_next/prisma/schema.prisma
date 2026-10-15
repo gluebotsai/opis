@@ -1,0 +1,92 @@
+// Campaign MS models live in campaign_db (DATABASE_URL / CAMPAIGN_DATABASE_URL).
+// my_account_qa (ACCOUNT_DATABASE_URL): auth users only — accessed via pg pool, not Prisma.
+// Do not store users/contacts here; store tenant_id + user/contact ID refs only.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ProductCode {
+  campaign
+  crm
+}
+
+enum ProductStatus {
+  active
+  inactive
+}
+
+enum CampaignStatus {
+  draft
+  scheduled
+  live
+  completed
+  cancelled
+}
+
+enum SourceChannel {
+  standalone_campaign
+  crm_marketing
+}
+
+model Branch {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @map("tenant_id") @db.Uuid
+  name      String
+  isDefault Boolean  @default(false) @map("is_default")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  products  OrganizationProduct[]
+  campaigns Campaign[]
+
+  @@index([tenantId])
+  @@index([tenantId, isDefault])
+  @@map("branches")
+}
+
+model OrganizationProduct {
+  id          String        @id @default(uuid()) @db.Uuid
+  tenantId    String        @map("tenant_id") @db.Uuid
+  branchId    String        @map("branch_id") @db.Uuid
+  productCode ProductCode   @map("product_code")
+  status      ProductStatus @default(active)
+  startsAt    DateTime?     @map("starts_at")
+  endsAt      DateTime?     @map("ends_at")
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, branchId, productCode])
+  @@index([tenantId, branchId])
+  @@index([tenantId, productCode, status])
+  @@map("organization_products")
+}
+
+model Campaign {
+  id               String         @id @default(uuid()) @db.Uuid
+  tenantId         String         @map("tenant_id") @db.Uuid
+  branchId         String         @map("branch_id") @db.Uuid
+  name             String
+  description      String?
+  status           CampaignStatus @default(draft)
+  startsAt         DateTime?      @map("starts_at")
+  endsAt           DateTime?      @map("ends_at")
+  sourceChannel    SourceChannel  @default(standalone_campaign) @map("source_channel")
+  createdByUserId  String         @map("created_by_user_id") @db.Uuid
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @updatedAt @map("updated_at")
+
+  branch Branch @relation(fields: [branchId], references: [id], onDelete: Restrict)
+
+  @@index([tenantId, branchId])
+  @@index([tenantId, branchId, status])
+  @@index([tenantId, branchId, startsAt])
+  @@map("campaigns")
+}

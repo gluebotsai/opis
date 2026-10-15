@@ -1,0 +1,980 @@
+product: crm
+engine: postgres
+default_schema: crm_marts
+tenant_column: organization_id
+tables:
+- name: mart_companies
+  schema: crm_marts
+  engine: postgres
+  description: B2B client companies, franchises, and total location rollups.
+  tenant_column: organization_id
+  sql_agent_only: false
+  columns:
+  - name: company_id
+  - name: organization_id
+  semantic_model: company
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - business_type
+  - company_industry
+  - channel_role
+  - owner_name
+  - parent_company_name
+  semantic_measures:
+  - company_count
+  - franchise_node_count
+  - total_location_count
+- name: mart_contact_activities
+  schema: crm_marts
+  engine: postgres
+  description: Contact-level sales activities, outreach, and tasks.
+  tenant_column: organization_id
+  sql_agent_only: false
+  columns:
+  - name: contact_activity_id
+  - name: organization_id
+  semantic_model: contact_activity
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - business_type
+  - activity_type
+  - folder
+  - contact_lifecycle_stage
+  semantic_measures:
+  - contact_activity_count
+  - completed_task_count
+  - open_task_count
+- name: mart_contact_campaign_engagement
+  schema: crm_marts
+  engine: postgres
+  description: CRM contact profile joined to campaign engagement signals.
+  grain: contact
+  purpose: Cross-spoke contact × campaign engagement for ad hoc SQL only.
+  tenant_column: organization_id
+  sql_agent_only: true
+  columns:
+  - name: contact_id
+  - name: organization_id
+  semantic_model: null
+  semantic_dimensions: null
+  semantic_measures: null
+- name: mart_contacts
+  schema: crm_marts
+  engine: postgres
+  description: Core marts model for CRM contact profiles overlaid on CDP records with lead scoring.
+  tenant_column: organization_id
+  sql_agent_only: false
+  columns:
+  - name: contact_id
+  - name: organization_id
+  semantic_model: contact
+  semantic_dimensions:
+  - organization_id
+  - business_type
+  - created_at
+  - lifecycle_stage
+  - lead_source
+  - lead_status
+  - owner_name
+  - lead_score
+  - lead_band
+  semantic_measures:
+  - contact_count
+  - new_lead_count
+  - mql_proxy_count
+  - eligible_lead_count
+  - customer_count
+  - funnel_eligible_count
+- name: mart_contracts
+  schema: crm_marts
+  engine: postgres
+  description: Contract mart with ARR, expiry, and 90-day renewal status.
+  tenant_column: organization_id
+  sql_agent_only: false
+  columns:
+  - name: contract_id
+  - name: organization_id
+  semantic_model: contract
+  semantic_dimensions:
+  - organization_id
+  - starts_at
+  - business_type
+  - channel_role
+  semantic_measures:
+  - contract_count
+  - arr_sum
+  - expired_contract_count
+  - renewal_due_90d_count
+  - renewed_contract_count
+- name: mart_deal_activities
+  schema: crm_marts
+  engine: postgres
+  description: Deal-related sales activities, tasks, and completion tracking.
+  tenant_column: organization_id
+  sql_agent_only: false
+  columns:
+  - name: deal_activity_id
+  - name: organization_id
+  semantic_model: deal_activity
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - business_type
+  - activity_type
+  - owner_name
+  - deal_stage
+  semantic_measures:
+  - deal_activity_count
+  - completed_deal_activity_count
+- name: mart_deals
+  schema: crm_marts
+  engine: postgres
+  description: Core marts model for CRM deals, pipeline amounts, stages, and sales cycle performance.
+  tenant_column: organization_id
+  sql_agent_only: false
+  columns:
+  - name: deal_id
+  - name: organization_id
+  semantic_model: deal
+  semantic_dimensions:
+  - organization_id
+  - business_type
+  - created_at
+  - closed_at
+  - stage
+  - deal_status_proxy
+  - lost_reason
+  - owner_name
+  - owner_team_id
+  semantic_measures:
+  - open_pipeline_amount
+  - deal_count
+  - deal_amount_sum
+  - won_deal_count
+  - lost_deal_count
+  - closed_deal_count
+  - sales_cycle_days_sum
+  - won_deal_count_for_avg
+  - won_deal_amount_sum
+  - lost_deal_amount_sum
+- name: mart_invoice_lines
+  schema: crm_marts
+  engine: postgres
+  description: Invoice line items joined with product catalog.
+  tenant_column: organization_id
+  sql_agent_only: false
+  columns:
+  - name: invoice_line_id
+  - name: organization_id
+  semantic_model: invoice_line
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - business_type
+  - invoice_status
+  - line_kind
+  - product_name
+  - product_category
+  semantic_measures:
+  - invoice_line_count
+  - invoiced_units_sum
+  - invoice_line_revenue_sum
+- name: mart_invoices
+  schema: crm_marts
+  engine: postgres
+  description: Invoices mart with outstanding/paid status and payment collection duration.
+  tenant_column: organization_id
+  sql_agent_only: false
+  columns:
+  - name: invoice_id
+  - name: organization_id
+  semantic_model: invoice
+  semantic_dimensions:
+  - organization_id
+  - business_type
+  - issue_date
+  - invoice_status
+  - created_by_name
+  semantic_measures:
+  - outstanding_invoice_amount
+  - paid_invoice_count
+  - days_to_pay_sum
+- name: mart_order_lines
+  schema: crm_marts
+  engine: postgres
+  description: Order line items joined with product catalog for SKU/category GMV analysis.
+  tenant_column: organization_id
+  sql_agent_only: false
+  columns:
+  - name: order_line_id
+  - name: organization_id
+  semantic_model: order_line
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - business_type
+  - order_status
+  - product_name
+  - product_sku
+  - product_category
+  - product_subcategory
+  - product_brand
+  - product_billing_type
+  semantic_measures:
+  - order_line_count
+  - units_sold_sum
+  - order_line_revenue_sum
+  - distinct_products_sold
+- name: mart_orders
+  schema: crm_marts
+  engine: postgres
+  description: Sales orders mart across B2B, B2C, and B2B2C business motions.
+  tenant_column: organization_id
+  sql_agent_only: false
+  columns:
+  - name: order_id
+  - name: organization_id
+  semantic_model: order
+  semantic_dimensions:
+  - organization_id
+  - business_type
+  - created_at
+  - order_status
+  - contact_lifecycle_stage
+  - created_by_name
+  semantic_measures:
+  - order_count
+  - order_total_sum
+- name: mart_proposals
+  schema: crm_marts
+  engine: postgres
+  description: Proposals mart joined with parent deal details.
+  tenant_column: organization_id
+  sql_agent_only: false
+  columns:
+  - name: proposal_id
+  - name: organization_id
+  semantic_model: proposal
+  semantic_dimensions:
+  - organization_id
+  - business_type
+  - created_at
+  - proposal_status
+  - owner_name
+  semantic_measures:
+  - proposal_sent_count
+  - proposal_accepted_count
+- name: mart_quote_lines
+  schema: crm_marts
+  engine: postgres
+  description: Quote line items joined with product catalog.
+  tenant_column: organization_id
+  sql_agent_only: false
+  columns:
+  - name: quote_line_id
+  - name: organization_id
+  semantic_model: quote_line
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - business_type
+  - quote_status
+  - product_name
+  - product_category
+  - owner_name
+  semantic_measures:
+  - quote_line_count
+  - quoted_units_sum
+  - quote_line_revenue_sum
+- name: mart_quotes
+  schema: crm_marts
+  engine: postgres
+  description: Quotes mart joined with parent deal stage and owner details.
+  tenant_column: organization_id
+  sql_agent_only: false
+  columns:
+  - name: quote_id
+  - name: organization_id
+  semantic_model: quote
+  semantic_dimensions:
+  - organization_id
+  - business_type
+  - created_at
+  - quote_status
+  - deal_stage
+  - owner_name
+  semantic_measures:
+  - quote_count
+  - deals_with_quote_count
+  - won_deals_with_accepted_quote_count
+- name: mart_contact_order_summary
+  schema: crm_marts
+  engine: postgres
+  tenant_column: organization_id
+  semantic_model: order_by_contact
+  semantic_dimensions:
+  - first_order_at
+  semantic_measures:
+  - contacts_with_orders
+  - lifetime_order_value_sum
+  - repeat_customer_count
+  note: Mart schema.yml entry missing — add meta block
+- name: mart_deal_daily_summary
+  schema: crm_marts
+  engine: postgres
+  tenant_column: organization_id
+  semantic_model: deal_daily
+  semantic_dimensions:
+  - organization_id
+  - business_type
+  - period_date
+  semantic_measures:
+  - avg_deal_count
+  - avg_open_pipeline_amount
+  - avg_won_deal_count
+  - avg_lost_deal_count
+  - avg_closed_deal_count
+  - avg_daily_win_rate
+  - avg_daily_loss_rate
+  note: Mart schema.yml entry missing — add meta block
+- name: mart_deal_owner_daily_summary
+  schema: crm_marts
+  engine: postgres
+  tenant_column: organization_id
+  semantic_model: deal_owner_daily
+  semantic_dimensions:
+  - organization_id
+  - business_type
+  - owner_name
+  - period_date
+  semantic_measures:
+  - avg_agent_win_rate
+  note: Mart schema.yml entry missing — add meta block
+- name: mart_contact_daily_summary
+  schema: crm_marts
+  engine: postgres
+  tenant_column: organization_id
+  semantic_model: contact_daily
+  semantic_dimensions:
+  - organization_id
+  - business_type
+  - period_date
+  semantic_measures:
+  - avg_contact_count
+  - avg_new_lead_count
+  - avg_mql_proxy_count
+  - avg_eligible_lead_count
+  - avg_customer_count
+  - avg_funnel_eligible_count
+  - avg_daily_mql_rate
+  - avg_daily_customer_conversion_rate
+  note: Mart schema.yml entry missing — add meta block
+- name: mart_proposal_daily_summary
+  schema: crm_marts
+  engine: postgres
+  tenant_column: organization_id
+  semantic_model: proposal_daily
+  semantic_dimensions:
+  - organization_id
+  - business_type
+  - period_date
+  semantic_measures:
+  - avg_proposal_sent_count
+  - avg_proposal_accepted_count
+  - avg_daily_proposal_acceptance_rate
+  note: Mart schema.yml entry missing — add meta block
+- name: mart_order_line_daily_summary
+  schema: crm_marts
+  engine: postgres
+  tenant_column: organization_id
+  semantic_model: order_line_daily
+  semantic_dimensions:
+  - organization_id
+  - business_type
+  - period_date
+  semantic_measures:
+  - avg_units_sold_sum
+  - avg_order_line_revenue_sum
+  - avg_distinct_products_sold
+  note: Mart schema.yml entry missing — add meta block
+certified_metrics:
+- id: account_volume
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: active_arr
+  label: null
+  'on': null
+  dims: null
+  kind: amount
+  direction: contextual
+  via: ask_semantic
+- id: average_closed_deal
+  label: null
+  'on': null
+  dims: null
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: average_contact_volume
+  label: null
+  'on': null
+  dims: null
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: average_customer_contact_count
+  label: null
+  'on': null
+  dims: null
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: average_customer_conversion_rate
+  label: null
+  'on': null
+  dims: null
+  kind: rate
+  direction: higher_is_better
+  via: ask_semantic
+- id: average_deal_lost
+  label: null
+  'on': null
+  dims: null
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: average_deal_value
+  label: null
+  'on': null
+  dims: null
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: average_deal_volume
+  label: null
+  'on': null
+  dims: null
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: average_deal_won_rate
+  label: null
+  'on': null
+  dims: null
+  kind: rate
+  direction: higher_is_worse
+  via: ask_semantic
+- id: average_deals_won
+  label: null
+  'on': null
+  dims: null
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: average_distinct_product_sold_count
+  label: null
+  'on': null
+  dims: null
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: average_eligible_lead_count
+  label: null
+  'on': null
+  dims: null
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: average_loss_rate
+  label: null
+  'on': null
+  dims: null
+  kind: rate
+  direction: higher_is_worse
+  via: ask_semantic
+- id: average_mql_contact_count
+  label: null
+  'on': null
+  dims: null
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: average_mql_rate
+  label: null
+  'on': null
+  dims: null
+  kind: rate
+  direction: higher_is_better
+  via: ask_semantic
+- id: average_new_lead_volume
+  label: null
+  'on': null
+  dims: null
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: average_open_pipeline_value
+  label: null
+  'on': null
+  dims: null
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: average_product_revenue
+  label: null
+  'on': null
+  dims: null
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: average_proposal_acceptance_rate
+  label: null
+  'on': null
+  dims: null
+  kind: rate
+  direction: higher_is_better
+  via: ask_semantic
+- id: average_proposal_accepted
+  label: null
+  'on': null
+  dims: null
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: average_proposal_sent
+  label: null
+  'on': null
+  dims: null
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: average_sales_cycle_days
+  label: null
+  'on': null
+  dims: null
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: average_selling_price
+  label: null
+  'on': null
+  dims: null
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: average_units_sold
+  label: null
+  'on': null
+  dims: null
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: average_win_rate_of_the_agent
+  label: null
+  'on': null
+  dims: null
+  kind: rate
+  direction: higher_is_better
+  via: ask_semantic
+- id: closed_deals_metric
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: completed_deal_activities_metric
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: contact_activity_volume
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: contact_volume
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: contacts_with_orders_metric
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: contract_renewal_rate
+  label: null
+  'on': null
+  dims: null
+  kind: rate
+  direction: higher_is_better
+  via: ask_semantic
+- id: contract_volume
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: contracts_due_for_renewal
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: customer_contact_count
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: customer_conversion_rate
+  label: Customer Conversion Rate
+  'on': Contact
+  dims:
+  - lifecycle_stage
+  - lead_source
+  kind: rate
+  direction: higher_is_better
+  via: ask_semantic
+- id: customer_lifetime_value
+  label: null
+  'on': null
+  dims: null
+  kind: amount
+  direction: contextual
+  via: ask_semantic
+- id: days_sales_outstanding
+  label: null
+  'on': null
+  dims: null
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: days_to_pay_total
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: deal_activity_completion_rate
+  label: null
+  'on': null
+  dims: null
+  kind: rate
+  direction: higher_is_better
+  via: ask_semantic
+- id: deal_activity_volume
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: deal_volume
+  label: Deal Volume
+  'on': Deal
+  dims:
+  - stage
+  - owner_name
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: deals_with_quote_metric
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: distinct_products_sold_count
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: eligible_lead_contact_count
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: franchise_node_volume
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: funnel_eligible_contact_count
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: invoice_outstanding_amount
+  label: null
+  'on': null
+  dims: null
+  kind: amount
+  direction: contextual
+  via: ask_semantic
+- id: invoiced_product_revenue
+  label: null
+  'on': null
+  dims: null
+  kind: amount
+  direction: contextual
+  via: ask_semantic
+- id: lifetime_order_value_total
+  label: null
+  'on': null
+  dims: null
+  kind: amount
+  direction: contextual
+  via: ask_semantic
+- id: loss_rate
+  label: null
+  'on': null
+  dims: null
+  kind: rate
+  direction: higher_is_worse
+  via: ask_semantic
+- id: lost_deal_amount_total
+  label: null
+  'on': null
+  dims: null
+  kind: amount
+  direction: contextual
+  via: ask_semantic
+- id: lost_deals_metric
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: mql_contact_count
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: mql_rate
+  label: MQL Rate
+  'on': Contact
+  dims:
+  - lifecycle_stage
+  - lead_source
+  kind: rate
+  direction: higher_is_better
+  via: ask_semantic
+- id: new_lead_volume
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: open_pipeline_value
+  label: Open Pipeline
+  'on': Deal
+  dims:
+  - stage
+  - owner_name
+  kind: amount
+  direction: contextual
+  via: ask_semantic
+- id: open_task_volume
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: order_gmv
+  label: null
+  'on': null
+  dims: null
+  kind: amount
+  direction: contextual
+  via: ask_semantic
+- id: order_volume
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: paid_invoices_metric
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: pipeline_coverage_ratio
+  label: null
+  'on': null
+  dims: null
+  kind: rate
+  direction: higher_is_better
+  via: ask_semantic
+- id: product_revenue
+  label: null
+  'on': null
+  dims: null
+  kind: amount
+  direction: contextual
+  via: ask_semantic
+- id: product_revenue_total
+  label: null
+  'on': null
+  dims: null
+  kind: amount
+  direction: contextual
+  via: ask_semantic
+- id: proposal_acceptance_rate
+  label: null
+  'on': null
+  dims: null
+  kind: rate
+  direction: higher_is_better
+  via: ask_semantic
+- id: proposal_accepted_metric
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: proposal_sent_metric
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: quote_to_close_rate
+  label: null
+  'on': null
+  dims: null
+  kind: rate
+  direction: higher_is_worse
+  via: ask_semantic
+- id: quoted_product_revenue
+  label: null
+  'on': null
+  dims: null
+  kind: amount
+  direction: contextual
+  via: ask_semantic
+- id: renewed_contracts_metric
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: repeat_customers_metric
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: repurchase_rate
+  label: null
+  'on': null
+  dims: null
+  kind: rate
+  direction: higher_is_better
+  via: ask_semantic
+- id: sales_agent_win_rate
+  label: null
+  'on': null
+  dims: null
+  kind: rate
+  direction: higher_is_better
+  via: ask_semantic
+- id: sales_cycle_days_total
+  label: null
+  'on': null
+  dims: null
+  kind: duration
+  direction: higher_is_worse
+  via: ask_semantic
+- id: total_account_locations
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: units_sold
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: won_deal_amount_total
+  label: null
+  'on': null
+  dims: null
+  kind: amount
+  direction: contextual
+  via: ask_semantic
+- id: won_deal_rate
+  label: Win Rate
+  'on': Deal
+  dims:
+  - stage
+  - owner_name
+  - owner_team_id
+  kind: rate
+  direction: higher_is_worse
+  via: ask_semantic
+- id: won_deals_for_avg
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: won_deals_metric
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic
+- id: won_deals_with_accepted_quote_metric
+  label: null
+  'on': null
+  dims: null
+  kind: count
+  direction: contextual
+  via: ask_semantic

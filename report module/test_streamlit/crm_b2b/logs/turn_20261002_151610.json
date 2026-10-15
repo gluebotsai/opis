@@ -1,0 +1,170 @@
+{
+  "question": "Why did the average deal cycle become longer?",
+  "answer": "The average sales cycle is 22.0 days.\n\nThe cycle duration varies significantly by stage, with the longest average time occurring in the `closed_won` stage at 22.00 days.\n\n| Stage | Lost Reason | Deal Count | Avg Cycle Days | Quote Count | Activity Count |\n| --- | --- | --- | --- | --- | --- |\n| closed_won | N/A | 1 | 22.00 | 0 | 316 |\n| qualification | N/A | 4 | 14.19 | 1 | 43 |\n| propose | N/A | 5 | 10.22 | 5 | 349 |\n| negotiate | N/A | 1 | 10.00 | 0 | 5 |\n| closed_lost | Pricing | 1 | 9.00 | 3 | 37 |\n| discover | N/A | 3 | 6.86 | 0 | 48 |\n\nThe `closed_won` stage shows a high activity density (316 activities) but lacks associated quote data, suggesting a gap in formalizing documentation for successful conversions. Additionally, the `negotiate` stage shows a significant activity gap with only 5 recorded interactions, which may be stalling deal momentum.\n\nReview the `closed_won` process to ensure quotes are properly attached to deals and develop a structured cadence for the `negotiate` stage to increase engagement.",
+  "trace": {
+    "question": "Why did the average deal cycle become longer?",
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1015,
+      "role": "admin"
+    },
+    "model": "worktual-gemma",
+    "tasks": [
+      {
+        "status": "ok",
+        "store": "sql",
+        "sql": "WITH rpt_deals AS (\nSELECT src.id, src.organization_id, src.title, src.stage, src.amount, src.currency_code, src.stage_weight, src.weighted_amount, src.company_id, src.company_name, src.company_industry, src.location_id, src.contact_id, src.contact_name, src.contact_email, src.owner_user_id, src.owner_name, src.created_at, src.closed_at, src.close_ts, src.updated_at, src.expected_close_date, src.lost_reason, src.is_open, src.is_won, src.is_lost, src.aging_days, src.forecast_category, src.forecast_reason, src.forecast_flagged FROM (\nSELECT \n  d.id,\n  d.organization_id,\n  d.title,\n  d.stage,\n  COALESCE(d.amount, 0) AS amount,\n  CASE\n    WHEN pq.currency IS NOT NULL AND pq.currency <> 'USD' THEN pq.currency\n    WHEN o.country IS NOT NULL AND o.country <> 'US' AND cc.curr IS NOT NULL THEN cc.curr\n    WHEN pq.currency = 'USD' THEN 'USD'\n    WHEN o.country = 'US' THEN 'USD'\n    ELSE 'USD'\n  END AS currency_code,\n  CASE d.stage\n    WHEN 'qualification' THEN 0.10\n    WHEN 'discover' THEN 0.25\n    WHEN 'propose' THEN 0.50\n    WHEN 'negotiate' THEN 0.75\n    WHEN 'closed_won' THEN 1.00\n    WHEN 'closed_lost' THEN 0.00\n    ELSE 0.00\n  END AS stage_weight,\n  ROUND(COALESCE(d.amount, 0) * (\n    CASE d.stage\n      WHEN 'qualification' THEN 0.10\n      WHEN 'discover' THEN 0.25\n      WHEN 'propose' THEN 0.50\n      WHEN 'negotiate' THEN 0.75\n      WHEN 'closed_won' THEN 1.00\n      WHEN 'closed_lost' THEN 0.00\n      ELSE 0.00\n    END\n  ), 2) AS weighted_amount,\n  d.company_id,\n  c.name AS company_name,\n  c.industry AS company_industry,\n  d.location_id,\n  d.contact_id,\n  COALESCE(d.contact_name, cdp.first_name || ' ' || COALESCE(cdp.last_name, '')) AS contact_name,\n  COALESCE(d.contact_email, id_k.key_value) AS contact_email,\n  d.owner_user_id,\n  su.first_name || ' ' || COALESCE(su.last_name, '') AS owner_name,\n  d.created_at,\n  d.closed_at,\n  COALESCE(d.closed_at, d.created_at) AS close_ts,\n  d.updated_at,\n  d.expected_close_date,\n  d.lost_reason,\n  (d.stage IN ('qualification', 'discover', 'propose', 'negotiate')) AS is_open,\n  (d.stage = 'closed_won') AS is_won,\n  (d.stage = 'closed_lost') AS is_lost,\n  FLOOR(EXTRACT(EPOCH FROM (NOW() - d.created_at))/86400)::integer AS aging_days,\n  d.forecast_category,\n  d.forecast_reason,\n  d.forecast_flagged\nFROM crm.deals d\nLEFT JOIN crm.companies c ON c.id = d.company_id AND c.organization_id = d.organization_id\nLEFT JOIN accounts.setup_users su ON su.id = d.owner_user_id\nLEFT JOIN accounts.organizations o ON o.id = d.organization_id\nLEFT JOIN cdp.customer_profile cdp ON cdp.cdp_id = d.contact_id\nLEFT JOIN LATERAL (\n  SELECT ik.key_value \n  FROM cdp.identity_keys ik \n  WHERE ik.cdp_id = d.contact_id AND ik.key_type = 'email' AND ik.organization_id = d.organization_id \n  ORDER BY ik.created_at ASC \n  LIMIT 1\n) id_k ON TRUE\nLEFT JOIN LATERAL (\n  SELECT q.currency \n  FROM crm.quotes q \n  WHERE q.deal_id = d.id AND q.organization_id = d.organization_id \n  ORDER BY CASE WHEN q.status = 'accepted' THEN 1 WHEN q.status = 'sent' THEN 2 ELSE 3 END, q.updated_at DESC \n  LIMIT 1\n) pq ON TRUE\nLEFT JOIN LATERAL (\n  SELECT CASE o.country \n    WHEN 'India' THEN 'INR' \n    WHEN 'United Kingdom' THEN 'GBP' \n    WHEN 'Germany' THEN 'EUR' \n    WHEN 'Canada' THEN 'CAD' \n    WHEN 'Australia' THEN 'AUD' \n    ELSE 'USD' \n  END AS curr\n) cc ON TRUE\nWHERE d.organization_id = %(_org_id)s\n) src WHERE TRUE\n)\nSELECT COALESCE(ROUND(CAST(AVG(EXTRACT(EPOCH FROM (closed_at - created_at)) / 86400) AS DECIMAL), 1), 0.0) AS avg_sales_cycle_days FROM rpt_deals AS deals WHERE is_won = TRUE AND closed_at > created_at AND TRUE AND TRUE AND TRUE LIMIT 500",
+        "views": [
+          "deals"
+        ],
+        "guard_notes": [
+          "row cap 500 applied"
+        ],
+        "bound_params": {
+          "_org_id": 1003,
+          "_user_id": 1015,
+          "user_id": 1015,
+          "organization_id": 1003,
+          "org_id": 1003,
+          "tenant_id": 1003,
+          "current_user_id": 1015
+        },
+        "rows": [
+          {
+            "avg_sales_cycle_days": "22.0"
+          }
+        ],
+        "kpi_id": "avg_sales_cycle",
+        "time_status": "all_time",
+        "attempts": [
+          {
+            "raw": "{\"tool\":\"run_kpi\",\"kpi_id\":\"avg_sales_cycle\",\"dimension\":null}",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "avg_sales_cycle"
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "tool": "run_kpi",
+        "requested_kpi": "avg_sales_cycle",
+        "requested_dimension": null,
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "avg_sales_cycle",
+          "goal": "Calculate average sales cycle length",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "kpi",
+          "depends_on": []
+        }
+      },
+      {
+        "status": "ok",
+        "rows": [
+          {
+            "stage": "closed_won",
+            "lost_reason": null,
+            "deal_count": 1,
+            "avg_cycle_days": 22.0,
+            "quote_count": 0,
+            "activity_count": 316
+          },
+          {
+            "stage": "qualification",
+            "lost_reason": null,
+            "deal_count": 4,
+            "avg_cycle_days": 14.186046511627906,
+            "quote_count": 1,
+            "activity_count": 43
+          },
+          {
+            "stage": "propose",
+            "lost_reason": null,
+            "deal_count": 5,
+            "avg_cycle_days": 10.223495702005739,
+            "quote_count": 5,
+            "activity_count": 349
+          },
+          {
+            "stage": "negotiate",
+            "lost_reason": null,
+            "deal_count": 1,
+            "avg_cycle_days": 10.0,
+            "quote_count": 0,
+            "activity_count": 5
+          },
+          {
+            "stage": "closed_lost",
+            "lost_reason": "Pricing",
+            "deal_count": 1,
+            "avg_cycle_days": 9.0,
+            "quote_count": 3,
+            "activity_count": 37
+          },
+          {
+            "stage": "discover",
+            "lost_reason": null,
+            "deal_count": 3,
+            "avg_cycle_days": 6.857142857142856,
+            "quote_count": 0,
+            "activity_count": 48
+          }
+        ],
+        "sql": "MATCH (d:Deal) \nOPTIONAL MATCH (d)-[:HAS]->(q:Quote) \nOPTIONAL MATCH (ca:ContactActivity) WHERE ca.contact_id = d.contact_id \nWITH d, q, ca \nRETURN \n    d.stage AS stage, \n    d.lost_reason AS lost_reason, \n    count(DISTINCT d) AS deal_count, \n    avg(duration.between(datetime(d.created_at), coalesce(datetime(d.closed_at), datetime())).days) AS avg_cycle_days, \n    count(DISTINCT q) AS quote_count, \n    count(DISTINCT ca) AS activity_count \nORDER BY avg_cycle_days DESC\nLIMIT 100",
+        "tool": "kg",
+        "attempts_made": 1,
+        "kg_notes": "### Deal Cycle and Stage Performance\n\nThe analysis of 798 total deals reveals significant variance in cycle duration across different stages, with the longest average cycle time occurring in the `closed_won` stage at 22.00 days. While the `propose` stage holds the highest volume of activity with 349 recorded interactions, the `closed_lost` segment shows a shorter cycle of 9.00 days, specifically attributed to Pricing as the primary lost reason.\n\n| Stage | Lost Reason | Deal Count | Avg Cycle Days | Quote Count | Activity Count |\n| --- | --- | --- | --- | --- | --- |\n| closed_won | N/A | 1 | 22.00 | 0 | 316 |\n| qualification | N/A | 4 | 14.19 | 1 | 43 |\n| propose | N/A | 5 | 10.22 | 5 | 349 |\n| negotiate | N/A | 1 | 10.00 | 0 | 5 |\n| closed_lost | Pricing | 1 | 9.00 | 3 | 37 |\n| discover | N/A | 3 | 6.86 | 0 | 48 |\n| **Total** | - | **15** | - | **9** | **798** |\n\n### Activity and Quote Distribution\n\nThere is a notable concentration of engagement in the `propose` stage, which accounts for 5 out of 9 total quotes and 349 of the 798 total activities. Conversely, the `closed_won` stage shows a high activity density (316 activities) but lacks associated quote data in the current records, suggesting a potential gap in formalizing documentation for successful conversions. The `negotiate` stage currently shows a significant activity gap with only 5 recorded interactions, which may contribute to friction in moving deals toward closure.\n\n### Operational Recommendations\n\n* **Address Pricing Friction:** Investigate the `closed_lost` reason of \"Pricing\" to determine if discount thresholds or value propositions need adjustment during the `propose` stage.\n* **Standardize Quote Documentation:** Review the `closed_won` process to ensure quotes are properly attached to deals, as the current data shows 0 quotes for the winning deal despite high activity.\n* **Increase Engagement in Negotiation:** Develop a structured cadence for the `negotiate` stage to prevent the low activity levels (5 counts) from stalling deal momentum.",
+        "task": {
+          "id": "t2",
+          "executor": "kg",
+          "kpi": null,
+          "goal": "Analyze deal aging: stages, activity gaps, quote delays, and lost reasons to identify cycle drivers",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "why_breakdown",
+          "depends_on": [
+            "t1"
+          ]
+        }
+      }
+    ],
+    "domain_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"deep\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"avg_sales_cycle\",\n      \"goal\": \"Calculate average sales cycle length\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"dimension\": null,\n      \"answer_type\": \"kpi\",\n      \"depends_on\": []\n    },\n    {\n      \"id\": \"t2\",\n      \"executor\": \"kg\",\n      \"kpi\": null,\n      \"goal\": \"Analyze deal aging: stages, activity gaps, quote delays, and lost reasons to identify cycle drivers\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"dimension\": null,\n      \"answer_type\": \"why_breakdown\",\n      \"depends_on\": [\"t1\"]\n    }\n  ]\n}\n```",
+    "plan": {
+      "kind": "plan",
+      "depth": "deep",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "avg_sales_cycle",
+          "goal": "Calculate average sales cycle length",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "kpi",
+          "depends_on": []
+        },
+        {
+          "id": "t2",
+          "executor": "kg",
+          "kpi": null,
+          "goal": "Analyze deal aging: stages, activity gaps, quote delays, and lost reasons to identify cycle drivers",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "why_breakdown",
+          "depends_on": [
+            "t1"
+          ]
+        }
+      ]
+    },
+    "facts": "time_requested: all time\nperiod_applied: overall (no date filter, UTC)\ntime_status: all_time\ncatalog_kpi: avg_sales_cycle\nRESULT: avg_sales_cycle = 22.0\n\ntime_requested: all time\ntime_status: kg\nRESULT: 6 group(s)\ngroup_by: stage\ntotal_deal_count: 15\n  closed_won / None / 22.0 / 0 / 316: 1\n  qualification / None / 14.186046511627906 / 1 / 43: 4\n  propose / None / 10.223495702005739 / 5 / 349: 5\n  negotiate / None / 10.0 / 0 / 5: 1\n  closed_lost / Pricing / 9.0 / 3 / 37: 1\n  discover / None / 6.857142857142856 / 0 / 48: 3\nkg_notes:\n### Deal Cycle and Stage Performance\n\nThe analysis of 798 total deals reveals significant variance in cycle duration across different stages, with the longest average cycle time occurring in the `closed_won` stage at 22.00 days. While the `propose` stage holds the highest volume of activity with 349 recorded interactions, the `closed_lost` segment shows a shorter cycle of 9.00 days, specifically attributed to Pricing as the primary lost reason.\n\n| Stage | Lost Reason | Deal Count | Avg Cycle Days | Quote Count | Activity Count |\n| --- | --- | --- | --- | --- | --- |\n| closed_won | N/A | 1 | 22.00 | 0 | 316 |\n| qualification | N/A | 4 | 14.19 | 1 | 43 |\n| propose | N/A | 5 | 10.22 | 5 | 349 |\n| negotiate | N/A | 1 | 10.00 | 0 | 5 |\n| closed_lost | Pricing | 1 | 9.00 | 3 | 37 |\n| discover | N/A | 3 | 6.86 | 0 | 48 |\n| **Total** | - | **15** | - | **9** | **798** |\n\n### Activity and Quote Distribution\n\nThere is a notable concentration of engagement in the `propose` stage, which accounts for 5 out of 9 total quotes and 349 of the 798 total activities. Conversely, the `closed_won` stage shows a high activity density (316 activities) but lacks associated quote data in the current records, suggesting a potential gap in formalizing documentation for successful conversions. The `negotiate` stage currently shows a significant activity gap with only 5 recorded interactions, which may contribute to friction in moving deals toward closure.\n\n### Operational Recommendations\n\n* **Address Pricing Friction:** Investigate the `closed_lost` reason of \"Pricing\" to determine if discount thresholds or value propositions need adjustment during the `propose` stage.\n* **Standardize Quote Documentation:** Review the `closed_won` process to ensure quotes are properly attached to deals, as the current data shows 0 quotes for the winning deal despite high activity.\n* **Increase Engagement in Negotiation:** Develop a structured cadence for the `negotiate` stage to prevent the low activity levels (5 counts) from stalling deal momentum.",
+    "grounded": true,
+    "briefing_raw": "The average sales cycle is 22.0 days.\n\nThe cycle duration varies significantly by stage, with the longest average time occurring in the `closed_won` stage at 22.00 days.\n\n| Stage | Lost Reason | Deal Count | Avg Cycle Days | Quote Count | Activity Count |\n| --- | --- | --- | --- | --- | --- |\n| closed_won | N/A | 1 | 22.00 | 0 | 316 |\n| qualification | N/A | 4 | 14.19 | 1 | 43 |\n| propose | N/A | 5 | 10.22 | 5 | 349 |\n| negotiate | N/A | 1 | 10.00 | 0 | 5 |\n| closed_lost | Pricing | 1 | 9.00 | 3 | 37 |\n| discover | N/A | 3 | 6.86 | 0 | 48 |\n\nThe `closed_won` stage shows a high activity density (316 activities) but lacks associated quote data, suggesting a gap in formalizing documentation for successful conversions. Additionally, the `negotiate` stage shows a significant activity gap with only 5 recorded interactions, which may be stalling deal momentum.\n\nReview the `closed_won` process to ensure quotes are properly attached to deals and develop a structured cadence for the `negotiate` stage to increase engagement."
+  }
+}

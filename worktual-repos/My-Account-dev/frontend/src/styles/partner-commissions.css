@@ -1,0 +1,397 @@
+/**
+ * Partner Commissions — entries (search + status filter) + slabs.
+ * Canvas #F4F4F6 · surfaces #FFFFFF · border #C9C9CF.
+ */
+
+.app-shell--partner .app-content:has(.partner-commissions-page) {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.app-shell--partner .app-content:has(.partner-commissions-page) > .customer-portal-context {
+  flex: 0 0 auto;
+  margin-bottom: 16px;
+}
+
+.admin-users-page.partner-commissions-page {
+  --au-canvas: #f4f4f6;
+  --au-text: #0b0b10;
+  --au-text-secondary: #3f3f49;
+  --au-text-caption: #5e5e69;
+  background: #f4f4f6;
+  color: #0b0b10;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 24px;
+  min-height: 0;
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  width: 100%;
+}
+
+.partner-commissions-page__header {
+  flex: 0 0 auto;
+}
+
+.partner-commissions-page .admin-users-page__header h1 {
+  color: #0b0b10;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.partner-commissions-kpi-grid {
+  align-self: start;
+  flex: 0 0 auto;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  height: max-content;
+  max-width: 640px;
+}
+
+.partner-commissions-kpi {
+  flex: 0 0 auto;
+  height: auto;
+}
+
+.partner-commissions-kpi__meta {
+  color: #5e5e69;
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+.admin-users-page.partner-commissions-page .partner-commissions-entries-panel {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  /* Header + filters + 4 data rows + footer — keeps short viewports stable */
+  min-height: 360px;
+  width: 100%;
+}
+
+.partner-commissions-entries-panel > .admin-users-panel__section-header {
+  flex: 0 0 auto;
+}
+
+.partner-commissions-entries-panel > .admin-users-panel__body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.partner-commissions-entries-panel .admin-users-panel__table-wrap {
+  background: #ffffff;
+  flex: 1 1 auto;
+  /* ~1 header row + 4 body rows at current cell padding */
+  min-height: 248px;
+  overflow: auto;
+}
+
+.partner-commissions-entries-panel > .admin-users-panel__footer {
+  flex: 0 0 auto;
+}
+
+.partner-commissions-page .admin-users-panel__search {
+  background: #ffffff;
+  min-width: min(280px, 100%);
+}
+
+.partner-commissions-filter {
+  display: block;
+  min-width: 160px;
+}
+
+.partner-commissions-filter select {
+  -webkit-appearance: none;
+  appearance: none;
+  background-color: var(--bg-surface);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%237E7E88' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-position: right 16px center;
+  background-repeat: no-repeat;
+  background-size: 16px 16px;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 0.875rem;
+  min-height: 38px;
+  padding: 8px 48px 8px 16px;
+  width: 100%;
+}
+
+.partner-commissions-filter select:hover {
+  background-color: var(--bg-subtle);
+  border-color: var(--border-strong);
+}
+
+.partner-commissions-filter select:focus,
+.partner-commissions-filter select:focus-visible {
+  border-color: #5f1fb0;
+  box-shadow: 0 0 0 3px color-mix(in srgb, #5f1fb0 18%, transparent);
+  outline: none;
+}
+
+.admin-users-page.partner-commissions-page .finance-partner-commissions-slabs-panel,
+.admin-users-page.partner-commissions-page .admin-users-panel.finance-partner-commissions-slabs-panel {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  height: auto;
+  min-height: 0;
+  width: 100%;
+}
+
+.partner-commissions-entries-panel > .admin-users-panel__footer {
+  background: #ffffff;
+  flex: 0 0 auto;
+  position: relative;
+  z-index: 2;
+}
+
+/* Entries: Status is a data column — disable Actions pin only; keep thead sticky as one row.
+   Reinforced in finance-partner-commissions.css (loads after admin-users-light re-import). */
+.admin-users-page.partner-commissions-page .admin-users-table.partner-commissions-table thead th {
+  background: #ffffff;
+  position: sticky;
+  top: 0;
+  z-index: 3;
+}
+
+.admin-users-page.partner-commissions-page .admin-users-table.partner-commissions-table th:last-child,
+.admin-users-page.partner-commissions-page .admin-users-table.partner-commissions-table td:last-child {
+  background: #ffffff;
+  box-shadow: none;
+  max-width: none;
+  min-width: 0;
+  overflow: visible;
+  right: auto;
+  text-align: left;
+  width: auto;
+}
+
+.admin-users-page.partner-commissions-page .admin-users-table.partner-commissions-table thead th:last-child {
+  position: sticky;
+  right: auto;
+  top: 0;
+  z-index: 4;
+}
+
+.admin-users-page.partner-commissions-page .admin-users-table.partner-commissions-table tbody td:last-child {
+  position: static;
+  z-index: auto;
+}
+
+.partner-commissions-page .finance-partner-commissions-slabs-panel > .admin-users-panel__body,
+.partner-commissions-page .admin-users-panel.finance-partner-commissions-slabs-panel > .admin-users-panel__body {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0;
+}
+
+.partner-commissions-page .finance-partner-commissions-slabs-panel .admin-users-panel__table-wrap,
+.partner-commissions-page .admin-users-panel.finance-partner-commissions-slabs-panel .admin-users-panel__table-wrap {
+  background: #ffffff;
+  /* Match entries: ~1 sticky header + 4 body rows; scroll for more */
+  flex: 0 0 auto;
+  height: 248px;
+  max-height: 248px;
+  min-height: 248px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.partner-commissions-page .admin-users-table.finance-partner-commissions-slabs-table th,
+.partner-commissions-page .admin-users-table.finance-partner-commissions-slabs-table td {
+  color: #3f3f49;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.4;
+  padding: 14px 12px;
+  vertical-align: middle;
+}
+
+.partner-commissions-page .admin-users-table.finance-partner-commissions-slabs-table th {
+  color: #5e5e69;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: none;
+}
+
+/* Slabs: no Actions pin — but keep thead sticky as one row (do not use
+   position:static on th:last-child; that drops vertical sticky for Commission rate). */
+.partner-commissions-page .admin-users-table.finance-partner-commissions-slabs-table th:last-child,
+.partner-commissions-page .admin-users-table.finance-partner-commissions-slabs-table td:last-child {
+  box-shadow: none;
+  max-width: none;
+  min-width: 10rem;
+  overflow: visible;
+  right: auto;
+  text-align: left;
+  text-overflow: clip;
+  width: 28%;
+}
+
+.partner-commissions-page .admin-users-table.finance-partner-commissions-slabs-table thead th:last-child {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+}
+
+.partner-commissions-page .admin-users-table.finance-partner-commissions-slabs-table td:last-child {
+  position: static;
+  z-index: auto;
+}
+
+.partner-commissions-page .admin-users-table.finance-partner-commissions-slabs-table th:first-child,
+.partner-commissions-page .admin-users-table.finance-partner-commissions-slabs-table td:first-child {
+  width: 72%;
+}
+
+.partner-commissions-page .admin-users-table.partner-commissions-table {
+  color: #0b0b10;
+  width: 100%;
+}
+
+.partner-commissions-page .admin-users-table.partner-commissions-table th,
+.partner-commissions-page .admin-users-table.partner-commissions-table td {
+  color: #3f3f49;
+  padding: 14px 12px;
+  vertical-align: middle;
+}
+
+.partner-commissions-page .admin-users-table.partner-commissions-table th {
+  color: #5e5e69;
+}
+
+.partner-commissions-table__primary {
+  color: #0b0b10;
+  display: block;
+  font-weight: 600;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.partner-commissions-table__meta {
+  color: #5e5e69;
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-top: 2px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.partner-commissions-pill {
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  padding: 6px 10px;
+  white-space: nowrap;
+}
+
+.partner-commissions-pill.is-paid {
+  background: color-mix(in srgb, #098f6a 12%, #ffffff);
+  color: #098f6a;
+}
+
+.partner-commissions-pill.is-pending {
+  background: color-mix(in srgb, #e0b73a 14%, #ffffff);
+  color: #8a6a12;
+}
+
+.partner-commissions-empty {
+  align-items: center;
+  color: #5e5e69;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 8px;
+  justify-content: center;
+  min-height: 160px;
+  padding: 24px 16px;
+  text-align: center;
+}
+
+.partner-commissions-empty h3 {
+  color: #0b0b10;
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.partner-commissions-empty p {
+  margin: 0;
+  max-width: 360px;
+}
+
+.partner-commissions-page .admin-users-table tbody tr:hover {
+  background: transparent;
+}
+
+@media (max-width: 900px) {
+  .partner-commissions-page .admin-users-panel__toolbar {
+    flex: 1 1 100%;
+    justify-content: stretch;
+  }
+
+  .partner-commissions-page .admin-users-panel__search,
+  .partner-commissions-filter {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+  }
+}
+
+@media (max-width: 720px) {
+  .partner-commissions-kpi-grid {
+    grid-template-columns: 1fr;
+    max-width: none;
+  }
+}
+
+@media (max-height: 720px) {
+  .admin-users-page.partner-commissions-page {
+    gap: 20px;
+  }
+
+  .partner-commissions-page .admin-users-page__header h1 {
+    font-size: 1.25rem;
+  }
+
+  .partner-commissions-page .admin-users-table.partner-commissions-table th,
+  .partner-commissions-page .admin-users-table.partner-commissions-table td {
+    padding: 12px 10px;
+  }
+
+  .partner-commissions-table th:nth-child(2),
+  .partner-commissions-table td:nth-child(2),
+  .partner-commissions-table th:nth-child(3),
+  .partner-commissions-table td:nth-child(3) {
+    display: none;
+  }
+}
+
+@media (max-height: 600px) {
+  .admin-users-page.partner-commissions-page {
+    gap: 16px;
+  }
+}

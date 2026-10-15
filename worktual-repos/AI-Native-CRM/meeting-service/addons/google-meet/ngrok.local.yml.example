@@ -1,0 +1,12 @@
+# Copy to ngrok.local.yml (gitignored). Reserve a domain on YOUR ngrok account:
+# https://dashboard.ngrok.com/domains/new
+#
+# Start:
+#   ngrok start meet-addon \
+#     --config "$HOME/Library/Application Support/ngrok/ngrok.yml" \
+#     --config addons/google-meet/ngrok.yml \
+#     --config addons/google-meet/ngrok.local.yml
+version: "3"
+endpoints:
+  - name: meet-addon
+    url: https://YOUR-SUBDOMAIN.ngrok-free.dev

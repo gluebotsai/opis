@@ -1,0 +1,1775 @@
+version: 2026.09.2
+source: 'Knowledge_Graph_Pipeline/config/mappings/core.yaml tables:'
+nodes:
+  Tenant:
+    label: Tenant
+    identifier: accounts.organizations.id
+    table: accounts.organizations
+    product: platform
+  User:
+    label: User
+    identifier: accounts.setup_users.id
+    table: accounts.setup_users
+    product: platform
+  Team:
+    label: Team
+    identifier: accounts.setup_teams.id
+    table: accounts.setup_teams
+    product: platform
+  AccessRole:
+    label: AccessRole
+    identifier: accounts.setup_roles.id
+    table: accounts.setup_roles
+    product: platform
+  OperatingSchedule:
+    label: OperatingSchedule
+    identifier: accounts.setup_business_hours.id
+    table: accounts.setup_business_hours
+    product: platform
+    readable_by:
+    - ccaas
+    - ticketing
+  ScheduleShift:
+    label: ScheduleShift
+    identifier: accounts.setup_business_hour_shifts.id
+    table: accounts.setup_business_hour_shifts
+    product: platform
+    readable_by:
+    - ccaas
+    - ticketing
+  HolidaySchedule:
+    label: HolidaySchedule
+    identifier: accounts.setup_holiday_calendars.id
+    table: accounts.setup_holiday_calendars
+    product: platform
+    readable_by:
+    - ccaas
+    - ticketing
+  NonWorkingDay:
+    label: NonWorkingDay
+    identifier: accounts.setup_holidays.id
+    table: accounts.setup_holidays
+    product: platform
+    readable_by:
+    - ccaas
+    - ticketing
+  ChannelAccount:
+    label: ChannelAccount
+    identifier: accounts.setup_social_configs.id
+    table: accounts.setup_social_configs
+    product: platform
+    readable_by:
+    - ccaas
+    - campaign
+  VoiceNumber:
+    label: VoiceNumber
+    identifier: accounts.setup_voice_dids.id
+    table: accounts.setup_voice_dids
+    product: ccaas
+  VoicePromptProfile:
+    label: VoicePromptProfile
+    identifier: accounts.setup_voice_prompt_profiles.id
+    table: accounts.setup_voice_prompt_profiles
+    product: ccaas
+  QueueDefinition:
+    label: QueueDefinition
+    identifier: accounts.setup_ccaas_queues.id
+    table: accounts.setup_ccaas_queues
+    product: ccaas
+  IntentRoutingProfile:
+    label: IntentRoutingProfile
+    identifier: ccass.queue_routing_profiles.uid
+    table: ccass.queue_routing_profiles
+    product: ccaas
+  KnowledgeDocument:
+    label: KnowledgeDocument
+    identifier: accounts.setup_knowledge_documents.id
+    table: accounts.setup_knowledge_documents
+    product: platform
+    readable_by:
+    - ccaas
+    - ticketing
+  ExtractedBusinessProfile:
+    label: ExtractedBusinessProfile
+    identifier: accounts.setup_knowledge_org_profiles.organization_id
+    table: accounts.setup_knowledge_org_profiles
+    product: platform
+    readable_by:
+    - ccaas
+    - ticketing
+  Contact:
+    label: Contact
+    identifier: cdp.customer_profile.cdp_id
+    table: cdp.customer_profile
+    product: platform
+    readable_by:
+    - crm
+    - cdp
+    - campaign
+    - ccaas
+    - ticketing
+  ContactIdentity:
+    label: ContactIdentity
+    identifier: cdp.contact_identities.uid
+    table: cdp.contact_identities
+    product: platform
+    readable_by:
+    - crm
+    - cdp
+    - campaign
+    - ccaas
+    - ticketing
+  Event:
+    label: Event
+    identifier: cdp.customer_events.event_id
+    table: cdp.customer_events
+    product: cdp
+    readable_by:
+    - campaign
+    - crm
+    - webtracking
+  Visit:
+    label: Visit
+    identifier: cdp.customer_sessions.session_id
+    table: cdp.customer_sessions
+    product: cdp
+    readable_by:
+    - campaign
+    - webtracking
+  Touchpoint:
+    label: Touchpoint
+    identifier: cdp.customer_interactions.interaction_id
+    table: cdp.customer_interactions
+    product: cdp
+  JourneyStep:
+    label: JourneyStep
+    identifier: cdp.customer_journey.journey_event_id
+    table: cdp.customer_journey
+    product: cdp
+  JourneyPosition:
+    label: JourneyPosition
+    identifier: cdp.journey_states.uid
+    table: cdp.journey_states
+    product: cdp
+  ContactScorecard:
+    label: ContactScorecard
+    identifier: cdp.customer_scores.cdp_id
+    table: cdp.customer_scores
+    product: cdp
+    readable_by:
+    - crm
+    - campaign
+  ContactValueSummary:
+    label: ContactValueSummary
+    identifier: cdp.gold_customer_metrics.cdp_id
+    table: cdp.gold_customer_metrics
+    product: cdp
+    readable_by:
+    - crm
+    - campaign
+  DailyEngagementMetric:
+    label: DailyEngagementMetric
+    identifier: cdp.customer_metrics.uid
+    table: cdp.customer_metrics
+    product: cdp
+  PerformanceMetric:
+    label: PerformanceMetric
+    identifier: cdp.gold_campaign_lookup.uid
+    table: cdp.gold_campaign_lookup
+    product: cdp
+  ContactInsight:
+    label: ContactInsight
+    identifier: cdp.ai_insights.insight_id
+    table: cdp.ai_insights
+    product: cdp
+    readable_by:
+    - crm
+    - campaign
+  NextBestAction:
+    label: NextBestAction
+    identifier: cdp.customer_recommendations.recommendation_id
+    table: cdp.customer_recommendations
+    product: cdp
+    readable_by:
+    - crm
+    - campaign
+  Segment:
+    label: Segment
+    identifier: cdp.segments.segment_id
+    table: cdp.segments
+    product: cdp
+    readable_by:
+    - campaign
+  Persona:
+    label: Persona
+    identifier: cdp.persona_definitions.persona_id
+    table: cdp.persona_definitions
+    product: cdp
+  PersonaEvidence:
+    label: PersonaEvidence
+    identifier: cdp.persona_snapshots.snapshot_id
+    table: cdp.persona_snapshots
+    product: cdp
+  ExperienceMemory:
+    label: ExperienceMemory
+    identifier: cdp.episodic_memory.memory_id
+    table: cdp.episodic_memory
+    product: cdp
+  KnownFact:
+    label: KnownFact
+    identifier: cdp.semantic_memory.memory_id
+    table: cdp.semantic_memory
+    product: cdp
+  EngagementRule:
+    label: EngagementRule
+    identifier: cdp.procedural_memory.rule_id
+    table: cdp.procedural_memory
+    product: cdp
+  ActivationSignal:
+    label: ActivationSignal
+    identifier: cdp.activation_tasks.task_id
+    table: cdp.activation_tasks
+    product: cdp
+  AnomalyDetector:
+    label: AnomalyDetector
+    identifier: cdp.anomaly_rules.rule_id
+    table: cdp.anomaly_rules
+    product: cdp
+  AnomalySignal:
+    label: AnomalySignal
+    identifier: cdp.anomaly_alerts.alert_id
+    table: cdp.anomaly_alerts
+    product: cdp
+  AdaptiveThreshold:
+    label: AdaptiveThreshold
+    identifier: cdp.anomaly_threshold_state.uid
+    table: cdp.anomaly_threshold_state
+    product: cdp
+  PredictiveModel:
+    label: PredictiveModel
+    identifier: cdp.agentic_model.uid
+    table: cdp.agentic_model
+    product: cdp
+  DataSource:
+    label: DataSource
+    identifier: cdp.source_systems.source_id
+    table: cdp.source_systems
+    product: cdp
+  Purchase:
+    label: Purchase
+    identifier: cdp.orders.order_id
+    table: cdp.orders
+    product: cdp
+    readable_by:
+    - crm
+    - campaign
+  Website:
+    label: Website
+    identifier: digital.tracked_sites.site_id
+    table: digital.tracked_sites
+    product: webtracking
+  Agent:
+    label: Agent
+    identifier: ticketing.agents.id
+    table: ticketing.agents
+    product: platform
+    readable_by:
+    - ccaas
+    - ticketing
+  Skill:
+    label: Skill
+    identifier: ccass.skills.id
+    table: ccass.skills
+    product: ccaas
+  ChannelCapacity:
+    label: ChannelCapacity
+    identifier: ccass.agent_capacity.id
+    table: ccass.agent_capacity
+    product: ccaas
+  AgentAvailability:
+    label: AgentAvailability
+    identifier: ccass.agent_presence.id
+    table: ccass.agent_presence
+    product: ccaas
+  PresenceReason:
+    label: PresenceReason
+    identifier: ccass.presence_reason_codes.id
+    table: ccass.presence_reason_codes
+    product: ccaas
+  Queue:
+    label: Queue
+    identifier: ticketing.agent_queues.id
+    table: ticketing.agent_queues
+    product: ticketing
+  DistributionPolicy:
+    label: DistributionPolicy
+    identifier: ccass.routing_policies.id
+    table: ccass.routing_policies
+    product: ccaas
+  AutomationPolicy:
+    label: AutomationPolicy
+    identifier: ccass.whatsapp_channel_policies.uid
+    table: ccass.whatsapp_channel_policies
+    product: ccaas
+  SLA:
+    label: SLA
+    identifier: ticketing.sla_policies.uid
+    table: ticketing.sla_policies
+    product: platform
+    readable_by:
+    - ccaas
+    - ticketing
+  OutcomeCode:
+    label: OutcomeCode
+    identifier: ccass.dispositions.id
+    table: ccass.dispositions
+    product: ccaas
+  Conversation:
+    label: Conversation
+    identifier: ccass.conversations.id
+    table: ccass.conversations
+    product: ccaas
+  ConversationDigest:
+    label: ConversationDigest
+    identifier: ccass.conversation_memory.id
+    table: ccass.conversation_memory
+    product: ccaas
+  ServiceLevelClock:
+    label: ServiceLevelClock
+    identifier: ccass.conversation_sla_state.id
+    table: ccass.conversation_sla_state
+    product: ccaas
+  OutcomeRecord:
+    label: OutcomeRecord
+    identifier: ccass.conversation_dispositions.id
+    table: ccass.conversation_dispositions
+    product: ccaas
+  MediaAttachment:
+    label: MediaAttachment
+    identifier: ccass.conversation_message_attachments.id
+    table: ccass.conversation_message_attachments
+    product: ccaas
+  InternalNote:
+    label: InternalNote
+    identifier: ccass.workspace_common_notes.uid
+    table: ccass.workspace_common_notes
+    product: ccaas
+  ParticipantRecord:
+    label: ParticipantRecord
+    identifier: ccass.conversation_participants.id
+    table: ccass.conversation_participants
+    product: ccaas
+  WorkAssignment:
+    label: WorkAssignment
+    identifier: ccass.conversation_assignments.id
+    table: ccass.conversation_assignments
+    product: ccaas
+  WorkTransfer:
+    label: WorkTransfer
+    identifier: ccass.conversation_transfers.id
+    table: ccass.conversation_transfers
+    product: ccaas
+  DistributionAttempt:
+    label: DistributionAttempt
+    identifier: ccass.routing_attempts.id
+    table: ccass.routing_attempts
+    product: ccaas
+  ChatSession:
+    label: ChatSession
+    identifier: ticketing.conversation_contexts.id
+    table: ticketing.conversation_contexts
+    product: ticketing
+  MissedEngagement:
+    label: MissedEngagement
+    identifier: ccass.agent_missed_contacts.id
+    table: ccass.agent_missed_contacts
+    product: ccaas
+  Task:
+    label: Task
+    identifier: ccass.agent_tasks.id
+    table: ccass.agent_tasks
+    product: ccaas
+  BotSkill:
+    label: BotSkill
+    identifier: ccass.nlp_skills.id
+    table: ccass.nlp_skills
+    product: ccaas
+  BotSkillVersion:
+    label: BotSkillVersion
+    identifier: ccass.nlp_skill_versions.id
+    table: ccass.nlp_skill_versions
+    product: ccaas
+  BotSkillBinding:
+    label: BotSkillBinding
+    identifier: ccass.nlp_skill_bindings.id
+    table: ccass.nlp_skill_bindings
+    product: ccaas
+  BotTool:
+    label: BotTool
+    identifier: ccass.nlp_skill_tools.id
+    table: ccass.nlp_skill_tools
+    product: ccaas
+  BotSession:
+    label: BotSession
+    identifier: ccass.nlp_conversations.id
+    table: ccass.nlp_conversations
+    product: ccaas
+  InteractionSummary:
+    label: InteractionSummary
+    identifier: cdp.interactions.id
+    table: cdp.interactions
+    product: cdp
+    readable_by:
+    - crm
+    - ccaas
+  Offering:
+    label: Offering
+    identifier: inventory.products.id
+    table: inventory.products
+    product: platform
+    readable_by:
+    - crm
+    - cdp
+    - campaign
+  OfferingPlan:
+    label: OfferingPlan
+    identifier: crm.product_offers.id
+    table: crm.product_offers
+    product: crm
+    readable_by:
+    - cdp
+    - campaign
+  OfferingAddOn:
+    label: OfferingAddOn
+    identifier: crm.product_addons.id
+    table: crm.product_addons
+    product: crm
+    readable_by:
+    - cdp
+    - campaign
+  PricingTier:
+    label: PricingTier
+    identifier: crm.product_addon_tiers.id
+    table: crm.product_addon_tiers
+    product: crm
+    readable_by:
+    - cdp
+  PriceList:
+    label: PriceList
+    identifier: crm.price_books.id
+    table: crm.price_books
+    product: crm
+  PriceListEntry:
+    label: PriceListEntry
+    identifier: crm.price_book_entries.id
+    table: crm.price_book_entries
+    product: crm
+  VerticalProfile:
+    label: VerticalProfile
+    identifier: crm.organization_profiles.organization_id
+    table: crm.organization_profiles
+    product: crm
+  Account:
+    label: Account
+    identifier: crm.companies.id
+    table: crm.companies
+    product: crm
+  AccountSite:
+    label: AccountSite
+    identifier: crm.company_locations.id
+    table: crm.company_locations
+    product: crm
+  SalesProfile:
+    label: SalesProfile
+    identifier: crm.contact_profiles.id
+    table: crm.contact_profiles
+    product: crm
+  Deal:
+    label: Deal
+    identifier: crm.deals.id
+    table: crm.deals
+    product: crm
+  DealActivity:
+    label: DealActivity
+    identifier: crm.deal_activities.id
+    table: crm.deal_activities
+    product: crm
+  EngagementActivity:
+    label: EngagementActivity
+    identifier: crm.contact_activities.id
+    table: crm.contact_activities
+    product: crm
+  Meeting:
+    label: Meeting
+    identifier: crm.appointments.id
+    table: crm.appointments
+    product: crm
+  DocumentTemplate:
+    label: DocumentTemplate
+    identifier: crm.invoice_templates.uid
+    table: crm.invoice_templates
+    product: crm
+  Proposal:
+    label: Proposal
+    identifier: crm.proposals.id
+    table: crm.proposals
+    product: crm
+  Quote:
+    label: Quote
+    identifier: crm.quotes.id
+    table: crm.quotes
+    product: crm
+  SalesOrder:
+    label: SalesOrder
+    identifier: crm.sales_orders.id
+    table: crm.sales_orders
+    product: crm
+  Invoice:
+    label: Invoice
+    identifier: crm.invoices.id
+    table: crm.invoices
+    product: crm
+  LineItem:
+    label: LineItem
+    identifier: crm.invoice_lines.uid
+    table: crm.invoice_lines
+    product: crm
+  Contract:
+    label: Contract
+    identifier: crm.contracts.id
+    table: crm.contracts
+    product: crm
+  BillingSchedule:
+    label: BillingSchedule
+    identifier: crm.contract_billing_schedules.id
+    table: crm.contract_billing_schedules
+    product: crm
+  AssignmentPolicy:
+    label: AssignmentPolicy
+    identifier: crm.org_assignment_settings.organization_id
+    table: crm.org_assignment_settings
+    product: crm
+  RepCapacityProfile:
+    label: RepCapacityProfile
+    identifier: crm.sales_user_assignment_profiles.id
+    table: crm.sales_user_assignment_profiles
+    product: crm
+  EnrichmentSnapshot:
+    label: EnrichmentSnapshot
+    identifier: crm.lead_enrichment_snapshots.id
+    table: crm.lead_enrichment_snapshots
+    product: crm
+  LeadBrief:
+    label: LeadBrief
+    identifier: crm.lead_summaries.id
+    table: crm.lead_summaries
+    product: crm
+  LiveMeetingSession:
+    label: LiveMeetingSession
+    identifier: crm.meeting_assist_sessions.id
+    table: crm.meeting_assist_sessions
+    product: crm
+  TranscriptSegment:
+    label: TranscriptSegment
+    identifier: crm.meeting_transcript_chunks.id
+    table: crm.meeting_transcript_chunks
+    product: crm
+  MeetingOutcome:
+    label: MeetingOutcome
+    identifier: crm.meeting_analyses.id
+    table: crm.meeting_analyses
+    product: crm
+  CoachingNote:
+    label: CoachingNote
+    identifier: crm.coaching_insights.id
+    table: crm.coaching_insights
+    product: crm
+  PrivacyRequest:
+    label: PrivacyRequest
+    identifier: crm.privacy_requests.id
+    table: crm.privacy_requests
+    product: crm
+  ApprovalRequest:
+    label: ApprovalRequest
+    identifier: crm.process_confirmations.id
+    table: crm.process_confirmations
+    product: crm
+  AgentMemorySlot:
+    label: AgentMemorySlot
+    identifier: crm.agent_memories.id
+    table: crm.agent_memories
+    product: crm
+  AgentJob:
+    label: AgentJob
+    identifier: crm.lead_enrichment_jobs.uid
+    table: crm.lead_enrichment_jobs
+    product: crm
+  Notification:
+    label: Notification
+    identifier: campaign.app_notifications.uid
+    table: campaign.app_notifications
+    product: platform
+    readable_by:
+    - crm
+    - ticketing
+    - campaign
+  SupportPortalSettings:
+    label: SupportPortalSettings
+    identifier: ticketing.org_settings.organization_id
+    table: ticketing.org_settings
+    product: ticketing
+  ContactAccount:
+    label: ContactAccount
+    identifier: ticketing.ticketing_accounts.id
+    table: ticketing.ticketing_accounts
+    product: ticketing
+  Ticket:
+    label: Ticket
+    identifier: ticketing.tickets.id
+    table: ticketing.tickets
+    product: ticketing
+  Note:
+    label: Note
+    identifier: ticketing.ticket_notes.id
+    table: ticketing.ticket_notes
+    product: ticketing
+  KnowledgeArticle:
+    label: KnowledgeArticle
+    identifier: ticketing.kb_articles.id
+    table: ticketing.kb_articles
+    product: ticketing
+  Macro:
+    label: Macro
+    identifier: ticketing.macros.id
+    table: ticketing.macros
+    product: ticketing
+  AutomationRule:
+    label: AutomationRule
+    identifier: ticketing.automation_rules.id
+    table: ticketing.automation_rules
+    product: ticketing
+  AuditLog:
+    label: AuditLog
+    identifier: ticketing.audit_events.id
+    table: ticketing.audit_events
+    product: ticketing
+  InboundEmail:
+    label: InboundEmail
+    identifier: ticketing.email_message_refs.id
+    table: ticketing.email_message_refs
+    product: ticketing
+  OutboundEmail:
+    label: OutboundEmail
+    identifier: ticketing.outbound_email_log.id
+    table: ticketing.outbound_email_log
+    product: ticketing
+  ChatWorkflowEvent:
+    label: ChatWorkflowEvent
+    identifier: ticketing.workflow_events.id
+    table: ticketing.workflow_events
+    product: ticketing
+  Suggestion:
+    label: Suggestion
+    identifier: ticketing.proactive_recommendations.id
+    table: ticketing.proactive_recommendations
+    product: ticketing
+  Approval:
+    label: Approval
+    identifier: ticketing.proactive_approvals.id
+    table: ticketing.proactive_approvals
+    product: ticketing
+  ProactiveDecision:
+    label: ProactiveDecision
+    identifier: ticketing.proactive_audit.id
+    table: ticketing.proactive_audit
+    product: ticketing
+  BusinessUnit:
+    label: BusinessUnit
+    identifier: campaign.branches.id
+    table: campaign.branches
+    product: platform
+  ModuleEntitlement:
+    label: ModuleEntitlement
+    identifier: campaign.organization_products.id
+    table: campaign.organization_products
+    product: platform
+  Campaign:
+    label: Campaign
+    identifier: campaign.campaigns.id
+    table: campaign.campaigns
+    product: campaign
+  CampaignChannelPlan:
+    label: CampaignChannelPlan
+    identifier: campaign.campaign_channels.id
+    table: campaign.campaign_channels
+    product: campaign
+  CampaignDraft:
+    label: CampaignDraft
+    identifier: campaign.campaign_agent_sessions.id
+    table: campaign.campaign_agent_sessions
+    product: campaign
+  MessageTemplate:
+    label: MessageTemplate
+    identifier: campaign.campaign_channel_templates.id
+    table: campaign.campaign_channel_templates
+    product: campaign
+  TemplateRevision:
+    label: TemplateRevision
+    identifier: campaign.campaign_template_messages.id
+    table: campaign.campaign_template_messages
+    product: campaign
+  ApprovedTemplate:
+    label: ApprovedTemplate
+    identifier: campaign.regulated_channel_templates.id
+    table: campaign.regulated_channel_templates
+    product: campaign
+  SendingReadiness:
+    label: SendingReadiness
+    identifier: campaign.channel_sending_profiles.id
+    table: campaign.channel_sending_profiles
+    product: campaign
+  ChannelSendingConfig:
+    label: ChannelSendingConfig
+    identifier: campaign.sms_channel_settings.uid
+    table: campaign.sms_channel_settings
+    product: campaign
+  SenderComplianceProfile:
+    label: SenderComplianceProfile
+    identifier: campaign.email_org_profiles.organization_id
+    table: campaign.email_org_profiles
+    product: campaign
+  SenderAddress:
+    label: SenderAddress
+    identifier: campaign.email_senders.id
+    table: campaign.email_senders
+    product: campaign
+  SendingDomain:
+    label: SendingDomain
+    identifier: campaign.email_domains.id
+    table: campaign.email_domains
+    product: campaign
+  BounceDomain:
+    label: BounceDomain
+    identifier: campaign.email_return_paths.organization_id
+    table: campaign.email_return_paths
+    product: campaign
+  SendingLimit:
+    label: SendingLimit
+    identifier: campaign.email_sending_caps.organization_id
+    table: campaign.email_sending_caps
+    product: campaign
+  SuppressedAddress:
+    label: SuppressedAddress
+    identifier: campaign.email_suppressions.uid
+    table: campaign.email_suppressions
+    product: campaign
+  SendBatch:
+    label: SendBatch
+    identifier: campaign.campaign_send_batches.id
+    table: campaign.campaign_send_batches
+    product: campaign
+  Message:
+    label: Message
+    identifier: campaign.campaign_send_recipients.id
+    table: campaign.campaign_send_recipients
+    product: campaign
+  PushSubscription:
+    label: PushSubscription
+    identifier: campaign.push_endpoints.id
+    table: campaign.push_endpoints
+    product: campaign
+  Visitor:
+    label: Visitor
+    identifier: campaign.website_contacts.id
+    table: campaign.website_contacts
+    product: campaign
+  OutreachEngagement:
+    label: OutreachEngagement
+    identifier: campaign.campaign_contact_engagement.id
+    table: campaign.campaign_contact_engagement
+    product: campaign
+  IndustryPack:
+    label: IndustryPack
+    identifier: campaign.tenant_industry_packs.organization_id
+    table: campaign.tenant_industry_packs
+    product: platform
+  CampaignIdea:
+    label: CampaignIdea
+    identifier: campaign.campaign_recommendations.id
+    table: campaign.campaign_recommendations
+    product: campaign
+edges:
+- from: ConfigurationHub
+  type: has_user
+  to: User
+- from: User
+  type: member_of
+  to: Team
+- from: User
+  type: follows_schedule
+  to: OperatingSchedule
+- from: ConfigurationHub
+  type: has_team
+  to: Team
+- from: Team
+  type: follows_schedule
+  to: OperatingSchedule
+- from: ConfigurationHub
+  type: has_access_role
+  to: AccessRole
+- from: AccessRole
+  type: grants_access_to
+  to: PlatformModule
+- from: ConfigurationHub
+  type: has_operating_schedule
+  to: OperatingSchedule
+- from: OperatingSchedule
+  type: observes
+  to: HolidaySchedule
+- from: OperatingSchedule
+  type: has_shift
+  to: ScheduleShift
+- from: ConfigurationHub
+  type: has_holiday_schedule
+  to: HolidaySchedule
+- from: HolidaySchedule
+  type: has_non_working_day
+  to: NonWorkingDay
+- from: ConfigurationHub
+  type: has_channel_account
+  to: ChannelAccount
+- from: ChannelAccount
+  type: operates_on
+  to: Channel
+- from: ChannelAccount
+  type: routes_to
+  to: QueueDefinition
+- from: ConfigurationHub
+  type: has_voice_number
+  to: VoiceNumber
+- from: VoiceNumber
+  type: routes_to
+  to: QueueDefinition
+- from: VoiceNumber
+  type: routes_to
+  to: User
+- from: VoiceNumber
+  type: uses_prompts
+  to: VoicePromptProfile
+- from: ConfigurationHub
+  type: has_voice_prompt_profile
+  to: VoicePromptProfile
+- from: ConfigurationHub
+  type: has_queue_definition
+  to: QueueDefinition
+- from: QueueDefinition
+  type: owned_by_team
+  to: Team
+- from: QueueDefinition
+  type: follows_schedule
+  to: OperatingSchedule
+- from: QueueDefinition
+  type: has_routing_profile
+  to: IntentRoutingProfile
+- from: ConfigurationHub
+  type: has_knowledge_document
+  to: KnowledgeDocument
+- from: KnowledgeDocument
+  type: uploaded_by
+  to: User
+- from: ConfigurationHub
+  type: has_extracted_profile
+  to: ExtractedBusinessProfile
+- from: Contact
+  type: has_identity
+  to: ContactIdentity
+- from: Event
+  type: in_session
+  to: Visit
+- from: Event
+  type: on_site
+  to: Website
+- from: Visit
+  type: on_site
+  to: Website
+- from: Touchpoint
+  type: in_session
+  to: Visit
+- from: JourneyStep
+  type: in_session
+  to: Visit
+- from: Contact
+  type: has_journey_position
+  to: JourneyPosition
+- from: Contact
+  type: has_scorecard
+  to: ContactScorecard
+- from: Contact
+  type: has_value_summary
+  to: ContactValueSummary
+- from: PerformanceMetricSet
+  type: has_metric
+  to: PerformanceMetric
+- from: CustomerIntelligenceHub
+  type: has_segment
+  to: Segment
+- from: CustomerIntelligenceHub
+  type: has_persona_definition
+  to: Persona
+- from: PersonaEvidence
+  type: evidence_for
+  to: Persona
+- from: CustomerIntelligenceHub
+  type: has_engagement_rule
+  to: EngagementRule
+- from: AnomalySignalSet
+  type: has_signal
+  to: AnomalySignal
+- from: AnomalySignal
+  type: raised_by
+  to: AnomalyDetector
+- from: AnomalyDetector
+  type: HAS_ADAPTIVE_THRESHOLD
+  to: AdaptiveThreshold
+- from: CustomerIntelligenceHub
+  type: has_predictive_model
+  to: PredictiveModel
+- from: CustomerIntelligenceHub
+  type: has_data_source
+  to: DataSource
+- from: DigitalPresenceHub
+  type: has_tracked_site
+  to: Website
+- from: Agent
+  type: role_of
+  to: User
+- from: ServiceOperationsHub
+  type: has_skill_definition
+  to: Skill
+- from: Agent
+  type: has_capacity
+  to: ChannelCapacity
+- from: Agent
+  type: has_availability
+  to: AgentAvailability
+- from: ServiceOperationsHub
+  type: has_presence_reason
+  to: PresenceReason
+- from: ServiceOperationsHub
+  type: has_service_queue
+  to: Queue
+- from: Queue
+  type: projection_of
+  to: QueueDefinition
+- from: Queue
+  type: owned_by_team
+  to: Team
+- from: Queue
+  type: follows_schedule
+  to: OperatingSchedule
+- from: Queue
+  type: has_routing_profile
+  to: IntentRoutingProfile
+- from: Queue
+  type: has_distribution_policy
+  to: DistributionPolicy
+- from: DistributionPolicy
+  type: overflows_to
+  to: Queue
+- from: ServiceOperationsHub
+  type: has_automation_policy
+  to: AutomationPolicy
+- from: AutomationPolicy
+  type: policy_for
+  to: ChannelAccount
+- from: AutomationPolicy
+  type: default_queue
+  to: Queue
+- from: ServiceOperationsHub
+  type: has_service_level_policy
+  to: SLA
+- from: ServiceOperationsHub
+  type: has_outcome_code
+  to: OutcomeCode
+- from: Conversation
+  type: in_queue
+  to: Queue
+- from: Conversation
+  type: HANDLED_BY
+  to: Agent
+- from: Conversation
+  type: CONTINUES
+  to: Conversation
+- from: Conversation
+  type: HAS_DIGEST
+  to: ConversationDigest
+- from: Conversation
+  type: HAS_SERVICE_LEVEL_CLOCK
+  to: ServiceLevelClock
+- from: ServiceLevelClock
+  type: has_sla
+  to: SLA
+- from: Conversation
+  type: HAS_OUTCOME
+  to: OutcomeRecord
+- from: OutcomeRecord
+  type: applied_by
+  to: User
+- from: Conversation
+  type: HAS_ATTACHMENT
+  to: MediaAttachment
+- from: Conversation
+  type: has_note
+  to: InternalNote
+- from: InternalNote
+  type: written_by
+  to: User
+- from: ServiceOperationsHub
+  type: has_note
+  to: InternalNote
+- from: Conversation
+  type: HAS_PARTICIPANT
+  to: ParticipantRecord
+- from: WorkAssignment
+  type: ASSIGNS
+  to: Conversation
+- from: WorkAssignment
+  type: OFFERED_TO
+  to: Agent
+- from: WorkTransfer
+  type: TRANSFERS
+  to: Conversation
+- from: WorkTransfer
+  type: from_queue
+  to: Queue
+- from: DistributionAttempt
+  type: ATTEMPTS
+  to: Conversation
+- from: Conversation
+  type: HAS_CHAT_SESSION
+  to: ChatSession
+- from: MissedEngagement
+  type: MISSED
+  to: Conversation
+- from: Task
+  type: ABOUT_CONVERSATION
+  to: Conversation
+- from: Task
+  type: created_by
+  to: User
+- from: ServiceOperationsHub
+  type: HAS_BOT_SKILL
+  to: BotSkill
+- from: BotSkill
+  type: owned_by
+  to: User
+- from: BotSkill
+  type: HAS_VERSION
+  to: BotSkillVersion
+- from: BotSkillVersion
+  type: BINDS
+  to: BotSkillBinding
+- from: BotSkillVersion
+  type: HAS_TOOL
+  to: BotTool
+- from: Conversation
+  type: HAS_BOT_SESSION
+  to: BotSession
+- from: BotSession
+  type: RAN_VERSION
+  to: BotSkillVersion
+- from: InteractionSummary
+  type: projection_of
+  to: Conversation
+- from: InteractionSummary
+  type: in_queue
+  to: Queue
+- from: OfferingCatalog
+  type: HAS_OFFERING
+  to: Offering
+- from: OfferingPlan
+  type: PLAN_FOR
+  to: Offering
+- from: OfferingAddOn
+  type: ADD_ON_FOR
+  to: Offering
+- from: OfferingAddOn
+  type: HAS_TIER
+  to: PricingTier
+- from: OfferingCatalog
+  type: HAS_PRICE_LIST
+  to: PriceList
+- from: PriceList
+  type: HAS_ENTRY
+  to: PriceListEntry
+- from: PriceListEntry
+  type: PRICES
+  to: Offering
+- from: PriceListEntry
+  type: PRICES
+  to: OfferingPlan
+- from: PriceListEntry
+  type: PRICES
+  to: OfferingAddOn
+- from: ConfigurationHub
+  type: HAS_VERTICAL_PROFILE
+  to: VerticalProfile
+- from: Account
+  type: owned_by
+  to: User
+- from: Account
+  type: SUBSIDIARY_OF
+  to: Account
+- from: Account
+  type: HAS_SITE
+  to: AccountSite
+- from: AccountSite
+  type: owned_by
+  to: User
+- from: SalesProfile
+  type: sales_view_of
+  to: Contact
+- from: SalesProfile
+  type: WORKS_AT
+  to: Account
+- from: SalesProfile
+  type: AT_SITE
+  to: AccountSite
+- from: SalesProfile
+  type: owned_by
+  to: User
+- from: SalesProfile
+  type: CONVERTED_TO
+  to: Deal
+- from: Deal
+  type: WITH_ACCOUNT
+  to: Account
+- from: Deal
+  type: AT_SITE
+  to: AccountSite
+- from: Deal
+  type: primary_contact
+  to: Contact
+- from: Deal
+  type: owned_by
+  to: User
+- from: Deal
+  type: HAS_ACTIVITY
+  to: DealActivity
+- from: DealActivity
+  type: created_by
+  to: User
+- from: EngagementActivity
+  type: assigned_to
+  to: User
+- from: EngagementActivity
+  type: SCHEDULED_AS
+  to: Meeting
+- from: Meeting
+  type: hosted_by
+  to: User
+- from: ConfigurationHub
+  type: HAS_DOCUMENT_TEMPLATE
+  to: DocumentTemplate
+- from: Proposal
+  type: FOR_OPPORTUNITY
+  to: Deal
+- from: Proposal
+  type: USES_TEMPLATE
+  to: DocumentTemplate
+- from: Proposal
+  type: approved_by
+  to: User
+- from: Quote
+  type: FOR_OPPORTUNITY
+  to: Deal
+- from: Quote
+  type: FROM_PROPOSAL
+  to: Proposal
+- from: Quote
+  type: RENEWS
+  to: Contract
+- from: Quote
+  type: approved_by
+  to: User
+- from: SalesOrder
+  type: FOR_OPPORTUNITY
+  to: Deal
+- from: SalesOrder
+  type: FROM_QUOTE
+  to: Quote
+- from: SalesOrder
+  type: FOR_ACCOUNT
+  to: Account
+- from: SalesOrder
+  type: PLACED_BY
+  to: Contact
+- from: Invoice
+  type: FOR_ORDER
+  to: SalesOrder
+- from: Invoice
+  type: FOR_ACCOUNT
+  to: Account
+- from: Invoice
+  type: UNDER_CONTRACT
+  to: Contract
+- from: Invoice
+  type: ON_SCHEDULE
+  to: BillingSchedule
+- from: Invoice
+  type: approved_by
+  to: User
+- from: Quote
+  type: HAS_LINE
+  to: LineItem
+- from: LineItem
+  type: FOR_OFFERING
+  to: Offering
+- from: SalesOrder
+  type: HAS_LINE
+  to: LineItem
+- from: Invoice
+  type: HAS_LINE
+  to: LineItem
+- from: LineItem
+  type: FOR_ADD_ON
+  to: OfferingAddOn
+- from: Contract
+  type: FOR_ACCOUNT
+  to: Account
+- from: Contract
+  type: FROM_OPPORTUNITY
+  to: Deal
+- from: Contract
+  type: RENEWED_BY
+  to: Deal
+- from: Contract
+  type: HAS_SCHEDULE
+  to: BillingSchedule
+- from: BillingSchedule
+  type: FOR_ACCOUNT
+  to: Account
+- from: ConfigurationHub
+  type: HAS_ASSIGNMENT_POLICY
+  to: AssignmentPolicy
+- from: User
+  type: has_capacity_profile
+  to: RepCapacityProfile
+- from: LiveMeetingSession
+  type: ASSISTS
+  to: EngagementActivity
+- from: LiveMeetingSession
+  type: hosted_by
+  to: User
+- from: LiveMeetingSession
+  type: has_segment
+  to: TranscriptSegment
+- from: MeetingOutcome
+  type: ANALYSES
+  to: EngagementActivity
+- from: MeetingOutcome
+  type: FOR_OPPORTUNITY
+  to: Deal
+- from: CoachingNote
+  type: about_user
+  to: User
+- from: CoachingNote
+  type: ANALYSES
+  to: EngagementActivity
+- from: PrivacyRequest
+  type: ABOUT_CUSTOMER
+  to: Contact
+- from: PrivacyRequest
+  type: RAISED_IN
+  to: EngagementActivity
+- from: PrivacyRequest
+  type: reviewed_by
+  to: User
+- from: ApprovalRequest
+  type: FOR_OPPORTUNITY
+  to: Deal
+- from: ApprovalRequest
+  type: awaiting
+  to: User
+- from: ApprovalRequest
+  type: decided_by
+  to: User
+- from: AgentJob
+  type: ABOUT_CUSTOMER
+  to: Contact
+- from: AgentJob
+  type: FOR_OPPORTUNITY
+  to: Deal
+- from: AgentJob
+  type: FOR_ACCOUNT
+  to: Account
+- from: SupportHub
+  type: has_portal_settings
+  to: SupportPortalSettings
+- from: SupportHub
+  type: has_support_account
+  to: ContactAccount
+- from: SupportHub
+  type: has_support_queue
+  to: Queue
+- from: Ticket
+  type: raised_by
+  to: Contact
+- from: Ticket
+  type: in_queue
+  to: Queue
+- from: Ticket
+  type: assigned_to
+  to: Agent
+- from: Ticket
+  type: resolved_by
+  to: Agent
+- from: Ticket
+  type: has_sla
+  to: SLA
+- from: SupportHub
+  type: has_service_level_policy
+  to: SLA
+- from: Ticket
+  type: has_note
+  to: Note
+- from: Note
+  type: written_by
+  to: Agent
+- from: SupportHub
+  type: HAS_KNOWLEDGE_ARTICLE
+  to: KnowledgeArticle
+- from: KnowledgeArticle
+  type: written_by
+  to: Agent
+- from: SupportHub
+  type: HAS_CANNED_REPLY
+  to: Macro
+- from: SupportHub
+  type: HAS_WORKFLOW_RULE
+  to: AutomationRule
+- from: AuditLog
+  type: PERFORMED_BY
+  to: Agent
+- from: InboundEmail
+  type: threads_to
+  to: Ticket
+- from: ChatSession
+  type: OPENED_BY
+  to: Agent
+- from: ChatSession
+  type: HAS_EVENT
+  to: ChatWorkflowEvent
+- from: ProactiveDecision
+  type: DECIDED_ON
+  to: ProactiveEvent
+- from: Notification
+  type: ABOUT_CASE
+  to: Ticket
+- from: ConfigurationHub
+  type: HAS_BUSINESS_UNIT
+  to: BusinessUnit
+- from: BusinessUnit
+  type: ENTITLES
+  to: ModuleEntitlement
+- from: ModuleEntitlement
+  type: FOR_MODULE
+  to: PlatformModule
+- from: MarketingHub
+  type: HAS_CAMPAIGN
+  to: Campaign
+- from: Campaign
+  type: IN_BUSINESS_UNIT
+  to: BusinessUnit
+- from: Campaign
+  type: FROM_DRAFT
+  to: CampaignDraft
+- from: Campaign
+  type: HAS_CHANNEL_PLAN
+  to: CampaignChannelPlan
+- from: CampaignChannelPlan
+  type: USES_TEMPLATE
+  to: MessageTemplate
+- from: CampaignDraft
+  type: IN_BUSINESS_UNIT
+  to: BusinessUnit
+- from: CampaignDraft
+  type: created_by
+  to: User
+- from: MessageTemplate
+  type: DRAFTED_IN
+  to: CampaignDraft
+- from: MessageTemplate
+  type: IN_BUSINESS_UNIT
+  to: BusinessUnit
+- from: MessageTemplate
+  type: HAS_REVISION
+  to: TemplateRevision
+- from: MarketingHub
+  type: HAS_APPROVED_TEMPLATE
+  to: ApprovedTemplate
+- from: ApprovedTemplate
+  type: SENDS_VIA
+  to: ChannelAccount
+- from: ApprovedTemplate
+  type: FOR_CAMPAIGN
+  to: Campaign
+- from: MarketingHub
+  type: HAS_SENDING_READINESS
+  to: SendingReadiness
+- from: SendingReadiness
+  type: FOR_CHANNEL
+  to: Channel
+- from: MarketingHub
+  type: HAS_SENDING_CONFIG
+  to: ChannelSendingConfig
+- from: MarketingHub
+  type: HAS_COMPLIANCE_PROFILE
+  to: SenderComplianceProfile
+- from: MarketingHub
+  type: HAS_SENDER_ADDRESS
+  to: SenderAddress
+- from: SenderAddress
+  type: AUTHENTICATED_ON
+  to: SendingDomain
+- from: MarketingHub
+  type: HAS_SENDING_DOMAIN
+  to: SendingDomain
+- from: MarketingHub
+  type: HAS_BOUNCE_DOMAIN
+  to: BounceDomain
+- from: MarketingHub
+  type: HAS_SENDING_LIMIT
+  to: SendingLimit
+- from: Campaign
+  type: HAS_BATCH
+  to: SendBatch
+- from: SendBatch
+  type: GATED_BY
+  to: SendingLimit
+- from: SendBatch
+  type: COMPLIES_WITH
+  to: SenderComplianceProfile
+- from: Message
+  type: IN_BATCH
+  to: SendBatch
+- from: Contact
+  type: HAS_PUSH_SUBSCRIPTION
+  to: PushSubscription
+- from: Visitor
+  type: RESOLVED_TO
+  to: Contact
+- from: Contact
+  type: HAS_OUTREACH_ENGAGEMENT
+  to: OutreachEngagement
+- from: ConfigurationHub
+  type: HAS_INDUSTRY_PACK
+  to: IndustryPack
+- from: MarketingHub
+  type: HAS_CAMPAIGN_IDEA
+  to: CampaignIdea
+- from: CampaignIdea
+  type: IN_BUSINESS_UNIT
+  to: BusinessUnit
+- from: Notification
+  type: ABOUT_CAMPAIGN
+  to: Campaign
+- from: Notification
+  type: ABOUT_TEMPLATE
+  to: ApprovedTemplate
+class_aliases:
+  Tenant: Tenant
+  User: User
+  Team: Team
+  AccessRole: AccessRole
+  OperatingSchedule: OperatingSchedule
+  ScheduleShift: ScheduleShift
+  HolidaySchedule: HolidaySchedule
+  NonWorkingDay: NonWorkingDay
+  ChannelAccount: ChannelAccount
+  VoiceNumber: VoiceNumber
+  VoicePromptProfile: VoicePromptProfile
+  QueueDefinition: QueueDefinition
+  IntentRoutingProfile: IntentRoutingProfile
+  KnowledgeDocument: KnowledgeDocument
+  ExtractedBusinessProfile: ExtractedBusinessProfile
+  Contact: Contact
+  ContactIdentity: ContactIdentity
+  Event: Event
+  Visit: Visit
+  Touchpoint: Touchpoint
+  JourneyStep: JourneyStep
+  JourneyPosition: JourneyPosition
+  ContactScorecard: ContactScorecard
+  ContactValueSummary: ContactValueSummary
+  DailyEngagementMetric: DailyEngagementMetric
+  PerformanceMetric: PerformanceMetric
+  ContactInsight: ContactInsight
+  NextBestAction: NextBestAction
+  Segment: Segment
+  Persona: Persona
+  PersonaEvidence: PersonaEvidence
+  ExperienceMemory: ExperienceMemory
+  KnownFact: KnownFact
+  EngagementRule: EngagementRule
+  ActivationSignal: ActivationSignal
+  AnomalyDetector: AnomalyDetector
+  AnomalySignal: AnomalySignal
+  AdaptiveThreshold: AdaptiveThreshold
+  PredictiveModel: PredictiveModel
+  DataSource: DataSource
+  Purchase: Purchase
+  Website: Website
+  Agent: Agent
+  Skill: Skill
+  ChannelCapacity: ChannelCapacity
+  AgentAvailability: AgentAvailability
+  PresenceReason: PresenceReason
+  Queue: Queue
+  DistributionPolicy: DistributionPolicy
+  AutomationPolicy: AutomationPolicy
+  SLA: SLA
+  OutcomeCode: OutcomeCode
+  Conversation: Conversation
+  ConversationDigest: ConversationDigest
+  ServiceLevelClock: ServiceLevelClock
+  OutcomeRecord: OutcomeRecord
+  MediaAttachment: MediaAttachment
+  InternalNote: InternalNote
+  ParticipantRecord: ParticipantRecord
+  WorkAssignment: WorkAssignment
+  WorkTransfer: WorkTransfer
+  DistributionAttempt: DistributionAttempt
+  ChatSession: ChatSession
+  MissedEngagement: MissedEngagement
+  Task: Task
+  BotSkill: BotSkill
+  BotSkillVersion: BotSkillVersion
+  BotSkillBinding: BotSkillBinding
+  BotTool: BotTool
+  BotSession: BotSession
+  InteractionSummary: InteractionSummary
+  Offering: Offering
+  OfferingPlan: OfferingPlan
+  OfferingAddOn: OfferingAddOn
+  PricingTier: PricingTier
+  PriceList: PriceList
+  PriceListEntry: PriceListEntry
+  VerticalProfile: VerticalProfile
+  Account: Account
+  AccountSite: AccountSite
+  SalesProfile: SalesProfile
+  Deal: Deal
+  DealActivity: DealActivity
+  EngagementActivity: EngagementActivity
+  Meeting: Meeting
+  DocumentTemplate: DocumentTemplate
+  Proposal: Proposal
+  Quote: Quote
+  SalesOrder: SalesOrder
+  Invoice: Invoice
+  LineItem: LineItem
+  Contract: Contract
+  BillingSchedule: BillingSchedule
+  AssignmentPolicy: AssignmentPolicy
+  RepCapacityProfile: RepCapacityProfile
+  EnrichmentSnapshot: EnrichmentSnapshot
+  LeadBrief: LeadBrief
+  LiveMeetingSession: LiveMeetingSession
+  TranscriptSegment: TranscriptSegment
+  MeetingOutcome: MeetingOutcome
+  CoachingNote: CoachingNote
+  PrivacyRequest: PrivacyRequest
+  ApprovalRequest: ApprovalRequest
+  AgentMemorySlot: AgentMemorySlot
+  AgentJob: AgentJob
+  Notification: Notification
+  SupportPortalSettings: SupportPortalSettings
+  ContactAccount: ContactAccount
+  Ticket: Ticket
+  Note: Note
+  KnowledgeArticle: KnowledgeArticle
+  Macro: Macro
+  AutomationRule: AutomationRule
+  AuditLog: AuditLog
+  InboundEmail: InboundEmail
+  OutboundEmail: OutboundEmail
+  ChatWorkflowEvent: ChatWorkflowEvent
+  Suggestion: Suggestion
+  Approval: Approval
+  ProactiveDecision: ProactiveDecision
+  BusinessUnit: BusinessUnit
+  ModuleEntitlement: ModuleEntitlement
+  Campaign: Campaign
+  CampaignChannelPlan: CampaignChannelPlan
+  CampaignDraft: CampaignDraft
+  MessageTemplate: MessageTemplate
+  TemplateRevision: TemplateRevision
+  ApprovedTemplate: ApprovedTemplate
+  SendingReadiness: SendingReadiness
+  ChannelSendingConfig: ChannelSendingConfig
+  SenderComplianceProfile: SenderComplianceProfile
+  SenderAddress: SenderAddress
+  SendingDomain: SendingDomain
+  BounceDomain: BounceDomain
+  SendingLimit: SendingLimit
+  SuppressedAddress: SuppressedAddress
+  SendBatch: SendBatch
+  Message: Message
+  PushSubscription: PushSubscription
+  Visitor: Visitor
+  OutreachEngagement: OutreachEngagement
+  IndustryPack: IndustryPack
+  CampaignIdea: CampaignIdea
+definitions:
+  Contact: A person the tenant interacts with; tickets and conversations resolve here
+    via cdp_id.
+  Tenant: Company or tenant org (Worktual customer business).
+  User: Staff login record in accounts (admin, supervisor, live agent). One person,
+    one User node.
+  Agent: Product staff row (ticketing.agents / ccass.agents). Tickets assign to Agent,
+    not User.
+  Team: Named group of agents assigned by skill or queue.
+  Ticket: A service request or issue raised by a customer that must be resolved.
+  ContactAccount: B2B account details for a contact in ticketing.
+  Note: Something an admin, agent, or resolver writes on a ticket.
+  Queue: A queue specified by skill; tickets and agents are assigned accordingly.
+  SLA: Service level agreement — time commitment by priority.
+  Macro: Canned reply / resolution steps for similar tickets.
+  KnowledgeArticle: Organization knowledge base article for agents and resolvers.
+  InboundEmail: Inbound email thread reference linked to a ticket.
+  OutboundEmail: Outbound email dispatch record for a ticket.
+  AutomationRule: Workflow automation rule for ticketing events.
+  AuditLog: Audit trail of actions on tickets or org settings.
+  Suggestion: Proactive AI suggestion for a ticket.
+  Approval: High-risk proactive action awaiting human approval.
+  Notification: User notification, often about a ticket.
+  ChatSession: Ticketing workspace assistant's chat session with the user.
+  TicketStatus: Whether a ticket is open, pending, in progress, resolved, or closed.
+  Priority: How urgent a ticket is.
+  Channel: Platform customers use to contact support (email, chat, phone, etc.).
+  ContactProfileBridge: Ticketing portal bridge from tickets.customer_id to CDP cdp_id;
+    not a graph node.
+  Conversation: A bounded exchange between customer and agent across channels.
+  Task: Assigned work item for an agent in the contact center.
+  Deal: Sales opportunity / deal in the pipeline.
+  Account: B2B company account in CRM.
+  Quote: Sales quote for a deal.
+  Campaign: Planned outreach effort to a segment.
+  Segment: Audience segment for campaigns or analytics.
+  Visitor: Anonymous or identified web visitor before CDP resolution.
+  Website: Tracked website for web analytics.
+  Event: Observed customer behaviour event (page view, click, etc.).
+  Message: Outbound message delivery record (email, SMS, push).
+  Offering: Product or service the organization sells.
+  PresenceReason: PresenceReason entity in the knowledge graph.
+  AutomationPolicy: AutomationPolicy entity in the knowledge graph.
+  InternalNote: InternalNote entity in the knowledge graph.
+  BounceDomain: BounceDomain entity in the knowledge graph.
+  LineItem: LineItem entity in the knowledge graph.
+  ConversationDigest: ConversationDigest entity in the knowledge graph.
+  JourneyPosition: JourneyPosition entity in the knowledge graph.
+  Persona: Persona entity in the knowledge graph.
+  ExperienceMemory: ExperienceMemory entity in the knowledge graph.
+  SuppressedAddress: SuppressedAddress entity in the knowledge graph.
+  WorkAssignment: WorkAssignment entity in the knowledge graph.
+  PushSubscription: PushSubscription entity in the knowledge graph.
+  LiveMeetingSession: LiveMeetingSession entity in the knowledge graph.
+  BotSkillVersion: BotSkillVersion entity in the knowledge graph.
+  VoicePromptProfile: VoicePromptProfile entity in the knowledge graph.
+  JourneyStep: JourneyStep entity in the knowledge graph.
+  DailyEngagementMetric: DailyEngagementMetric entity in the knowledge graph.
+  SenderComplianceProfile: SenderComplianceProfile entity in the knowledge graph.
+  ContactValueSummary: ContactValueSummary entity in the knowledge graph.
+  Invoice: Invoice entity in the knowledge graph.
+  ChannelCapacity: ChannelCapacity entity in the knowledge graph.
+  Proposal: Proposal entity in the knowledge graph.
+  AgentAvailability: AgentAvailability entity in the knowledge graph.
+  QueueDefinition: QueueDefinition entity in the knowledge graph.
+  DealActivity: DealActivity entity in the knowledge graph.
+  AgentJob: AgentJob entity in the knowledge graph.
+  CoachingNote: CoachingNote entity in the knowledge graph.
+  DistributionPolicy: DistributionPolicy entity in the knowledge graph.
+  SupportPortalSettings: SupportPortalSettings entity in the knowledge graph.
+  WorkTransfer: WorkTransfer entity in the knowledge graph.
+  ServiceLevelClock: ServiceLevelClock entity in the knowledge graph.
+  ActivationSignal: ActivationSignal entity in the knowledge graph.
+  DataSource: DataSource entity in the knowledge graph.
+  PriceListEntry: PriceListEntry entity in the knowledge graph.
+  ChannelAccount: ChannelAccount entity in the knowledge graph.
+  InteractionSummary: InteractionSummary entity in the knowledge graph.
+  KnowledgeDocument: KnowledgeDocument entity in the knowledge graph.
+  SalesProfile: SalesProfile entity in the knowledge graph.
+  AssignmentPolicy: AssignmentPolicy entity in the knowledge graph.
+  Meeting: Meeting entity in the knowledge graph.
+  MeetingOutcome: MeetingOutcome entity in the knowledge graph.
+  EnrichmentSnapshot: EnrichmentSnapshot entity in the knowledge graph.
+  SenderAddress: SenderAddress entity in the knowledge graph.
+  Skill: Skill entity in the knowledge graph.
+  CampaignIdea: CampaignIdea entity in the knowledge graph.
+  ContactScorecard: ContactScorecard entity in the knowledge graph.
+  AnomalySignal: AnomalySignal entity in the knowledge graph.
+  ContactInsight: ContactInsight entity in the knowledge graph.
+  ChannelSendingConfig: ChannelSendingConfig entity in the knowledge graph.
+  EngagementActivity: EngagementActivity entity in the knowledge graph.
+  IndustryPack: IndustryPack entity in the knowledge graph.
+  AccessRole: AccessRole entity in the knowledge graph.
+  SalesOrder: SalesOrder entity in the knowledge graph.
+  TemplateRevision: TemplateRevision entity in the knowledge graph.
+  Touchpoint: Touchpoint entity in the knowledge graph.
+  IntentRoutingProfile: IntentRoutingProfile entity in the knowledge graph.
+  OutreachEngagement: OutreachEngagement entity in the knowledge graph.
+  AgentMemorySlot: AgentMemorySlot entity in the knowledge graph.
+  OperatingSchedule: OperatingSchedule entity in the knowledge graph.
+  Contract: Contract entity in the knowledge graph.
+  ContactIdentity: ContactIdentity entity in the knowledge graph.
+  BotTool: BotTool entity in the knowledge graph.
+  PrivacyRequest: PrivacyRequest entity in the knowledge graph.
+  KnownFact: KnownFact entity in the knowledge graph.
+  NextBestAction: NextBestAction entity in the knowledge graph.
+  ApprovedTemplate: ApprovedTemplate entity in the knowledge graph.
+  VoiceNumber: VoiceNumber entity in the knowledge graph.
+  BotSkillBinding: BotSkillBinding entity in the knowledge graph.
+  MissedEngagement: MissedEngagement entity in the knowledge graph.
+  HolidaySchedule: HolidaySchedule entity in the knowledge graph.
+  DocumentTemplate: DocumentTemplate entity in the knowledge graph.
+  CampaignChannelPlan: CampaignChannelPlan entity in the knowledge graph.
+  ApprovalRequest: ApprovalRequest entity in the knowledge graph.
+  MessageTemplate: MessageTemplate entity in the knowledge graph.
+  LeadBrief: LeadBrief entity in the knowledge graph.
+  MediaAttachment: MediaAttachment entity in the knowledge graph.
+  AdaptiveThreshold: AdaptiveThreshold entity in the knowledge graph.
+  ProactiveDecision: ProactiveDecision entity in the knowledge graph.
+  SendingReadiness: SendingReadiness entity in the knowledge graph.
+  BusinessUnit: BusinessUnit entity in the knowledge graph.
+  PriceList: PriceList entity in the knowledge graph.
+  VerticalProfile: VerticalProfile entity in the knowledge graph.
+  BotSkill: BotSkill entity in the knowledge graph.
+  DistributionAttempt: DistributionAttempt entity in the knowledge graph.
+  SendingLimit: SendingLimit entity in the knowledge graph.
+  BotSession: BotSession entity in the knowledge graph.
+  CampaignDraft: CampaignDraft entity in the knowledge graph.
+  ChatWorkflowEvent: ChatWorkflowEvent entity in the knowledge graph.
+  RepCapacityProfile: RepCapacityProfile entity in the knowledge graph.
+  BillingSchedule: BillingSchedule entity in the knowledge graph.
+  EngagementRule: EngagementRule entity in the knowledge graph.
+  PredictiveModel: PredictiveModel entity in the knowledge graph.
+  Purchase: Purchase entity in the knowledge graph.
+  ModuleEntitlement: ModuleEntitlement entity in the knowledge graph.
+  AccountSite: AccountSite entity in the knowledge graph.
+  Visit: Visit entity in the knowledge graph.
+  PerformanceMetric: PerformanceMetric entity in the knowledge graph.
+  AnomalyDetector: AnomalyDetector entity in the knowledge graph.
+  TranscriptSegment: TranscriptSegment entity in the knowledge graph.
+  NonWorkingDay: NonWorkingDay entity in the knowledge graph.
+  SendBatch: SendBatch entity in the knowledge graph.
+  ExtractedBusinessProfile: ExtractedBusinessProfile entity in the knowledge graph.
+  OutcomeRecord: OutcomeRecord entity in the knowledge graph.
+  PersonaEvidence: PersonaEvidence entity in the knowledge graph.
+  ScheduleShift: ScheduleShift entity in the knowledge graph.
+  SendingDomain: SendingDomain entity in the knowledge graph.
+  OfferingPlan: OfferingPlan entity in the knowledge graph.
+  OutcomeCode: OutcomeCode entity in the knowledge graph.
+  OfferingAddOn: OfferingAddOn entity in the knowledge graph.
+  ParticipantRecord: ParticipantRecord entity in the knowledge graph.
+  PricingTier: PricingTier entity in the knowledge graph.

@@ -1,0 +1,60 @@
+{
+  "turn_id": "b117bd41",
+  "timestamp": "2026-10-09T11:49:15.826174+00:00",
+  "question": "What is the average interaction duration?",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1018,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Average interaction duration</strong></p><p>The average interaction duration for all time is <strong>62.40 minutes</strong>.</p><p>Would you like to see this average broken down by channel?</p>",
+  "card": "card: kpi r1",
+  "facts": "result_id: r1\nwindow: all time\nkpi: avg_handle_time\ncertified: true\nunit: minutes\ntask_goal: Calculate the average interaction duration.\nanswer_type: number\nrow_count: 1\nrow 1: avg_handle_time=62.40",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1018,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "What is the average interaction duration?",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants to know the average duration of all interactions.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Calculate the average interaction duration.",
+          "time": "all time",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "avg_handle_time",
+        "row_count": 1
+      }
+    ],
+    "facts": "result_id: r1\nwindow: all time\nkpi: avg_handle_time\ncertified: true\nunit: minutes\ntask_goal: Calculate the average interaction duration.\nanswer_type: number\nrow_count: 1\nrow 1: avg_handle_time=62.40",
+    "grounded": true,
+    "card": "card: kpi r1"
+  },
+  "error": null
+}

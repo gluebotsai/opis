@@ -1,0 +1,476 @@
+[
+  {
+    "id": "label_tenant",
+    "type": "node_label",
+    "name": "Tenant",
+    "description": "A top-level isolation boundary that logically separates data and configurations across different organizations or customers within a multi-tenant CRM system",
+    "category": "System",
+    "properties": [
+      "id",
+      "name",
+      "domain",
+      "plan",
+      "status",
+      "created_at",
+      "updated_at"
+    ],
+    "synonyms": [
+      "Tenant Account",
+      "Multi-Tenant",
+      "Tenant Organization",
+      "Workspace",
+      "Account Tenant",
+      "Platform Tenant"
+    ]
+  },
+  {
+    "id": "label_role",
+    "type": "node_label",
+    "name": "Role",
+    "description": "A named collection of permissions that can be assigned to users to define what actions they are allowed to perform within the CRM",
+    "category": "Security",
+    "properties": [
+      "id",
+      "name",
+      "permissions",
+      "description",
+      "is_system",
+      "created_at",
+      "updated_at"
+    ],
+    "synonyms": [
+      "Permission Group",
+      "Access Role",
+      "User Role",
+      "Security Role",
+      "Authorization Role",
+      "Role Assignment"
+    ]
+  },
+  {
+    "id": "label_team",
+    "type": "node_label",
+    "name": "Team",
+    "description": "A group of users who can collaborate on deals, cases, and other CRM entities, with shared access and responsibilities",
+    "category": "Organization",
+    "properties": [
+      "id",
+      "name",
+      "lead_id",
+      "description",
+      "created_at",
+      "updated_at"
+    ],
+    "synonyms": [
+      "User Team",
+      "Department",
+      "Working Group",
+      "Staff Group",
+      "Team Group",
+      "Collaboration Team"
+    ]
+  },
+  {
+    "id": "label_user",
+    "type": "node_label",
+    "name": "User",
+    "description": "A human user account that can log into the CRM system, interact with entities, and perform actions based on their assigned roles and team memberships",
+    "category": "User",
+    "properties": [
+      "id",
+      "email",
+      "first_name",
+      "last_name",
+      "role_id",
+      "tenant_id",
+      "status",
+      "created_at",
+      "updated_at"
+    ],
+    "synonyms": [
+      "User Account",
+      "System User",
+      "App User",
+      "Platform User",
+      "CRM User",
+      "End User"
+    ]
+  },
+  {
+    "id": "label_contact",
+    "type": "node_label",
+    "name": "Contact",
+    "description": "A person or entity that can be associated with deals, orders, and activities; can be a lead, prospect, or existing customer",
+    "category": "Contact",
+    "properties": [
+      "id",
+      "first_name",
+      "last_name",
+      "email",
+      "phone",
+      "company_id",
+      "status",
+      "created_at",
+      "updated_at"
+    ],
+    "synonyms": [
+      "Person",
+      "Customer Contact",
+      "Business Contact",
+      "Lead",
+      "Prospect",
+      "Client"
+    ]
+  },
+  {
+    "id": "label_contactpoint",
+    "type": "node_label",
+    "name": "ContactPoint",
+    "description": "A specific contact information record such as an email address, phone number, or physical address associated with a contact",
+    "category": "Contact",
+    "properties": [
+      "id",
+      "contact_id",
+      "type",
+      "value",
+      "is_primary",
+      "created_at",
+      "updated_at"
+    ],
+    "synonyms": [
+      "Contact Info",
+      "Email Phone",
+      "Communication Point",
+      "Contact Method",
+      "Phone Email",
+      "Reach Point"
+    ]
+  },
+  {
+    "id": "label_product",
+    "type": "node_label",
+    "name": "Product",
+    "description": "A sellable item or service offered by the company, with pricing, inventory tracking, and description information",
+    "category": "Product",
+    "properties": [
+      "id",
+      "name",
+      "sku",
+      "price",
+      "cost",
+      "description",
+      "category",
+      "is_active",
+      "created_at",
+      "updated_at"
+    ],
+    "synonyms": [
+      "Item",
+      "Merchandise",
+      "SKU",
+      "Sellable",
+      "Good",
+      "Offering"
+    ]
+  },
+  {
+    "id": "label_order",
+    "type": "node_label",
+    "name": "Order",
+    "description": "A customer purchase order placed for one or more products or services",
+    "category": "Sales",
+    "properties": [
+      "id",
+      "order_number",
+      "contact_id",
+      "company_id",
+      "total_amount",
+      "currency",
+      "status",
+      "order_date",
+      "created_at",
+      "updated_at"
+    ],
+    "synonyms": [
+      "Purchase",
+      "Order Request",
+      "Customer Order",
+      "Sales Order",
+      "Transaction",
+      "Buy Order"
+    ]
+  },
+  {
+    "id": "label_contract",
+    "type": "node_label",
+    "name": "Contract",
+    "description": "A legal agreement with a customer or vendor outlining terms, obligations, and deliverables",
+    "category": "Sales",
+    "properties": [
+      "id",
+      "contract_number",
+      "title",
+      "contact_id",
+      "company_id",
+      "value",
+      "start_date",
+      "end_date",
+      "status",
+      "created_at",
+      "updated_at"
+    ],
+    "synonyms": [
+      "Agreement",
+      "Legal Contract",
+      "Service Contract",
+      "Client Agreement",
+      "Vendor Contract",
+      "Contract Document"
+    ]
+  },
+  {
+    "id": "label_case",
+    "type": "node_label",
+    "name": "Case",
+    "description": "A customer support or service request tracked from creation through resolution",
+    "category": "Support",
+    "properties": [
+      "id",
+      "case_number",
+      "subject",
+      "description",
+      "contact_id",
+      "status",
+      "priority",
+      "assigned_to",
+      "created_at",
+      "updated_at"
+    ],
+    "synonyms": [
+      "Support Case",
+      "Support Ticket",
+      "Issue",
+      "Service Request",
+      "Help Ticket",
+      "Customer Issue"
+    ]
+  },
+  {
+    "id": "label_ticket",
+    "type": "node_label",
+    "name": "Ticket",
+    "description": "A support ticket created by a customer or agent to track and resolve issues",
+    "category": "Support",
+    "properties": [
+      "id",
+      "ticket_number",
+      "subject",
+      "description",
+      "contact_id",
+      "assigned_to",
+      "status",
+      "priority",
+      "created_at",
+      "updated_at"
+    ],
+    "synonyms": [
+      "Support Ticket",
+      "Issue Ticket",
+      "Help Ticket",
+      "Service Ticket",
+      "Problem Ticket",
+      "Resolution Ticket"
+    ]
+  },
+  {
+    "id": "label_subscription",
+    "type": "node_label",
+    "name": "Subscription",
+    "description": "A recurring billing arrangement where a customer pays periodically for access to a product or service",
+    "category": "Billing",
+    "properties": [
+      "id",
+      "subscription_id",
+      "contact_id",
+      "company_id",
+      "plan",
+      "status",
+      "billing_cycle",
+      "start_date",
+      "end_date",
+      "created_at",
+      "updated_at"
+    ],
+    "synonyms": [
+      "Recurring Billing",
+      "Subscription Plan",
+      "Membership",
+      "Service Subscription",
+      "Recurring Subscription",
+      "Billing Plan"
+    ]
+  },
+  {
+    "id": "label_payment",
+    "type": "node_label",
+    "name": "Payment",
+    "description": "A record of money received from a customer as payment for an invoice, order, or subscription",
+    "category": "Finance",
+    "properties": [
+      "id",
+      "payment_number",
+      "invoice_id",
+      "amount",
+      "currency",
+      "method",
+      "paid_at",
+      "reference",
+      "created_at",
+      "updated_at"
+    ],
+    "synonyms": [
+      "Payment Record",
+      "Money Received",
+      "Payment Transaction",
+      "Received Payment",
+      "Customer Payment",
+      "Online Payment"
+    ]
+  },
+  {
+    "id": "label_salestarget",
+    "type": "node_label",
+    "name": "SalesTarget",
+    "description": "A sales goal or quota set for a user or team, tracking performance against defined revenue or activity metrics",
+    "category": "Sales",
+    "properties": [
+      "id",
+      "target_number",
+      "owner_id",
+      "team_id",
+      "metric",
+      "target_value",
+      "period",
+      "start_date",
+      "end_date",
+      "created_at",
+      "updated_at"
+    ],
+    "synonyms": [
+      "Sales Goal",
+      "Sales Quota",
+      "Revenue Target",
+      "Sales Objective",
+      "Target List",
+      "Performance Target"
+    ]
+  },
+  {
+    "id": "label_target",
+    "type": "node_label",
+    "name": "Target",
+    "description": "A defined goal or objective within a sales or marketing campaign, often tied to a specific audience segment",
+    "category": "Marketing",
+    "properties": [
+      "id",
+      "target_number",
+      "campaign_id",
+      "name",
+      "segment",
+      "size",
+      "status",
+      "created_at",
+      "updated_at"
+    ],
+    "synonyms": [
+      "Campaign Target",
+      "Audience Target",
+      "Goal",
+      "Objective",
+      "Segment Target",
+      "Marketing Goal"
+    ]
+  },
+  {
+    "id": "label_task",
+    "type": "node_label",
+    "name": "Task",
+    "description": "A work item or action item assigned to a user, often linked to a deal, contact, or case for tracking progress",
+    "category": "Activity",
+    "properties": [
+      "id",
+      "title",
+      "description",
+      "assigned_to",
+      "contact_id",
+      "deal_id",
+      "due_date",
+      "priority",
+      "status",
+      "created_at",
+      "updated_at"
+    ],
+    "synonyms": [
+      "To-Do",
+      "Action Item",
+      "Work Item",
+      "Assignment",
+      "Activity Task",
+      "Job Task"
+    ]
+  },
+  {
+    "id": "label_product",
+    "type": "node_label",
+    "name": "Product",
+    "description": "A product entity within the CRM schema, representing an item available for sale",
+    "category": "Product",
+    "properties": [
+      "id",
+      "name",
+      "sku",
+      "description",
+      "price",
+      "cost",
+      "category",
+      "is_active",
+      "created_at",
+      "updated_at"
+    ],
+    "synonyms": [
+      "Item",
+      "Merchandise",
+      "SKU",
+      "Sellable",
+      "Good",
+      "Product Item"
+    ]
+  },
+  {
+    "id": "label_order",
+    "type": "node_label",
+    "name": "Order",
+    "description": "An order entity within the CRM schema, representing a customer purchase order",
+    "category": "Sales",
+    "properties": [
+      "id",
+      "order_number",
+      "contact_id",
+      "company_id",
+      "total_amount",
+      "currency",
+      "status",
+      "order_date",
+      "created_at",
+      "updated_at"
+    ],
+    "synonyms": [
+      "Purchase Order",
+      "Order Request",
+      "Customer Order",
+      "SO",
+      "Transaction",
+      "Buy Order"
+    ]
+  }
+]

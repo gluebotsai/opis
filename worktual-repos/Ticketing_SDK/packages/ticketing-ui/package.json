@@ -1,0 +1,41 @@
+{
+  "name": "@worktual/ticketing-ui",
+  "version": "0.1.0",
+  "description": "White-label Worktual Ticketing elements and an iframe embed for the co-worker.",
+  "license": "SEE LICENSE IN LICENSE",
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./embed": {
+      "types": "./dist/embed.d.ts",
+      "import": "./dist/embed.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prepublishOnly": "npm run build",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run tests"
+  },
+  "dependencies": {
+    "@worktual/ticketing": "^0.1.0"
+  },
+  "devDependencies": {
+    "happy-dom": "^17.4.4",
+    "typescript": "~5.8.2",
+    "vitest": "^3.0.9"
+  }
+}

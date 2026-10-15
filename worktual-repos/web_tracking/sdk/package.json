@@ -1,0 +1,35 @@
+{
+  "name": "@worktual/analytics",
+  "version": "2.0.0",
+  "description": "Worktual Universal JavaScript Analytics SDK",
+  "type": "module",
+  "main": "dist/webtracking.js",
+  "module": "dist/webtracking.esm.js",
+  "types": "types/index.d.ts",
+  "files": [
+    "dist",
+    "types"
+  ],
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@rollup/plugin-node-resolve": "^15.3.0",
+    "@rollup/plugin-terser": "^0.4.4",
+    "jsdom": "^25.0.1",
+    "rollup": "^4.28.0",
+    "rrweb": "^2.1.1",
+    "vitest": "^2.1.8"
+  },
+  "keywords": [
+    "analytics",
+    "tracking",
+    "worktual",
+    "webtracking"
+  ],
+  "license": "MIT"
+}

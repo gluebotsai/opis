@@ -1,0 +1,371 @@
+# =============================================================================
+# domains/legal.yaml
+#   effective(org) = core.yaml + domains/legal.yaml [+ org<id>.yaml]
+#   Conformance rules R1-R6 as documented in domains/healthcare.yaml §header.
+#
+# RE-VERIFIED against the updated core (catalog-hub revision):
+#   * ccass.conversations now declares queue_id / assigned_agent_id /
+#     assigned_user_id — the old C3 patch is CLOSED.
+#   * Tenant-scoped nodes now hang off SetupCatalog / ContactCenterCatalog /
+#     DataPlatformCatalog / CampaignCatalog / TicketCatalog /
+#     WebTrackingCatalog. No pack node may attach directly to Tenant (C5).
+#   * access: now uses core's own L1/L2/L3 sensitivity scale and carries
+#     domain + module, matching the shape of core `access:` blocks.
+#   * Customer / Offering / StaffRole / TicketAgent are domain `common` in core.
+#   * accounts.organization_locations is STILL commented out, and consent_json
+#     is STILL absent from cdp.customer_profile — those blockers remain valid.
+#
+# ONTOLOGIST'S NOTE
+#   This is the vertical where core fits WORST, and the pack says so plainly
+#   rather than papering over it. inventory.products maps onto a fee
+#   arrangement (billing_type recurring = retainer, one_time = fixed fee),
+#   crm.deals onto an engagement opportunity, crm.contracts onto an engagement
+#   letter, crm.appointments onto a consultation. That is the client-relationship
+#   surface, and it is genuinely useful.
+#   The MATTER — the case itself, with its court, docket, deadlines, documents
+#   and time entries — has no source anywhere in core. Neither does a billable
+#   time entry, which is the commercial heart of a law firm. Both are listed
+#   under no_source and nothing is synthesised for them.
+#   Two controls make this pack different from the others: everything free-text
+#   is restricted by default because it may be privileged, and §6 records that
+#   ETHICAL WALLS ARE NOT EXPRESSIBLE in the current RBAC model. That limitation
+#   must be understood before this pack is deployed at a firm.
+# =============================================================================
+
+industry: legal
+pack_version: "2026.09.02"
+requires_core: ">=3"
+layer: domain
+
+applies_when:
+  accounts.organizations.industry_type:
+    [legal, law, law firm, legal services, legaltech, advocates, solicitors,
+     attorneys, chambers, notary, ip services, patent attorney, compliance services,
+     company secretary, tax advisory, arbitration]
+
+variant_key: accounts.organizations.business_type
+variants:
+  b2c:
+    # consumer legal: family, conveyancing, personal injury, wills, immigration
+    anchor_entities: [Customer, Opportunity, Contract, Meeting, Invoice, SupportCase]
+    naming_overrides:
+      Customer: {primary: Client, aliases: [client, instructing client, applicant]}
+    de_emphasise: [Account, Quote, LoyaltyTier]
+  b2b:
+    # corporate clients, in-house counsel, panel work, IP portfolios
+    anchor_entities: [Account, Customer, Opportunity, Quote, Contract, Invoice]
+    naming_overrides:
+      Account: {primary: Client Organisation, aliases: [corporate client, panel client, account]}
+      Customer: {primary: Client Customer, aliases: [general counsel, in-house counsel, instructing contact]}
+      Opportunity:    {primary: Engagement Opportunity, aliases: [pitch, panel bid, rfp, instruction]}
+    de_emphasise: [LoyaltyTier]
+  b2b2c:
+    # legal plans distributed via employers / insurers / membership bodies
+    anchor_entities: [Account, Customer, Contract, Offering, SupportCase]
+    naming_overrides:
+      Account: {primary: Scheme Sponsor, aliases: [employer, insurer, membership body, referrer]}
+    de_emphasise: []
+
+# =============================================================================
+# 1. NAMING
+# =============================================================================
+naming:
+  Customer:      {primary: Client,   aliases: [client, instructing client, applicant, party]}
+  Lead:         {primary: Enquiry,  aliases: [enquiry, prospective client, intake]}
+  Customer:     {primary: Client,   aliases: [retained client, active client]}
+  Offering:      {primary: Legal Service, aliases: [service, fee arrangement, package, retainer]}
+  OfferingPlan: {primary: Fee Plan, aliases: [fee option, package, tier]}
+  Addon:        {primary: Disbursement Item, aliases: [add-on, extra service]}
+  Opportunity:         {primary: Engagement, aliases: [matter opportunity, instruction, pitch, case enquiry]}
+  Quote:        {primary: Fee Estimate, aliases: [quotation, costs estimate, scope of work]}
+  Contract:     {primary: Engagement Letter, aliases: [retainer agreement, terms of business, ccfa]}
+  BillingSchedule: {primary: Billing Plan, aliases: [fee schedule, milestone billing]}
+  Invoice:      {primary: Fee Note, aliases: [bill, invoice, costs note]}
+  Account:      {primary: Client Organisation, aliases: [corporate client, account, panel client]}
+  CompanySite:  {primary: Client Site, aliases: [office, location, subsidiary]}
+  Meeting:  {primary: Consultation, aliases: [client meeting, conference, hearing prep, call]}
+  SupportCase:       {primary: Client Request, aliases: [request, query, case, complaint]}
+  Conversation: {primary: Client Conversation, aliases: [call, chat, contact]}
+  KnowledgeArticle: {primary: Guidance Note, aliases: [precedent note, faq, briefing]}
+  Campaign:     {primary: Campaign, aliases: [client alert, seminar invite, newsletter]}
+  AudienceSegment:      {primary: Client AudienceSegment, aliases: [sector segment, panel segment]}
+  Task:         {primary: Action, aliases: [follow-up, next step, diary item]}
+  Employee:         {primary: Fee Earner, aliases: [lawyer, solicitor, advocate, associate, partner, paralegal]}
+  StaffRole:        {primary: Client Services Advisor, aliases: [reception, advisor]}
+  TicketAgent:  {primary: Client Services Advisor, aliases: [support agent]}
+  Team:         {primary: Practice Group, aliases: [team, department, chambers group]}
+  TicketQueue:  {primary: Practice ServiceQueue, aliases: [queue, desk]}
+
+role_naming:
+  match_on: [AccessRole.name, AccessRole.product_id]                          # [core: accounts.setup_roles]
+  aliases:
+    sales_rep:     [Business Development, originating fee earner]
+    sales_manager: [Practice Head, partner]
+    finance:       [Billing / Cashier]
+    resolver:      [Supervising Fee Earner]
+    agent:         [Client Services Advisor]
+    admin:         [Practice Administrator]
+    viewer:        [Read-only / audit]
+  note: >-
+    Fee earner seniority, supervision and matter responsibility are firm
+    concepts that core's flat role model does not carry. See §6 ethical walls.
+
+# =============================================================================
+# 2. EXTRA LABELS
+# =============================================================================
+extends:
+
+  inventory.products:
+    extra_labels:
+      - {label: LegalService}
+      - {label: RetainerService, when: {billing_type: [recurring]}}           # [core: billing_type]
+      - {label: FixedFeeService, when: {billing_type: [one_time]}}
+      - {label: ActiveService,   when: {status: [active]}}                    # [core: status]
+      - {label: ScopedService,   when: {product_type: [customizable]}}        # [core: product_type]
+    promote_property_to_node:
+      category:    {label: PracticeArea, key: slug, name_from: category,    edge: IN_PRACTICE_AREA}
+      subcategory: {label: ServiceType,  key: slug, name_from: subcategory, edge: OF_SERVICE_TYPE}
+    derive_hierarchy:
+      - {from: ServiceType, to: PracticeArea, edge: PARENT_PRACTICE_AREA}
+    note: >-
+      PracticeArea carries litigation / corporate / IP / family / property.
+      There is NO hourly rate concept in core — price is a single figure and
+      unit_of_measure has no `per_hour` value. Time-based billing is unmodelled.
+
+  crm.deals:
+    extra_labels:
+      - {label: Engagement}
+      - {label: RetainedEngagement, when: {stage: [closed_won]}}              # [core: stage]
+      - {label: DeclinedEngagement, when: {stage: [closed_lost]}}
+      - {label: ActiveEngagement,   when: {stage: [qualification, discover, propose, negotiate]}}
+
+  crm.contracts:
+    extra_labels:
+      - {label: EngagementLetter}
+      - {label: ActiveRetainer,   when: {status: [active]}}                   # [core: status]
+      - {label: ConcludedRetainer,when: {status: [cancelled, canceled, expired, completed]}}
+      - {label: AutoRenewing,     when: {auto_renew: [true]}}                 # [core: auto_renew]
+
+  crm.contract_billing_schedules:
+    extra_labels:
+      - {label: BillingPlan}
+      - {label: ActiveSchedule, when: {status: [active]}}                     # [core: status]
+
+  crm.invoices:
+    extra_labels:
+      - {label: FeeNote}
+      - {label: OverdueFeeNote, when: {status: [overdue]}}                    # [core: status]
+      - {label: SettledFeeNote, when: {status: [paid]}}
+      - {label: EscalatedRecovery, when: {escalation_severity: [high, critical]}}  # [core: escalation_severity]
+
+  crm.appointments:
+    extra_labels:
+      - {label: Consultation}
+      - {label: HeldConsultation,    when: {status: [completed]}}             # [core: status]
+      - {label: MissedConsultation,  when: {status: [no_show]}}
+      - {label: ScheduledConsultation,when: {status: [scheduled]}}
+      - {label: RemoteConsultation,  when: {provider: [google_meet, zoom, teams]}}  # [core: provider]
+
+  ticketing.tickets:
+    extra_labels:
+      - {label: ClientRequest}
+      - {label: MatterUpdateRequest, when: {category: [case_update, status_update, progress]}}
+      - {label: DocumentRequest,     when: {category: [document_request, documentation, copies]}}
+      - {label: BillingQuery,        when: {category: [billing, fees, costs, payment]}}
+      - {label: NewInstruction,      when: {category: [new_matter, new_instruction, intake]}}
+      - {label: ComplaintRequest,    when: {category: [complaint, grievance]}}
+
+  ccass.conversations:
+    extra_labels: [{label: ClientConversation}]
+
+  cdp.customer_profile:
+    extra_labels: [{label: LegalClient}]
+    custom_fields:                        # allowed: core sets custom_dynamic: true
+      whitelist: [client_ref, matter_ref, practice_area_interest, jurisdiction,
+                  engagement_type, referral_source_code, conflict_check_status]
+      identity: [client_ref, matter_ref]           # references only, never content
+      promote_to_node:
+        practice_area_interest: {label: PracticeArea, key: slug, edge: NEEDS_PRACTICE_AREA}
+        jurisdiction:           {label: Jurisdiction, key: slug, edge: IN_JURISDICTION}
+      blocklist:
+        # Privileged and special-category content. matter_ref (a reference) is
+        # allowed; matter CONTENT never is.
+        [case_facts, facts, allegations, charges, offence, criminal_history,
+         conviction, opposing_party, counterparty_name, settlement_amount,
+         claim_value, medical, injury, immigration_status, asylum, visa_status,
+         religion, caste, political_affiliation, trade_union, sexual_orientation,
+         financial_position, assets, privileged_notes, counsel_advice]
+      blocklist_action: drop_silently_and_log
+    note: >-
+      matter_ref is promoted as an identity key so that a client conversation
+      can carry a case reference. It is a POINTER to the practice management
+      system, not a matter record — see not_modelled.
+
+  crm.contact_profiles:
+    extra_labels:
+      - {label: ClientOverlay}
+      - {label: ConflictCheckPending, when: {flagged_for_review: [true]}}     # [core: flagged_for_review]
+      - {label: MarketingSuppressed,  when: {marketing_opt_out: [true]}}      # [core: marketing_opt_out]
+    note: >-
+      flagged_for_review is a generic core review flag. Using it as a conflict
+      indicator is a tenant convention, not a schema guarantee — the meta-graph
+      records this caveat so the agent never asserts a conflict check occurred.
+
+# =============================================================================
+# 3. VOCABULARIES
+# =============================================================================
+vocabularies:
+  ticket.category:                                                # [core: ticketing.tickets.category]
+    canonical: [new_matter, new_instruction, intake, case_update, status_update,
+                document_request, documentation, billing, fees, costs, payment,
+                scheduling, complaint, grievance, compliance, general]
+  conversation.intent:                                            # [core: supported_intents]
+    canonical: [new_enquiry, matter_status, fee_estimate, document_request,
+                appointment_booking, billing_query, complaint, deadline_query,
+                referral_enquiry]
+    note: matter_status must route to the practice management system; the graph holds no case state.
+  campaign.goal:                                                  # [core: campaign.campaigns.goal]
+    canonical: [client_alert, regulatory_update, seminar_webinar, cross_practice_referral,
+                dormant_client_reactivation, panel_renewal, newsletter, feedback_request]
+  journey_state.current_stage:                                    # [core: journey_states.current_stage]
+    canonical: [enquiry, conflict_check, engagement_letter_sent, retained,
+                matter_active, awaiting_client, concluded, dormant, referred_out]
+  contact.lead_source:                                            # [core: crm.contact_profiles.lead_source]
+    canonical: [referral_client, referral_professional, panel_appointment,
+                website, directory_listing, seminar_event, repeat_client,
+                insurer_scheme, employer_scheme, call_centre]
+  deal.stage:                                                     # [core: crm.deals.stage]
+    labels: {qualification: "Enquiry & conflict check", discover: "Scoping / initial advice",
+             propose: "Fee estimate issued", negotiate: "Terms & engagement letter",
+             closed_won: "Retained", closed_lost: "Not instructed / referred out"}
+  product.billing_type:                                           # [core: inventory.products.billing_type]
+    labels: {recurring: "Retainer", one_time: "Fixed fee"}
+
+# =============================================================================
+# 4. DERIVED LABELS — batch lane
+# =============================================================================
+derived_labels:
+  lane: batch
+  Customer:
+    source: cdp.gold_customer_metrics                             # [core: DailyEngagementMetric]
+    rules:
+      - {label: SingleMatterClient, when: "total_orders == 1"}
+      - {label: RepeatClient,       when: "total_orders >= 2"}
+      - {label: KeyClient,          when: "total_spend >= p90(total_spend)"}
+      - {label: DormantClient,      when: "last_event_at < now() - 365d"}
+    exclusive_groups: [[SingleMatterClient, RepeatClient]]
+    note: >-
+      These are commercial relationship labels only. Nothing here infers case
+      merit, risk or outcome, none of which this graph can see.
+
+# =============================================================================
+# 5. METRICS
+# =============================================================================
+metrics:
+  extend_synonyms:
+    win_rate: [instruction rate, conversion to retainer, pitch win rate]
+    order_volume: [matters opened, instructions received, engagements]
+    average_order_value: [average matter value, average fee]
+    days_sales_outstanding: [lock-up, debtor days, time to collect]
+    active_arr: [retainer book, recurring fee base]
+  add:
+    - metric_id: enquiry_to_retainer_rate
+      canonical_name: Enquiry-to-Retainer Rate
+      synonyms: [intake conversion, how many enquiries become clients]
+      unit: ratio
+      route: graph
+      computed_from: [Opportunity]
+      direction: higher_is_better
+    - metric_id: fee_note_overdue_rate
+      canonical_name: Overdue Fee Note Rate
+      synonyms: [aged debt, unpaid bills, collection problem]
+      unit: ratio
+      route: graph
+      computed_from: [Invoice]
+      direction: lower_is_better
+    - metric_id: consultation_no_show_rate
+      canonical_name: Consultation No-Show Rate
+      synonyms: [missed client meetings, wasted diary time]
+      unit: ratio
+      route: graph
+      computed_from: [Meeting]
+      direction: lower_is_better
+  cannot_compute:
+    metrics:
+      - {metric: utilisation_rate, reason: "no time entry table — billable hours have no source"}
+      - {metric: realisation_rate, reason: "requires recorded time vs billed value; recorded time does not exist"}
+      - {metric: matter_profitability, reason: "requires cost of time; no source"}
+    note: >-
+      These are the three metrics a law firm asks for first. They are listed
+      here so the agent can explain why it cannot answer instead of proxying.
+
+# =============================================================================
+# 6. ACCESS — tighten only. Privilege makes free text restricted BY DEFAULT.
+# =============================================================================
+access:
+  PracticeArea: {domain: common, module: core, sensitivity: L1}
+  ServiceType:  {domain: common, module: core, sensitivity: L1}
+  Jurisdiction: {domain: common, module: core, sensitivity: L1}
+  tighten:
+    SupportCase:                 {sensitivity: L3, deny_properties: [description, ai_summary]}
+    CaseNote:             {sensitivity: L3, deny_properties: [body]}
+    WorkNote:               {sensitivity: L3, deny_properties: [body]}
+    SharedNote:             {sensitivity: L3, deny_properties: [body]}
+    EngagementActivity:        {sensitivity: L3, deny_properties: [body, transcript_text]}
+    ConversationSummary:    {sensitivity: L3, deny_properties: [rolling_summary, extracted_facts]}
+    TranscriptSegment: {sensitivity: L3, deny_properties: [text]}
+    MeetingOutcome:        {sensitivity: L3, deny_properties: [next_step_agreed, objections_raised]}
+    Insight:                {sensitivity: L3, deny_properties: [summary, explanation]}
+    Recommendation:         {sensitivity: L3, deny_properties: [recommendation]}
+    ExperienceMemory:       {sensitivity: L3, deny_properties: [summary]}
+    KnownFact:              {sensitivity: L3, deny_properties: [fact]}
+  never_grant: [LegalClient, LegalService, ClientRequest]
+
+  LIMITATION_ethical_walls:
+    status: NOT_EXPRESSIBLE
+    detail: >-
+      Core RBAC scopes access by product domain and, at best, by record owner
+      (owner_user_id). A firm needs MATTER-LEVEL separation: a fee earner on one
+      side of a dispute must be walled from the other side's records, regardless
+      of product or ownership. Neo4j FGAC cannot express that either — its
+      property rules compare against literals, not session-scoped matter
+      membership.
+    consequence: >-
+      Until a matter-membership model exists, this pack must not be deployed
+      where ethical walls are a regulatory requirement without a compensating
+      control at the application layer. Raise before go-live; do not discover it
+      afterwards.
+
+compliance:
+  regimes: [legal professional privilege, bar / SRA conduct rules, GDPR, DPDP, AML for legal]
+  notes:
+    - Everything free-text is restricted by default because it may be privileged.
+    - Conflict checking is a firm process; ConflictCheckPending is a convention flag only.
+    - Matter content is blocklisted at ingest; only references are permitted.
+
+# =============================================================================
+# 7. NOT MODELLED
+# =============================================================================
+not_modelled:
+  blocked_on_core:
+    - {concept: Office / Chambers location, blocker: "accounts.organization_locations mapping commented out in core."}
+    - {concept: Consent, blocker: "cdp.customer_profile.consent_json not in core properties."}
+    - {concept: "SupportCase -> Matter", blocker: "ticketing.tickets has no matter reference; a case-update request cannot be traced to anything."}
+  no_source:
+    - {concept: Matter / Case, severity: critical, note: "the central entity of the entire vertical. matter_ref is a string in a JSON bag pointing at a practice management system we do not read. No matter node, no matter status, no matter team."}
+    - {concept: Time entry / Billable hour, severity: critical, note: "the commercial heart of a law firm. No table, no per_hour unit of measure, no rate card by fee earner. Utilisation, realisation and matter profitability are therefore uncomputable — see §5 cannot_compute."}
+    - {concept: Court / Docket / Filing, severity: high}
+    - {concept: Hearing / Deadline / Limitation date, severity: high, note: "crm.appointments can hold a diarised meeting but carries no limitation-date semantics, and missing one is a negligence event."}
+    - {concept: Document / Version / Precedent, severity: high, note: "ticketing attachments and knowledge articles exist; a matter document set with versions and privilege status does not."}
+    - {concept: Opposing party / Counterparty, severity: high, note: "blocklisted as content AND has no table. Conflict checking needs it."}
+    - {concept: Conflict check record, severity: high, note: "ConflictCheckPending is a repurposed generic flag, not a check with parties, date and outcome."}
+    - {concept: Client / trust account (IOLTA), severity: high, note: "regulated money handling; no ledger anywhere in core."}
+    - {concept: Counsel / Barrister instruction, severity: medium}
+    - {concept: Fee earner rate card & seniority, severity: medium, note: "crm.sales_user_assignment_profiles.seniority_tier is the nearest column and is a sales concept, not a charge-out rate."}
+    - {concept: Matter team membership, severity: medium, note: "required for ethical walls — see §6 LIMITATION."}
+
+# =============================================================================
+# 8. ASSUMES — same C1-C4 / E1-E7 / R1-R6 as domains/healthcare.yaml §8
+#    Additionally, this pack should NOT ship to a regulated firm until the
+#    §6 ethical-walls limitation has an agreed compensating control.
+# =============================================================================

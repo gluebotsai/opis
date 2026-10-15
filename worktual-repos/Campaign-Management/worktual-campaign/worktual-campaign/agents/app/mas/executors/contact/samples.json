@@ -1,0 +1,41 @@
+[
+  {
+    "id": "contact-create-happy-path",
+    "title": "Create a contact after confirmation",
+    "turns": [
+      {
+        "role": "user",
+        "content": "Add a contact named Rahul Nair, email rahul.nair@example.com"
+      },
+      {
+        "role": "assistant",
+        "content": "<p>I can create <strong>Rahul Nair</strong> with email rahul.nair@example.com. Confirm to save?</p>",
+        "tools": ["SET_DRAFT_FIELDS"]
+      },
+      {
+        "role": "user",
+        "content": "Yes, create it"
+      },
+      {
+        "role": "assistant",
+        "content": "<p>Contact <strong>Rahul Nair</strong> is created.</p>",
+        "tools": ["CREATE_SINGLE_CONTACT"]
+      }
+    ]
+  },
+  {
+    "id": "contact-view-by-email",
+    "title": "Find contact by email",
+    "turns": [
+      {
+        "role": "user",
+        "content": "Show me the contact for ada@example.com"
+      },
+      {
+        "role": "assistant",
+        "content": "<p>Here is the contact matching <strong>ada@example.com</strong>.</p>",
+        "tools": ["VIEW_CONTACT"]
+      }
+    ]
+  }
+]

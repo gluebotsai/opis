@@ -1,0 +1,108 @@
+product: ticketing
+# Directed hops for ticketing on the unified org graph.
+# Live Support* names plus legacy aliases so older Cypher still parses.
+
+start_labels:
+  - Ticket
+  - OpenTicket
+  - OverdueTicket
+  - ReopenedTicket
+  - ResolvedTicket
+  - Queue
+  - SupportQueue
+  - Agent
+  - SupportAgent
+  - Note
+  - Contact
+  - Customer
+  - User
+  - KnowledgeArticle
+  - TicketHistory
+  - TicketAuditTrail
+  - Notification
+  - ProactiveDecision
+  - ProactiveRecommendation
+
+leaf_labels:
+  - BusinessHours
+  - TicketHistory
+
+edges:
+  # Live graph
+  - {from: Ticket, rel: ROUTED_TO, to: SupportQueue}
+  - {from: Ticket, rel: ROUTED_TO, to: Queue}
+  - {from: OpenTicket, rel: ROUTED_TO, to: SupportQueue}
+  - {from: OverdueTicket, rel: ROUTED_TO, to: SupportQueue}
+  - {from: ReopenedTicket, rel: ROUTED_TO, to: SupportQueue}
+  - {from: ResolvedTicket, rel: ROUTED_TO, to: SupportQueue}
+  - {from: Ticket, rel: ASSIGNED_TO, to: SupportAgent}
+  - {from: Ticket, rel: ASSIGNED_TO, to: Agent}
+  - {from: Ticket, rel: RESOLVED_BY, to: SupportAgent}
+  - {from: Ticket, rel: RESOLVED_BY, to: Agent}
+  - {from: Ticket, rel: GOVERNED_BY, to: SupportSLA}
+  - {from: Ticket, rel: GOVERNED_BY, to: SLA}
+  - {from: Ticket, rel: GOVERNED_BY, to: TicketSLA}
+  - {from: Ticket, rel: HAS, to: Note}
+  - {from: Ticket, rel: HAS, to: TicketAuditTrail}
+  - {from: Ticket, rel: HAS, to: TicketSLA}
+  - {from: Ticket, rel: HAS, to: TicketHistory}
+  - {from: Ticket, rel: HAS, to: Notification}
+  - {from: Ticket, rel: HAS, to: ProactiveDecision}
+  - {from: Ticket, rel: HAS, to: ProactiveRecommendation}
+  - {from: Ticket, rel: HAS, to: KnowledgeArticle}
+  - {from: Note, rel: WRITTEN_BY, to: SupportAgent}
+  - {from: Note, rel: WRITTEN_BY, to: Agent}
+  - {from: KnowledgeArticle, rel: WRITTEN_BY, to: SupportAgent}
+  - {from: KnowledgeArticle, rel: WRITTEN_BY, to: StaffRole}
+  - {from: TicketAuditTrail, rel: PERFORMED_BY, to: SupportAgent}
+  - {from: TicketAuditTrail, rel: PERFORMED_BY, to: Agent}
+  - {from: ProactiveDecision, rel: DECIDED_BY, to: SupportAgent}
+  - {from: ProactiveRecommendation, rel: SHOWN_TO, to: SupportAgent}
+  - {from: SupportAgent, rel: MEMBER_OF, to: SupportQueue}
+  - {from: Agent, rel: MEMBER_OF, to: Queue}
+  - {from: SupportAgent, rel: MEMBER_OF, to: Queue}
+  - {from: User, rel: ACTS_AS, to: SupportAgent}
+  - {from: User, rel: ACTS_AS, to: Agent}
+  - {from: User, rel: FOLLOWS, to: BusinessHours}
+  - {from: SupportAgent, rel: FOLLOWS, to: BusinessHours}
+  - {from: SupportQueue, rel: FOLLOWS, to: BusinessHours}
+  - {from: Contact, rel: HAS, to: TicketHistory}
+  - {from: Customer, rel: HAS, to: TicketHistory}
+  - {from: ContactProfile, rel: HAS, to: TicketHistory}
+  - {from: Contact, rel: SAME_PERSON_AS, to: Customer}
+  - {from: Customer, rel: SAME_PERSON_AS, to: Contact}
+  - {from: Contact, rel: SAME_PERSON_AS, to: ContactProfile}
+  - {from: ContactProfile, rel: SAME_PERSON_AS, to: Contact}
+  # Legacy aliases
+  - {from: Ticket, rel: in_queue, to: Queue}
+  - {from: Ticket, rel: in_queue, to: SupportQueue}
+  - {from: Ticket, rel: assigned_to, to: Agent}
+  - {from: Ticket, rel: assigned_to, to: SupportAgent}
+  - {from: Ticket, rel: resolved_by, to: Agent}
+  - {from: Ticket, rel: resolved_by, to: SupportAgent}
+  - {from: Ticket, rel: has_sla, to: SLA}
+  - {from: Ticket, rel: has_sla, to: SupportSLA}
+  - {from: Ticket, rel: has_note, to: Note}
+  - {from: Ticket, rel: raised_by, to: Contact}
+  - {from: Ticket, rel: raised_by, to: Customer}
+  - {from: Note, rel: written_by, to: Agent}
+  - {from: Note, rel: written_by, to: SupportAgent}
+  - {from: Queue, rel: staffed_by, to: Agent}
+  - {from: SupportQueue, rel: staffed_by, to: SupportAgent}
+  - {from: SupportQueue, rel: staffed_by, to: Agent}
+  - {from: Queue, rel: staffed_by, to: SupportAgent}
+
+forbidden_labels:
+  - Conversation
+  - Campaign
+  - Deal
+  - Employee
+  - ServiceQueue
+  - SupportCase
+  - PendingTicket
+  - UrgentTicket
+  - BugReport
+  - ChatSession
+  - ContactCentre
+  - ContactCentreAgent
+  - ContactCentreQueue

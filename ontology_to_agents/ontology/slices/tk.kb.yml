@@ -1,0 +1,40 @@
+slice_id: tk.kb
+agent: Knowledge Base Specialist
+modules:
+- core
+- knowledge
+- tk_kb
+classes:
+- Party
+- Person
+- Organization
+- Contact
+- Agent
+- Consent
+- Preference
+- Channel
+- Event
+- WorkItem
+- Location
+- KnowledgeArticle
+- OrganizationDirectory
+- KbCategory
+relations:
+- Person works_for Organization
+- Contact has_consent Consent
+- Contact has_preference Preference
+- Contact belongs_to Organization
+- Agent works_for Organization
+- KnowledgeArticle owned_by Organization
+- OrganizationDirectory of Organization
+- KnowledgeArticle in_category KbCategory
+actions:
+- action.identify
+- action.route_to_specialist
+- action.get_organization_details
+- action.get_organization_knowledge
+- action.navigate
+- action.create_kb_article
+- action.manage_kb_category
+metric_ids: []
+note: Legal slice (tools/policy). Inject pack.as_prompt() compact, not this file.

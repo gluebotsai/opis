@@ -1,0 +1,84 @@
+cases:
+  - id: auto_vin_first
+    field: vin
+    table: cdp.customer_profile
+    industry: automotive
+    expected_decision: reuse
+    expected_class_id: Vehicle
+    forbidden_class_ids: [Automobile, VehicleDetails]
+    expected_gate: auto
+
+  - id: auto_vin_reuse
+    field: chassis_no
+    table: cdp.customer_profile
+    industry: automotive
+    expected_decision: reuse
+    expected_class_id: Vehicle
+    expected_gate: auto
+
+  - id: bp_observation
+    field: blood_pressure
+    table: cdp.customer_profile
+    fhir_family: observation
+    expected_decision: reuse
+    expected_class_id: ClinicalObservation
+    forbidden_class_ids: [MedicalCondition, BloodGroup]
+    expected_gate: auto
+
+  - id: glucose_observation
+    field: glucose
+    table: cdp.customer_profile
+    fhir_family: observation
+    expected_decision: reuse
+    expected_class_id: ClinicalObservation
+    forbidden_class_ids: [MedicalCondition]
+
+  - id: diabetes_condition
+    field: diabetes
+    table: cdp.customer_profile
+    fhir_family: condition
+    expected_decision: reuse
+    expected_class_id: MedicalCondition
+    forbidden_class_ids: [ClinicalObservation]
+
+  - id: blood_group_enum
+    field: blood_group
+    table: cdp.customer_profile
+    expected_decision: reuse
+    forbidden_class_ids: [BloodGroup]
+
+  - id: shopify_category
+    field: category
+    table: inventory.products
+    expected_decision: new_term
+    expected_class_id: Offering
+    forbidden_class_ids: []
+
+  - id: product_color
+    field: color
+    table: inventory.products
+    expected_decision: reuse
+    expected_class_id: Offering
+
+  - id: dealership_vin
+    field: vin
+    table: cdp.customer_profile
+    industry: automotive
+    expected_class_id: Vehicle
+
+  - id: parts_sku
+    field: product_name
+    table: inventory.products
+    fixture: brake pad
+    expected_class_id: Offering
+
+  - id: phi_hiv
+    field: hiv_status
+    table: cdp.customer_profile
+    expected_decision: reject
+    expected_gate: human
+
+  - id: junk_tmp
+    field: tmp_foo_debug
+    table: cdp.customer_profile
+    expected_decision: reject

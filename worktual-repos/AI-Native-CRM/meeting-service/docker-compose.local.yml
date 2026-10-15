@@ -1,0 +1,36 @@
+# Local test override: bind :8050 so SSH tunnels can keep :8030–:8041 to QA.
+# Vexa stays on the existing tunnel (:18056) via host.docker.internal.
+#
+#   cd meeting-service
+#   docker compose -f docker-compose.yml -f docker-compose.local.yml up -d --build
+#
+# CRM .env + frontend (Vite) + ngrok meet-addon upstream:
+#   MEETING_SERVICE_URL=http://127.0.0.1:8050
+
+services:
+  meeting-service:
+    ports:
+      - "8050:8030"
+    environment:
+      VEXA_API_BASE: http://host.docker.internal:18056
+      # CRM on the host (tsx) — completed webhook + assist ask
+      CRM_COMPLETED_WEBHOOK_URL: http://host.docker.internal:4000/api/webhooks/meeting-service/completed
+      CRM_BOT_BASE_URL: http://host.docker.internal:4000
+      CRM_USERS_BASE_URL: http://host.docker.internal:4000
+      HOST_ENDED_SILENCE_SEC: "0"
+      HOST_ENDED_ALONE_GRACE_SEC: "90"
+      HOST_ENDED_GRACE_SEC: "90"
+      FINALIZE_ON_SCHEDULED_SLOT_END: "false"
+      FINALIZE_ON_BOT_ALONE: "false"
+      # Avoid registering a webhook Vexa cannot reach on this laptop
+      PUBLIC_BASE_URL: ""
+
+  meeting-worker:
+    environment:
+      VEXA_API_BASE: http://host.docker.internal:18056
+      CRM_COMPLETED_WEBHOOK_URL: http://host.docker.internal:4000/api/webhooks/meeting-service/completed
+      HOST_ENDED_SILENCE_SEC: "0"
+      HOST_ENDED_ALONE_GRACE_SEC: "90"
+      HOST_ENDED_GRACE_SEC: "90"
+      FINALIZE_ON_SCHEDULED_SLOT_END: "false"
+      FINALIZE_ON_BOT_ALONE: "false"

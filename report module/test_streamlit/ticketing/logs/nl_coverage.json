@@ -1,0 +1,1778 @@
+[
+  {
+    "question": "How many tickets are there?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "ticket_count",
+        "dimension": null,
+        "time": "all time",
+        "goal": "Total ticket count"
+      }
+    ],
+    "status": "ok",
+    "kpi": "ticket_count",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "Ticket count for period_applied overall is **20043**.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "What is the average tickets per day?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "avg_tickets_per_day",
+        "dimension": null,
+        "time": "all time",
+        "goal": "Calculate average tickets per day"
+      }
+    ],
+    "status": "ok",
+    "kpi": "avg_tickets_per_day",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "The average tickets per day for period_applied overall is **54.122161600638655**.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "What is the average open ticket age?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "avg_open_ticket_age",
+        "dimension": null,
+        "time": "all time",
+        "goal": "Average open ticket age"
+      }
+    ],
+    "status": "ok",
+    "kpi": "avg_open_ticket_age",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "The average open ticket age for period_applied overall is **155.7232933396047974**.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "How many days since the last ticket?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "days_since_last_ticket",
+        "dimension": null,
+        "time": "all time",
+        "goal": "Days since the last ticket was created"
+      }
+    ],
+    "status": "ok",
+    "kpi": "days_since_last_ticket",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "days_since_last_ticket for period_applied overall is **0.21261891579861111111**",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "What is the ticket resolution rate?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "resolution_rate",
+        "dimension": null,
+        "time": "all time",
+        "goal": "Calculate the ticket resolution rate"
+      }
+    ],
+    "status": "ok",
+    "kpi": "resolution_rate",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "The ticket resolution rate for overall is **0.6051988225315571**.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "What is the assignment rate?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "assignment_rate",
+        "dimension": null,
+        "time": "all time",
+        "goal": "Assignment rate for the organization"
+      }
+    ],
+    "status": "ok",
+    "kpi": "assignment_rate",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "The assignment rate for overall is **0.9997505363468543**.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "How many tickets were reopened?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "reopen_count",
+        "dimension": null,
+        "time": "all time",
+        "goal": "Total number of reopened tickets"
+      }
+    ],
+    "status": "ok",
+    "kpi": "reopen_count",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "The reopen_count for period_applied overall is **1758**.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "What is the reopen rate?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "reopen_rate",
+        "dimension": null,
+        "time": "all time",
+        "goal": "Calculate the reopen rate"
+      }
+    ],
+    "status": "ok",
+    "kpi": "reopen_rate",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "The reopen rate for period_applied overall is **0.1265841013824885**.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "What is the escalation rate?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "escalation_rate",
+        "dimension": null,
+        "time": "all time",
+        "goal": "Get the escalation rate"
+      }
+    ],
+    "status": "ok",
+    "kpi": "escalation_rate",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "The escalation rate for overall is **0.00019957092251658934**.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "What is the reassignment rate?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "reassignment_rate",
+        "dimension": null,
+        "time": "all time",
+        "goal": "Calculate the reassignment rate"
+      }
+    ],
+    "status": "ok",
+    "kpi": "reassignment_rate",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "The reassignment rate for period_applied overall is **4.990518015770037e-05**.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "What is the average first response time?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "avg_first_response_time",
+        "dimension": null,
+        "time": "all time",
+        "goal": "Average first response time across all time"
+      }
+    ],
+    "status": "ok",
+    "kpi": "avg_first_response_time",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "The average first response time for period_applied overall is **4.67677102010197856250**.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "What is the average resolution time?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "avg_resolution_time",
+        "dimension": null,
+        "time": "all time",
+        "goal": "Average resolution time"
+      }
+    ],
+    "status": "ok",
+    "kpi": "avg_resolution_time",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "The average resolution time for period_applied overall is **19.61161887663758358537**.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "What is average resolution variance versus SLA?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "avg_resolution_variance_vs_sla",
+        "dimension": null,
+        "time": "all time",
+        "goal": "Calculate average resolution variance versus SLA"
+      }
+    ],
+    "status": "ok",
+    "kpi": "avg_resolution_variance_vs_sla",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "The average resolution variance versus SLA for overall is **-24.63603301551403773916**.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "What is first response SLA compliance?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "first_response_sla_compliance",
+        "dimension": null,
+        "time": "all time",
+        "goal": "First response SLA compliance"
+      }
+    ],
+    "status": "ok",
+    "kpi": "first_response_sla_compliance",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "First response SLA compliance for overall is **0.34904954348151473**.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "What is resolution SLA compliance?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "resolution_sla_compliance",
+        "dimension": null,
+        "time": "all time",
+        "goal": "Resolution SLA compliance rate"
+      }
+    ],
+    "status": "ok",
+    "kpi": "resolution_sla_compliance",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "resolution_sla_compliance for overall is **0.5160437147562253**",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "What is the SLA breach rate?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "sla_breach_rate",
+        "dimension": null,
+        "time": "all time",
+        "goal": "SLA breach rate"
+      }
+    ],
+    "status": "ok",
+    "kpi": "sla_breach_rate",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "The SLA breach rate for period_applied overall is **0.48395628524377465**.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "How many tickets are at risk for first response SLA?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "first_response_at_risk_count",
+        "dimension": null,
+        "time": "all time",
+        "goal": "Count of tickets at risk for first response SLA"
+      }
+    ],
+    "status": "ok",
+    "kpi": "first_response_at_risk_count",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "First response SLA at risk count for overall is **0**.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "How many tickets are at risk for resolution SLA?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "resolution_at_risk_count",
+        "dimension": null,
+        "time": "all time",
+        "goal": "Count of tickets at risk for resolution SLA"
+      }
+    ],
+    "status": "ok",
+    "kpi": "resolution_at_risk_count",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "The resolution at risk ticket count for overall is **1**.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "How many tickets have no SLA?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "no_sla_count",
+        "dimension": null,
+        "time": "all time",
+        "goal": "Count of tickets with no SLA"
+      }
+    ],
+    "status": "ok",
+    "kpi": "no_sla_count",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "The no SLA ticket count for period_applied overall is **0**.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "Which queues are at risk?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "queues_at_risk",
+        "dimension": null,
+        "time": "all time",
+        "goal": "Identify queues currently at risk"
+      }
+    ],
+    "status": "ok",
+    "kpi": "queues_at_risk",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "The number of queues at risk for period_applied overall is **1** (Order Management & Fulfillment).",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "What is the average overdue hours?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "average_overdue_hours",
+        "dimension": null,
+        "time": "all time",
+        "goal": "Calculate the average overdue hours"
+      }
+    ],
+    "status": "ok",
+    "kpi": "average_overdue_hours",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "The average overdue hours for overall is **119.43572396017297380945**.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "What is the average CSAT?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "avg_csat",
+        "dimension": null,
+        "time": "all time",
+        "goal": "Calculate the average CSAT score"
+      }
+    ],
+    "status": "ok",
+    "kpi": "avg_csat",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "The average CSAT for period_applied overall is **3.86**.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "What is the CSAT response rate?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "csat_response_rate",
+        "dimension": null,
+        "time": "all time",
+        "goal": "CSAT response rate"
+      }
+    ],
+    "status": "ok",
+    "kpi": "csat_response_rate",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "The CSAT response rate for period_applied overall is **0.5511129431162407**.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "What is the CSAT distribution?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "csat_distribution_rate",
+        "dimension": null,
+        "time": "all time",
+        "goal": "Get CSAT distribution rate"
+      }
+    ],
+    "status": "ok",
+    "kpi": "csat_distribution_rate",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "The CSAT distribution rate for overall is **0.7071054599850412** promoter, **0.12834704562453253** neutral, and **0.16454749439042632** detractor, based on **6685** rated tickets.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "How many customers were served?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "customers_served",
+        "dimension": null,
+        "time": "all time",
+        "goal": "Total customers served"
+      }
+    ],
+    "status": "ok",
+    "kpi": "customers_served",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "Customers served overall was **17098**.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "How many accounts were served?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "accounts_served",
+        "dimension": null,
+        "time": "all time",
+        "goal": "Total number of accounts served"
+      }
+    ],
+    "status": "ok",
+    "kpi": "accounts_served",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "Accounts served for period_applied overall was **0**.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "How many active customers are there?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "active_customers",
+        "dimension": null,
+        "time": "all time",
+        "goal": "Count of active customers"
+      }
+    ],
+    "status": "ok",
+    "kpi": "active_customers",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "There are **17,098** active customers for period_applied overall.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "How many total customers are there?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "total_customers",
+        "dimension": null,
+        "time": "all time",
+        "goal": "Total number of customers"
+      }
+    ],
+    "status": "ok",
+    "kpi": "total_customers",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "Total customers for period_applied overall is **101056**.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "How many active agents are there?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "active_agents",
+        "dimension": null,
+        "time": "all time",
+        "goal": "Count of active agents"
+      }
+    ],
+    "status": "ok",
+    "kpi": "active_agents",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "There are **3** active agents for period_applied overall.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "How many total users are there?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "total_users",
+        "dimension": null,
+        "time": "all time",
+        "goal": "Total number of users in the organization"
+      }
+    ],
+    "status": "ok",
+    "kpi": "total_users",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "Total users for period_applied overall is **8**.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "How many queues are there?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "queue_count",
+        "dimension": null,
+        "time": "all time",
+        "goal": "Total number of queues"
+      }
+    ],
+    "status": "ok",
+    "kpi": "queue_count",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "There are **7** queues for the period applied: overall (no date filter, UTC).",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "What is queue coverage?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "queue_coverage",
+        "dimension": null,
+        "time": "all time",
+        "goal": "Get total queue coverage"
+      }
+    ],
+    "status": "ok",
+    "kpi": "queue_coverage",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "queue_coverage for overall is **25**.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "How many distinct agents are in queues?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "distinct_agents_in_queues",
+        "dimension": null,
+        "time": "all time",
+        "goal": "Count of distinct agents in queues"
+      }
+    ],
+    "status": "ok",
+    "kpi": "distinct_agents_in_queues",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "There are **7** distinct agents in queues for the period applied: overall (no date filter, UTC).",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "How many distinct queues are covered?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "distinct_queues_covered",
+        "dimension": null,
+        "time": "all time",
+        "goal": "Count of distinct queues covered"
+      }
+    ],
+    "status": "ok",
+    "kpi": "distinct_queues_covered",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "The number of distinct queues covered for period_applied overall is **7**.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "How many ticket notes are there?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "note_count",
+        "dimension": null,
+        "time": "all time",
+        "goal": "Total count of ticket notes"
+      }
+    ],
+    "status": "ok",
+    "kpi": "note_count",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "There are **37** ticket notes for the period applied: overall (no date filter, UTC).",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "How many escalations are there?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "escalation_count",
+        "dimension": null,
+        "time": "all time",
+        "goal": "Total number of escalations"
+      }
+    ],
+    "status": "ok",
+    "kpi": "escalation_count",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "escalation_count for period_applied overall is **5**.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "How many reassignments are there?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "reassignment_count",
+        "dimension": null,
+        "time": "all time",
+        "goal": "Total number of reassignments"
+      }
+    ],
+    "status": "ok",
+    "kpi": "reassignment_count",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "reassignment_count for period_applied overall is **1**.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "How many knowledge base articles are there?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "kb_article_count",
+        "dimension": null,
+        "time": "all time",
+        "goal": "Total number of knowledge base articles"
+      }
+    ],
+    "status": "ok",
+    "kpi": "kb_article_count",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "The kb_article_count for period_applied overall is **58**.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "How many KB views are there?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "kb_views",
+        "dimension": null,
+        "time": "all time",
+        "goal": "Total KB views"
+      }
+    ],
+    "status": "ok",
+    "kpi": "kb_views",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "KB views for period_applied overall are **24**.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "How many recommendations are there?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "recommendation_count",
+        "dimension": null,
+        "time": "all time",
+        "goal": "Total count of recommendations"
+      }
+    ],
+    "status": "ok",
+    "kpi": "recommendation_count",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "There are **1044** recommendations for period_applied overall.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "What is the recommendation acceptance rate?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "recommendation_acceptance_rate",
+        "dimension": null,
+        "time": "all time",
+        "goal": "Recommendation acceptance rate"
+      }
+    ],
+    "status": "ok",
+    "kpi": "recommendation_acceptance_rate",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "The recommendation acceptance rate for overall is **0.0**.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "How many approvals are there?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "approval_count",
+        "dimension": null,
+        "time": "all time",
+        "goal": "Total number of approvals"
+      }
+    ],
+    "status": "ok",
+    "kpi": "approval_count",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "There are **3426** approvals for period_applied overall.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "What is the approval rate?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "approval_rate",
+        "dimension": null,
+        "time": "all time",
+        "goal": "Get the approval rate"
+      }
+    ],
+    "status": "ok",
+    "kpi": "approval_rate",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "The approval rate for overall is not available.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "How many unread notifications are there?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "unread_notifications",
+        "dimension": null,
+        "time": "all time",
+        "goal": "Count of unread notifications"
+      }
+    ],
+    "status": "ok",
+    "kpi": "unread_notifications",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "There are **561,186** unread notifications for period_applied overall.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "How many tickets by queue?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "ticket_count",
+        "dimension": "queue",
+        "time": "all time",
+        "goal": "Ticket count by queue"
+      }
+    ],
+    "status": "ok",
+    "kpi": "ticket_count",
+    "dim": "queue",
+    "tool": "run_kpi",
+    "n": 7,
+    "err": null,
+    "error": "",
+    "answer": "The ticket count for period_applied overall was **20043**.\n\nBreakdown by queue:\n- Shipping & Delivery Support: 4478\n- Returns & Refunds Support: 4027\n- Order Management & Fulfillment: 3208\n- Product Support: 2426\n- Payments & Billing Support: 2366",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "How many tickets by agent?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "ticket_count",
+        "dimension": "agent",
+        "time": "all time",
+        "goal": "Ticket count by agent"
+      }
+    ],
+    "status": "ok",
+    "kpi": "ticket_count",
+    "dim": "agent",
+    "tool": "run_kpi",
+    "n": 4,
+    "err": null,
+    "error": "",
+    "answer": "Ticket count for period_applied overall was **20043**.\n\nBreakdown by agent:\n- Shobana R: 8245\n- Lokesh B: 7932\n- mohamed fazil: 3865\n- Booxoo Admin: 1",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "Ticket count by resolver",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "ticket_count",
+        "dimension": "resolver",
+        "time": "all time",
+        "goal": "Ticket count by resolver"
+      }
+    ],
+    "status": "ok",
+    "kpi": "ticket_count",
+    "dim": "resolver",
+    "tool": "run_kpi",
+    "n": 4,
+    "err": null,
+    "error": "",
+    "answer": "Ticket count for period_applied overall was **20043**.\n\n- Anshu Kushwaha: 6435\n- Priya Moorthy: 5055\n- Arun Ayyappan: 4788\n- Chandru R: 3765",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "Ticket count by status",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "ticket_count",
+        "dimension": "status",
+        "time": "all time",
+        "goal": "Ticket count by status across all time"
+      }
+    ],
+    "status": "ok",
+    "kpi": "ticket_count",
+    "dim": "status",
+    "tool": "run_kpi",
+    "n": 6,
+    "err": null,
+    "error": "",
+    "answer": "Ticket count for period_applied overall was **20043**.\n\nStatus breakdown:\n- Closed: 12112\n- Overdue: 3828\n- Open: 2323\n- Reopened: 1758\n- Resolved: 18",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "Tickets by priority",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "ticket_count",
+        "dimension": "priority",
+        "time": "all time",
+        "goal": "Ticket count by priority across all time"
+      }
+    ],
+    "status": "ok",
+    "kpi": "ticket_count",
+    "dim": "priority",
+    "tool": "run_kpi",
+    "n": 4,
+    "err": null,
+    "error": "",
+    "answer": "Ticket count for period_applied overall is **20043**.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "Tickets by channel",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "ticket_count",
+        "dimension": "channel",
+        "time": "all time",
+        "goal": "Ticket count by channel across all time"
+      }
+    ],
+    "status": "ok",
+    "kpi": "ticket_count",
+    "dim": "channel",
+    "tool": "run_kpi",
+    "n": 5,
+    "err": null,
+    "error": "",
+    "answer": "Ticket count by channel for period_applied overall was **20043**.\n\n- Email: 7322\n- Chat: 5373\n- Web: 4176\n- Phone: 3171\n- Webchat: 1",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "Tickets by category",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "ticket_count",
+        "dimension": "category",
+        "time": "all time",
+        "goal": "Ticket count by category"
+      }
+    ],
+    "status": "ok",
+    "kpi": "ticket_count",
+    "dim": "category",
+    "tool": "run_kpi",
+    "n": 69,
+    "err": null,
+    "error": "",
+    "answer": "Ticket count for period_applied overall was **20043**.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "Tickets by customer",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "ticket_count",
+        "dimension": "customer",
+        "time": "all time",
+        "goal": "Ticket count by customer"
+      }
+    ],
+    "status": "ok",
+    "kpi": "ticket_count",
+    "dim": "customer",
+    "tool": "run_kpi",
+    "n": 14127,
+    "err": null,
+    "error": "",
+    "answer": "The total ticket count for period_applied overall is **20043** across 14127 customer groups.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "Tickets by created by",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "ticket_count",
+        "dimension": "created_by",
+        "time": "all time",
+        "goal": "Ticket count by creator"
+      }
+    ],
+    "status": "ok",
+    "kpi": "ticket_count",
+    "dim": "created_by",
+    "tool": "run_kpi",
+    "n": 14115,
+    "err": null,
+    "error": "",
+    "answer": "The ticket count for period_applied overall is **20,043**.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "Ticket volume by month",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "ticket_count",
+        "dimension": "month",
+        "time": "all time",
+        "goal": "Ticket count by month"
+      }
+    ],
+    "status": "ok",
+    "kpi": "ticket_count",
+    "dim": "month",
+    "tool": "run_kpi",
+    "n": 14,
+    "err": null,
+    "error": "",
+    "answer": "Ticket volume for overall was **20043**.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "Ticket volume by week",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "ticket_count",
+        "dimension": "week",
+        "time": "all time",
+        "goal": "Ticket count by week across all time"
+      }
+    ],
+    "status": "ok",
+    "kpi": "ticket_count",
+    "dim": "week",
+    "tool": "run_kpi",
+    "n": 54,
+    "err": null,
+    "error": "",
+    "answer": "Ticket volume for period_applied was **20043**.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "Ticket volume by day",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "ticket_count",
+        "dimension": "day",
+        "time": "all time",
+        "goal": "Ticket count by day across all time"
+      }
+    ],
+    "status": "ok",
+    "kpi": "ticket_count",
+    "dim": "day",
+    "tool": "run_kpi",
+    "n": 370,
+    "err": null,
+    "error": "",
+    "answer": "Ticket volume for period_applied overall was **20043**.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "Resolution rate by queue",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "resolution_rate",
+        "dimension": "queue",
+        "time": "all time",
+        "goal": "Resolution rate by queue across all time"
+      }
+    ],
+    "status": "ok",
+    "kpi": "resolution_rate",
+    "dim": "queue",
+    "tool": "run_kpi",
+    "n": 7,
+    "err": null,
+    "error": "",
+    "answer": "Resolution rate by queue for period_applied overall: Payments & Billing Support is **0.6208791208791209**, Offers & Loyalty Support is **0.610236220472441**, Shipping & Delivery Support is **0.6100937918713711**, Returns & Refunds Support is **0.6069034020362553**, and Product Support is **0.6034624896949712**.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "Average CSAT by agent",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "avg_csat",
+        "dimension": "agent",
+        "time": "all time",
+        "goal": "Average CSAT by agent across all time"
+      }
+    ],
+    "status": "ok",
+    "kpi": "avg_csat",
+    "dim": "agent",
+    "tool": "run_kpi",
+    "n": 3,
+    "err": null,
+    "error": "",
+    "answer": "Average CSAT for period_applied overall was **3.89** for Lokesh B, **3.85** for Shobana R, and **3.83** for mohamed fazil.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "SLA breach rate by priority",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "sla_breach_rate",
+        "dimension": "priority",
+        "time": "all time",
+        "goal": "SLA breach rate broken down by priority"
+      }
+    ],
+    "status": "ok",
+    "kpi": "sla_breach_rate",
+    "dim": "priority",
+    "tool": "run_kpi",
+    "n": 4,
+    "err": null,
+    "error": "",
+    "answer": "SLA breach rate for overall was **0.8261405672009864** for urgent, **0.5485491976009078** for high, **0.44423573608828365** for medium, and **0.4097313958608543** for low.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "How many tickets in the last 7 days?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "ticket_count",
+        "dimension": null,
+        "time": "last 7 days",
+        "goal": "Total ticket count for the last 7 days"
+      }
+    ],
+    "status": "ok",
+    "kpi": "ticket_count",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "ticket_count for period_applied past 7 days (UTC) was **2025**.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "How many tickets in the last 30 days?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "ticket_count",
+        "dimension": null,
+        "time": "last 30 days",
+        "goal": "Total ticket count for the last 30 days"
+      }
+    ],
+    "status": "ok",
+    "kpi": "ticket_count",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "ticket_count for past 30 days (UTC) was **10258**.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "How many tickets in the last 1 day?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "ticket_count",
+        "dimension": null,
+        "time": "last 1 day",
+        "goal": "Total ticket count for the last 1 day"
+      }
+    ],
+    "status": "ok",
+    "kpi": "ticket_count",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "ticket_count for period_applied past 1 days (UTC) was **6**.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "How many tickets from 2026-09-01 to 2026-09-15?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "ticket_count",
+        "dimension": null,
+        "time": "2026-09-01 to 2026-09-15",
+        "goal": "Total ticket count from 2026-09-01 to 2026-09-15"
+      }
+    ],
+    "status": "ok",
+    "kpi": "ticket_count",
+    "dim": null,
+    "tool": "run_kpi",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "ticket_count for 2026-09-01 to 2026-09-15 was **3117**.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "List queues",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": null,
+        "dimension": null,
+        "time": "all time",
+        "goal": "List all queues"
+      }
+    ],
+    "status": "ok",
+    "kpi": null,
+    "dim": null,
+    "tool": "run_sql",
+    "n": 7,
+    "err": null,
+    "error": "",
+    "answer": "There are **7** queues for period_applied overall.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "Find teams named billing",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": null,
+        "dimension": null,
+        "time": "all time",
+        "goal": "List queues where name is like 'billing'"
+      }
+    ],
+    "status": "ok",
+    "kpi": null,
+    "dim": null,
+    "tool": "run_sql",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "There is 1 queue named 'billing' for the period_applied overall: Payments & Billing Support.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "List all ticket statuses",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": null,
+        "dimension": null,
+        "time": "all time",
+        "goal": "List all distinct ticket statuses"
+      }
+    ],
+    "status": "ok",
+    "kpi": null,
+    "dim": null,
+    "tool": "run_sql",
+    "n": 6,
+    "err": null,
+    "error": "",
+    "answer": "The ticket statuses for period_applied overall are Closed, Open, Overdue, Pending, Reopened, and Resolved.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "List agents",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": null,
+        "dimension": null,
+        "time": "all time",
+        "goal": "List all agents"
+      }
+    ],
+    "status": "ok",
+    "kpi": null,
+    "dim": null,
+    "tool": "run_sql",
+    "n": 8,
+    "err": null,
+    "error": "",
+    "answer": "There are 8 agents overall.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "List open tickets",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": null,
+        "dimension": null,
+        "time": "all time",
+        "goal": "List all tickets with status 'Open'"
+      }
+    ],
+    "status": "ok",
+    "kpi": null,
+    "dim": null,
+    "tool": "run_sql",
+    "n": 500,
+    "err": null,
+    "error": "",
+    "answer": "There are 500 open tickets for the period_applied overall.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "Find ticket number 104",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": null,
+        "dimension": null,
+        "time": "all time",
+        "goal": "Find ticket number 104"
+      }
+    ],
+    "status": "ok",
+    "kpi": null,
+    "dim": null,
+    "tool": "run_sql",
+    "n": 1,
+    "err": null,
+    "error": "",
+    "answer": "Ticket #104 was found with a status of Closed for the period applied: overall.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "Why are tickets stuck or overdue?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": "resolution_at_risk_count",
+        "dimension": "queue",
+        "time": "all time",
+        "goal": "Count of tickets at risk of breaching SLA by queue"
+      },
+      {
+        "executor": "sql",
+        "kpi": "average_overdue_hours",
+        "dimension": "priority",
+        "time": "all time",
+        "goal": "Average overdue hours broken down by priority"
+      },
+      {
+        "executor": "kg",
+        "kpi": null,
+        "dimension": null,
+        "time": "all time",
+        "goal": "Identify drivers and note history for overdue tickets"
+      }
+    ],
+    "status": "ok",
+    "kpi": "resolution_at_risk_count",
+    "dim": "queue",
+    "tool": "run_kpi",
+    "n": 0,
+    "err": null,
+    "error": "",
+    "answer": "Average overdue hours across all priorities for the overall period are: **127.68** for medium, **125.37** for low, **115.46** for high, and **77.17** for urgent.",
+    "grounded": true,
+    "executors": [
+      "sql",
+      "sql",
+      "kg"
+    ]
+  },
+  {
+    "question": "Walk the staffing path for a queue",
+    "plan": [
+      {
+        "executor": "kg",
+        "kpi": null,
+        "dimension": null,
+        "time": "all time",
+        "goal": "staffing path for queue"
+      }
+    ],
+    "status": "error",
+    "kpi": null,
+    "dim": null,
+    "tool": "kg",
+    "n": 0,
+    "err": "NO_TOOL",
+    "error": "KG executor did not return run_cypher JSON.",
+    "answer": "No staffing path was found for the queue.",
+    "grounded": true,
+    "executors": [
+      "kg"
+    ]
+  },
+  {
+    "question": "Show the neighborhood around a ticket",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": null,
+        "dimension": null,
+        "time": "all time",
+        "goal": "Find ticket number from user input or list recent tickets to identify target"
+      }
+    ],
+    "status": "ok",
+    "kpi": null,
+    "dim": null,
+    "tool": "run_sql",
+    "n": 50,
+    "err": null,
+    "error": "",
+    "answer": "No ticket number was specified to identify a neighborhood.",
+    "grounded": true,
+    "executors": [
+      "sql"
+    ]
+  },
+  {
+    "question": "Who wrote notes on recent tickets?",
+    "plan": [
+      {
+        "executor": "sql",
+        "kpi": null,
+        "dimension": null,
+        "time": "all time",
+        "goal": "List recent tickets with their most recent note timestamps"
+      },
+      {
+        "executor": "kg",
+        "kpi": null,
+        "dimension": null,
+        "time": "all time",
+        "goal": "Find the path from recent tickets to the users who wrote the notes"
+      }
+    ],
+    "status": "ok",
+    "kpi": null,
+    "dim": null,
+    "tool": "run_sql",
+    "n": 50,
+    "err": null,
+    "error": "",
+    "answer": "No users were found who wrote notes on the recent tickets for the period applied: overall (no date filter, UTC).",
+    "grounded": true,
+    "executors": [
+      "sql",
+      "kg"
+    ]
+  }
+]

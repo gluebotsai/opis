@@ -1,0 +1,16 @@
+{
+  "conversations": [
+    {
+      "id": "interaction-to-task",
+      "title": "Route task work to the task executor",
+      "turns": [
+        { "role": "user", "content": "Show my open follow-up tasks" },
+        {
+          "role": "assistant",
+          "content": "",
+          "tools": ["route_to_agent"]
+        }
+      ]
+    }
+  ]
+}

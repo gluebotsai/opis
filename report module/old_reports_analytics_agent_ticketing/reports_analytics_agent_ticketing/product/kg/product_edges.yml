@@ -1,0 +1,34 @@
+product: ticketing
+# Directed hops allowed for ticketing reports on the unified org graph.
+# Source: Knowledge_Graph_Pipeline/config/mappings/core.yaml ticketing.* mappings.
+# Contact is a shared node. It may be reached from Ticket. It has no outgoing hops here.
+
+start_labels:
+  - Ticket
+  - Queue
+
+leaf_labels:
+  - Contact
+
+edges:
+  - {from: Ticket, rel: in_queue, to: Queue}
+  - {from: Ticket, rel: assigned_to, to: Agent}
+  - {from: Ticket, rel: resolved_by, to: Agent}
+  - {from: Ticket, rel: has_sla, to: SLA}
+  - {from: Ticket, rel: has_note, to: Note}
+  - {from: Ticket, rel: raised_by, to: Contact}
+  - {from: Note, rel: written_by, to: Agent}
+  - {from: Queue, rel: staffed_by, to: Agent}
+
+forbidden_labels:
+  - Conversation
+  - Campaign
+  - Deal
+  - Employee
+  - ServiceQueue
+  - SupportCase
+  - OpenTicket
+  - PendingTicket
+  - OverdueTicket
+  - ReopenedTicket
+  - ResolvedTicket

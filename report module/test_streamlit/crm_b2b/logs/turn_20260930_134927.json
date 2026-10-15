@@ -1,0 +1,147 @@
+{
+  "question": "which agent has more operations.. ",
+  "answer": "Across all time, there were 2,347 agent operations recorded.",
+  "trace": {
+    "question": "which agent has more operations..",
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1015,
+      "role": "admin"
+    },
+    "model": "worktual-gemma",
+    "tasks": [
+      {
+        "status": "ok",
+        "store": "sql",
+        "sql": "WITH rpt_agent_jobs AS (\nSELECT src.id, src.organization_id, src.job_type, src.contact_id, src.status, src.created_at, src.updated_at FROM (\nSELECT \n  id,\n  organization_id,\n  job_type,\n  contact_id,\n  status,\n  created_at,\n  updated_at\nFROM (\n  SELECT id, organization_id, 'enrichment' AS job_type, contact_id, status::text AS status, created_at, updated_at FROM crm.lead_enrichment_jobs WHERE organization_id = %(_org_id)s\n  UNION ALL\n  SELECT id, organization_id, 'scoring' AS job_type, contact_id, status::text AS status, created_at, updated_at FROM crm.lead_scoring_jobs WHERE organization_id = %(_org_id)s\n  UNION ALL\n  SELECT id, organization_id, 'nurture' AS job_type, contact_id, status::text AS status, created_at, updated_at FROM crm.lead_nurture_jobs WHERE organization_id = %(_org_id)s\n  UNION ALL\n  SELECT id, organization_id, 'lifecycle' AS job_type, contact_id, status::text AS status, created_at, updated_at FROM crm.lead_lifecycle_jobs WHERE organization_id = %(_org_id)s\n) aj\n) src WHERE TRUE\n)\nSELECT job_type, status, CAST(COUNT(*) AS BIGINT) AS job_count FROM rpt_agent_jobs AS agent_jobs WHERE TRUE AND TRUE AND TRUE GROUP BY job_type, status ORDER BY job_type, status LIMIT 500",
+        "views": [
+          "agent_jobs"
+        ],
+        "guard_notes": [
+          "row cap 500 applied"
+        ],
+        "bound_params": {
+          "_org_id": 1003,
+          "_user_id": 1015,
+          "user_id": 1015,
+          "organization_id": 1003,
+          "org_id": 1003,
+          "tenant_id": 1003,
+          "current_user_id": 1015
+        },
+        "rows": [
+          {
+            "job_type": "enrichment",
+            "status": "enriched",
+            "job_count": 44
+          },
+          {
+            "job_type": "enrichment",
+            "status": "skipped",
+            "job_count": 944
+          },
+          {
+            "job_type": "lifecycle",
+            "status": "applied",
+            "job_count": 1
+          },
+          {
+            "job_type": "lifecycle",
+            "status": "failed",
+            "job_count": 5
+          },
+          {
+            "job_type": "lifecycle",
+            "status": "pending",
+            "job_count": 29
+          },
+          {
+            "job_type": "lifecycle",
+            "status": "skipped",
+            "job_count": 23
+          },
+          {
+            "job_type": "lifecycle",
+            "status": "waited",
+            "job_count": 396
+          },
+          {
+            "job_type": "nurture",
+            "status": "analyzing",
+            "job_count": 6
+          },
+          {
+            "job_type": "nurture",
+            "status": "pending",
+            "job_count": 22
+          },
+          {
+            "job_type": "nurture",
+            "status": "sent",
+            "job_count": 100
+          },
+          {
+            "job_type": "nurture",
+            "status": "skipped",
+            "job_count": 307
+          },
+          {
+            "job_type": "nurture",
+            "status": "waited",
+            "job_count": 16
+          },
+          {
+            "job_type": "scoring",
+            "status": "scored",
+            "job_count": 454
+          }
+        ],
+        "kpi_id": "agent_operations",
+        "time_status": "all_time",
+        "attempts": [
+          {
+            "raw": "{\"tool\":\"run_kpi\",\"kpi_id\":\"agent_operations\",\"dimension\":null}",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "agent_operations"
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "tool": "run_kpi",
+        "requested_kpi": "agent_operations",
+        "requested_dimension": null,
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "agent_operations",
+          "goal": "Compare activity volume across agents to identify who has more operations",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "ranking",
+          "depends_on": []
+        }
+      }
+    ],
+    "domain_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"standard\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"agent_operations\",\n      \"goal\": \"Compare activity volume across agents to identify who has more operations\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"answer_type\": \"ranking\",\n      \"depends_on\": []\n    }\n  ]\n}\n```",
+    "plan": {
+      "kind": "plan",
+      "depth": "standard",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "agent_operations",
+          "goal": "Compare activity volume across agents to identify who has more operations",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "ranking",
+          "depends_on": []
+        }
+      ]
+    },
+    "facts": "time_requested: all time\nperiod_applied: overall (no date filter, UTC)\ntime_status: all_time\ncatalog_kpi: agent_operations\nRESULT: 13 group(s)\ngroup_by: group\ntotal_job_count: 2347\n  enrichment / enriched: 44\n  enrichment / skipped: 944\n  lifecycle / applied: 1\n  lifecycle / failed: 5\n  lifecycle / pending: 29\n  ... 8 more groups not listed",
+    "grounded": true,
+    "briefing_raw": "Across all time, there were 2,347 agent operations recorded."
+  }
+}

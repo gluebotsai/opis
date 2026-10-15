@@ -1,0 +1,267 @@
+version: 1
+source_tables:
+  - ccass.conversations
+  - ccass.conversation_dispositions
+  - ccass.dispositions
+  - ccass.agent_missed_contacts
+default_filters:
+  - organization_id is injected by the executor
+  - Dashboard time: COALESCE(assigned_at, resolved_at, ended_at, created_at)
+  - My Performance may additionally scope assigned_user_id server-side
+metrics:
+  - id: conversations_handled
+    label: Conversations handled
+    aliases: [handled volume, handled conversations, tickets handled, call count, chat count]
+    description: Count of handled conversations in the period.
+    grain: conversation
+    tables: [ccass.conversations]
+    join_path: []
+    dimensions: [channel, queue_id, day, assigned_agent_id]
+    time_column: assigned_at
+    dashboard_time_expr: COALESCE(assigned_at, resolved_at, ended_at, created_at)
+    chart_hints: [kpi, bar]
+    formula: |
+      COUNT(*) FILTER (WHERE status IN ('resolved','closed') OR ended_at IS NOT NULL)
+    sql: |
+      SELECT COUNT(*) AS conversations_handled
+      FROM ccass.conversations
+      WHERE (status IN ('resolved', 'closed') OR ended_at IS NOT NULL)
+        AND {{time_expr}} >= TIMESTAMP '{{period_start}}'
+        AND {{time_expr}} < TIMESTAMP '{{period_end}}'
+    example_questions:
+      - how many did I handle
+      - handled volume
+      - conversations handled
+      - call count
+      - chat count
+      - yesterday chat count
+    caveats:
+      - Handled means resolved/closed or ended_at set.
+
+  - id: resolution_rate
+    label: Resolution rate
+    aliases: [resolved, resolve rate, resolution]
+    description: Percentage of handled conversations that have resolved_at set.
+    grain: conversation
+    tables: [ccass.conversations]
+    unit: percentage_points
+    chart_hints: [kpi]
+    time_column: assigned_at
+    dashboard_time_expr: COALESCE(assigned_at, resolved_at, ended_at, created_at)
+    formula: |
+      100.0 * resolved / NULLIF(handled, 0)
+    sql: |
+      SELECT
+        100.0 * COUNT(*) FILTER (WHERE resolved_at IS NOT NULL)
+        / NULLIF(COUNT(*) FILTER (WHERE status IN ('resolved', 'closed') OR ended_at IS NOT NULL), 0)
+        AS resolution_rate
+      FROM ccass.conversations
+      WHERE {{time_expr}} >= TIMESTAMP '{{period_start}}'
+        AND {{time_expr}} < TIMESTAMP '{{period_end}}'
+    example_questions:
+      - resolution rate
+      - how many did I resolve
+
+  - id: avg_handle_time
+    label: Average handle time
+    aliases: [aht, handle time, handel time, handleing time, avg handle]
+    description: Average seconds from assigned_at to resolved_at or ended_at.
+    grain: conversation
+    tables: [ccass.conversations]
+    dimensions: [channel, queue_id, day]
+    chart_hints: [kpi, line]
+    time_column: assigned_at
+    dashboard_time_expr: COALESCE(assigned_at, resolved_at, ended_at, created_at)
+    formula: |
+      AVG(EXTRACT(EPOCH FROM (COALESCE(resolved_at, ended_at) - assigned_at)))
+      FILTER (WHERE assigned_at IS NOT NULL AND COALESCE(resolved_at, ended_at) IS NOT NULL)
+    sql: |
+      SELECT
+        AVG(EXTRACT(EPOCH FROM (COALESCE(resolved_at, ended_at) - assigned_at)))
+          FILTER (
+            WHERE assigned_at IS NOT NULL
+              AND COALESCE(resolved_at, ended_at) IS NOT NULL
+          ) AS avg_handle_seconds
+      FROM ccass.conversations
+      WHERE {{time_expr}} >= TIMESTAMP '{{period_start}}'
+        AND {{time_expr}} < TIMESTAMP '{{period_end}}'
+    example_questions:
+      - average handle time
+      - how long am I taking
+      - AHT
+    caveats:
+      - Requires assigned_at and an end timestamp.
+
+  - id: avg_first_response
+    label: Average first response time
+    aliases: [frt, first response, how fast]
+    description: Average seconds from assigned_at to first_response_at.
+    grain: conversation
+    tables: [ccass.conversations]
+    chart_hints: [kpi]
+    time_column: assigned_at
+    dashboard_time_expr: COALESCE(assigned_at, resolved_at, ended_at, created_at)
+    sql: |
+      SELECT
+        AVG(EXTRACT(EPOCH FROM (first_response_at - assigned_at)))
+          FILTER (WHERE first_response_at IS NOT NULL AND assigned_at IS NOT NULL)
+          AS avg_first_response_seconds
+      FROM ccass.conversations
+      WHERE {{time_expr}} >= TIMESTAMP '{{period_start}}'
+        AND {{time_expr}} < TIMESTAMP '{{period_end}}'
+    example_questions:
+      - first response time
+      - how fast do I reply
+
+  - id: response_sla_60s
+    label: 60s first-response SLA
+    aliases: [sla, response sla, within 60 seconds, service level]
+    description: Percentage of first responses within 60 seconds of assignment.
+    grain: conversation
+    tables: [ccass.conversations]
+    unit: percentage_points
+    chart_hints: [kpi]
+    time_column: assigned_at
+    dashboard_time_expr: COALESCE(assigned_at, resolved_at, ended_at, created_at)
+    sql: |
+      SELECT
+        100.0 * COUNT(*) FILTER (
+          WHERE first_response_at IS NOT NULL
+            AND assigned_at IS NOT NULL
+            AND EXTRACT(EPOCH FROM (first_response_at - assigned_at)) <= 60
+        ) / NULLIF(COUNT(*) FILTER (WHERE first_response_at IS NOT NULL), 0)
+        AS response_sla_pct
+      FROM ccass.conversations
+      WHERE {{time_expr}} >= TIMESTAMP '{{period_start}}'
+        AND {{time_expr}} < TIMESTAMP '{{period_end}}'
+    example_questions:
+      - SLA
+      - response SLA
+    caveats:
+      - Dashboard still uses a fixed 60s threshold, not tenant sla_policies, unless the question asks for policy breaches.
+
+  - id: transfers
+    label: Transfers
+    aliases: [transfer, transferred, transfer count]
+    description: Conversations with transferred_at set.
+    grain: conversation
+    tables: [ccass.conversations]
+    chart_hints: [kpi]
+    time_column: assigned_at
+    dashboard_time_expr: COALESCE(assigned_at, resolved_at, ended_at, created_at)
+    sql: |
+      SELECT COUNT(*) AS transfers
+      FROM ccass.conversations
+      WHERE transferred_at IS NOT NULL
+        AND {{time_expr}} >= TIMESTAMP '{{period_start}}'
+        AND {{time_expr}} < TIMESTAMP '{{period_end}}'
+    example_questions:
+      - how many transferred
+
+  - id: channel_mix
+    label: Channel mix
+    aliases: [channel breakdown, share of volume, by channel]
+    description: Handled volume grouped by channel.
+    grain: conversation
+    tables: [ccass.conversations]
+    dimensions: [channel]
+    chart_hints: [pie, bar]
+    time_column: assigned_at
+    dashboard_time_expr: COALESCE(assigned_at, resolved_at, ended_at, created_at)
+    sql: |
+      SELECT channel, COUNT(*) AS conversations
+      FROM ccass.conversations
+      WHERE (status IN ('resolved', 'closed') OR ended_at IS NOT NULL)
+        AND {{time_expr}} >= TIMESTAMP '{{period_start}}'
+        AND {{time_expr}} < TIMESTAMP '{{period_end}}'
+      GROUP BY channel
+      ORDER BY conversations DESC
+    example_questions:
+      - channel mix
+      - breakdown by channel
+      - webchat vs email
+
+  - id: daily_handled_trend
+    label: Daily handled trend
+    aliases: [daily trend, over time, handled by day]
+    description: Handled conversations per day.
+    grain: day
+    tables: [ccass.conversations]
+    dimensions: [day]
+    chart_hints: [line, bar]
+    time_column: assigned_at
+    dashboard_time_expr: COALESCE(assigned_at, resolved_at, ended_at, created_at)
+    sql: |
+      SELECT
+        DATE_TRUNC('day', {{time_expr}})::date AS day,
+        COUNT(*) AS conversations
+      FROM ccass.conversations
+      WHERE (status IN ('resolved', 'closed') OR ended_at IS NOT NULL)
+        AND {{time_expr}} >= TIMESTAMP '{{period_start}}'
+        AND {{time_expr}} < TIMESTAMP '{{period_end}}'
+      GROUP BY 1
+      ORDER BY 1
+    example_questions:
+      - daily trend
+      - handled over time
+
+  - id: disposition_mix
+    label: Disposition mix
+    aliases: [disposition, outcomes, how did I close]
+    description: Latest disposition label counts for completed conversations.
+    grain: conversation
+    tables:
+      - ccass.conversations
+      - ccass.conversation_dispositions
+      - ccass.dispositions
+    join_path:
+      - ccass.conversations
+      - ccass.conversation_dispositions
+      - ccass.dispositions
+    dimensions: [disposition]
+    chart_hints: [pie, bar]
+    time_column: assigned_at
+    dashboard_time_expr: COALESCE(assigned_at, resolved_at, ended_at, created_at)
+    sql: |
+      WITH latest_disposition AS (
+        SELECT DISTINCT ON (cd.conversation_id)
+          cd.conversation_id,
+          d.label
+        FROM ccass.conversation_dispositions cd
+        JOIN ccass.dispositions d ON d.id = cd.disposition_id
+        ORDER BY cd.conversation_id, cd.applied_at DESC
+      )
+      SELECT ld.label AS disposition, COUNT(*) AS conversations
+      FROM ccass.conversations c
+      JOIN latest_disposition ld ON ld.conversation_id = c.id
+      WHERE (c.status IN ('resolved', 'closed') OR c.ended_at IS NOT NULL)
+        AND {{time_expr}} >= TIMESTAMP '{{period_start}}'
+        AND {{time_expr}} < TIMESTAMP '{{period_end}}'
+      GROUP BY ld.label
+      ORDER BY conversations DESC
+    example_questions:
+      - disposition mix
+      - how did I close conversations
+    caveats:
+      - Use DISTINCT ON latest applied_at. Do not SELECT DISTINCT to hide join fan-out.
+
+  - id: missed_contacts
+    label: Missed contacts
+    aliases: [missed, missed contact, offer timeout, no answer]
+    description: Offer timeouts and manual rejects recorded for agents.
+    grain: missed_event
+    tables: [ccass.agent_missed_contacts]
+    dimensions: [channel, reason, agent_id]
+    chart_hints: [kpi, bar]
+    time_column: missed_at
+    dashboard_time_expr: missed_at
+    sql: |
+      SELECT reason, channel, COUNT(*) AS missed
+      FROM ccass.agent_missed_contacts
+      WHERE missed_at >= TIMESTAMP '{{period_start}}'
+        AND missed_at < TIMESTAMP '{{period_end}}'
+      GROUP BY reason, channel
+      ORDER BY missed DESC
+    example_questions:
+      - missed contacts
+      - how many offers timed out

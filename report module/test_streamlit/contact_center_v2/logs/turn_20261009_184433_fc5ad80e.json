@@ -1,0 +1,62 @@
+{
+  "turn_id": "fc5ad80e",
+  "timestamp": "2026-10-09T13:14:33.714967+00:00",
+  "question": "Which agents have the highest transfer rate?",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1018,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Agent transfer rates</strong></p>\n<p>The following agents had the highest transfer rates for all time:</p>\n<ul>\n<li><strong>Raghuram M</strong>: 0.1667</li>\n<li><strong>Lokesh B</strong>: 0.1538</li>\n<li><strong>Santhosh S</strong>: 0</li>\n<li><strong>Bharathi Sivakumar</strong>: 0</li>\n<li><strong>None</strong>: 0</li>\n</ul>\n<p>Would you like to see the total number of handled conversations for these agents?</p>",
+  "card": "card: table r1",
+  "facts": "result_id: r1\nwindow: all time\ncertified: false\ntask_goal: List agents and their transfer rates, including those with transfers.\nanswer_type: list\nrow_count: 5\nrow 1: agent_name=Lokesh B; total_handled=13; transferred_count=2; transfer_rate=0.1538\nrow 2: agent_name=Santhosh S; total_handled=20; transferred_count=0; transfer_rate=0\nrow 3: agent_name=Raghuram M; total_handled=6; transferred_count=1; transfer_rate=0.1667\nrow 4: agent_name=None; total_handled=539; transferred_count=0; transfer_rate=0\nrow 5: agent_name=Bharathi Sivakumar; total_handled=61; transferred_count=0; transfer_rate=0",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1018,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "Which agents have the highest transfer rate?",
+    "plan": {
+      "kind": "plan",
+      "understanding": "A list of agents ranked by their transfer rate.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "free_sql",
+          "goal": "List agents and their transfer rates, including those with transfers.",
+          "time": "all time",
+          "scope": "admin",
+          "slice": [
+            "agent"
+          ],
+          "answer_type": "list"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": false,
+        "kpi_id": null,
+        "row_count": 5
+      }
+    ],
+    "facts": "result_id: r1\nwindow: all time\ncertified: false\ntask_goal: List agents and their transfer rates, including those with transfers.\nanswer_type: list\nrow_count: 5\nrow 1: agent_name=Lokesh B; total_handled=13; transferred_count=2; transfer_rate=0.1538\nrow 2: agent_name=Santhosh S; total_handled=20; transferred_count=0; transfer_rate=0\nrow 3: agent_name=Raghuram M; total_handled=6; transferred_count=1; transfer_rate=0.1667\nrow 4: agent_name=None; total_handled=539; transferred_count=0; transfer_rate=0\nrow 5: agent_name=Bharathi Sivakumar; total_handled=61; transferred_count=0; transfer_rate=0",
+    "grounded": true,
+    "card": "card: table r1"
+  },
+  "error": null
+}

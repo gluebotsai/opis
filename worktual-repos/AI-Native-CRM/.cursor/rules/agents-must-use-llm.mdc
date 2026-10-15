@@ -1,0 +1,43 @@
+---
+description: CRM agents must use the LLM for replies, field collection, and actions — never heuristics
+alwaysApply: true
+---
+
+# Agents must use the LLM (Python only)
+
+All CRM agents live under `ai-service/app/agents/**`. TypeScript may only enqueue
+jobs and call `callAiServiceAgent(...)`.
+
+**Whatever the user chats, the LLM decides.** Replies, collected fields, tool
+calls, and other actions come from `generate_ai_text` / `chat_with_tools` /
+`run_native_agent_turn` (`LLM_BASE_URL`). Reuse `crm_tools`, `coworker_shared`,
+`llm_result`.
+
+## Required
+
+- Speech, draft patches, scores, decisions, emails, summaries = LLM output
+- Code may fetch context, run tools the LLM chose, parse/clamp JSON, persist
+- If the LLM is down or returns nothing usable: fail/retry. Do **not** fill
+  fields, route, or reply with regex/if-else
+
+## Forbidden
+
+```python
+# BAD — collecting a name / routing / answering without the LLM
+patch["firstName"] = parse_name_from_text(user_text)
+if "create contact" in text: return open_create()
+return canned_reply("What's their first name?")
+
+# GOOD — LLM turn only; schema clamp of the model patch is allowed
+result = await run_native_agent_turn(...)
+clean = sanitize(result.get("patch"), companies)
+```
+
+- Heuristic field-fill, keyword routers, or canned coworker replies on any
+  agent path (including “LLM forgot the patch, so regex it”)
+- Agent brains in TypeScript (`backend/src/service/ai/**`)
+- Telling users a heuristic result was AI-generated
+- A second prompt/tool/memory stack beside `crm_tools` / `coworker_shared`
+
+Allowed outside agent reasoning: auth, tenancy, RBAC, payload limits, SQL
+deny-lists, schema/enum clamp of **LLM** output.

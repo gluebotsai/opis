@@ -1,0 +1,1195 @@
+{
+  "schema_version": "1.0",
+  "namespace": "ticketing.v1",
+  "tools": [
+    {
+      "name": "get_ticket",
+      "description": "Get one ticket by ticket_number (e.g. 12345 or #12345).",
+      "auth": "actor_or_api_key",
+      "express": { "method": "GET", "path": "/api/tickets/{ticket_number}" },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "ticket_number": { "type": "string" }
+        },
+        "required": ["ticket_number"]
+      }
+    },
+    {
+      "name": "list_tickets",
+      "description": "List or search tickets using structured, actor-scoped filters.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "GET", "path": "/api/tickets" },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "scope": { "type": "string", "enum": ["default", "assignee", "team", "org", "search", "created", "unassigned"] },
+          "limit": { "type": "integer", "minimum": 1, "maximum": 100, "description": "Page size. Default 12 for chat lists." },
+          "offset": { "type": "integer", "minimum": 0, "description": "Skip this many rows for the next page." },
+          "created_by": { "type": "string", "enum": ["SELF"] },
+          "assigned_to": { "type": "string" },
+          "status": { "type": "string" },
+          "priority": { "type": "string" },
+          "channel": { "type": "string" },
+          "query": { "type": "string", "maxLength": 200 },
+          "queue": { "type": "string" },
+          "customer": { "type": "string" },
+          "due": { "type": "string", "enum": ["today", "overdue"] },
+          "created_range": {
+            "type": "string",
+            "description": "Created-at window. Presets: today, yesterday, this_week, last_week, this_month, last_month, last_24h, last_7d, last_30d. Aliases like past_month map to last_30d. Or ISO YYYY-MM-DD or YYYY-MM-DD/YYYY-MM-DD from trusted now."
+          },
+          "updated_range": {
+            "type": "string",
+            "description": "Updated-at window. Same presets/aliases/ISO windows as created_range."
+          },
+          "sort": { "type": "string", "enum": ["latest", "oldest", "priority", "due"] }
+        }
+      }
+    },
+    {
+      "name": "get_ticket_progress",
+      "description": "Get ticket progress stepper and status history.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "GET", "path": "/api/tickets/{ticket_number}/progress" },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "ticket_number": { "type": "string" }
+        },
+        "required": ["ticket_number"]
+      }
+    },
+    {
+      "name": "list_ticket_notes",
+      "description": "List recent notes for one ticket.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "GET", "path": "/api/tickets/{ticket_number}/notes" },
+      "input_schema": {
+        "type": "object",
+        "properties": { "ticket_number": { "type": "string" } },
+        "required": ["ticket_number"]
+      }
+    },
+    {
+      "name": "get_triage_stats",
+      "description": "Agent/admin triage cards: created by me, reassigned out, open on my teams.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "GET", "path": "/api/agent/triage-stats" },
+      "input_schema": { "type": "object", "properties": {} }
+    },
+    {
+      "name": "get_dashboard_chart",
+      "description": "Dashboard workload chart series for a time range.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "GET", "path": "/api/dashboard/chart" },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "chart_range": { "type": "string", "enum": ["24hours", "7days", "30days"] }
+        }
+      }
+    },
+    {
+      "name": "list_activities",
+      "description": "Recent Home dashboard activity rows.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "GET", "path": "/api/activities" },
+      "input_schema": { "type": "object", "properties": {} }
+    },
+    {
+      "name": "create_ticket",
+      "description": "Create a ticket (customerName and/or subject required).",
+      "auth": "actor_or_api_key",
+      "express": { "method": "POST", "path": "/api/tickets" },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "customerName": { "type": "string" },
+          "customerId": { "type": "string" },
+          "customerEmail": { "type": "string" },
+          "customerPhone": { "type": "string" },
+          "subject": { "type": "string" },
+          "description": { "type": "string" },
+          "channel": { "type": "string" },
+          "priority": { "type": "string" },
+          "status": { "type": "string" },
+          "queue": { "type": "string" },
+          "category": { "type": "string" },
+          "skill": { "type": "string" },
+          "assigneeId": { "type": "string" },
+          "resolverId": { "type": "string" },
+          "queueId": { "type": "string" },
+          "orderId": { "type": "string" },
+          "productId": { "type": "string" },
+          "references": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": { "type": "string" },
+                "id": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "enrich_ticket",
+      "description": "Preview authoritative ticket triage and assignment before confirmation.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "POST", "path": "/api/tickets/enrich" },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "customerName": { "type": "string" },
+          "customerEmail": { "type": "string" },
+          "customerPhone": { "type": "string" },
+          "issue": { "type": "string" }
+        },
+        "required": ["customerName", "issue"]
+      }
+    },
+    {
+      "name": "verify_ticket_customer",
+      "description": "Check CDP/directory for email or phone during create-ticket before collecting the issue.",
+      "auth": "actor_or_api_key",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "customerName": { "type": "string" },
+          "customerEmail": { "type": "string" },
+          "customerPhone": { "type": "string" },
+          "contact": { "type": "string" }
+        }
+      }
+    },
+    {
+      "name": "update_ticket",
+      "description": "Update ticket fields (status, priority, assignee, subject, …).",
+      "auth": "actor_or_api_key",
+      "express": { "method": "PUT", "path": "/api/tickets/{ticket_number}" },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "ticket_number": { "type": "string" },
+          "status": { "type": "string" },
+          "priority": { "type": "string" },
+          "assignee": { "type": "string" },
+          "resolver": { "type": "string" },
+          "subject": { "type": "string" },
+          "description": { "type": "string" },
+          "queue": { "type": "string" },
+          "category": { "type": "string" },
+          "ai_summary": { "type": "string" }
+        },
+        "required": ["ticket_number"]
+      }
+    },
+    {
+      "name": "escalate_ticket",
+      "description": "Escalate a ticket; optional assignee/agent/rationale.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "POST", "path": "/api/tickets/{ticket_number}/escalate" },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "ticket_number": { "type": "string" },
+          "assignee": { "type": "string" },
+          "assignee_id": { "type": "string" },
+          "agent": { "type": "string" },
+          "agent_id": { "type": "string" },
+          "rationale": { "type": "string" }
+        },
+        "required": ["ticket_number"]
+      }
+    },
+    {
+      "name": "auto_assign_ticket",
+      "description": "Auto-assign a ticket via backend routing. Never invent the assignee.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "POST", "path": "/api/tickets/{ticket_number}/auto-assign" },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "ticket_number": { "type": "string" }
+        },
+        "required": ["ticket_number"]
+      }
+    },
+    {
+      "name": "add_ticket_note",
+      "description": "Add a note to a ticket by ticket_number.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "POST", "path": "/api/tickets/{ticket_number}/notes" },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "ticket_number": { "type": "string" },
+          "text": { "type": "string" },
+          "visibility": { "type": "string", "enum": ["internal", "public"] },
+          "send_customer_email": { "type": "boolean" }
+        },
+        "required": ["ticket_number", "text"]
+      }
+    },
+    {
+      "name": "list_queues",
+      "description": "List teams. For the members of one team, set query to that team's name. For every team, set list_all true and omit query.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "GET", "path": "/api/queues" },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Team name when they want one team or its members. Omit when listing every team."
+          },
+          "list_all": {
+            "type": "boolean",
+            "description": "True only when they want every team. Do not set this when they named one team."
+          }
+        }
+      }
+    },
+    {
+      "name": "create_queue",
+      "description": "Create a queue/team by name.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "POST", "path": "/api/queues" },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "members": { "type": "array", "items": { "type": "string" } },
+          "member_ids": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["name"]
+      }
+    },
+    {
+      "name": "update_queue",
+      "description": "Update a queue/team (name, description, members). For adding people to an existing team, pass only the new staff in members/member_ids and set add_members=true so existing members are kept. Without add_members, members/member_ids replace the full roster.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "PATCH", "path": "/api/queues/{queue_id}" },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "queue_id": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "members": { "type": "array", "items": { "type": "string" } },
+          "member_ids": { "type": "array", "items": { "type": "string" } },
+          "add_members": {
+            "type": "boolean",
+            "description": "When true, merge members/member_ids into the existing team roster instead of replacing it."
+          }
+        },
+        "required": ["queue_id"]
+      }
+    },
+    {
+      "name": "delete_queue",
+      "description": "Delete a queue/team by id.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "DELETE", "path": "/api/queues/{queue_id}" },
+      "input_schema": {
+        "type": "object",
+        "properties": { "queue_id": { "type": "string" } },
+        "required": ["queue_id"]
+      }
+    },
+    {
+      "name": "resolve_ticket_person",
+      "description": "List and rank live staff for ticket reassignment or escalation.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "GET", "path": "/api/agents" },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "response": { "type": "string" },
+          "ticket_number": { "type": "string" },
+          "target_role": { "type": "string", "enum": ["agent", "resolver", "admin"] },
+          "user_query": { "type": "string" },
+          "proceed": { "type": "integer", "minimum": 0, "maximum": 1 }
+        }
+      }
+    },
+    {
+      "name": "list_kb",
+      "description": "List knowledge base articles, 10 per page. First page: offset 0. Next page of the same list: offset from the prior TOOL RESULT nextOffset.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "GET", "path": "/api/kb" },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string" },
+          "category": { "type": "string" },
+          "status": { "type": "string" },
+          "limit": { "type": "integer", "description": "Page size. Use 10." },
+          "offset": { "type": "integer", "description": "0 for a new list. Next page uses the prior nextOffset." }
+        }
+      }
+    },
+    {
+      "name": "search_kb",
+      "description": "Retrieve the single best published knowledge article for how-to or troubleshooting. Uses the Meilisearch index. Quote the TOOL RESULT only. Use list_kb or get_kb to browse or open an article.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "POST", "path": "/api/internal/kb/search" },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string" }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "list_kb_categories",
+      "description": "List category labels derived from live knowledge articles.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "GET", "path": "/api/kb" },
+      "input_schema": { "type": "object", "properties": {} }
+    },
+    {
+      "name": "manage_kb_category",
+      "description": "Validate and stage a knowledge category label, or list categories.",
+      "auth": "actor_or_api_key",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "maxLength": 64 },
+          "mode": { "type": "string", "enum": ["add", "list"] }
+        },
+        "required": ["name"]
+      }
+    },
+    {
+      "name": "export_kb",
+      "description": "Export live knowledge articles as JSON, CSV, Markdown, text, PDF, or Word.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "GET", "path": "/api/kb" },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "fmt": { "type": "string", "enum": ["json", "csv", "md", "txt", "pdf", "doc"] },
+          "category": { "type": "string" }
+        }
+      }
+    },
+    {
+      "name": "import_kb_articles",
+      "description": "Import knowledge articles from a JSON array.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "POST", "path": "/api/kb" },
+      "input_schema": {
+        "type": "object",
+        "properties": { "articles_json": { "type": "string" } },
+        "required": ["articles_json"]
+      }
+    },
+    {
+      "name": "get_kb",
+      "description": "Get one knowledge article by id.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "GET", "path": "/api/kb/{article_id}" },
+      "input_schema": {
+        "type": "object",
+        "properties": { "article_id": { "type": "string" } },
+        "required": ["article_id"]
+      }
+    },
+    {
+      "name": "update_kb_article",
+      "description": "Update a KB article (title, content, category, status).",
+      "auth": "actor_or_api_key",
+      "express": { "method": "PATCH", "path": "/api/kb/{article_id}" },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "article_id": { "type": "string" },
+          "title": { "type": "string" },
+          "content": { "type": "string" },
+          "category": { "type": "string" },
+          "status": { "type": "string" }
+        },
+        "required": ["article_id"]
+      }
+    },
+    {
+      "name": "publish_kb_article",
+      "description": "Publish a KB article by id.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "PATCH", "path": "/api/kb/{article_id}" },
+      "input_schema": {
+        "type": "object",
+        "properties": { "article_id": { "type": "string" } },
+        "required": ["article_id"]
+      }
+    },
+    {
+      "name": "create_kb_article",
+      "description": "Create and publish a KB article with title, content, category.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "POST", "path": "/api/kb" },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string" },
+          "content": { "type": "string" },
+          "category": { "type": "string" },
+          "author": { "type": "string" }
+        },
+        "required": ["title", "content", "category"]
+      }
+    },
+    {
+      "name": "draft_kb_article",
+      "description": "Save a KB article as a staff-only draft with title, content, category.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "POST", "path": "/api/kb" },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string" },
+          "content": { "type": "string" },
+          "category": { "type": "string" },
+          "author": { "type": "string" }
+        },
+        "required": ["title", "content", "category"]
+      }
+    },
+    {
+      "name": "list_customers",
+      "description": "List customers in the directory.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "GET", "path": "/api/customers" },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string" },
+          "status": { "type": "string" },
+          "exact_email": { "type": "string" },
+          "exact_phone": { "type": "string" },
+          "limit": { "type": "integer", "minimum": 1, "maximum": 100 },
+          "offset": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    {
+      "name": "get_customer_360",
+      "description": "Get customer ticket history and counts by email.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "GET", "path": "/api/customers/360" },
+      "input_schema": {
+        "type": "object",
+        "properties": { "email": { "type": "string" } },
+        "required": ["email"]
+      }
+    },
+    {
+      "name": "import_customers",
+      "description": "Import customers from CSV text. Do not invent rows.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "POST", "path": "/api/customers/import" },
+      "input_schema": {
+        "type": "object",
+        "properties": { "csv_text": { "type": "string" } },
+        "required": ["csv_text"]
+      }
+    },
+    {
+      "name": "create_customer",
+      "description": "Create a customer in the directory (admin). Same body as Customers form.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "POST", "path": "/api/customers" },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "email": { "type": "string" },
+          "phone": { "type": "string" },
+          "accountName": { "type": "string" }
+        },
+        "required": ["name"]
+      }
+    },
+    {
+      "name": "list_macros",
+      "description": "List macros. Optional q searches title/body in SQL.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "GET", "path": "/api/macros" },
+      "input_schema": {
+        "type": "object",
+        "properties": { "q": { "type": "string" } }
+      }
+    },
+    {
+      "name": "create_macro",
+      "description": "Create a macro with title and body.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "POST", "path": "/api/macros" },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string" },
+          "body": { "type": "string" }
+        },
+        "required": ["title", "body"]
+      }
+    },
+    {
+      "name": "update_macro",
+      "description": "Patch a macro title and/or body.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "PATCH", "path": "/api/macros/{macro_id}" },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "macro_id": { "type": "string" },
+          "title": { "type": "string" },
+          "body": { "type": "string" }
+        },
+        "required": ["macro_id"]
+      }
+    },
+    {
+      "name": "delete_macro",
+      "description": "Delete a macro by id.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "DELETE", "path": "/api/macros/{macro_id}" },
+      "input_schema": {
+        "type": "object",
+        "properties": { "macro_id": { "type": "string" } },
+        "required": ["macro_id"]
+      }
+    },
+    {
+      "name": "list_agents",
+      "description": "List assignable staff for the org.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "GET", "path": "/api/agents" },
+      "input_schema": { "type": "object", "properties": {} }
+    },
+    {
+      "name": "list_priorities",
+      "description": "List priority catalog entries.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "GET", "path": "/api/priorities" },
+      "input_schema": {
+        "type": "object",
+        "properties": { "include_inactive": { "type": "boolean" } }
+      }
+    },
+    {
+      "name": "create_priority",
+      "description": "Create a priority (admin): display name + resolution hours (whole hours; sub-hour values store as 1h minimum). On user affirmation call with confirmed=true.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "POST", "path": "/api/priorities" },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "display_name": { "type": "string" },
+          "displayName": { "type": "string" },
+          "resolution_hours": { "type": "number" },
+          "resolutionHours": { "type": "number" },
+          "hours": { "type": "number" },
+          "confirmed": { "type": "boolean" }
+        }
+      }
+    },
+    {
+      "name": "update_priority",
+      "description": "Patch priority display name, SLA hours, or active flag (admin).",
+      "auth": "actor_or_api_key",
+      "express": { "method": "PATCH", "path": "/api/priorities/{priority_id}" },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "priority_id": { "type": "string" },
+          "displayName": { "type": "string" },
+          "resolutionHours": { "type": "number" },
+          "active": { "type": "boolean" }
+        },
+        "required": ["priority_id"]
+      }
+    },
+    {
+      "name": "delete_priority",
+      "description": "Delete one or more priorities in a single call (admin). Pass priority_ids with every numeric id from list_priorities they asked to remove. For one row, priority_id is enough. Never call this tool more than once this turn.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "DELETE", "path": "/api/priorities/{priority_id}" },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "priority_id": { "type": "string" },
+          "priority_ids": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    {
+      "name": "list_statuses",
+      "description": "List ticket status catalog entries.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "GET", "path": "/api/statuses" },
+      "input_schema": {
+        "type": "object",
+        "properties": { "include_inactive": { "type": "boolean" } }
+      }
+    },
+    {
+      "name": "create_status",
+      "description": "Create a ticket status (admin).",
+      "auth": "actor_or_api_key",
+      "express": { "method": "POST", "path": "/api/statuses" },
+      "input_schema": {
+        "type": "object",
+        "properties": { "display_name": { "type": "string" } },
+        "required": ["display_name"]
+      }
+    },
+    {
+      "name": "update_status",
+      "description": "Patch status display name or active flag (admin).",
+      "auth": "actor_or_api_key",
+      "express": { "method": "PATCH", "path": "/api/statuses/{status_id}" },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "status_id": { "type": "string" },
+          "displayName": { "type": "string" },
+          "active": { "type": "boolean" }
+        },
+        "required": ["status_id"]
+      }
+    },
+    {
+      "name": "delete_status",
+      "description": "Delete one or more statuses in a single call (admin). Pass status_ids with every numeric id from list_statuses they asked to remove. For one row, status_id is enough. Never call this tool more than once this turn.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "DELETE", "path": "/api/statuses/{status_id}" },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "status_id": { "type": "string" },
+          "status_ids": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    {
+      "name": "get_metrics",
+      "description": "Structured Home dashboard snapshot only (scope=org|self). NOT for natural-language 'how many open tickets' questions — those MUST use ask_semantic_layer.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "GET", "path": "/api/metrics" },
+      "input_schema": { "type": "object", "properties": {} }
+    },
+    {
+      "name": "list_ticket_recommendations",
+      "description": "List proactive ticket recommendations for the actor, optionally for one ticket.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "GET", "path": "/api/proactive/recommendations" },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "ticket_number": { "type": "string" }
+        }
+      }
+    },
+    {
+      "name": "get_analytics",
+      "description": "Structured analytics snapshot for 24hours, 7days, or 30days. NOT for NL how-many/CSAT/SLA questions — use ask_semantic_layer. NOT for why/drivers — use ask_knowledge_graph.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "GET", "path": "/api/analytics" },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "range": { "type": "string", "enum": ["24hours", "7days", "30days"] }
+        }
+      }
+    },
+    {
+      "name": "export_analytics",
+      "description": "Prepare analytics CSV download href. Never dump CSV into chat.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "GET", "path": "/api/analytics/export" },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "range": { "type": "string", "enum": ["24hours", "7days", "30days"] }
+        }
+      }
+    },
+    {
+      "name": "get_csat_reports",
+      "description": "Get CSAT reports for 7days, 30days, or 90days.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "GET", "path": "/api/csat-reports" },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "range": { "type": "string", "enum": ["7days", "30days", "90days"] }
+        }
+      }
+    },
+    {
+      "name": "list_audit",
+      "description": "List immutable audit events with optional action, actor, ticket, range filters.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "GET", "path": "/api/audit" },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "limit": { "type": "integer" },
+          "action": { "type": "string" },
+          "actor": { "type": "string" },
+          "ticket": { "type": "string" },
+          "range": { "type": "string" }
+        }
+      }
+    },
+    {
+      "name": "list_escalation_directory",
+      "description": "Read-only escalation directory (teams, members, skills).",
+      "auth": "actor_or_api_key",
+      "express": { "method": "GET", "path": "/api/escalation-directory" },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "q": { "type": "string" },
+          "skill": { "type": "string" }
+        }
+      }
+    },
+    {
+      "name": "list_widgets",
+      "description": "List integration widgets.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "GET", "path": "/api/integration/widgets" },
+      "input_schema": { "type": "object", "properties": {} }
+    },
+    {
+      "name": "create_widget",
+      "description": "Create an integration widget.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "POST", "path": "/api/integration/widgets" },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "buttonLabel": { "type": "string" },
+          "allowedOrigins": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["name"]
+      }
+    },
+    {
+      "name": "update_widget",
+      "description": "Update an integration widget.",
+      "auth": "actor",
+      "express": { "method": "PATCH", "path": "/api/integration/widgets/{widget_id}" },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "widget_id": { "type": "string" },
+          "name": { "type": "string" },
+          "button_label": { "type": "string" },
+          "enabled": { "type": "boolean" },
+          "allowed_origins": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["widget_id"]
+      }
+    },
+    {
+      "name": "list_integration_keys",
+      "description": "List integration API keys metadata only (masked prefix, never secrets).",
+      "auth": "actor_or_api_key",
+      "express": { "method": "GET", "path": "/api/integration/keys" },
+      "input_schema": { "type": "object", "properties": {} }
+    },
+    {
+      "name": "create_integration_key",
+      "description": "Create an integration API key and return its secret once.",
+      "auth": "actor",
+      "express": { "method": "POST", "path": "/api/integration/keys" },
+      "input_schema": {
+        "type": "object",
+        "properties": { "name": { "type": "string" } },
+        "required": ["name"]
+      }
+    },
+    {
+      "name": "revoke_integration_key",
+      "description": "Revoke an integration API key.",
+      "auth": "actor",
+      "express": { "method": "DELETE", "path": "/api/integration/keys/{key_id}" },
+      "input_schema": {
+        "type": "object",
+        "properties": { "key_id": { "type": "string" } },
+        "required": ["key_id"]
+      }
+    },
+    {
+      "name": "list_automation_rules",
+      "description": "List automation rules.",
+      "auth": "actor",
+      "express": { "method": "GET", "path": "/api/automation/rules" },
+      "input_schema": { "type": "object", "properties": {} }
+    },
+    {
+      "name": "create_automation_rule",
+      "description": "Create an automation rule.",
+      "auth": "actor",
+      "express": { "method": "POST", "path": "/api/automation/rules" },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "event": { "type": "string", "enum": ["ticket.created", "ticket.updated"] },
+          "conditions": { "type": "object" },
+          "actions": { "type": "object" },
+          "priority": { "type": "integer" },
+          "enabled": { "type": "boolean" }
+        },
+        "required": ["name", "event"]
+      }
+    },
+    {
+      "name": "update_automation_rule",
+      "description": "Update an automation rule.",
+      "auth": "actor",
+      "express": { "method": "PATCH", "path": "/api/automation/rules/{rule_id}" },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "rule_id": { "type": "string" },
+          "name": { "type": "string" },
+          "event": { "type": "string", "enum": ["ticket.created", "ticket.updated"] },
+          "conditions": { "type": "object" },
+          "actions": { "type": "object" },
+          "priority": { "type": "integer" },
+          "enabled": { "type": "boolean" }
+        },
+        "required": ["rule_id"]
+      }
+    },
+    {
+      "name": "delete_automation_rule",
+      "description": "Delete an automation rule.",
+      "auth": "actor",
+      "express": { "method": "DELETE", "path": "/api/automation/rules/{rule_id}" },
+      "input_schema": {
+        "type": "object",
+        "properties": { "rule_id": { "type": "string" } },
+        "required": ["rule_id"]
+      }
+    },
+    {
+      "name": "get_org_preferences",
+      "description": "Get org preferences.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "GET", "path": "/api/org-preferences" },
+      "input_schema": { "type": "object", "properties": {} }
+    },
+    {
+      "name": "get_user_preferences",
+      "description": "Get the actor soft/hard preference scratchpad from Postgres.",
+      "auth": "actor",
+      "input_schema": { "type": "object", "properties": {} }
+    },
+    {
+      "name": "update_user_preference",
+      "description": "Upsert one user preference. soft injects into prompts; hard is enforced by verify_hard_preferences.",
+      "auth": "actor",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "key": { "type": "string" },
+          "value": {},
+          "kind": { "type": "string", "enum": ["soft", "hard"] }
+        },
+        "required": ["key", "kind"]
+      }
+    },
+    {
+      "name": "verify_hard_preferences",
+      "description": "Check a proposed tool action against hard preferences (allow|block|approval_required).",
+      "auth": "actor",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "tool_name": { "type": "string" },
+          "arguments": { "type": "object" },
+          "channel": { "type": "string" }
+        },
+        "required": ["tool_name"]
+      }
+    },
+    {
+      "name": "store_long_term_memory",
+      "description": "Store a durable cross-session memory fact for the actor.",
+      "auth": "actor",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "content": { "type": "string" },
+          "kind": { "type": "string" },
+          "conversation_id": { "type": "string" }
+        },
+        "required": ["content"]
+      }
+    },
+    {
+      "name": "search_long_term_memory",
+      "description": "Search tenant/user-scoped long-term memory; returns a bounded result set.",
+      "auth": "actor",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string" },
+          "limit": { "type": "integer", "minimum": 1, "maximum": 20 }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "update_org_preferences",
+      "description": "Update non-secret org preferences. Send only changed fields.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "PUT", "path": "/api/org-preferences" },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "ticket_prefix": { "type": "string" },
+          "portal_label": { "type": "string" },
+          "display_timezone": { "type": "string" },
+          "portal_auth_mode": { "type": "string", "enum": ["password", "otp"] },
+          "business_type": { "type": "string", "enum": ["b2b", "b2c"] }
+        }
+      }
+    },
+    {
+      "name": "list_notifications",
+      "description": "List notifications for the actor.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "GET", "path": "/api/notifications" },
+      "input_schema": { "type": "object", "properties": {} }
+    },
+    {
+      "name": "send_staff_notification",
+      "description": "Send a grounded notification to one or more staff users.",
+      "auth": "actor",
+      "express": { "method": "POST", "path": "/api/notifications/send" },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "user_id": { "type": "string" },
+          "user_ids": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "title": { "type": "string" },
+          "message": { "type": "string" },
+          "kind": { "type": "string" },
+          "ticket_uuid": { "type": "string" },
+          "customer_name": { "type": "string" }
+        },
+        "required": ["title", "message"]
+      }
+    },
+    {
+      "name": "list_ticket_recommendations",
+      "description": "List proactive recommendations, optionally for one ticket.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "GET", "path": "/api/proactive/recommendations" },
+      "input_schema": {
+        "type": "object",
+        "properties": { "ticket_number": { "type": "string" } }
+      }
+    },
+    {
+      "name": "mark_all_notifications_read",
+      "description": "Mark all notifications read.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "POST", "path": "/api/notifications/read-all" },
+      "input_schema": { "type": "object", "properties": {} }
+    },
+    {
+      "name": "mark_notification_read",
+      "description": "Mark one notification read.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "PATCH", "path": "/api/notifications/{notification_id}/read" },
+      "input_schema": {
+        "type": "object",
+        "properties": { "notification_id": { "type": "string" } },
+        "required": ["notification_id"]
+      }
+    },
+    {
+      "name": "clear_notifications",
+      "description": "Clear all notifications for the current actor.",
+      "auth": "actor",
+      "express": { "method": "DELETE", "path": "/api/notifications" },
+      "input_schema": { "type": "object", "properties": {} }
+    },
+    {
+      "name": "portal_list_tickets",
+      "description": "List the signed-in support-portal customer's tickets.",
+      "auth": "portal_customer",
+      "express": { "method": "GET", "path": "/api/internal/portal/tickets" },
+      "input_schema": { "type": "object", "properties": {} }
+    },
+    {
+      "name": "get_customer_order",
+      "description": "Look up one order for this organization and this customer only (cdp.orders). Use after they gave an order id for a purchase-related ticket. Never invent an order.",
+      "auth": "actor_or_api_key",
+      "express": { "method": "GET", "path": "/api/internal/orders" },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "order_id": { "type": "string" },
+          "customer_id": { "type": "string" }
+        },
+        "required": ["order_id"]
+      }
+    },
+    {
+      "name": "portal_create_ticket",
+      "description": "File a ticket for the signed-in support-portal customer (issue or description required).",
+      "auth": "portal_customer",
+      "express": { "method": "POST", "path": "/api/internal/portal/tickets" },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "issue": { "type": "string" },
+          "subject": { "type": "string" },
+          "description": { "type": "string" },
+          "orderId": { "type": "string" },
+          "productId": { "type": "string" },
+          "references": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": { "type": "string" },
+                "id": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "ask_semantic_layer",
+      "description": "Certified KPI numbers via POST /v1/semantic/query. Read every slice metric and dimension, then pass the best-fit metrics[] ids — never the user sentence and never a weakly related first row. Optional group_by only for a requested break-down, filters [{dimension, op, value|values}], order_by, time only if they named a window, limit, dataScope org|mine. Runtime fills organizationId, userId, product, agent. Values only — not why. Combined value+why: also call ask_knowledge_graph.",
+      "auth": "actor_or_api_key",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "metrics": {
+            "type": "array",
+            "items": { "type": "string" },
+            "minItems": 1
+          },
+          "group_by": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "filters": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "dimension": { "type": "string" },
+                "op": { "type": "string" },
+                "value": {},
+                "values": { "type": "array" }
+              },
+              "required": ["dimension"]
+            }
+          },
+          "time": {
+            "type": "object",
+            "properties": {
+              "period": { "type": "string" },
+              "start": { "type": "string" },
+              "end": { "type": "string" },
+              "grain": { "type": "string" }
+            }
+          },
+          "limit": { "type": "integer" },
+          "dataScope": { "type": "string", "enum": ["org", "mine"] },
+          "order_by": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        },
+        "required": ["metrics"]
+      }
+    },
+    {
+      "name": "ask_sql_layer",
+      "description": "List/search ticket rows via POST /v1/sql/query. Required instruction (one English sentence). Recommended entityHint wt:Ticket. Optional filters [{dimension, op, value|values}] and limit. Runtime fills organizationId, userId, originProduct, originAgent. No SQL, no table names, no empty args. Success with rows=[] is zero tickets — do not also call list_tickets. list_tickets only if this tool fails. Not for how-many/CSAT/SLA %.",
+      "auth": "actor_or_api_key",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "instruction": { "type": "string" },
+          "entityHint": { "type": "string" },
+          "entity_hint": { "type": "string" },
+          "filters": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "dimension": { "type": "string" },
+                "op": { "type": "string" },
+                "value": {},
+                "values": { "type": "array" }
+              },
+              "required": ["dimension"]
+            }
+          },
+          "limit": { "type": "integer" }
+        },
+        "required": ["instruction"]
+      }
+    },
+    {
+      "name": "ask_knowledge_graph",
+      "description": "Why/analyse/drivers narrative via the knowledge graph. Use for why metrics moved or what is causing issues. NOT for exact KPI numbers alone — call ask_semantic_layer for values. Combined value+why: call ask_semantic_layer then this.",
+      "auth": "actor_or_api_key",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string" },
+          "organization_id": { "type": "string" },
+          "session_id": { "type": "string" }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "ask_hub",
+      "description": "Send leftover/out-of-product asks to Worktual Hub A2A (campaign, marketing, CCaaS, CVM). Requires focused customer cdp_id.",
+      "auth": "actor_or_api_key",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string" },
+          "cdp_id": { "type": "string" },
+          "organization_id": { "type": "string" },
+          "channel": { "type": "string", "enum": ["chat", "email"] }
+        },
+        "required": ["query"]
+      }
+    }
+  ]
+}

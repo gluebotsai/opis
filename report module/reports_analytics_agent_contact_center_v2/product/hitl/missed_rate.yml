@@ -1,0 +1,244 @@
+kpi_id: missed_rate
+object: missed_rate
+grain_table: ccass.agent_missed_contacts
+joined_tables:
+- ccass.conversations
+- ccass.queues
+- ccass.agents
+- ccass.missed_contact_reasons
+columns:
+- column: ccass.conversations.assigned_agent_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.assigned_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.assigned_user_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.bot_active
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.channel_config_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.channel
+  use: both
+  reason: Filter and GROUP BY on this missed_contact metric.
+- column: ccass.conversations.closed_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.contact_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.created_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.direction
+  use: filter
+  reason: Missed rate groups on the union source. Direction is a filter only.
+- column: ccass.conversations.disposition_code
+  use: not_this_metric
+  reason: Disposition split is the catalog label, not the raw code.
+- column: ccass.conversations.disposition_note
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.end_actor
+  use: filter
+  reason: Can filter this missed_contact metric. Not a default volume GROUP BY.
+- column: ccass.conversations.end_reason
+  use: filter
+  reason: Can filter this missed_contact metric. Not a default volume GROUP BY.
+- column: ccass.conversations.ended_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.external_thread_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.first_agent_response_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.first_response_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.first_response_due_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.handoff_reason
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.lifecycle_state
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.live_agent_enabled
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.mailbox_connection_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.nlp_enabled
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.organization_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.previous_conversation_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.priority
+  use: both
+  reason: Filter and GROUP BY on this missed_contact metric.
+- column: ccass.conversations.provider_thread_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.queue_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.queued_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.resolution_code
+  use: filter
+  reason: Can filter this missed_contact metric. Not a default volume GROUP BY.
+- column: ccass.conversations.resolution_due_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.resolution_summary
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.resolved_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.sla_status
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.status
+  use: filter
+  reason: Missed rate groups on the union source. Status is a filter only.
+- column: ccass.conversations.subject
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.transferred_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.conversations.visitor_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.webchat_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.agent_missed_contacts.acknowledged_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.agent_missed_contacts.agent_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.agent_missed_contacts.assigned_user_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.agent_missed_contacts.assignment_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.agent_missed_contacts.channel
+  use: both
+  reason: Filter and GROUP BY on this missed_contact metric.
+- column: ccass.agent_missed_contacts.contact_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.agent_missed_contacts.conversation_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.agent_missed_contacts.created_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.agent_missed_contacts.customer_name
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.agent_missed_contacts.id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.agent_missed_contacts.missed_at
+  use: not_this_metric
+  reason: Time window. Python time.py binds :start/:end. Not a filter slot.
+- column: ccass.agent_missed_contacts.offered_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.agent_missed_contacts.organization_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.agent_missed_contacts.queue_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.agent_missed_contacts.reason
+  use: filter
+  reason: Miss reason filters the numerator. Not a GROUP BY on the rate (denominator is conversations
+    started).
+- column: ccass.missed_contact_reasons.code
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.missed_contact_reasons.description
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.missed_contact_reasons.id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.missed_contact_reasons.name
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.missed_contact_reasons.sort_order
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.agents.created_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.agents.display_name
+  use: both
+  reason: Filter and GROUP BY on this missed_contact metric.
+- column: ccass.agents.id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.agents.organization_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.agents.setup_user_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.agents.status
+  use: not_this_metric
+  reason: Roster status is not ready and not a volume split. Ready is presence_state. Agent split is display_name.
+- column: ccass.queues.business_hours_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.queues.id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.queues.name
+  use: both
+  reason: Filter and GROUP BY on this missed_contact metric.
+- column: ccass.queues.organization_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.queues.published_at
+  use: not_this_metric
+  reason: Not an accepted slot on this metric. Lists via free SQL.
+- column: ccass.queues.setup_queue_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.queues.status
+  use: not_this_metric
+  reason: Published queue active/inactive is not a volume split. Queue split is ccass.queues.name.
+- column: ccass.queues.team_id
+  use: not_this_metric
+  reason: Internal id. Answers show names.
+- column: ccass.conversations.is_reopened
+  use: filter
+  reason: Can filter this missed_contact metric. Not a default volume GROUP BY.
+- column: ccass.conversations.is_bot_only
+  use: filter
+  reason: Can filter this missed_contact metric. Not a default volume GROUP BY.
+- column: ccass.conversations.handler
+  use: filter
+  reason: Missed rate groups on the union source. Handler is a filter only.

@@ -1,0 +1,17 @@
+name: ccass.message_receipts
+alias: r
+schema: ccass
+grain: receipt
+purpose: Sent, delivered, and read timestamps for a message.
+time_columns: [sent_at, delivered_at, read_at]
+columns:
+  - { name: id, type: bigint, pk: true, description: Receipt id }
+  - { name: organization_id, type: bigint, description: Tenant id }
+  - { name: conversation_id, type: bigint, fk: ccass.conversations.id, description: Conversation }
+  - { name: message_id, type: bigint, fk: ccass.conversation_messages.id, description: Message }
+  - { name: status, type: text, values: [sent, delivered, read], description: Receipt status }
+  - { name: sent_at, type: timestamptz, description: Sent }
+  - { name: delivered_at, type: timestamptz, description: Delivered }
+  - { name: read_at, type: timestamptz, description: Read }
+sample_rows:
+  - { id: 1, conversation_id: 101, message_id: 9002, status: read, sent_at: "2026-09-07T10:02:18Z", delivered_at: "2026-09-07T10:02:19Z", read_at: "2026-09-07T10:02:40Z" }

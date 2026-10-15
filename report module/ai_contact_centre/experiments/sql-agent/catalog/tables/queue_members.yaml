@@ -1,0 +1,15 @@
+name: ccass.queue_members
+alias: qm
+schema: ccass
+grain: membership
+purpose: Agents staffed on a queue, with channel handling flags.
+columns:
+  - { name: id, type: bigint, pk: true, description: Membership id }
+  - { name: queue_id, type: bigint, fk: ccass.queues.id, description: Queue }
+  - { name: agent_id, type: bigint, fk: ccass.agents.id, description: Agent }
+  - { name: handles_chat, type: boolean, description: Handles webchat }
+  - { name: handles_email, type: boolean, description: Handles email }
+  - { name: handles_whatsapp, type: boolean, description: Handles WhatsApp }
+  - { name: chat_concurrency, type: int, description: Chat concurrency }
+sample_rows:
+  - { id: 1, queue_id: 7, agent_id: 12, handles_chat: true, handles_email: true, handles_whatsapp: true, chat_concurrency: 3 }

@@ -1,0 +1,323 @@
+{
+  "question": "why raghu have more deals?",
+  "answer": "### Pipeline Distribution & Workload Summary\n\nRaghuram M manages the highest volume of opportunities with 5 deals, compared to Manoj M (3), Yaswanth MG (3), DivyaPrasath RS (1), and 2 unassigned deals.\n\n| Owner | Deal Count |\n| :--- | :---: |\n| **Raghuram M** | **5** |\n| Manoj M | 3 |\n| Yaswanth MG | 3 |\n| Unassigned | 2 |\n| DivyaPrasath RS | 1 |\n| **Total** | **14** |\n\n### Commercial Diagnosis: Raghuram M's Portfolio Drivers\n\nRaghuram's higher deal count is driven by high activity across multiple stages, but the portfolio contains significant data integrity and forecasting risks:\n\n* **Valuation Gaps & Forecast Visibility:** A significant portion of Raghuram's pipeline, including the Netflix and Aspero deals, is currently recorded at **\u20b90**. Furthermore, most deals are marked as `omitted` in the Forecast Category, making his actual revenue contribution unquantifiable.\n* **Pricing Friction:** There is evidence of pricing-related churn, specifically the loss of the Mohamed Fazil account ($15,000 USD) due to **Pricing** objections.\n* **Data Integrity Issues:** The Aspero `closed_won` deal is currently recorded at \u20b90, suggesting a missing quote or line item that prevents accurate revenue recognition.\n\n### Tactical Levers to Improve Forecast Accuracy\n\n* **Mandatory Value Qualification:** Require all deals to have a verified estimated value or associated quote before progressing past the `discovery` stage to eliminate zero-value noise.\n* **Pricing Objection Post-Mortem:** Review the specific quote for the Mohamed Fazil account to determine if tiered pricing or earlier discount authority is required to mitigate pricing friction.\n* **Forecast Category Alignment:** Ensure all active deals are assigned a valid Forecast Category (e.g., Pipeline, Commit) to resolve the current `omitted` status and provide visibility into expected revenue.",
+  "trace": {
+    "question": "why raghu have more deals?",
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1017,
+      "role": "sales_manager"
+    },
+    "model": "worktual-gemma",
+    "tasks": [
+      {
+        "status": "ok",
+        "store": "sql",
+        "sql": "WITH rpt_deals AS (\nSELECT src.id, src.organization_id, src.title, src.stage, src.amount, src.currency_code, src.stage_weight, src.weighted_amount, src.company_id, src.company_name, src.company_industry, src.location_id, src.contact_id, src.contact_name, src.contact_email, src.owner_user_id, src.owner_name, src.created_at, src.closed_at, src.close_ts, src.updated_at, src.expected_close_date, src.lost_reason, src.is_open, src.is_won, src.is_lost, src.aging_days, src.forecast_category, src.forecast_reason, src.forecast_flagged FROM (\nSELECT \n  d.id,\n  d.organization_id,\n  d.title,\n  d.stage,\n  COALESCE(d.amount, 0) AS amount,\n  CASE\n    WHEN pq.currency IS NOT NULL AND pq.currency <> 'USD' THEN pq.currency\n    WHEN o.country IS NOT NULL AND o.country <> 'US' AND cc.curr IS NOT NULL THEN cc.curr\n    WHEN pq.currency = 'USD' THEN 'USD'\n    WHEN o.country = 'US' THEN 'USD'\n    ELSE 'USD'\n  END AS currency_code,\n  CASE d.stage\n    WHEN 'qualification' THEN 0.10\n    WHEN 'discover' THEN 0.25\n    WHEN 'propose' THEN 0.50\n    WHEN 'negotiate' THEN 0.75\n    WHEN 'closed_won' THEN 1.00\n    WHEN 'closed_lost' THEN 0.00\n    ELSE 0.00\n  END AS stage_weight,\n  ROUND(COALESCE(d.amount, 0) * (\n    CASE d.stage\n      WHEN 'qualification' THEN 0.10\n      WHEN 'discover' THEN 0.25\n      WHEN 'propose' THEN 0.50\n      WHEN 'negotiate' THEN 0.75\n      WHEN 'closed_won' THEN 1.00\n      WHEN 'closed_lost' THEN 0.00\n      ELSE 0.00\n    END\n  ), 2) AS weighted_amount,\n  d.company_id,\n  c.name AS company_name,\n  c.industry AS company_industry,\n  d.location_id,\n  d.contact_id,\n  COALESCE(d.contact_name, cdp.first_name || ' ' || COALESCE(cdp.last_name, '')) AS contact_name,\n  COALESCE(d.contact_email, id_k.key_value) AS contact_email,\n  d.owner_user_id,\n  su.first_name || ' ' || COALESCE(su.last_name, '') AS owner_name,\n  d.created_at,\n  d.closed_at,\n  COALESCE(d.closed_at, d.created_at) AS close_ts,\n  d.updated_at,\n  d.expected_close_date,\n  d.lost_reason,\n  (d.stage IN ('qualification', 'discover', 'propose', 'negotiate')) AS is_open,\n  (d.stage = 'closed_won') AS is_won,\n  (d.stage = 'closed_lost') AS is_lost,\n  FLOOR(EXTRACT(EPOCH FROM (NOW() - d.created_at))/86400)::integer AS aging_days,\n  d.forecast_category,\n  d.forecast_reason,\n  d.forecast_flagged\nFROM crm.deals d\nLEFT JOIN crm.companies c ON c.id = d.company_id AND c.organization_id = d.organization_id\nLEFT JOIN accounts.setup_users su ON su.id = d.owner_user_id\nLEFT JOIN accounts.organizations o ON o.id = d.organization_id\nLEFT JOIN cdp.customer_profile cdp ON cdp.cdp_id = d.contact_id\nLEFT JOIN LATERAL (\n  SELECT ik.key_value \n  FROM cdp.identity_keys ik \n  WHERE ik.cdp_id = d.contact_id AND ik.key_type = 'email' AND ik.organization_id = d.organization_id \n  ORDER BY ik.created_at ASC \n  LIMIT 1\n) id_k ON TRUE\nLEFT JOIN LATERAL (\n  SELECT q.currency \n  FROM crm.quotes q \n  WHERE q.deal_id = d.id AND q.organization_id = d.organization_id \n  ORDER BY CASE WHEN q.status = 'accepted' THEN 1 WHEN q.status = 'sent' THEN 2 ELSE 3 END, q.updated_at DESC \n  LIMIT 1\n) pq ON TRUE\nLEFT JOIN LATERAL (\n  SELECT CASE o.country \n    WHEN 'India' THEN 'INR' \n    WHEN 'United Kingdom' THEN 'GBP' \n    WHEN 'Germany' THEN 'EUR' \n    WHEN 'Canada' THEN 'CAD' \n    WHEN 'Australia' THEN 'AUD' \n    ELSE 'USD' \n  END AS curr\n) cc ON TRUE\nWHERE d.organization_id = %(_org_id)s\n) src WHERE TRUE\n)\nSELECT COALESCE(CAST(owner_name AS TEXT), 'Unassigned') AS owner, CAST(COUNT(*) AS BIGINT) AS total_opportunities FROM rpt_deals AS deals WHERE TRUE AND TRUE AND TRUE GROUP BY COALESCE(CAST(owner_name AS TEXT), 'Unassigned') ORDER BY 2 DESC NULLS LAST LIMIT 500",
+        "views": [
+          "deals"
+        ],
+        "guard_notes": [
+          "row cap 500 applied"
+        ],
+        "bound_params": {
+          "_org_id": 1003,
+          "_user_id": 1017,
+          "user_id": 1017,
+          "organization_id": 1003,
+          "org_id": 1003,
+          "tenant_id": 1003,
+          "current_user_id": 1017
+        },
+        "rows": [
+          {
+            "owner": "Raghuram M",
+            "total_opportunities": 5
+          },
+          {
+            "owner": "Manoj M",
+            "total_opportunities": 3
+          },
+          {
+            "owner": "Yaswanth MG",
+            "total_opportunities": 3
+          },
+          {
+            "owner": "Unassigned",
+            "total_opportunities": 2
+          },
+          {
+            "owner": "DivyaPrasath RS",
+            "total_opportunities": 1
+          }
+        ],
+        "kpi_id": "total_opportunities",
+        "dimension": "owner",
+        "time_status": "all_time",
+        "attempts": [
+          {
+            "raw": "{\"tool\":\"run_kpi\",\"kpi_id\":\"total_opportunities\",\"dimension\":\"owner\"}",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "total_opportunities",
+              "dimension": "owner"
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "tool": "run_kpi",
+        "requested_kpi": "total_opportunities",
+        "requested_dimension": "owner",
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "total_opportunities",
+          "goal": "Deal counts by owner for the named reps",
+          "time": "all time",
+          "scope": "org",
+          "dimension": "owner",
+          "answer_type": "breakdown",
+          "depends_on": []
+        }
+      },
+      {
+        "status": "ok",
+        "rows": [
+          {
+            "rep_user_id": 1066,
+            "rep_name": "DivyaPrasath RS",
+            "deal_id": "cmul9ofkg01vvqm0u2khw3xn6",
+            "deal_title": "CRM",
+            "deal_stage": "propose",
+            "account_name": "Open AI",
+            "currency": "USD",
+            "deal_value": 15000.0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-09-28"
+          },
+          {
+            "rep_user_id": 1018,
+            "rep_name": "Manoj M",
+            "deal_id": "cmtn4ovi300a4o40ul729d1ud",
+            "deal_title": "Lakshmi P",
+            "deal_stage": "qualification",
+            "account_name": "Lakshmi P Account",
+            "currency": "INR",
+            "deal_value": 0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-09-04"
+          },
+          {
+            "rep_user_id": 1018,
+            "rep_name": "Manoj M",
+            "deal_id": "cmu1dirbz002k1anxhf42gtz5",
+            "deal_title": "Aspero\u2014 dpzoro Customer",
+            "deal_stage": "discover",
+            "account_name": "Aspero",
+            "currency": "INR",
+            "deal_value": 0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-09-14"
+          },
+          {
+            "rep_user_id": 1018,
+            "rep_name": "Manoj M",
+            "deal_id": "cmu6v7vbu005io50uh7bpe00x",
+            "deal_title": "HCL \u2014 yaswanth M G",
+            "deal_stage": "qualification",
+            "account_name": "positron",
+            "currency": "INR",
+            "deal_value": 0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-09-18"
+          },
+          {
+            "rep_user_id": 1015,
+            "rep_name": "Raghuram M",
+            "deal_id": "cmtlcopyi001p1a9vpooi9rs3",
+            "deal_title": "positron \u2014 gugan s",
+            "deal_stage": "qualification",
+            "account_name": "positron",
+            "currency": "INR",
+            "deal_value": 123250.0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-09-03"
+          },
+          {
+            "rep_user_id": 1015,
+            "rep_name": "Raghuram M",
+            "deal_id": "cmugumk9x004fmo0ubruzr8uq",
+            "deal_title": "Netflix \u2014 Kirti Patidar",
+            "deal_stage": "discover",
+            "account_name": "Netflix",
+            "currency": "INR",
+            "deal_value": 0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-09-25"
+          },
+          {
+            "rep_user_id": 1015,
+            "rep_name": "Raghuram M",
+            "deal_id": "cmtmph11w0025o40ur981z4ig",
+            "deal_title": "Dell \u2014 vighesh s",
+            "deal_stage": "closed_won",
+            "account_name": "Aspero",
+            "currency": "INR",
+            "deal_value": 0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-09-04"
+          },
+          {
+            "rep_user_id": 1015,
+            "rep_name": "Raghuram M",
+            "deal_id": "cmtsms61u00111aimq9lsb7aw",
+            "deal_title": "crm",
+            "deal_stage": "closed_lost",
+            "account_name": "Mohamed Fazil (account)",
+            "currency": "USD",
+            "deal_value": 15000.0,
+            "lost_reason": "Pricing",
+            "forecast_category": null,
+            "created_date": "2026-09-08"
+          },
+          {
+            "rep_user_id": 1015,
+            "rep_name": "Raghuram M",
+            "deal_id": "cmumhu64r01yaqm0up65tavy0",
+            "deal_title": "CRM",
+            "deal_stage": "propose",
+            "account_name": "Mohamed Fazil (account)",
+            "currency": "USD",
+            "deal_value": 15000.0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-09-29"
+          },
+          {
+            "rep_user_id": 1017,
+            "rep_name": "Yaswanth MG",
+            "deal_id": "cmtci1gpm000f1a860hip0f2p",
+            "deal_title": "hexaware \u2014 Hitler hit",
+            "deal_stage": "qualification",
+            "account_name": "hexaware",
+            "currency": "INR",
+            "deal_value": 0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-08-28"
+          },
+          {
+            "rep_user_id": 1017,
+            "rep_name": "Yaswanth MG",
+            "deal_id": "cmucsr2pw001upg0ubbvbzhw8",
+            "deal_title": "Lokesh deal",
+            "deal_stage": "negotiate",
+            "account_name": "orange",
+            "currency": "INR",
+            "deal_value": 0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-09-22"
+          },
+          {
+            "rep_user_id": 1017,
+            "rep_name": "Yaswanth MG",
+            "deal_id": "cmu28ch7200lbs70uocmqjzrt",
+            "deal_title": "GRT Jewellers \u2014 Nandhu A",
+            "deal_stage": "propose",
+            "account_name": "GRT Jewellers",
+            "currency": "USD",
+            "deal_value": 123.94,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-09-15"
+          },
+          {
+            "rep_user_id": 1028,
+            "rep_name": null,
+            "deal_id": "cmu8k810304kmlb0u4hi6w7a4",
+            "deal_title": "pricing",
+            "deal_stage": "propose",
+            "account_name": "hexaware",
+            "currency": "USD",
+            "deal_value": 0.0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-09-19"
+          },
+          {
+            "rep_user_id": 1028,
+            "rep_name": null,
+            "deal_id": "cmuctclg2005o1ago5703inxa",
+            "deal_title": "crm",
+            "deal_stage": "propose",
+            "account_name": "Lucifer S (account)",
+            "currency": "USD",
+            "deal_value": 15000.0,
+            "lost_reason": null,
+            "forecast_category": "omitted",
+            "created_date": "2026-09-22"
+          }
+        ],
+        "sql": "MATCH (u:User)\nWHERE ($can_view_all = true OR u.id = $effective_user_id)\n  AND (coalesce($rep_name, '') = '' OR toLower(u.first_name) CONTAINS toLower($rep_name) OR toLower(u.last_name) CONTAINS toLower($rep_name))\nOPTIONAL MATCH (d:Deal) WHERE d.owner_user_id = u.id\nOPTIONAL MATCH (d)-[:HAS]->(q:Quote)\nOPTIONAL MATCH (a:Account {id: d.company_id})\nWITH u, d, a, collect(q) AS quotes\nWITH u, d, a,\n     [q IN quotes WHERE toLower(q.approval_status) = 'approved'][0] AS approved_quote,\n     quotes[0] AS any_quote\nWITH u, d, a,\n     coalesce(approved_quote.currency, any_quote.currency, d.currency, $default_currency, 'INR') AS currency,\n     coalesce(approved_quote.total, any_quote.total, d.amount, 0) AS final_amount\nWHERE d IS NOT NULL\nRETURN u.id AS rep_user_id,\n       u.first_name + ' ' + coalesce(u.last_name, '') AS rep_name,\n       d.id AS deal_id,\n       d.title AS deal_title,\n       d.stage AS deal_stage,\n       coalesce(a.name, 'Unassigned Account') AS account_name,\n       currency,\n       final_amount AS deal_value,\n       d.lost_reason AS lost_reason,\n       d.forecast_category AS forecast_category,\n       toString(date(d.created_at)) AS created_date\nORDER BY rep_name, d.created_at\nLIMIT 25",
+        "tool": "kg",
+        "attempts_made": 1,
+        "kg_notes": "### Pipeline Distribution & Rep Workload Analysis\n\nRaghuram M currently manages the highest volume of deals in the dataset, holding 5 out of the 10 recorded opportunities. While this indicates a high level of activity and pipeline ownership, the portfolio is characterized by significant valuation gaps and a mix of high-value prospects and unpriced opportunities.\n\n| Rep Name | Deal Count | Total Value (USD) | Total Value (INR) | Primary Stages |\n| :--- | :---: | :--- | :--- | :--- |\n| **Raghuram M** | **5** | **$15,000.00** | **\u20b9123,250.00** | Qualification, Discover, Closed Won/Lost, Propose |\n| Manoj M | 3 | $0.00 | \u20b90.00 | Qualification, Discover |\n| DivyaPrasath RS | 1 | $15,000.00 | \u20b90.00 | Propose |\n| Yaswanth MG | 1 | $0.00 | \u20b90.00 | Qualification |\n| **Total** | **10** | **$60,123.94** | **\u20b9123,250.00** | |\n\n### Commercial Diagnosis: Pipeline Composition & Risk Factors\n\nA deep dive into Raghuram M\u2019s portfolio reveals several critical commercial observations that explain both the volume and the underlying risk profile:\n\n*   **High Activity vs. Low Value Density:** Raghuram is managing a diverse range of deal stages, from `qualification` to `closed_lost`. However, a significant portion of his pipeline (specifically the Netflix and Aspero deals) is currently recorded at **\u20b90**, which obscures the true potential value of his territory and makes accurate forecasting difficult.\n*   **Pricing Friction & Loss Patterns:** We see a direct instance of deal loss due to **Pricing** (Mohamed Fazil account, $15,000 USD). This suggests that while Raghuram is successfully moving deals through the funnel, there is a disconnect between our pricing model and the customer's perceived value at the closing stage.\n*   **Forecast Visibility Gaps:** Almost all of Raghuram's deals are currently categorized as `omitted` in the Forecast Category. This lack of categorization, combined with several $0 value deals, means his contribution to the upcoming revenue forecast is currently unquantifiable from a data perspective.\n*   **Data Integrity Issues:** The presence of a `closed_won` deal for Aspero at \u20b90 indicates a missing quote or line item. This prevents us from recognizing the actual revenue generated by his successful wins.\n\n### Tactical Levers to Improve Forecast Accuracy & Win Rates\n\nTo transition Raghuram's high deal volume into predictable revenue, the following operational steps are recommended:\n\n*   **Mandatory Value Qualification:** Implement a requirement that no deal can progress past the `discovery` stage without an associated quote or a verified estimated value. This will eliminate the \"zero-value\" noise in the pipeline and allow for a realistic assessment of Raghuram's actual workload and potential.\n*   **Pricing Objection Post-Mortem:** Since \"Pricing\" was the recorded reason for a lost $15,000 USD deal, leadership should review the specific quote sent to Mohamed Fazil. If pricing is a recurring theme for Raghuram, we may need to introduce tiered pricing options or more aggressive discounting authority earlier in the `propose` stage.\n*   **Forecast Category Alignment:** Ensure all active deals are assigned a Forecast Category (e.g., Pipeline, Best Case, Commit). This will resolve the current \"omitted\" status and provide the executive team with a clear view of Raghuram's expected contribution to the quarterly target.",
+        "task": {
+          "id": "t2",
+          "executor": "kg",
+          "kpi": null,
+          "goal": "Lost reasons, forecast stall, and commercial path for deals owned by those named reps",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "why_breakdown",
+          "depends_on": [
+            "t1"
+          ]
+        }
+      }
+    ],
+    "domain_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"deep\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"total_opportunities\",\n      \"goal\": \"Deal counts by owner for the named reps\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"dimension\": \"owner\",\n      \"answer_type\": \"breakdown\",\n      \"depends_on\": []\n    },\n    {\n      \"id\": \"t2\",\n      \"executor\": \"kg\",\n      \"kpi\": null,\n      \"goal\": \"Lost reasons, forecast stall, and commercial path for deals owned by those named reps\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"dimension\": null,\n      \"answer_type\": \"why_breakdown\",\n      \"depends_on\": [\n        \"t1\"\n      ]\n    }\n  ]\n}\n```",
+    "plan": {
+      "kind": "plan",
+      "depth": "deep",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "total_opportunities",
+          "goal": "Deal counts by owner for the named reps",
+          "time": "all time",
+          "scope": "org",
+          "dimension": "owner",
+          "answer_type": "breakdown",
+          "depends_on": []
+        },
+        {
+          "id": "t2",
+          "executor": "kg",
+          "kpi": null,
+          "goal": "Lost reasons, forecast stall, and commercial path for deals owned by those named reps",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "why_breakdown",
+          "depends_on": [
+            "t1"
+          ]
+        }
+      ]
+    },
+    "facts": "time_requested: all time\nperiod_applied: overall (no date filter, UTC)\ntime_status: all_time\ncatalog_kpi: total_opportunities\nRESULT: 5 group(s)\ngroup_by: owner\ntotal_total_opportunities: 14\n  Raghuram M: 5\n  Manoj M: 3\n  Yaswanth MG: 3\n  Unassigned: 2\n  DivyaPrasath RS: 1\n\ntime_requested: all time\ntime_status: kg\nRESULT: 14 group(s)\ngroup_by: group\ntotal_deal_value: 183373.94\n  1066 / DivyaPrasath RS / cmul9ofkg01vvqm0u2khw3xn6 / CRM / propose / Open AI / USD / None / omitted / 2026-09-28: 15000.0\n  1018 / Manoj M / cmtn4ovi300a4o40ul729d1ud / Lakshmi P / qualification / Lakshmi P Account / INR / None / omitted / 2026-09-04: 0\n  1018 / Manoj M / cmu1dirbz002k1anxhf42gtz5 / Aspero\u2014 dpzoro Customer / discover / Aspero / INR / None / omitted / 2026-09-14: 0\n  1018 / Manoj M / cmu6v7vbu005io50uh7bpe00x / HCL \u2014 yaswanth M G / qualification / positron / INR / None / omitted / 2026-09-18: 0\n  1015 / Raghuram M / cmtlcopyi001p1a9vpooi9rs3 / positron \u2014 gugan s / qualification / positron / INR / None / omitted / 2026-09-03: 123250.0\n  1015 / Raghuram M / cmugumk9x004fmo0ubruzr8uq / Netflix \u2014 Kirti Patidar / discover / Netflix / INR / None / omitted / 2026-09-25: 0\n  1015 / Raghuram M / cmtmph11w0025o40ur981z4ig / Dell \u2014 vighesh s / closed_won / Aspero / INR / None / omitted / 2026-09-04: 0\n  1015 / Raghuram M / cmtsms61u00111aimq9lsb7aw / crm / closed_lost / Mohamed Fazil (account) / USD / Pricing / None / 2026-09-08: 15000.0\n  1015 / Raghuram M / cmumhu64r01yaqm0up65tavy0 / CRM / propose / Mohamed Fazil (account) / USD / None / omitted / 2026-09-29: 15000.0\n  1017 / Yaswanth MG / cmtci1gpm000f1a860hip0f2p / hexaware \u2014 Hitler hit / qualification / hexaware / INR / None / omitted / 2026-08-28: 0\n  1017 / Yaswanth MG / cmucsr2pw001upg0ubbvbzhw8 / Lokesh deal / negotiate / orange / INR / None / omitted / 2026-09-22: 0\n  1017 / Yaswanth MG / cmu28ch7200lbs70uocmqjzrt / GRT Jewellers \u2014 Nandhu A / propose / GRT Jewellers / USD / None / omitted / 2026-09-15: 123.94\n  1028 / None / cmu8k810304kmlb0u4hi6w7a4 / pricing / propose / hexaware / USD / None / omitted / 2026-09-19: 0.0\n  1028 / None / cmuctclg2005o1ago5703inxa / crm / propose / Lucifer S (account) / USD / None / omitted / 2026-09-22: 15000.0\nkg_notes:\n### Pipeline Distribution & Rep Workload Analysis\n\nRaghuram M currently manages the highest volume of deals in the dataset, holding 5 out of the 10 recorded opportunities. While this indicates a high level of activity and pipeline ownership, the portfolio is characterized by significant valuation gaps and a mix of high-value prospects and unpriced opportunities.\n\n| Rep Name | Deal Count | Total Value (USD) | Total Value (INR) | Primary Stages |\n| :--- | :---: | :--- | :--- | :--- |\n| **Raghuram M** | **5** | **$15,000.00** | **\u20b9123,250.00** | Qualification, Discover, Closed Won/Lost, Propose |\n| Manoj M | 3 | $0.00 | \u20b90.00 | Qualification, Discover |\n| DivyaPrasath RS | 1 | $15,000.00 | \u20b90.00 | Propose |\n| Yaswanth MG | 1 | $0.00 | \u20b90.00 | Qualification |\n| **Total** | **10** | **$60,123.94** | **\u20b9123,250.00** | |\n\n### Commercial Diagnosis: Pipeline Composition & Risk Factors\n\nA deep dive into Raghuram M\u2019s portfolio reveals several critical commercial observations that explain both the volume and the underlying risk profile:\n\n*   **High Activity vs. Low Value Density:** Raghuram is managing a diverse range of deal stages, from `qualification` to `closed_lost`. However, a significant portion of his pipeline (specifically the Netflix and Aspero deals) is currently recorded at **\u20b90**, which obscures the true potential value of his territory and makes accurate forecasting difficult.\n*   **Pricing Friction & Loss Patterns:** We see a direct instance of deal loss due to **Pricing** (Mohamed Fazil account, $15,000 USD). This suggests that while Raghuram is successfully moving deals through the funnel, there is a disconnect between our pricing model and the customer's perceived value at the closing stage.\n*   **Forecast Visibility Gaps:** Almost all of Raghuram's deals are currently categorized as `omitted` in the Forecast Category. This lack of categorization, combined with several $0 value deals, means his contribution to the upcoming revenue forecast is currently unquantifiable from a data perspective.\n*   **Data Integrity Issues:** The presence of a `closed_won` deal for Aspero at \u20b90 indicates a missing quote or line item. This prevents us from recognizing the actual revenue generated by his successful wins.\n\n### Tactical Levers to Improve Forecast Accuracy & Win Rates\n\nTo transition Raghuram's high deal volume into predictable revenue, the following operational steps are recommended:\n\n*   **Mandatory Value Qualification:** Implement a requirement that no deal can progress past the `discovery` stage without an associated quote or a verified estimated value. This will eliminate the \"zero-value\" noise in the pipeline and allow for a realistic assessment of Raghuram's actual workload and potential.\n*   **Pricing Objection Post-Mortem:** Since \"Pricing\" was the recorded reason for a lost $15,000 USD deal, leadership should review the specific quote sent to Mohamed Fazil. If pricing is a recurring theme for Raghuram, we may need to introduce tiered pricing options or more aggressive discounting authority earlier in the `propose` stage.\n*   **Forecast Category Alignment:** Ensure all active deals are assigned a Forecast Category (e.g., Pipeline, Best Case, Commit). This will resolve the current \"omitted\" status and provide the executive team with a clear view of Raghuram's expected contribution to the quarterly target.",
+    "grounded": true,
+    "briefing_raw": "### Pipeline Distribution & Workload Summary\n\nRaghuram M manages the highest volume of opportunities with 5 deals, compared to Manoj M (3), Yaswanth MG (3), DivyaPrasath RS (1), and 2 unassigned deals.\n\n| Owner | Deal Count |\n| :--- | :---: |\n| **Raghuram M** | **5** |\n| Manoj M | 3 |\n| Yaswanth MG | 3 |\n| Unassigned | 2 |\n| DivyaPrasath RS | 1 |\n| **Total** | **14** |\n\n### Commercial Diagnosis: Raghuram M's Portfolio Drivers\n\nRaghuram's higher deal count is driven by high activity across multiple stages, but the portfolio contains significant data integrity and forecasting risks:\n\n* **Valuation Gaps & Forecast Visibility:** A significant portion of Raghuram's pipeline, including the Netflix and Aspero deals, is currently recorded at **\u20b90**. Furthermore, most deals are marked as `omitted` in the Forecast Category, making his actual revenue contribution unquantifiable.\n* **Pricing Friction:** There is evidence of pricing-related churn, specifically the loss of the Mohamed Fazil account ($15,000 USD) due to **Pricing** objections.\n* **Data Integrity Issues:** The Aspero `closed_won` deal is currently recorded at \u20b90, suggesting a missing quote or line item that prevents accurate revenue recognition.\n\n### Tactical Levers to Improve Forecast Accuracy\n\n* **Mandatory Value Qualification:** Require all deals to have a verified estimated value or associated quote before progressing past the `discovery` stage to eliminate zero-value noise.\n* **Pricing Objection Post-Mortem:** Review the specific quote for the Mohamed Fazil account to determine if tiered pricing or earlier discount authority is required to mitigate pricing friction.\n* **Forecast Category Alignment:** Ensure all active deals are assigned a valid Forecast Category (e.g., Pipeline, Commit) to resolve the current `omitted` status and provide visibility into expected revenue."
+  }
+}

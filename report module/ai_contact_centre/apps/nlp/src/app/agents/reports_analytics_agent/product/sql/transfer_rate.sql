@@ -1,0 +1,52 @@
+-- product/sql/transfer_rate.sql
+-- Certified transfer_rate. Declared filter slots only. No open filters_sql hole.
+SELECT
+  {{dimension_select}}
+  COUNT(*) FILTER (
+    WHERE conversations.transferred_at IS NOT NULL
+      AND (CAST(:start AS timestamptz) IS NULL OR conversations.transferred_at >= CAST(:start AS timestamptz))
+      AND (CAST(:end AS timestamptz) IS NULL OR conversations.transferred_at < CAST(:end AS timestamptz))
+  ) AS transferred_n,
+  COUNT(*) FILTER (
+    WHERE (conversations.status IN ('resolved', 'closed') OR conversations.ended_at IS NOT NULL)
+      AND (CAST(:start AS timestamptz) IS NULL OR conversations.ended_at >= CAST(:start AS timestamptz))
+      AND (CAST(:end AS timestamptz) IS NULL OR conversations.ended_at < CAST(:end AS timestamptz))
+  ) AS handled_n
+FROM rpt.conversations conversations
+WHERE 1 = 1
+  AND (CAST(:team AS text) IS NULL OR conversations.team_name = CAST(:team AS text))
+  AND (CAST(:channel_config AS text) IS NULL OR EXISTS (
+      SELECT 1 FROM rpt.channel_configs cc
+      WHERE cc.id = conversations.channel_config_id AND cc.name = CAST(:channel_config AS text)
+    ))
+  AND (CAST(:customer_blocked AS text) IS NULL OR conversations.customer_blocked = CAST(:customer_blocked AS boolean))
+  AND (CAST(:customer_company AS text) IS NULL OR conversations.customer_company = CAST(:customer_company AS text))
+  AND (CAST(:customer_name AS text) IS NULL OR conversations.customer_name ILIKE CAST(:customer_name AS text))
+  AND (CAST(:customer_language AS text) IS NULL OR conversations.customer_language = CAST(:customer_language AS text))
+  AND (CAST(:channel AS text) IS NULL OR conversations.channel = CAST(:channel AS text))
+  AND (CAST(:conversation_direction AS text) IS NULL OR conversations.direction = CAST(:conversation_direction AS text))
+  AND (CAST(:disposition AS text) IS NULL OR conversations.disposition_label = CAST(:disposition AS text))
+  AND (CAST(:end_actor AS text) IS NULL OR conversations.end_actor = CAST(:end_actor AS text))
+  AND (CAST(:end_reason AS text) IS NULL OR conversations.end_reason = CAST(:end_reason AS text))
+  AND (CAST(:handoff_reason AS text) IS NULL OR conversations.handoff_reason = CAST(:handoff_reason AS text))
+  AND (CAST(:priority AS text) IS NULL OR conversations.priority = CAST(:priority AS integer))
+  AND (CAST(:resolution_code AS text) IS NULL OR conversations.resolution_code = CAST(:resolution_code AS text))
+  AND (CAST(:conversation_status AS text) IS NULL OR conversations.status = CAST(:conversation_status AS text))
+  AND (CAST(:transferred_to_agent AS text) IS NULL OR EXISTS (
+      SELECT 1 FROM rpt.transfers tr
+      WHERE tr.conversation_id = conversations.id
+        AND tr.completed_at IS NOT NULL
+        AND tr.to_agent_name = CAST(:transferred_to_agent AS text)
+    ))
+  AND (CAST(:transferred_to_queue AS text) IS NULL OR EXISTS (
+      SELECT 1 FROM rpt.transfers tr
+      WHERE tr.conversation_id = conversations.id
+        AND tr.completed_at IS NOT NULL
+        AND tr.to_queue_name = CAST(:transferred_to_queue AS text)
+    ))
+  AND (CAST(:agent AS text) IS NULL OR conversations.agent_name = CAST(:agent AS text))
+  AND (CAST(:queue AS text) IS NULL OR conversations.queue_name = CAST(:queue AS text))
+  AND (CAST(:is_reopened AS text) IS NULL OR conversations.is_reopened = CAST(:is_reopened AS boolean))
+  AND (CAST(:is_bot_only AS text) IS NULL OR conversations.is_bot_only = CAST(:is_bot_only AS boolean))
+  AND (CAST(:handler AS text) IS NULL OR conversations.handler = CAST(:handler AS text))
+{{group_by_sql}}

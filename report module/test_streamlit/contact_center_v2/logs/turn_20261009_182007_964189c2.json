@@ -1,0 +1,62 @@
+{
+  "turn_id": "964189c2",
+  "timestamp": "2026-10-09T12:50:07.711788+00:00",
+  "question": "how many conversations are in this month  break down by the channels?",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1018,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>What came back</strong></p><ul><li>6</li><li>channel=email; total=6</li><li>channel=facebook; total=5</li><li>channel=instagram; total=7</li><li>channel=webchat; total=136</li><li>channel=whatsapp; total=18</li><li>channel=call; total=214</li></ul><p>Want this broken down another way?</p>",
+  "card": "card: none",
+  "facts": "result_id: r1\nwindow: this month (UTC)\nkpi: total\ncertified: true\nunit: conversations\ntask_goal: Count the number of conversations started this month, split by channel.\nanswer_type: number\nrow_count: 6\nrow 1: channel=email; total=6\nrow 2: channel=facebook; total=5\nrow 3: channel=instagram; total=7\nrow 4: channel=webchat; total=136\nrow 5: channel=whatsapp; total=18\nrow 6: channel=call; total=214",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1018,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "how many conversations are in this month  break down by the channels?",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants the total count of conversations started this month, broken down by channel.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Count the number of conversations started this month, split by channel.",
+          "time": "this month",
+          "scope": "org",
+          "slice": [
+            "channel"
+          ],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "total",
+        "row_count": 6
+      }
+    ],
+    "facts": "result_id: r1\nwindow: this month (UTC)\nkpi: total\ncertified: true\nunit: conversations\ntask_goal: Count the number of conversations started this month, split by channel.\nanswer_type: number\nrow_count: 6\nrow 1: channel=email; total=6\nrow 2: channel=facebook; total=5\nrow 3: channel=instagram; total=7\nrow 4: channel=webchat; total=136\nrow 5: channel=whatsapp; total=18\nrow 6: channel=call; total=214",
+    "grounded": true,
+    "card": "card: none"
+  },
+  "error": null
+}

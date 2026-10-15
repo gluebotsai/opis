@@ -1,0 +1,47 @@
+{
+  "turn_id": "0a77000e",
+  "timestamp": "2026-10-03T17:05:50.452339+00:00",
+  "question": "what is the clickrate.. ",
+  "identity": {
+    "organization_id": 1000,
+    "user_id": 1000,
+    "branch_id": 1000,
+    "role": "admin"
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma",
+    "dsn_set": true
+  },
+  "answer": "Would you like the click rate for all time, or for a specific time period or channel?",
+  "facts": "",
+  "trace": {
+    "identity": {
+      "organization_id": 1000,
+      "user_id": 1000,
+      "branch_id": 1000,
+      "role": "admin",
+      "scope_label": "All branch campaigns",
+      "timezone": "UTC"
+    },
+    "question": "what is the clickrate.. ",
+    "supervisor": {
+      "kind": "route",
+      "target": "domain"
+    },
+    "supervisor_raw": "```json\n{\"kind\": \"route\", \"target\": \"domain\"}\n```",
+    "interpret_raw": "```json\n{\n  \"kind\": \"interpret\",\n  \"need\": \"Determine the click rate for campaigns.\",\n  \"object\": \"send\",\n  \"metric_family\": \"rate\",\n  \"slice\": \"\",\n  \"time\": \"all time\",\n  \"scope_words\": \"all branch campaigns\",\n  \"echo\": \"What is the click rate?\",\n  \"ask_user\": \"Would you like the click rate for all time, or for a specific time period or channel?\"\n}\n```",
+    "interpret": {
+      "kind": "interpret",
+      "need": "Determine the click rate for campaigns.",
+      "object": "send",
+      "metric_family": "rate",
+      "slice": "",
+      "time": "all time",
+      "scope_words": "all branch campaigns",
+      "echo": "What is the click rate?",
+      "ask_user": "Would you like the click rate for all time, or for a specific time period or channel?"
+    }
+  },
+  "error": null
+}

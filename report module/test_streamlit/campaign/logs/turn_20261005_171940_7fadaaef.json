@@ -1,0 +1,130 @@
+{
+  "turn_id": "7fadaaef",
+  "timestamp": "2026-10-05T11:49:40.344724+00:00",
+  "question": "what is the unique opens and unique clicks are there",
+  "identity": {
+    "organization_id": 1012,
+    "user_id": 1054,
+    "branch_id": 1004,
+    "role": "admin"
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma",
+    "dsn_set": true
+  },
+  "answer": "I am unable to provide the unique opens and unique clicks at this time. Please try again.",
+  "facts": "EXECUTION_ERROR\nerror_type: REPLAN\nmessage: This task is a certified metric. Output run_kpi and pick one METRIC name from the catalog.\ntask_goal: Unique email opens and unique email clicks",
+  "trace": {
+    "identity": {
+      "organization_id": 1012,
+      "user_id": 1054,
+      "branch_id": 1004,
+      "role": "admin",
+      "scope_label": "All branch campaigns",
+      "timezone": "UTC"
+    },
+    "question": "what is the unique opens and unique clicks are there",
+    "supervisor": {
+      "kind": "route",
+      "target": "domain"
+    },
+    "supervisor_raw": "```json\n{\"kind\": \"route\", \"target\": \"domain\"}\n```",
+    "task_results": [
+      {
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Count unique opens and unique clicks",
+          "time": "all time",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "number"
+        },
+        "status": "error",
+        "error_type": "REPLAN",
+        "error": "This task is a certified metric. Output run_kpi and pick one METRIC name from the catalog.",
+        "kpi_id": null,
+        "store": null,
+        "sql": null,
+        "row_count": 0,
+        "time_echo": null,
+        "path": "certified_metric",
+        "rows": []
+      },
+      {
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Unique email opens and unique email clicks",
+          "time": "all time",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "number"
+        },
+        "status": "error",
+        "error_type": "REPLAN",
+        "error": "This task is a certified metric. Output run_kpi and pick one METRIC name from the catalog.",
+        "kpi_id": null,
+        "store": null,
+        "sql": null,
+        "row_count": 0,
+        "time_echo": null,
+        "path": "certified_metric",
+        "rows": []
+      }
+    ],
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants the count of unique opens and unique clicks.",
+      "depth": "quick",
+      "path": "certified_metric",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Unique email opens and unique email clicks",
+          "time": "all time",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "number"
+        },
+        {
+          "id": "t2",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Unique email opens and unique email clicks",
+          "time": "all time",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "plan_raw": "```json\n{\"kind\":\"plan\",\"understanding\":\"The user wants the count of unique opens and unique clicks.\",\"depth\":\"quick\",\"path\":\"certified_metric\",\"tasks\":[{\"id\":\"t1\",\"executor\":\"sql\",\"path\":\"certified_metric\",\"goal\":\"Unique email opens and unique email clicks\",\"time\":\"all time\",\"scope\":\"org\",\"slice\":[],\"answer_type\":\"number\"},{\"id\":\"t2\",\"executor\":\"sql\",\"path\":\"certified_metric\",\"goal\":\"Unique email opens and unique email clicks\",\"time\":\"all time\",\"scope\":\"org\",\"slice\":[],\"answer_type\":\"number\"}]}\n```",
+    "interpret": {
+      "need": "The user wants the count of unique opens and unique clicks.",
+      "time": "all time",
+      "slice": ""
+    },
+    "facts": "EXECUTION_ERROR\nerror_type: REPLAN\nmessage: This task is a certified metric. Output run_kpi and pick one METRIC name from the catalog.\ntask_goal: Unique email opens and unique email clicks",
+    "loop_errors": [
+      {
+        "attempt": 1,
+        "error_type": "REPLAN",
+        "error": "This task is a certified metric. Output run_kpi and pick one METRIC name from the catalog."
+      },
+      {
+        "attempt": 2,
+        "error_type": "REPLAN",
+        "error": "This task is a certified metric. Output run_kpi and pick one METRIC name from the catalog."
+      }
+    ],
+    "briefing_raw": "I am unable to provide the unique opens and unique clicks at this time. Please try again.",
+    "grounded": true
+  },
+  "error": null
+}

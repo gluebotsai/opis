@@ -1,0 +1,87 @@
+# Tenant org1000 — folder name org + organization_id (accounts.organizations.id = 1000).
+# Ontology ids stay wt:*. This file names, binds, and governs.
+
+tenantId: org1000
+organizationId: 1000
+industryPack: saas_b2b
+businessType: b2b
+# Dev fallback when accounts DB has no setup_user_product_access rows (production: DB is SoT).
+enabledSpokes: [contact_centre, ticketing, crm, campaign, hub, cdp]
+channels:
+  ccaas: [whatsapp, email, instagram, facebook, call, webchat]
+features:
+  ccaas: [wfm]
+extra_modules: []
+
+labels:
+  wt:Customer: Prospect
+  wt:Contact: Contact
+  wt:Ticket: Case
+  wt:Appointment: Demo
+  wt:Organization: Workspace
+
+synonyms:
+  Account: Contact
+  Prospect: Contact
+  Client: Contact
+  Logo: Contact
+  Tenant: Tenant
+  Workspace: Tenant
+  Case: SupportCase
+  Ticket: SupportCase
+  Issue: SupportCase
+  Demo: Meeting
+  Meeting: Meeting
+  Help doc: KnowledgeArticle
+  KB: KnowledgeArticle
+  Canned reply: CannedReply
+  Deal: Opportunity
+  Opportunity: Opportunity
+  # metrics — MetricFlow id is the agent id; synonyms for natural language
+  drop-off: missed_contact_rate
+  abandon%: missed_contact_rate
+  missed contact: missed_contact_rate
+  urgent cases: high_priority_ticket_volume
+  open cases: open_tickets_metric
+  AHT: average_handle_time
+  CSAT: average_csat_score
+  queue depth: open_conversations
+  MQL: mql_contact_count
+
+binds:
+  wt:Customer:
+    live: GET /cdp/v1/profiles/{cdpId}
+    warehouse: cdp.customer_profile
+    keys: [cdpId, email, crmContactId]
+    join: { organization: organization_id }
+  wt:Ticket:
+    live: GET /ticketing/v1/tickets?cdpId={cdpId}&status=open
+    warehouse: mart_tickets
+    join: { customer: cdpId, organization: organization_id }
+    keys: [ticket_id, number]
+  wt:Conversation:
+    warehouse: stg_conversations
+    join: { customer: contact_id, organization: organization_id }
+  wt:Queue:
+    warehouse: setup_ccaas_queues
+    keys: [queue_id]
+  wt:Deal:
+    warehouse: mart_deals
+    join: { customer: cdpId, organization: organization_id }
+
+extensions:
+  wt:Customer:
+    productInterest: { source: crm.contacts.product_interest }
+    companySize: { source: crm.companies.size }
+    workspaceId: { source: accounts.organizations.id }
+  wt:Ticket:
+    affectedSpoke: { source: ticketing.tickets.skill_id }
+    skillId: { source: ticketing.tickets.skill_id }
+
+# Metric thresholds live in org1000_metrics.yaml (base formulas in MetricFlow).
+
+policies:
+  contactWindow: { tz: Asia/Kolkata, hours: "09:00-18:00" }
+  marketingRequiresConsent: true
+  ticketWritesViaExpress: true
+  asgaDefault: confirm

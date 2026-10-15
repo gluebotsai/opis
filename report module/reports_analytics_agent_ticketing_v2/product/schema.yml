@@ -1,0 +1,832 @@
+version: 1
+# Virtual reporting views for LLM-written SQL.
+#
+# The LLM only ever sees and writes `rpt.<view>`. It never sees ticketing.* tables.
+# sql_guard turns every `rpt.<view>` it uses into a scoped CTE:
+#
+#   rpt_<view> AS (SELECT <columns for this role> FROM (<source>) src WHERE <role scope>)
+#
+# Rules for `source`:
+#   - must filter the tenant with {org_id}
+#   - may use {{base_ticket}} (product/sql/_base_ticket.sql)
+#   - may output extra columns that role scopes need; only `columns` below are exposed
+# Role scope, masking and which views a role gets live in access.yml (not here).
+
+views:
+
+  tickets:
+    description: One row per ticket. The main table for lists, lookups, counts and breakdowns.
+    source: |
+      SELECT * FROM ticketing.tickets WHERE organization_id = {org_id}
+    columns:
+      id:
+        type: bigint
+        description: "Internal ticket id. Use for joins only; never show it."
+      ticket_number:
+        type: text
+        description: "Ticket number people use, e.g. '#1611' or '1611'. Match with ticket_number = '#1611' OR ticket_number = '1611'."
+      subject:
+        type: text
+        description: "Ticket subject line."
+      description:
+        type: text
+        description: "Ticket body text. Long; select only when asked."
+      status:
+        type: text
+        description: " \"Ticket lifecycle as stored: Open, Pending, Reopened, Overdue, Resolved, Closed. This is NOT SLA sla_status and NOT CSAT. GROUP BY this for 'breakdown by status'.\""
+      priority:
+        type: text
+        description: " \"Ticket priority: low, medium, high, urgent. Not the same as status.\""
+      channel:
+        type: text
+        description: " \"Intake channel: Email, Chat, Phone, webchat. Where the ticket came from, not a queue.\""
+      category:
+        type: text
+        description: "Issue category (Login Issue, Billing, Delivery). Not status and not queue."
+      skill:
+        type: text
+        description: "Routing skill tag. GROUP BY this for breakdown by skill."
+      customer_id:
+        type: bigint
+        description: "Customer (contact) id. Joins rpt.customers.id."
+      customer_name:
+        type: text
+        description: "Customer display name."
+      customer_email:
+        type: text
+        description: "Customer email address."
+      customer_phone:
+        type: text
+        description: "Customer contact phone number."
+      assignee_id:
+        type: bigint
+        description: "Agent (L1) the ticket is assigned to. Joins rpt.agents.id. NULL = unassigned."
+      assignee_name:
+        type: text
+        description: "Assigned agent's name."
+      resolver_id:
+        type: bigint
+        description: "Resolver (L2) working the ticket. Joins rpt.agents.id."
+      resolver_name:
+        type: text
+        description: "Resolver's name."
+      queue_id:
+        type: bigint
+        description: "Queue (team) id. Joins rpt.queues.id."
+      queue_name:
+        type: text
+        description: "Queue name."
+      created_by_id:
+        type: bigint
+        description: "Staff member who created the ticket. Joins rpt.agents.id."
+      created_by_name:
+        type: text
+        description: "Name of the staff member who created the ticket."
+      due_at:
+        type: timestamptz
+        description: "Resolution SLA due time. NULL = no resolution SLA."
+      first_response_at:
+        type: timestamptz
+        description: "Time of the first response to the customer."
+      resolved_at:
+        type: timestamptz
+        description: "Time the ticket was resolved. NULL = not resolved."
+      csat_score:
+        type: integer
+        description: "Customer satisfaction score 1-5. NULL = not rated."
+      csat_rated_at:
+        type: timestamptz
+        description: "Time the CSAT score was given."
+      csat_comment:
+        type: text
+        description: "Customer feedback comment provided with the CSAT score."
+      ai_summary:
+        type: text
+        description: "Short AI-generated summary of the ticket issue and resolution."
+      created_at:
+        type: timestamptz
+        description: "Time the ticket was created. Default date column."
+      updated_at:
+        type: timestamptz
+        description: "Time the ticket was last changed."
+  ticket_facts:
+    description: >
+      One row per ticket with certified derived fields (hours, SLA states, status flags).
+      Join to rpt.tickets on ticket_facts.ticket_id = tickets.id. Always use these fields
+      instead of computing hours or SLA states yourself.
+    source: |
+      {{base_ticket}}
+    columns:
+      ticket_id:
+        type: bigint
+        description: "Same as rpt.tickets.id."
+      resolution_hours:
+        type: numeric
+        description: "Hours from created to resolved. NULL if not resolved."
+      first_response_hours:
+        type: numeric
+        description: "Hours from created to first response. NULL if no response yet."
+      resolution_variance_hours:
+        type: numeric
+        description: "Hours resolved minus due. Negative = early, positive = late."
+      overdue_hours_so_far:
+        type: numeric
+        description: "Hours past due (uses now for open tickets). Only meaningful when resolution_sla_missed."
+      sla_resolution_hours:
+        type: integer
+        description: "Resolution hours allowed by the ticket's SLA policy."
+      sla_first_response_hours:
+        type: integer
+        description: "First-response hours allowed by the ticket's SLA policy."
+      is_pending_generic:
+        type: boolean
+        description: "True when status is not Closed or Resolved (generic 'pending' / 'still open' / 'outstanding')."
+      is_status_open:
+        type: boolean
+        description: "Status is exactly Open."
+      is_status_pending_literal:
+        type: boolean
+        description: "Status is exactly Pending."
+      is_status_reopened:
+        type: boolean
+        description: "Status is exactly Reopened."
+      is_status_overdue:
+        type: boolean
+        description: "Status is exactly Overdue."
+      is_status_resolved:
+        type: boolean
+        description: "Status is exactly Resolved."
+      is_status_closed:
+        type: boolean
+        description: "Status is exactly Closed."
+      is_unassigned:
+        type: boolean
+        description: "No assignee."
+      is_high_priority:
+        type: boolean
+        description: "Priority is high."
+      resolution_sla_met:
+        type: boolean
+        description: "Resolved on or before due."
+      resolution_sla_missed:
+        type: boolean
+        description: "Resolved late, or still open past due."
+      resolution_at_risk:
+        type: boolean
+        description: "Still open, not yet due, with 20% or less of SLA time left."
+      resolution_no_sla:
+        type: boolean
+        description: "Ticket has no resolution SLA."
+      first_response_sla_met:
+        type: boolean
+        description: "First response within policy hours."
+      first_response_sla_missed:
+        type: boolean
+        description: "First response late, or none and already past due."
+      first_response_at_risk:
+        type: boolean
+        description: "No response yet, not yet due, 20% or less of time left."
+      first_response_no_sla:
+        type: boolean
+        description: "No first-response policy for this priority."
+  queue_ticket_counts:
+    description: >
+      Pre-counted tickets per queue, resolver, status, priority and created day.
+      Counts only. Sum ticket_count; never average it.
+    source: |
+      SELECT queue_id, queue_name, resolver_id, resolver_name, status, priority,
+             date_trunc('day', created_at) AS created_day, COUNT(*)::bigint AS ticket_count
+      FROM ticketing.tickets
+      WHERE organization_id = {org_id}
+      GROUP BY queue_id, queue_name, resolver_id, resolver_name, status, priority, date_trunc('day', created_at)
+    columns:
+      queue_id:
+        type: bigint
+        description: "Queue id."
+      queue_name:
+        type: text
+        description: "Queue name."
+      resolver_id:
+        type: bigint
+        description: "Resolver id (NULL = no resolver yet)."
+      resolver_name:
+        type: text
+        description: "Resolver name."
+      status:
+        type: text
+        description: "Status name."
+        sample_values: true
+      priority:
+        type: text
+        description: "Priority."
+        sample_values: true
+      created_day:
+        type: timestamptz
+        description: "Day the tickets were created (UTC, start of day). Filter time on this."
+      ticket_count:
+        type: bigint
+        description: "Number of tickets in this group."
+  agents:
+    description: One row per staff member (admin, agent, resolver). Use for rosters ("who are the agents").
+    source: |
+      SELECT a.*,
+             COALESCE(
+               (SELECT MAX(t.assignee_name) FROM ticketing.tickets t
+                 WHERE t.organization_id = a.organization_id AND t.assignee_id = a.id),
+               (SELECT MAX(t.resolver_name) FROM ticketing.tickets t
+                 WHERE t.organization_id = a.organization_id AND t.resolver_id = a.id),
+               a.support_email
+             ) AS display_name
+      FROM ticketing.agents a
+      WHERE a.organization_id = {org_id}
+    columns:
+      id:
+        type: bigint
+        description: "Staff id. Same id space as tickets.assignee_id / resolver_id / created_by_id."
+      display_name:
+        type: text
+        description: "Staff member's name."
+      support_email:
+        type: text
+        description: "Staff email."
+      role:
+        type: text
+        description: "admin, agent (L1) or resolver (L2)."
+        sample_values: true
+      status:
+        type: text
+        description: "Agent account status Active or Inactive. Not ticket status."
+      timezone:
+        type: text
+        description: "Agent timezone."
+      language:
+        type: text
+        description: "Agent UI language."
+      last_login_at:
+        type: timestamptz
+        description: "Last login."
+      created_at:
+        type: timestamptz
+        description: "When the staff member was added."
+  queues:
+    description: One row per queue (team).
+    source: |
+      SELECT * FROM ticketing.agent_queues WHERE organization_id = {org_id}
+    columns:
+      id:
+        type: bigint
+        description: "Queue id. Joins rpt.tickets.queue_id."
+      queue_name:
+        type: text
+        description: "Queue / team name. Users saying team or department mean this column."
+      type:
+        type: text
+        description: "Queue type."
+        sample_values: true
+      description:
+        type: text
+        description: "Queue description."
+      open_tickets:
+        type: integer
+        description: "Stored open-ticket snapshot on the queue row. Prefer counting rpt.tickets for live volume."
+      assigned:
+        type: integer
+        description: "Stored assigned snapshot. Prefer live ticket counts."
+      sla_status:
+        type: text
+        description: "Queue-level SLA badge on the queue row. Not ticket status."
+      created_at:
+        type: timestamptz
+        description: "When the queue was created."
+  queue_members:
+    description: Which staff member belongs to which queue.
+    source: |
+      SELECT * FROM ticketing.agent_queue_members WHERE organization_id = {org_id}
+    columns:
+      queue_id:
+        type: bigint
+        description: "Queue id. Joins rpt.queues.id."
+      user_id:
+        type: bigint
+        description: "Staff id. Joins rpt.agents.id."
+      created_at:
+        type: timestamptz
+        description: "When the membership was added."
+  notes:
+    description: One row per note on a ticket.
+    source: |
+      SELECT * FROM ticketing.ticket_notes WHERE organization_id = {org_id}
+    columns:
+      id:
+        type: bigint
+        description: "Note id."
+      ticket_id:
+        type: bigint
+        description: "Ticket id. Joins rpt.tickets.id."
+      author_id:
+        type: bigint
+        description: "Staff id of the author. Joins rpt.agents.id."
+      author_name:
+        type: text
+        description: "Author's name."
+      body:
+        type: text
+        description: "Note text. Select only when asked."
+      visibility:
+        type: text
+        description: "private or public. PrivateNote vs PublicReply."
+      pinned:
+        type: boolean
+        description: "Note is pinned on the ticket."
+      created_at:
+        type: timestamptz
+        description: "When the note was written."
+  audit_events:
+    description: >
+      One row per ticket event. Useful actions: 'ticket.assigned' (first = initial assignment,
+      later ones = reassignments), 'ticket.escalated', 'ticket.status_changed',
+      'ticket.resolver_set'. meta is jsonb (e.g. meta->>'from', meta->>'to', meta->>'prev_status').
+    source: |
+      SELECT * FROM ticketing.audit_events WHERE organization_id = {org_id}
+    columns:
+      id:
+        type: bigint
+        description: "Event id."
+      ticket_id:
+        type: bigint
+        description: "Ticket id. Joins rpt.tickets.id."
+      ticket_number:
+        type: text
+        description: "Ticket number on the event."
+      action:
+        type: text
+        description: "Event type."
+        sample_values: true
+      actor_id:
+        type: bigint
+        description: "Staff id who did it."
+      actor_name:
+        type: text
+        description: "Name of who did it."
+      meta:
+        type: jsonb
+        description: "Event details (jsonb)."
+      created_at:
+        type: timestamptz
+        description: "When it happened."
+  customers:
+    description: One row per ticketing customer (contact). tickets.customer_id joins here.
+    source: |
+      SELECT * FROM ticketing.contact_profile WHERE organization_id = {org_id}
+    columns:
+      id:
+        type: bigint
+        description: "Customer id. Joins rpt.tickets.customer_id. Same as contact_profile.id."
+      cdp_id:
+        type: text
+        description: "CDP person id when linked."
+      status:
+        type: text
+        description: "Contact profile status (e.g. Active). Not ticket status."
+      account_id:
+        type: bigint
+        description: "B2B account id. Joins rpt.accounts.id. Often null for B2C."
+      total_tickets:
+        type: integer
+        description: "Stored ticket count on the profile. Prefer counting rpt.tickets for live volume."
+      created_at:
+        type: timestamptz
+        description: "When the customer was added."
+  accounts:
+    description: One row per B2B customer account.
+    source: |
+      SELECT * FROM ticketing.ticketing_accounts WHERE organization_id = {org_id}
+    columns:
+      id:
+        type: bigint
+        description: "Account id."
+      name:
+        type: text
+        description: "Account name."
+      status:
+        type: text
+        description: "Account status."
+        sample_values: true
+      created_at:
+        type: timestamptz
+        description: "When the account was added."
+  sla_policies:
+    description: SLA hours per priority for this org.
+    source: |
+      SELECT * FROM ticketing.sla_policies WHERE organization_id = {org_id}
+    columns:
+      id:
+        type: bigint
+        description: "Policy id."
+      display_name:
+        type: text
+        description: "Policy name."
+      priority:
+        type: text
+        description: "Priority the policy applies to."
+      resolution_hours:
+        type: integer
+        description: "Hours allowed to resolve."
+      first_response_hours:
+        type: integer
+        description: "Hours allowed for first response."
+      active:
+        type: boolean
+        description: "Policy is in use."
+      is_system:
+        type: boolean
+        description: "Built-in policy."
+      sort_order:
+        type: integer
+        description: "Display order."
+  notifications:
+    description: One row per in-app notification.
+    source: |
+      SELECT * FROM ticketing.notifications WHERE organization_id = {org_id}
+    columns:
+      id:
+        type: bigint
+        description: "Notification id."
+      user_id:
+        type: bigint
+        description: "Staff id who received it."
+      title:
+        type: text
+        description: "Notification title."
+      message:
+        type: text
+        description: "Notification body."
+      ticket_id:
+        type: bigint
+        description: "Related ticket id when present."
+      kind:
+        type: text
+        description: "Notification type."
+        sample_values: true
+      is_read:
+        type: boolean
+        description: "Has been read."
+      created_at:
+        type: timestamptz
+        description: "When it was sent."
+  kb_articles:
+    description: One row per knowledge-base article.
+    source: |
+      SELECT * FROM ticketing.kb_articles WHERE organization_id = {org_id}
+    columns:
+      id:
+        type: bigint
+        description: "Article id."
+      external_id:
+        type: text
+        description: "External article id."
+      title:
+        type: text
+        description: "Article title."
+      content:
+        type: text
+        description: "Article body. Select only when asked."
+      status:
+        type: text
+        description: "Published or Draft. Not ticket status."
+      category:
+        type: text
+        description: "Article category."
+      views:
+        type: integer
+        description: "Total views."
+      author_id:
+        type: bigint
+        description: "Author staff id."
+      author_name:
+        type: text
+        description: "Author name."
+      created_at:
+        type: timestamptz
+        description: "When the article was created."
+      updated_at:
+        type: timestamptz
+        description: "Last update."
+  recommendations:
+    description: One row per AI recommendation made on a ticket. ticket_id is text; compare with CAST(tickets.id AS text).
+    source: |
+      SELECT * FROM ticketing.proactive_recommendations WHERE organization_id = {org_id}
+    columns:
+      id:
+        type: bigint
+        description: "Recommendation id."
+      ticket_id:
+        type: text
+        description: "Ticket id as text."
+      ticket_number:
+        type: text
+        description: "Ticket number."
+      agent_id:
+        type: text
+        description: "Agent the recommendation was shown to."
+      summary:
+        type: text
+        description: "Recommendation summary."
+      status:
+        type: text
+        description: "accepted, dismissed or open. Not ticket status."
+      created_at:
+        type: timestamptz
+        description: "When it was made."
+  approvals:
+    description: One row per AI action waiting for or given human approval. ticket_id is text.
+    source: |
+      SELECT * FROM ticketing.proactive_approvals WHERE organization_id = {org_id}
+    columns:
+      id:
+        type: bigint
+        description: "Approval id."
+      ticket_id:
+        type: text
+        description: "Ticket id as text."
+      ticket_number:
+        type: text
+        description: "Ticket number."
+      agent_id:
+        type: text
+        description: "Agent who decided or was asked."
+      status:
+        type: text
+        description: "approved, rejected or pending. Not ticket status."
+      tool_name:
+        type: text
+        description: "Action that needed approval."
+      created_at:
+        type: timestamptz
+        description: "When it was requested."
+      decided_at:
+        type: timestamptz
+        description: "When it was decided."
+  ticket_statuses:
+    description: Allowed ticket lifecycle names for this org. Use to list possible statuses. Never GROUP BY this instead of rpt.tickets.status when counting tickets.
+    source: |
+      SELECT * FROM ticketing.ticket_statuses WHERE organization_id = {org_id}
+    columns:
+      id:
+        type: bigint
+        description: "Status row id."
+      status:
+        type: text
+        description: "Stored status key matching tickets.status."
+      display_name:
+        type: text
+        description: "Label shown in the UI."
+      active:
+        type: boolean
+        description: "Status is in use."
+      is_system:
+        type: boolean
+        description: "Built-in status."
+      sort_order:
+        type: integer
+        description: "Display order."
+  macros:
+    description: One canned reply / macro.
+    source: |
+      SELECT * FROM ticketing.macros WHERE organization_id = {org_id}
+    columns:
+      id:
+        type: bigint
+        description: "Macro id."
+      title:
+        type: text
+        description: "Macro title."
+      body:
+        type: text
+        description: "Macro body. Select only when asked."
+      created_by_id:
+        type: bigint
+        description: "Author staff id."
+      created_by_name:
+        type: text
+        description: "Author name."
+      created_at:
+        type: timestamptz
+        description: "When created."
+      updated_at:
+        type: timestamptz
+        description: "Last update."
+  outbound_emails:
+    description: One outbound email sent on a ticket.
+    source: |
+      SELECT * FROM ticketing.outbound_email_log WHERE organization_id = {org_id}
+    columns:
+      id:
+        type: bigint
+        description: "Log id."
+      ticket_id:
+        type: bigint
+        description: "Ticket id. Joins rpt.tickets.id."
+      ticket_number:
+        type: text
+        description: "Ticket number."
+      to_email:
+        type: text
+        description: "Recipient email."
+      subject:
+        type: text
+        description: "Email subject."
+      body_preview:
+        type: text
+        description: "Short body preview."
+      kind:
+        type: text
+        description: "Email kind."
+      status:
+        type: text
+        description: "Send status. Not ticket status."
+      error:
+        type: text
+        description: "Send error if any."
+      created_at:
+        type: timestamptz
+        description: "When sent."
+  inbound_emails:
+    description: Inbound email Message-Id mapped to a ticket.
+    source: |
+      SELECT * FROM ticketing.email_message_refs WHERE organization_id = {org_id}
+    columns:
+      id:
+        type: bigint
+        description: "Row id."
+      ticket_id:
+        type: bigint
+        description: "Ticket id. Joins rpt.tickets.id."
+      ticket_number:
+        type: text
+        description: "Ticket number."
+      message_id:
+        type: text
+        description: "Email Message-Id."
+      created_at:
+        type: timestamptz
+        description: "When recorded."
+  reassignment_requests:
+    description: One request to change the resolver on a ticket.
+    source: |
+      SELECT * FROM ticketing.ticket_reassignment_requests WHERE organization_id = {org_id}
+    columns:
+      id:
+        type: bigint
+        description: "Request id."
+      ticket_id:
+        type: bigint
+        description: "Ticket id."
+      ticket_number:
+        type: text
+        description: "Ticket number."
+      requested_by_name:
+        type: text
+        description: "Who asked."
+      proposed_resolver_name:
+        type: text
+        description: "Proposed resolver."
+      reason:
+        type: text
+        description: "Reason text."
+      status:
+        type: text
+        description: "Request status. Not ticket status."
+      created_at:
+        type: timestamptz
+        description: "When requested."
+      decided_at:
+        type: timestamptz
+        description: "When decided."
+  automation_rules:
+    description: Ticket automation rules.
+    source: |
+      SELECT * FROM ticketing.automation_rules WHERE organization_id = {org_id}
+    columns:
+      id:
+        type: bigint
+        description: "Rule id."
+      name:
+        type: text
+        description: "Rule name."
+      event:
+        type: text
+        description: "Trigger event."
+      enabled:
+        type: boolean
+        description: "Rule is on."
+      priority:
+        type: integer
+        description: "Rule priority order."
+      created_by_name:
+        type: text
+        description: "Author."
+      created_at:
+        type: timestamptz
+        description: "When created."
+  critical_alerts:
+    description: Critical in-product alerts for staff.
+    source: |
+      SELECT * FROM ticketing.critical_alerts WHERE organization_id = {org_id}
+    columns:
+      id:
+        type: bigint
+        description: "Alert id."
+      user_id:
+        type: bigint
+        description: "Staff who received it."
+      scenario:
+        type: text
+        description: "Alert scenario."
+      title:
+        type: text
+        description: "Alert title."
+      message:
+        type: text
+        description: "Alert message."
+      ticket_id:
+        type: bigint
+        description: "Related ticket."
+      ticket_number:
+        type: text
+        description: "Ticket number."
+      customer_name:
+        type: text
+        description: "Customer name on the alert."
+      created_at:
+        type: timestamptz
+        description: "When created."
+  user_sessions:
+    description: Staff browser sessions (auth sessions). Not ticket chat sessions.
+    source: |
+      SELECT * FROM ticketing.user_sessions WHERE organization_id = {org_id}
+    columns:
+      id:
+        type: bigint
+        description: "Session id."
+      user_id:
+        type: bigint
+        description: "Staff id."
+      device_label:
+        type: text
+        description: "Device label."
+      browser:
+        type: text
+        description: "Browser."
+      os:
+        type: text
+        description: "OS."
+      is_current:
+        type: boolean
+        description: "Current session."
+      last_active_at:
+        type: timestamptz
+        description: "Last activity."
+      created_at:
+        type: timestamptz
+        description: "When opened."
+      revoked_at:
+        type: timestamptz
+        description: "When revoked."
+  activity_logs:
+    description: Free-text activity lines on a ticket.
+    source: |
+      SELECT * FROM ticketing.activity_logs WHERE organization_id = {org_id}
+    columns:
+      id:
+        type: bigint
+        description: "Log id."
+      ticket_id:
+        type: bigint
+        description: "Ticket id."
+      text:
+        type: text
+        description: "Activity text."
+      created_at:
+        type: timestamptz
+        description: "When logged."
+relationships:
+  - "rpt.tickets.id = rpt.ticket_facts.ticket_id  (one to one)"
+  - "rpt.tickets.queue_id = rpt.queues.id  (many to one)"
+  - "rpt.tickets.assignee_id = rpt.agents.id  (many to one; the agent)"
+  - "rpt.tickets.resolver_id = rpt.agents.id  (many to one; the resolver)"
+  - "rpt.tickets.created_by_id = rpt.agents.id  (many to one; who created it)"
+  - "rpt.tickets.customer_id = rpt.customers.id  (many to one)"
+  - "rpt.customers.account_id = rpt.accounts.id  (many to one)"
+  - "rpt.tickets.id = rpt.notes.ticket_id  (one to many)"
+  - "rpt.tickets.id = rpt.audit_events.ticket_id  (one to many)"
+  - "rpt.tickets.id = rpt.outbound_emails.ticket_id  (one to many)"
+  - "rpt.tickets.id = rpt.inbound_emails.ticket_id  (one to many)"
+  - "rpt.tickets.id = rpt.reassignment_requests.ticket_id  (one to many)"
+  - "rpt.tickets.id = rpt.activity_logs.ticket_id  (one to many)"
+  - "rpt.tickets.priority = rpt.sla_policies.priority  (many to one)"
+  - "rpt.queues.id = rpt.queue_members.queue_id  (one to many)"
+  - "rpt.agents.id = rpt.queue_members.user_id  (one to many)"
+  - "CAST(rpt.tickets.id AS text) = rpt.recommendations.ticket_id  (one to many)"
+  - "CAST(rpt.tickets.id AS text) = rpt.approvals.ticket_id  (one to many)"
+

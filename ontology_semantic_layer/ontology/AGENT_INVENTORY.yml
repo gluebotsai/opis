@@ -1,0 +1,144 @@
+# Agent inventory from product MD files → slice presets.
+# Sources are documentation, not live code. Status fields come from those docs.
+# CDP has no chat Super; Hub consumes cdpId + organizationId.
+
+sources:
+  contact_centre: reference/CONTACT_CENTER_AGENTS.md
+  ticketing: reference/TICKETING_SYSTEM_AGENTS.md
+  crm: reference/crm-agents-reference.md
+  campaign: reference/CAMPAIGN_AGENTS_CATALOG.md
+  hub: ../docs/HUB_FOR_SPOKES.md
+  cdp: ../docs/HUB_FOR_SPOKES.md   # identity spine for Hub, not a spoke MAS
+
+# ---------------------------------------------------------------------------
+# Contact Centre
+# ---------------------------------------------------------------------------
+contact_centre:
+  hierarchy: super → domain (L2) → executor (L3)
+  note: L1/L2 Super and Domain agents are Target — runtime is NLP ids + route_to_agent.
+  agents:
+    - { id: cc.super, doc: "Contact Center Super Agent", status: target, entry: chat_router, preset: cc.super, modules: [identity, interaction, knowledge, ticket, followup, queue, workforce, quality, performance, compliance, booking, hub] }
+    - { id: cc.omnichannel, doc: "Omnichannel Engagement Domain Agent", status: target, entry: chat_router, preset: cc.omnichannel }
+    - { id: cc.ai_support, doc: "AI Support Agent", status: implemented_partial, nlp: [support_bot, custom_lola_sales, custom_lola_service], preset: cc.ai_support, modules: [identity, interaction, knowledge, ticket] }
+    - { id: cc.booking, doc: "Lola BookingAgent", status: implemented, nlp: [custom_lola_booking], preset: cc.booking, modules: [identity, interaction, booking] }
+    - { id: cc.channel_adaptation, doc: "Channel Adaptation Agent", status: proposed, preset: cc.channel_adaptation, modules: [interaction] }
+    - { id: cc.identity, doc: "Customer Identification & Merge", status: implemented_partial, nlp: [contact, contact_enrich], preset: cc.identity, modules: [identity] }
+    - { id: cc.interaction_ops, doc: "Interaction Operations Domain Agent", status: target, preset: cc.interaction_ops }
+    - { id: cc.recovery, doc: "Interaction Recovery Agent", status: implemented_partial, nlp: [proactive], preset: cc.recovery, modules: [identity, interaction, followup, workforce] }
+    - { id: cc.followup, doc: "Follow-Up Management Agent", status: implemented_partial, nlp: [task], preset: cc.followup, modules: [followup, interaction] }
+    - { id: cc.closure, doc: "Interaction Closure Agent", status: implemented_partial, preset: cc.closure, modules: [interaction, quality] }
+    - { id: cc.agent_assist, doc: "Agent Assist Domain Agent", status: target, preset: cc.agent_assist }
+    - { id: cc.coworker, doc: "Support Agent Coworker", status: implemented, nlp: [general, inbox], preset: cc.coworker, modules: [identity, interaction, knowledge, followup] }
+    - { id: cc.compliance, doc: "Real-Time Compliance Agent", status: proposed, preset: cc.compliance, modules: [interaction, compliance] }
+    - { id: cc.quality, doc: "Interaction Quality Agent", status: implemented_partial, nlp: [sentiment], preset: cc.quality, modules: [interaction, quality] }
+    - { id: cc.wfm, doc: "Workforce Management Domain Agent", status: target, preset: cc.wfm }
+    - { id: cc.queue, doc: "Queue Management Agent", status: implemented, nlp: [queue], preset: cc.queue, modules: [queue, workforce] }
+    - { id: cc.presence, doc: "Agent Presence Monitoring Agent", status: implemented, nlp: [monitoring], preset: cc.presence, modules: [workforce, followup, performance, hub] }
+    - { id: cc.forecast, doc: "Forecasting & Scheduling Agent", status: proposed, preset: cc.forecast, modules: [queue, workforce, performance] }
+    - { id: cc.performance, doc: "Performance Intelligence Domain Agent", status: target, preset: cc.performance }
+    - { id: cc.reporting, doc: "Scheduled Reporting Agent", status: implemented_partial, nlp: [analytics], preset: cc.reporting, modules: [performance, workforce, queue] }
+    - { id: cc.anomaly, doc: "Operational Anomaly Agent", status: proposed, preset: cc.anomaly, modules: [performance, workforce, queue, interaction, hub] }
+
+# ---------------------------------------------------------------------------
+# Ticketing
+# ---------------------------------------------------------------------------
+ticketing:
+  hierarchy: Super (chat) → specialists; proactive Level B gated by ASGA
+  note: May be entitled under CCaaS commercially; ontology still one Ticket.
+  chat:
+    - { id: tk.super, doc: "Ticketing Super Agent", entry: chat_router, preset: tk.super }
+    - { id: tk.tickets, doc: "Tickets Specialist", preset: tk.tickets, modules: [identity, ticket], collects: [customer_name, email_or_phone, issue] }
+    - { id: tk.teams, doc: "Teams Specialist", preset: tk.teams, modules: [tk_team] }
+    - { id: tk.customers, doc: "Customers Specialist", preset: tk.customers, modules: [identity], note: "Writes CDP when create-ticket fails missing person" }
+    - { id: tk.kb, doc: "KB Specialist", preset: tk.kb, modules: [knowledge, tk_kb] }
+    - { id: tk.macros, doc: "Macros Specialist", preset: tk.macros, modules: [tk_macro] }
+    - { id: tk.admin, doc: "Admin Specialist", preset: tk.admin, modules: [ticket, tk_admin, performance] }
+    - { id: tk.portal, doc: "Customer Portal", preset: tk.portal, modules: [identity, knowledge, ticket, tk_kb], identity: session }
+  proactive_live:
+    - { id: tk.dssa, doc: "DSSA Deflection", layer: 1, modules: [tk_kb], must_not: create_ticket }
+    - { id: tk.tcaa, doc: "TCAA Capture", layer: 1, modules: [ticket] }
+    - { id: tk.icpa, doc: "ICPA Classify/Priority", layer: 1, modules: [ticket] }
+    - { id: tk.itra, doc: "ITRA Routing L1/L2", layer: 1, modules: [ticket, tk_team] }
+    - { id: tk.rkaa, doc: "RKAA Knowledge assist", layer: 2, modules: [tk_kb, ticket] }
+    - { id: tk.ara, doc: "ARA Close/reopen", layer: 2, asga: confirm }
+    - { id: tk.sema, doc: "SEMA SLA/escalate", layer: 2, modules: [ticket] }
+    - { id: tk.tsaa, doc: "TSAA Summary", layer: 2 }
+    - { id: tk.crda, doc: "CRDA Draft reply", layer: 2 }
+    - { id: tk.stda, doc: "STDA Similar tickets", layer: 3 }
+    - { id: tk.rcaa, doc: "RCAA Root cause", layer: 3 }
+    - { id: tk.wloa, doc: "WLOA Workload", layer: 3 }
+    - { id: tk.tiaa, doc: "TIAA Analytics", layer: 3, modules: [performance] }
+    - { id: tk.pna, doc: "PNA Notifications", layer: 3 }
+    - { id: tk.asga, doc: "ASGA Safety gate", layer: common, preset: tk.proactive }
+  planned_not_live: [MIA, CFU, CRA]
+  note_proactive: "Docs say 14 live in registry_agents.py. Catalog today has one tk.proactive preset covering the family — split presets only if prompt allowlists differ."
+
+# ---------------------------------------------------------------------------
+# CRM
+# ---------------------------------------------------------------------------
+crm:
+  hierarchy: crm-agent Super → module specialists; separate HTTP job agents
+  tenant_example: org1000
+  fetch: fetch_ontology_slice(agent="crm.deals", tenant="org1000")
+  coworker:
+    - { id: crm.super, http: crm-agent, doc: "Main CRM co-worker" }
+    - { id: crm.chat, http: chat, tools: none }
+    - { id: crm.contacts, http: contact-agent, modules: [identity] }
+    - { id: crm.companies, http: company-agent }
+    - { id: crm.deals, http: deal-agent }
+    - { id: crm.proposals, http: proposal-agent }
+    - { id: crm.products, http: product-agent, table: inventory.products }
+    - { id: crm.reports, http: reports-analytics-agent, tools: [ask_semantic] }
+    - { id: crm.link, http: link-agent }
+    - { id: crm.drafts, doc: "Draft specialists (in-shell create forms)" }
+  jobs:
+    lead: [enrich-lead, score-lead, summarize-lead, assign-sales, welcome-lead, nurture-lead, lifecycle-lead, owner-change-notify]
+    email: [auto-reply-email, compose-email, send-outbound-email, compliance-privacy]
+    meeting: [meeting-brief-email, meeting-mom, meeting-miss-escalation, post-meeting-process, analyze-transcript, assist-meeting, sales-coach]
+    cron_hitl: [audit-forecast, invoice-escalation, expansion-matcher]
+    documents: [document-template, document-template-edit, document-template-chat, document-clone-personalize, proposal-content]
+    prospecting: [prospect-search, prospect-qualify, prospect-personnel]
+    utility: [hygiene, daily-briefing, hello]
+  commercial: "CRM suite may entitle CCaaS, Ticketing, Campaign, CDP, webtracking — still one Customer (cdp_id)."
+
+# ---------------------------------------------------------------------------
+# Campaign (extension slot — often entitled under CRM)
+# ---------------------------------------------------------------------------
+campaign:
+  note: "Campaign 'Hub Super' is the campaign skill router, not Worktual Hub."
+  fetch: fetch_ontology_slice(agent="camp.reports", tenant="org1000")
+  agents:
+    - { id: camp.create, doc: "Create Campaign Agent" }
+    - { id: camp.contacts, doc: "Contacts / Audience Agent", overlap: crm.contacts }
+    - { id: camp.monitoring, doc: "Monitoring Agent" }
+    - { id: camp.reports, doc: "Reports Agent", tools: [ask_ontology, ask_semantic_layer, query_analytics] }
+    - { id: camp.events, doc: "Events Report Agent" }
+    - { id: camp.recommendations, doc: "Recommendations Agent" }
+    - { id: camp.forms, doc: "Forms Agent" }
+    - { id: camp.wa_approved, doc: "WhatsApp Approved Agent" }
+    - { id: camp.wa_rejected, doc: "WhatsApp Rejected Agent" }
+    - { id: camp.templates, doc: "Template Library / Director / Coach" }
+    - { id: camp.ondemand, doc: "On-Demand Agent", entry: hub_pipeline }
+    - { id: camp.super, doc: "Hub Super Agent (campaign)", entry: sequential_skills }
+
+# ---------------------------------------------------------------------------
+# Hub + CDP
+# ---------------------------------------------------------------------------
+hub:
+  id: hub.orchestrator
+  preset: hub.orchestrator
+  not: "Does not talk to end customers; returns suggestedAgentReply + dispatch."
+  inbound_skills: [spoke-query, run-pipeline, leftover-work]
+  required_fields: [organizationId, cdpId]
+  scenarios: [spoke_query, ops_anomaly, engagement_anomaly, customer_event]
+  dispatch_families:
+    service: [escalate, assign, notify, open_task, create_ticket, service_recovery, service_intervention]
+    engagement: [callback, bot_popup, send_email, call, schedule_call]
+    growth: [retain, offer, high_touch_retention, suppress_campaign]
+  spokes: [contact_centre, ticketing, crm, campaign]
+
+cdp:
+  no_mas: true
+  role: "Customer spine. Hub and spokes pass cdpId; do not invent a second Customer type."
+  postgres: [cdp.customer_profile, cdp.identity_keys, cdp.customer_events]
+  hub_triggers: [cdp.anomaly_alert, customer_event, engagement_anomaly via webtracking identities]

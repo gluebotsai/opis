@@ -1,0 +1,40 @@
+{
+  "name": "worktual-crm",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm run dev:api",
+    "dev:api": "npm run dev --prefix backend",
+    "dev:web": "npm run dev --prefix frontend",
+    "dev:stack": "bash scripts/dev-stack.sh",
+    "dev:stack:start": "bash scripts/dev-stack.sh start",
+    "dev:stack:stop": "bash scripts/dev-stack.sh stop",
+    "dev:stack:restart": "bash scripts/dev-stack.sh restart",
+    "dev:stack:status": "bash scripts/dev-stack.sh status",
+    "dev:meet-media": "npm run dev --prefix meet-media-worker",
+    "db:generate": "prisma generate && node backend/scripts/generate-prisma.mjs",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:studio": "prisma studio"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.3",
+    "bcryptjs": "^3.0.3",
+    "lucide-react": "^1.24.0",
+    "pg": "^8.22.0",
+    "playwright": "^1.62.1"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^20",
+    "@types/pg": "^8.20.0",
+    "dotenv": "^17.4.2",
+    "prisma": "^6.19.3",
+    "tsx": "^4.20.5",
+    "typescript": "^5"
+  }
+}

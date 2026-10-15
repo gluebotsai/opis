@@ -1,0 +1,3930 @@
+[
+  {
+    "id": "rule_global_query_contract",
+    "type": "query_rule",
+    "name": "Global Cypher Query Contract",
+    "aliases": [
+      "query rules",
+      "cypher rules",
+      "graph contract",
+      "how to query"
+    ],
+    "description": "Mandatory rules the Cypher agent must apply to EVERY generated query against the Worktual OKG. Retrieve and prepend this card on every request.",
+    "business_rules": [
+      "CASE SENSITIVITY: Neo4j labels, relationship types and property names are case-sensitive. Labels are PascalCase (Conversation, SalesOrder, ContactProfile). Relationship types are UPPER_SNAKE_CASE (HAS_ROUTING_ATTEMPT, BELONGS_TO_SEGMENT). Properties are lower_snake_case (created_at, churn_score, total_amount). Never title-case a property, never PascalCase a relationship, never UPPER a label.",
+      "NODE KEYS ARE NOT ALWAYS 'id'. Registry: Contact=cdp_id, CustomerScore=cdp_id, ContactPoint=identity_id, Insight=insight_id, Recommendation=recommendation_id, Segment=segment_id, Order=order_id, OrgProfile=organization_id, KnowledgeOrgProfile=organization_id, AssignmentSettings=organization_id, WebchatChannelConfig=channel_config_id, SocialChannelConfig=channel_config_id, Product=id (bigint), PlatformProduct=id (string). Every other label uses id.",
+      "ANCHOR BOTH ENDS WITH LABELS. These relationship types are overloaded and reused across unrelated pairs: CONTAINS, HAS_LINE, FOR_PRODUCT, FOR_CONTACT, FOR_OPPORTUNITY, FOR_ACTIVITY, FOR_ACCOUNT, OWNED_BY, CREATED_BY, ASSIGNED_TO, IN_QUEUE, FROM_QUEUE, HANDLED_BY, OFFERED_AGENT, FOLLOWS_HOURS, USES_TEMPLATE, APPROVED_BY. Never write (a)-[:CONTAINS]->(b) without labels on both a and b.",
+      "TENANT SCOPE IS THE DATABASE. Each tenant has its own Neo4j database. Do NOT add `WHERE n.organization_id = $organization_id` unless the runtime actually binds $organization_id — an unbound parameter makes Neo4j throw 'Expected parameter(s)' and the agent returns an error instead of an answer.",
+      "DATETIME vs DATE. Most timestamps are ZONED DATETIME (UTC) and must be compared with datetime($period_start). But DATE-typed columns must be compared with date($period_start): Invoice.issue_date, Opportunity.expected_close_date, Contact.acquisition_date, Contact.date_of_birth, Holiday.holiday_date, Quote.valid_until. Mixing date and datetime raises a type error.",
+      "DURATIONS. Use duration.inSeconds(a, b).seconds for elapsed time. duration.between(a, b).seconds returns ONLY the seconds component (excludes days/months) and silently under-reports any span longer than 24 hours.",
+      "ALWAYS BOUND BOTH ENDS OF A PERIOD: `>= datetime($period_start) AND < datetime($period_end)`. A start-only filter makes 'this week' silently mean 'this week and everything after'.",
+      "GUARD DIVISION: CASE WHEN total = 0 THEN 0.0 ELSE toFloat(numerator)/total END. A bare toFloat(x)/0 returns null and the answer reads as 'unknown'.",
+      "EXISTENCE CHECKS: use EXISTS { (c)-[:HAS_TRANSFER]->(:Transfer) } or COUNT {}. Bare pattern expressions outside WHERE are removed in Neo4j 5.",
+      "NEVER INVENT A TENANT FAN-OUT EDGE. The following (Tenant)-[...]->(x) relationships are commented out in core.yaml and DO NOT EXIST in the graph: HAS_CONTACT, HAS_CONTACT_PROFILE, HAS_CONVERSATION, HAS_INTERACTION, HAS_DEAL, HAS_DEAL_ACTIVITY, HAS_COMPANY, HAS_COMPANY_SITE, HAS_QUOTE, HAS_PROPOSAL, HAS_INVOICE, HAS_SALES_ORDER, HAS_CONTRACT, HAS_NOTIFICATION, HAS_MISSED_CONTACT, HAS_SHARED_NOTE, HAS_KNOWLEDGE_DOCUMENT, HAS_QUOTE_TEMPLATE, HAS_PROPOSAL_TEMPLATE, HAS_INVOICE_TEMPLATE. Match the label directly instead: MATCH (d:Opportunity) — not MATCH (:Tenant)-[:HAS_DEAL]->(d:Opportunity), which returns zero rows.",
+      "(Contact)-[:PARTICIPATED_IN]->(Conversation) DOES NOT EXIST. Conversations, interactions, activities, insights and recommendations hang off a Contact through synthetic collection nodes. See concept_contact_history.",
+      "IF NO CARD MATCHES, SAY SO. Do not improvise labels or relationship types that are absent from these cards."
+    ],
+    "keywords": [
+      "rules",
+      "contract",
+      "case sensitive",
+      "node key",
+      "how to query",
+      "cypher conventions"
+    ],
+    "examples": [],
+    "search_text": "Global Cypher Query Contract Mandatory rules the Cypher agent must apply to EVERY generated query against the Worktual OKG. Retrieve and prepend this card on every request. query rules cypher rules graph contract how to query rules contract case sensitive node key how to query cypher conventions",
+    "domain": "meta",
+    "schema_version": "2"
+  },
+  {
+    "id": "concept_contact_history",
+    "type": "graph_pattern",
+    "name": "Contact History Traversal (collection nodes)",
+    "aliases": [
+      "customer 360",
+      "contact timeline",
+      "conversations for a customer",
+      "activity history",
+      "interaction history"
+    ],
+    "description": "A Contact does not connect directly to its Conversations, Interactions, Activities, Insights or Recommendations. Each hangs off a synthetic collection node keyed by the same cdp_id. Every 'show me everything about customer X' query must go through the collection hop.",
+    "disambiguation": "This is the ONLY correct path from a person to their history. (Contact)-[:PARTICIPATED_IN]->(Conversation), (Contact)-[:HAS_CONVERSATION]->(Conversation) and (Tenant)-[:HAS_CONVERSATION]->() are all non-existent and return zero rows.",
+    "base_entities": [
+      "Contact",
+      "ConversationHistory",
+      "InteractionHistory",
+      "ActivityTimeline",
+      "InsightCollection",
+      "RecommendationCollection"
+    ],
+    "business_rules": [
+      "(Contact)-[:HAS_CONVERSATIONS]->(ConversationHistory)-[:CONTAINS]->(Conversation)",
+      "(Contact)-[:HAS_INTERACTIONS]->(InteractionHistory)-[:CONTAINS]->(Interaction)",
+      "(Contact)-[:HAS_ACTIVITIES]->(ActivityTimeline)-[:CONTAINS]->(ContactActivity)",
+      "(Contact)-[:HAS_INSIGHTS]->(InsightCollection)-[:CONTAINS]->(Insight)",
+      "(Contact)-[:HAS_RECOMMENDATIONS]->(RecommendationCollection)-[:CONTAINS]->(Recommendation)",
+      "Note the plural relationship names: HAS_CONVERSATIONS / HAS_INTERACTIONS / HAS_ACTIVITIES / HAS_INSIGHTS / HAS_RECOMMENDATIONS. Singular forms do not exist.",
+      "All five collection nodes are keyed by cdp_id, the same value as the Contact.",
+      "CONTAINS is overloaded — it is also (Order)-[:CONTAINS]->(Product). Always label both ends.",
+      "Direct edges that DO exist from other nodes to Contact: (ContactProfile)-[:OVERLAY_OF]->(Contact), (Contact)-[:HAS_SCORES]->(CustomerScore), (Contact)-[:HAS_CONTACT_POINT]->(ContactPoint) — direction is Contact→ContactPoint, (Contact)-[:HAS_CHANNEL_IDENTITY]->(ChannelIdentity), (Contact)-[:PLACED]->(Order), (Contact)-[:BELONGS_TO_SEGMENT]->(Segment), (Contact)-[:HAS_ENRICHMENT]->(LeadEnrichmentSnapshot), (Contact)-[:HAS_LEAD_SUMMARY]->(LeadSummary)."
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Contact)-[:HAS_CONVERSATIONS]->(ConversationHistory)-[:CONTAINS]->(Conversation)",
+        "(Contact)-[:HAS_INTERACTIONS]->(InteractionHistory)-[:CONTAINS]->(Interaction)",
+        "(Contact)-[:HAS_ACTIVITIES]->(ActivityTimeline)-[:CONTAINS]->(ContactActivity)",
+        "(Contact)-[:HAS_INSIGHTS]->(InsightCollection)-[:CONTAINS]->(Insight)",
+        "(Contact)-[:HAS_RECOMMENDATIONS]->(RecommendationCollection)-[:CONTAINS]->(Recommendation)"
+      ],
+      "key_properties": {
+        "Contact": [
+          "cdp_id",
+          "first_name",
+          "last_name",
+          "contact_type",
+          "last_seen_at"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (ct:Contact {cdp_id: $cdp_id})-[:HAS_CONVERSATIONS]->(:ConversationHistory)-[:CONTAINS]->(c:Conversation) RETURN c.id AS conversation_id, c.channel AS channel, c.status AS status, c.created_at AS created_at, c.resolved_at AS resolved_at ORDER BY c.created_at DESC LIMIT 20",
+    "params": {
+      "cdp_id": "required"
+    },
+    "keywords": [
+      "customer history",
+      "contact timeline",
+      "their conversations",
+      "everything about",
+      "360"
+    ],
+    "negative_keywords": [
+      "queue",
+      "sla policy",
+      "invoice template"
+    ],
+    "examples": [
+      "Show me all conversations for this customer",
+      "What insights do we have on contact X?",
+      "Give me the activity timeline for this lead"
+    ],
+    "search_text": "Contact History Traversal (collection nodes) A Contact does not connect directly to its Conversations, Interactions, Activities, Insights or Recommendations. Each hangs off a synthetic collection node keyed by the same cdp_id. Every 'show me everything about customer X' query must go through the collection hop. customer 360 contact timeline conversations for a customer activity history interaction history customer history contact timeline their conversations everything about 360 (Contact)-[:HAS_CONVERSATIONS]->(ConversationHistory)-[:CONTAINS]->(Conversation) (Contact)-[:HAS_INTERACTIONS]->(InteractionHistory)-[:CONTAINS]->(Interaction) (Contact)-[:HAS_ACTIVITIES]->(ActivityTimeline)-[:CONTAINS]->(ContactActivity) (Contact)-[:HAS_INSIGHTS]->(InsightCollection)-[:CONTAINS]->(Insight) (Contact)-[:HAS_RECOMMENDATIONS]->(RecommendationCollection)-[:CONTAINS]->(Recommendation)",
+    "domain": "cdp",
+    "schema_version": "2"
+  },
+  {
+    "id": "concept_missed_contacts",
+    "type": "business_concept",
+    "name": "Missed Contacts",
+    "aliases": [
+      "missed calls",
+      "missed chats",
+      "agent missed",
+      "unanswered contacts",
+      "no agent pickup"
+    ],
+    "description": "A contact that was offered to a specific agent and not answered. Materialised as its own MissedContact node with reason, channel, offered_at and missed_at.",
+    "disambiguation": "Three different things are often called 'missed'. (1) Agent was offered and did not answer -> MissedContact node (THIS card). (2) Routing could not find any agent to offer to -> RoutingAttempt.outcome, see concept_routing_failure. (3) Customer hung up before any agent -> see concept_abandonment_rate. Do not answer a MissedContact question with RoutingAttempt data or the numbers will not reconcile with the Missed Contacts screen in the product.",
+    "base_entities": [
+      "MissedContact",
+      "Agent",
+      "Queue",
+      "Conversation",
+      "Contact"
+    ],
+    "business_rules": [
+      "MissedContact is a first-class node (ccass.agent_missed_contacts). Key = id. Do not derive it from RoutingAttempt.",
+      "Use missed_at for the event date. offered_at is when the offer went out, acknowledged_at is when the agent cleared it.",
+      "Available relationships: (MissedContact)-[:MISSED_BY]->(Agent), -[:ASSIGNED_USER]->(Employee), -[:FROM_CONVERSATION]->(Conversation), -[:FROM_QUEUE]->(Queue), -[:FOR_CONTACT]->(Contact).",
+      "There is NO (Tenant)-[:HAS_MISSED_CONTACT]->(MissedContact) edge — match (mc:MissedContact) directly.",
+      "Grouping dimensions available directly on the node without a join: channel, reason, customer_name, customer_email, customer_phone.",
+      "The Agent-side name is Agent.display_name, not Agent.name.",
+      "For 'why did it increase', run the diagnostic_template ONCE — it returns dimension, current, previous, delta in a single pass."
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(MissedContact)-[:MISSED_BY]->(Agent)",
+        "(MissedContact)-[:FROM_QUEUE]->(Queue)",
+        "(MissedContact)-[:FROM_CONVERSATION]->(Conversation)",
+        "(MissedContact)-[:FOR_CONTACT]->(Contact)"
+      ],
+      "key_properties": {
+        "MissedContact": [
+          "missed_at",
+          "offered_at",
+          "acknowledged_at",
+          "reason",
+          "channel"
+        ],
+        "Agent": [
+          "display_name",
+          "status"
+        ],
+        "Queue": [
+          "name",
+          "status"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (mc:MissedContact) WHERE mc.missed_at >= datetime($period_start) AND mc.missed_at < datetime($period_end) RETURN count(mc) AS missed_count",
+    "diagnostic_template": "MATCH (mc:MissedContact)-[:FROM_QUEUE]->(q:Queue) WITH q.name AS dimension, sum(CASE WHEN mc.missed_at >= datetime($period_start) AND mc.missed_at < datetime($period_end) THEN 1 ELSE 0 END) AS current, sum(CASE WHEN mc.missed_at >= datetime($compare_start) AND mc.missed_at < datetime($compare_end) THEN 1 ELSE 0 END) AS previous WHERE current > 0 OR previous > 0 RETURN dimension, current, previous, current - previous AS delta ORDER BY abs(current - previous) DESC LIMIT 5",
+    "params": {
+      "period_start": "required",
+      "period_end": "required",
+      "compare_start": "diagnostic only",
+      "compare_end": "diagnostic only"
+    },
+    "keywords": [
+      "missed",
+      "unanswered",
+      "no pickup",
+      "missed contacts",
+      "agent missed"
+    ],
+    "negative_keywords": [
+      "abandoned",
+      "hung up",
+      "no agent available"
+    ],
+    "examples": [
+      "Why did missed contacts increase this week?",
+      "Which queue has the most missed contacts?",
+      "Which agent missed the most contacts?"
+    ],
+    "search_text": "Missed Contacts A contact that was offered to a specific agent and not answered. Materialised as its own MissedContact node with reason, channel, offered_at and missed_at. missed calls missed chats agent missed unanswered contacts no agent pickup missed unanswered no pickup missed contacts agent missed (MissedContact)-[:MISSED_BY]->(Agent) (MissedContact)-[:FROM_QUEUE]->(Queue) (MissedContact)-[:FROM_CONVERSATION]->(Conversation) (MissedContact)-[:FOR_CONTACT]->(Contact)",
+    "domain": "ccaas",
+    "schema_version": "2"
+  },
+  {
+    "id": "concept_routing_failure",
+    "type": "business_concept",
+    "name": "Routing Failure / No Agent Available",
+    "aliases": [
+      "routing failures",
+      "no agent available",
+      "no ready agents",
+      "failed to route",
+      "routing attempts"
+    ],
+    "description": "Attempts by the router to place a conversation with an agent, and their outcomes. Used for capacity and coverage questions, not for agent-level missed contacts.",
+    "disambiguation": "This is the routing engine's view. For an agent who was offered and did not answer use concept_missed_contacts. For a customer who left the queue use concept_abandonment_rate.",
+    "base_entities": [
+      "RoutingAttempt",
+      "Conversation",
+      "Queue",
+      "Agent"
+    ],
+    "business_rules": [
+      "(Conversation)-[:HAS_ROUTING_ATTEMPT]->(RoutingAttempt) — direction is Conversation to RoutingAttempt.",
+      "(RoutingAttempt)-[:TARGETED_QUEUE]->(Queue) and (RoutingAttempt)-[:OFFERED_AGENT]->(Agent).",
+      "OUTCOME VALUES ARE NOT GUARANTEED. Never hard-code an outcome list. Run the discovery query first: MATCH (ra:RoutingAttempt) RETURN DISTINCT ra.outcome AS outcome, count(*) AS n ORDER BY n DESC. Filtering on a value that does not exist returns 0 and reads as 'no problems this week', which is the worst possible wrong answer.",
+      "Use ra.created_at for when the attempt was made and ra.completed_at for when it resolved.",
+      "attempt_number lets you separate first offers from retries; count DISTINCT conversations, not attempts, when the question is about contacts rather than offers."
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Conversation)-[:HAS_ROUTING_ATTEMPT]->(RoutingAttempt)",
+        "(RoutingAttempt)-[:TARGETED_QUEUE]->(Queue)",
+        "(RoutingAttempt)-[:OFFERED_AGENT]->(Agent)",
+        "(Conversation)-[:HAS_ASSIGNMENT]->(Assignment)",
+        "(Assignment)-[:FROM_ATTEMPT]->(RoutingAttempt)"
+      ],
+      "key_properties": {
+        "RoutingAttempt": [
+          "outcome",
+          "attempt_number",
+          "created_at",
+          "completed_at"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (ra:RoutingAttempt) WHERE ra.created_at >= datetime($period_start) AND ra.created_at < datetime($period_end) RETURN ra.outcome AS outcome, count(ra) AS attempts, count(DISTINCT ra.conversation_id) AS conversations ORDER BY attempts DESC",
+    "diagnostic_template": "MATCH (ra:RoutingAttempt)-[:TARGETED_QUEUE]->(q:Queue) WITH q.name AS dimension, sum(CASE WHEN ra.created_at >= datetime($period_start) AND ra.created_at < datetime($period_end) THEN 1 ELSE 0 END) AS current, sum(CASE WHEN ra.created_at >= datetime($compare_start) AND ra.created_at < datetime($compare_end) THEN 1 ELSE 0 END) AS previous WHERE current > 0 OR previous > 0 RETURN dimension, current, previous, current - previous AS delta ORDER BY abs(current - previous) DESC LIMIT 5",
+    "discovery_template": "MATCH (ra:RoutingAttempt) RETURN DISTINCT ra.outcome AS outcome, count(*) AS n ORDER BY n DESC",
+    "params": {
+      "period_start": "required",
+      "period_end": "required"
+    },
+    "keywords": [
+      "routing",
+      "no agent",
+      "coverage",
+      "routing attempt",
+      "failed to route"
+    ],
+    "negative_keywords": [
+      "abandoned",
+      "hung up"
+    ],
+    "examples": [
+      "How often did routing fail to find an agent?",
+      "Which queue has the worst coverage?"
+    ],
+    "search_text": "Routing Failure / No Agent Available Attempts by the router to place a conversation with an agent, and their outcomes. Used for capacity and coverage questions, not for agent-level missed contacts. routing failures no agent available no ready agents failed to route routing attempts routing no agent coverage routing attempt failed to route (Conversation)-[:HAS_ROUTING_ATTEMPT]->(RoutingAttempt) (RoutingAttempt)-[:TARGETED_QUEUE]->(Queue) (RoutingAttempt)-[:OFFERED_AGENT]->(Agent) (Conversation)-[:HAS_ASSIGNMENT]->(Assignment) (Assignment)-[:FROM_ATTEMPT]->(RoutingAttempt)",
+    "domain": "ccaas",
+    "schema_version": "2"
+  },
+  {
+    "id": "concept_abandonment_rate",
+    "type": "business_concept",
+    "name": "Abandonment Rate",
+    "aliases": [
+      "abandoned calls",
+      "customer hangup",
+      "disconnect before agent",
+      "abandon rate"
+    ],
+    "description": "Share of conversations where the customer disconnected before any agent was assigned.",
+    "disambiguation": "Customer-side. For agent-side non-answer use concept_missed_contacts; for router-side failure use concept_routing_failure.",
+    "base_entities": [
+      "Conversation",
+      "Channel",
+      "Queue"
+    ],
+    "business_rules": [
+      "Abandoned = ended_at IS NOT NULL AND assigned_at IS NULL.",
+      "end_reason and end_actor carry the reason; end_actor distinguishes customer-initiated from system-initiated. Discover the values before filtering on them rather than assuming codes.",
+      "Denominator is all conversations created in the period. Guard against a zero denominator.",
+      "Conversation has NO queue_id property in the graph — group by queue only through (Conversation)-[:IN_QUEUE]->(Queue). Group by channel using the scalar c.channel property, which is always populated."
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Conversation)-[:IN_QUEUE]->(Queue)",
+        "(Conversation)-[:THROUGH]->(Channel)"
+      ],
+      "key_properties": {
+        "Conversation": [
+          "created_at",
+          "assigned_at",
+          "ended_at",
+          "end_reason",
+          "end_actor",
+          "channel"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (c:Conversation) WHERE c.created_at >= datetime($period_start) AND c.created_at < datetime($period_end) WITH count(c) AS total, sum(CASE WHEN c.assigned_at IS NULL AND c.ended_at IS NOT NULL THEN 1 ELSE 0 END) AS abandoned RETURN abandoned, total, CASE WHEN total = 0 THEN 0.0 ELSE round(100.0 * abandoned / total, 2) END AS abandonment_pct",
+    "diagnostic_template": "MATCH (c:Conversation) WHERE c.created_at >= datetime($compare_start) AND c.created_at < datetime($period_end) WITH c.channel AS dimension, sum(CASE WHEN c.created_at >= datetime($period_start) AND c.assigned_at IS NULL AND c.ended_at IS NOT NULL THEN 1 ELSE 0 END) AS current, sum(CASE WHEN c.created_at < datetime($compare_end) AND c.assigned_at IS NULL AND c.ended_at IS NOT NULL THEN 1 ELSE 0 END) AS previous RETURN dimension, current, previous, current - previous AS delta ORDER BY abs(current - previous) DESC LIMIT 5",
+    "params": {
+      "period_start": "required",
+      "period_end": "required"
+    },
+    "keywords": [
+      "abandonment",
+      "abandoned",
+      "hung up",
+      "disconnect",
+      "left the queue"
+    ],
+    "negative_keywords": [
+      "missed contact",
+      "routing failure"
+    ],
+    "examples": [
+      "What is our abandonment rate this week?",
+      "Which channel has the highest abandonment?"
+    ],
+    "search_text": "Abandonment Rate Share of conversations where the customer disconnected before any agent was assigned. abandoned calls customer hangup disconnect before agent abandon rate abandonment abandoned hung up disconnect left the queue (Conversation)-[:IN_QUEUE]->(Queue) (Conversation)-[:THROUGH]->(Channel)",
+    "domain": "ccaas",
+    "schema_version": "2"
+  },
+  {
+    "id": "concept_sla_breach",
+    "type": "business_concept",
+    "name": "SLA Breach Rate",
+    "aliases": [
+      "SLA violation",
+      "overdue SLA",
+      "breached SLA",
+      "missed SLA",
+      "SLA compliance"
+    ],
+    "description": "Conversations whose service level deadline was missed, recorded as SLAInstance.breached_at.",
+    "base_entities": [
+      "Conversation",
+      "SLAInstance",
+      "SLA"
+    ],
+    "business_rules": [
+      "(Conversation)-[:HAS_SLA]->(SLAInstance)-[:BASED_ON]->(SLA). TRACKED_BY_SLA and HAS_SLA_INSTANCE do not exist.",
+      "The instance label is SLAInstance (from ccass.conversation_sla_state); the policy label is SLA (from ccass.sla_policies). Both are uppercase SLA — not Sla, not SlaInstance.",
+      "Breached when SLAInstance.breached_at IS NOT NULL. Filter breached_at within the period for 'breaches this week'; filter Conversation.created_at within the period for 'breach rate of this week's conversations'. These are different questions — pick deliberately and say which you used.",
+      "Conversation also carries denormalised sla_status, first_response_due_at and resolution_due_at. Prefer SLAInstance for breach facts; Conversation.sla_status is a snapshot and can lag.",
+      "SLA policy name lives on SLA.name; warning thresholds on SLA.warning_threshold_pct."
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Conversation)-[:HAS_SLA]->(SLAInstance)",
+        "(SLAInstance)-[:BASED_ON]->(SLA)"
+      ],
+      "key_properties": {
+        "SLAInstance": [
+          "breached_at",
+          "first_response_due_at",
+          "resolution_due_at",
+          "first_response_warning_at",
+          "resolution_warning_at"
+        ],
+        "SLA": [
+          "name",
+          "first_response_seconds",
+          "resolution_seconds",
+          "is_active"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (c:Conversation)-[:HAS_SLA]->(si:SLAInstance) WHERE si.breached_at >= datetime($period_start) AND si.breached_at < datetime($period_end) RETURN count(si) AS breach_count",
+    "diagnostic_template": "MATCH (c:Conversation)-[:HAS_SLA]->(si:SLAInstance)-[:BASED_ON]->(s:SLA) WITH s.name AS dimension, sum(CASE WHEN si.breached_at >= datetime($period_start) AND si.breached_at < datetime($period_end) THEN 1 ELSE 0 END) AS current, sum(CASE WHEN si.breached_at >= datetime($compare_start) AND si.breached_at < datetime($compare_end) THEN 1 ELSE 0 END) AS previous WHERE current > 0 OR previous > 0 RETURN dimension, current, previous, current - previous AS delta ORDER BY abs(current - previous) DESC LIMIT 5",
+    "params": {
+      "period_start": "required",
+      "period_end": "required"
+    },
+    "keywords": [
+      "SLA",
+      "breach",
+      "overdue",
+      "violation",
+      "compliance"
+    ],
+    "examples": [
+      "How many SLA breaches this month?",
+      "Which SLA policy has the most breaches?"
+    ],
+    "search_text": "SLA Breach Rate Conversations whose service level deadline was missed, recorded as SLAInstance.breached_at. SLA violation overdue SLA breached SLA missed SLA SLA compliance SLA breach overdue violation compliance (Conversation)-[:HAS_SLA]->(SLAInstance) (SLAInstance)-[:BASED_ON]->(SLA)",
+    "domain": "ccaas",
+    "schema_version": "2"
+  },
+  {
+    "id": "concept_first_contact_resolution",
+    "type": "business_concept",
+    "name": "First Contact Resolution (FCR)",
+    "aliases": [
+      "FCR",
+      "resolved first time",
+      "one call resolution",
+      "first time fix"
+    ],
+    "description": "Conversations resolved without any transfer to another queue or agent.",
+    "base_entities": [
+      "Conversation",
+      "Transfer"
+    ],
+    "business_rules": [
+      "FCR = resolved_at IS NOT NULL AND no (Conversation)-[:HAS_TRANSFER]->(:Transfer).",
+      "Use EXISTS { } for the negation. Bare pattern expressions inside CASE are invalid in Neo4j 5.",
+      "Report the rate, not just the count — a raw fcr_count with no denominator is meaningless.",
+      "A conversation with CONTINUES_FROM set is a follow-up of a previous contact and arguably not FCR. If the question is about true first-time resolution, exclude them: NOT EXISTS { (c)-[:CONTINUES_FROM]->(:Conversation) }."
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Conversation)-[:HAS_TRANSFER]->(Transfer)",
+        "(Conversation)-[:CONTINUES_FROM]->(Conversation)"
+      ],
+      "key_properties": {
+        "Conversation": [
+          "resolved_at",
+          "closed_at",
+          "created_at",
+          "previous_conversation_id"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (c:Conversation) WHERE c.resolved_at >= datetime($period_start) AND c.resolved_at < datetime($period_end) WITH count(c) AS resolved, sum(CASE WHEN NOT EXISTS { (c)-[:HAS_TRANSFER]->(:Transfer) } THEN 1 ELSE 0 END) AS fcr RETURN fcr, resolved, CASE WHEN resolved = 0 THEN 0.0 ELSE round(100.0 * fcr / resolved, 2) END AS fcr_pct",
+    "params": {
+      "period_start": "required",
+      "period_end": "required"
+    },
+    "keywords": [
+      "FCR",
+      "first contact resolution",
+      "no transfer",
+      "first time"
+    ],
+    "examples": [
+      "What is our FCR rate?",
+      "Did FCR drop this week?"
+    ],
+    "search_text": "First Contact Resolution (FCR) Conversations resolved without any transfer to another queue or agent. FCR resolved first time one call resolution first time fix FCR first contact resolution no transfer first time (Conversation)-[:HAS_TRANSFER]->(Transfer) (Conversation)-[:CONTINUES_FROM]->(Conversation)",
+    "domain": "ccaas",
+    "schema_version": "2"
+  },
+  {
+    "id": "concept_average_handle_time",
+    "type": "business_concept",
+    "name": "Average Handle Time (AHT)",
+    "aliases": [
+      "AHT",
+      "handle time",
+      "talk time",
+      "handling time"
+    ],
+    "description": "Average elapsed seconds from agent assignment to resolution.",
+    "base_entities": [
+      "Conversation",
+      "Agent"
+    ],
+    "business_rules": [
+      "AHT = duration.inSeconds(c.assigned_at, c.resolved_at).seconds. Do NOT use duration.between(...).seconds — it drops the day component and under-reports any conversation open longer than 24 hours, which is common on email.",
+      "Only include rows where both assigned_at and resolved_at are non-null.",
+      "Anchor the period on resolved_at (when the handling finished), and bound both ends.",
+      "Always return the sample size alongside the average — a 3-conversation average should not be reported as a trend.",
+      "Per-agent breakdown goes through (Conversation)-[:HANDLED_BY]->(Agent), returning Agent.display_name.",
+      "Email conversations skew AHT heavily. Split by c.channel before comparing periods."
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Conversation)-[:HANDLED_BY]->(Agent)"
+      ],
+      "key_properties": {
+        "Conversation": [
+          "assigned_at",
+          "resolved_at",
+          "channel"
+        ],
+        "Agent": [
+          "display_name"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (c:Conversation) WHERE c.resolved_at >= datetime($period_start) AND c.resolved_at < datetime($period_end) AND c.assigned_at IS NOT NULL RETURN round(avg(duration.inSeconds(c.assigned_at, c.resolved_at).seconds)) AS aht_seconds, count(c) AS sample_size",
+    "diagnostic_template": "MATCH (c:Conversation) WHERE c.assigned_at IS NOT NULL AND c.resolved_at >= datetime($compare_start) AND c.resolved_at < datetime($period_end) WITH c.channel AS dimension, avg(CASE WHEN c.resolved_at >= datetime($period_start) THEN duration.inSeconds(c.assigned_at, c.resolved_at).seconds END) AS current, avg(CASE WHEN c.resolved_at < datetime($compare_end) THEN duration.inSeconds(c.assigned_at, c.resolved_at).seconds END) AS previous RETURN dimension, round(current) AS current, round(previous) AS previous, round(coalesce(current,0) - coalesce(previous,0)) AS delta ORDER BY abs(coalesce(current,0) - coalesce(previous,0)) DESC LIMIT 5",
+    "params": {
+      "period_start": "required",
+      "period_end": "required"
+    },
+    "keywords": [
+      "AHT",
+      "handle time",
+      "average handle",
+      "how long"
+    ],
+    "examples": [
+      "What is average handle time?",
+      "AHT by agent this week"
+    ],
+    "search_text": "Average Handle Time (AHT) Average elapsed seconds from agent assignment to resolution. AHT handle time talk time handling time AHT handle time average handle how long (Conversation)-[:HANDLED_BY]->(Agent)",
+    "domain": "ccaas",
+    "schema_version": "2"
+  },
+  {
+    "id": "concept_service_level",
+    "type": "business_concept",
+    "name": "Service Level",
+    "aliases": [
+      "SL",
+      "answered within threshold",
+      "service level agreement attainment"
+    ],
+    "description": "Share of conversations whose first agent response landed inside the first-response SLA deadline.",
+    "disambiguation": "Service Level measures responses that were on time. SLA Breach Rate measures the ones that were not. They should sum to 100% over the same population — if they do not, you have filtered on different anchors.",
+    "base_entities": [
+      "Conversation",
+      "SLAInstance",
+      "SLA"
+    ],
+    "business_rules": [
+      "Met when c.first_agent_response_at <= si.first_response_due_at.",
+      "Use first_agent_response_at, NOT first_response_at — first_response_at includes bot responses and will inflate service level on any channel where bot_active is true.",
+      "Guard the denominator.",
+      "Conversations with no first_agent_response_at are unanswered so far; decide explicitly whether they count as a miss (they usually should for a closed period) and state the choice."
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Conversation)-[:HAS_SLA]->(SLAInstance)-[:BASED_ON]->(SLA)"
+      ],
+      "key_properties": {
+        "Conversation": [
+          "queued_at",
+          "first_agent_response_at",
+          "first_response_at",
+          "bot_active",
+          "created_at"
+        ],
+        "SLAInstance": [
+          "first_response_due_at"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (c:Conversation)-[:HAS_SLA]->(si:SLAInstance) WHERE c.created_at >= datetime($period_start) AND c.created_at < datetime($period_end) WITH count(c) AS total, sum(CASE WHEN c.first_agent_response_at IS NOT NULL AND c.first_agent_response_at <= si.first_response_due_at THEN 1 ELSE 0 END) AS met RETURN met, total, CASE WHEN total = 0 THEN 0.0 ELSE round(100.0 * met / total, 2) END AS service_level_pct",
+    "params": {
+      "period_start": "required",
+      "period_end": "required"
+    },
+    "keywords": [
+      "service level",
+      "answered in time",
+      "threshold",
+      "on time response"
+    ],
+    "examples": [
+      "Are we meeting service level?",
+      "Service level by queue"
+    ],
+    "search_text": "Service Level Share of conversations whose first agent response landed inside the first-response SLA deadline. SL answered within threshold service level agreement attainment service level answered in time threshold on time response (Conversation)-[:HAS_SLA]->(SLAInstance)-[:BASED_ON]->(SLA)",
+    "domain": "ccaas",
+    "schema_version": "2"
+  },
+  {
+    "id": "concept_queue_wait_time",
+    "type": "business_concept",
+    "name": "Queue Wait Time",
+    "aliases": [
+      "wait time",
+      "time in queue",
+      "speed of answer",
+      "ASA"
+    ],
+    "description": "Elapsed seconds from entering the queue to agent assignment.",
+    "base_entities": [
+      "Conversation",
+      "Queue"
+    ],
+    "business_rules": [
+      "Wait = duration.inSeconds(c.queued_at, c.assigned_at).seconds. Never duration.between(...).seconds.",
+      "Conversation has no queue_id property — the queue name is only reachable via (Conversation)-[:IN_QUEUE]->(Queue), returning q.name.",
+      "Conversations still waiting (assigned_at IS NULL) are excluded by this metric and will make wait time look better than it is during a backlog. Report the count of still-waiting conversations alongside.",
+      "Bound both ends of the period on created_at."
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Conversation)-[:IN_QUEUE]->(Queue)"
+      ],
+      "key_properties": {
+        "Conversation": [
+          "queued_at",
+          "assigned_at",
+          "created_at"
+        ],
+        "Queue": [
+          "name",
+          "status"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (c:Conversation)-[:IN_QUEUE]->(q:Queue) WHERE c.created_at >= datetime($period_start) AND c.created_at < datetime($period_end) AND c.queued_at IS NOT NULL AND c.assigned_at IS NOT NULL RETURN q.name AS queue, round(avg(duration.inSeconds(c.queued_at, c.assigned_at).seconds)) AS avg_wait_seconds, count(c) AS sample_size ORDER BY avg_wait_seconds DESC LIMIT 10",
+    "params": {
+      "period_start": "required",
+      "period_end": "required"
+    },
+    "keywords": [
+      "wait time",
+      "queue wait",
+      "speed of answer",
+      "how long waiting"
+    ],
+    "examples": [
+      "Average wait time by queue",
+      "Which queue has the longest wait?"
+    ],
+    "search_text": "Queue Wait Time Elapsed seconds from entering the queue to agent assignment. wait time time in queue speed of answer ASA wait time queue wait speed of answer how long waiting (Conversation)-[:IN_QUEUE]->(Queue)",
+    "domain": "ccaas",
+    "schema_version": "2"
+  },
+  {
+    "id": "concept_transfer_rate",
+    "type": "business_concept",
+    "name": "Transfer Rate",
+    "aliases": [
+      "transfers",
+      "escalations",
+      "handoffs",
+      "reassignments"
+    ],
+    "description": "Conversations transferred to another queue or agent, as a count and as a share of conversations in the period.",
+    "base_entities": [
+      "Conversation",
+      "Transfer",
+      "Queue",
+      "Agent"
+    ],
+    "business_rules": [
+      "(Conversation)-[:HAS_TRANSFER]->(Transfer). Destination queue via (Transfer)-[:TRANSFERRED_TO]->(Queue); origin queue via (Transfer)-[:FROM_QUEUE]->(Queue).",
+      "Agent-side edges are FROM_AGENT, REQUESTED_AGENT and OFFERED_AGENT — all to Agent.",
+      "A conversation can have several Transfer nodes. Count DISTINCT conversations for a rate, count Transfer nodes for transfer volume, and say which you did.",
+      "Transfer.state tells you whether the transfer completed. requested_at is the anchor date; completed_at may be null for abandoned transfers.",
+      "Transfers are the inverse population of FCR — reconcile the two when both appear in one answer."
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Conversation)-[:HAS_TRANSFER]->(Transfer)",
+        "(Transfer)-[:TRANSFERRED_TO]->(Queue)",
+        "(Transfer)-[:FROM_QUEUE]->(Queue)",
+        "(Transfer)-[:FROM_AGENT]->(Agent)"
+      ],
+      "key_properties": {
+        "Transfer": [
+          "state",
+          "requested_at",
+          "completed_at",
+          "notes",
+          "disposition_code"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (c:Conversation)-[:HAS_TRANSFER]->(t:Transfer) WHERE t.requested_at >= datetime($period_start) AND t.requested_at < datetime($period_end) RETURN count(DISTINCT c) AS conversations_transferred, count(t) AS transfer_events",
+    "diagnostic_template": "MATCH (c:Conversation)-[:HAS_TRANSFER]->(t:Transfer)-[:TRANSFERRED_TO]->(q:Queue) WITH q.name AS dimension, sum(CASE WHEN t.requested_at >= datetime($period_start) AND t.requested_at < datetime($period_end) THEN 1 ELSE 0 END) AS current, sum(CASE WHEN t.requested_at >= datetime($compare_start) AND t.requested_at < datetime($compare_end) THEN 1 ELSE 0 END) AS previous WHERE current > 0 OR previous > 0 RETURN dimension, current, previous, current - previous AS delta ORDER BY abs(current - previous) DESC LIMIT 5",
+    "params": {
+      "period_start": "required",
+      "period_end": "required"
+    },
+    "keywords": [
+      "transfer",
+      "escalation",
+      "handoff",
+      "passed to another"
+    ],
+    "examples": [
+      "How many transfers this week?",
+      "Which queue receives the most transfers?"
+    ],
+    "search_text": "Transfer Rate Conversations transferred to another queue or agent, as a count and as a share of conversations in the period. transfers escalations handoffs reassignments transfer escalation handoff passed to another (Conversation)-[:HAS_TRANSFER]->(Transfer) (Transfer)-[:TRANSFERRED_TO]->(Queue) (Transfer)-[:FROM_QUEUE]->(Queue) (Transfer)-[:FROM_AGENT]->(Agent)",
+    "domain": "ccaas",
+    "schema_version": "2"
+  },
+  {
+    "id": "concept_conversation_volume",
+    "type": "business_concept",
+    "name": "Conversation Volume",
+    "aliases": [
+      "contact volume",
+      "interaction count",
+      "ticket volume",
+      "how many conversations"
+    ],
+    "description": "Count of conversations in a period, optionally split by channel, queue or status.",
+    "base_entities": [
+      "Conversation",
+      "Channel",
+      "Queue"
+    ],
+    "business_rules": [
+      "Default to the scalar c.channel property for channel splits. It is always populated. The (Conversation)-[:THROUGH]->(Channel) edge depends on channel_config_id, which is null for a meaningful share of rows — grouping through it silently drops those conversations and undercounts total volume.",
+      "If the question needs the configured channel name rather than the channel kind, use (Conversation)-[:THROUGH]->(ch:Channel) and return ch.name, but state that rows without a channel config are excluded.",
+      "Channel node properties are channel_type and name. Conversation.channel is the kind (voice, email, webchat, whatsapp...).",
+      "Do not mix Conversation counts with Interaction counts in one total — Interaction is a CDP projection of the same event. See concept_interaction."
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Conversation)-[:THROUGH]->(Channel)",
+        "(Conversation)-[:IN_QUEUE]->(Queue)"
+      ],
+      "key_properties": {
+        "Conversation": [
+          "created_at",
+          "channel",
+          "status",
+          "lifecycle_state",
+          "priority"
+        ],
+        "Channel": [
+          "channel_type",
+          "name"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (c:Conversation) WHERE c.created_at >= datetime($period_start) AND c.created_at < datetime($period_end) RETURN c.channel AS channel, count(c) AS volume ORDER BY volume DESC",
+    "diagnostic_template": "MATCH (c:Conversation) WITH c.channel AS dimension, sum(CASE WHEN c.created_at >= datetime($period_start) AND c.created_at < datetime($period_end) THEN 1 ELSE 0 END) AS current, sum(CASE WHEN c.created_at >= datetime($compare_start) AND c.created_at < datetime($compare_end) THEN 1 ELSE 0 END) AS previous WHERE current > 0 OR previous > 0 RETURN dimension, current, previous, current - previous AS delta ORDER BY abs(current - previous) DESC LIMIT 5",
+    "params": {
+      "period_start": "required",
+      "period_end": "required"
+    },
+    "keywords": [
+      "volume",
+      "how many conversations",
+      "contact volume",
+      "count"
+    ],
+    "examples": [
+      "How many conversations this week?",
+      "Volume by channel"
+    ],
+    "search_text": "Conversation Volume Count of conversations in a period, optionally split by channel, queue or status. contact volume interaction count ticket volume how many conversations volume how many conversations contact volume count (Conversation)-[:THROUGH]->(Channel) (Conversation)-[:IN_QUEUE]->(Queue)",
+    "domain": "ccaas",
+    "schema_version": "2"
+  },
+  {
+    "id": "concept_interaction",
+    "type": "business_concept",
+    "name": "Interaction (CDP projection)",
+    "aliases": [
+      "cdp interaction",
+      "customer interaction",
+      "engagement record"
+    ],
+    "description": "Interaction is the CDP-side projection of a CCaaS Conversation, carrying sentiment, outcome and summary for customer-360 use.",
+    "disambiguation": "Interaction and Conversation describe the SAME event. Never count both in one metric and never join them into one row set — you will double count. Use Conversation for operational contact-centre metrics (SLA, AHT, queue, routing). Use Interaction for customer-level analytics (sentiment, outcome, engagement history).",
+    "base_entities": [
+      "Interaction",
+      "Conversation",
+      "Contact",
+      "Queue",
+      "Agent"
+    ],
+    "business_rules": [
+      "(Interaction)-[:PROJECTED_FROM]->(Conversation) links the two.",
+      "(Contact)-[:HAS_INTERACTIONS]->(InteractionHistory)-[:CONTAINS]->(Interaction) is the only path from a person.",
+      "Interaction also has (Interaction)-[:IN_QUEUE]->(Queue) and (Interaction)-[:HANDLED_BY]->(Agent) — the same relationship types Conversation uses. Always label the source node or you will match both.",
+      "Sentiment, outcome and summary live only on Interaction, not on Conversation."
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Interaction)-[:PROJECTED_FROM]->(Conversation)",
+        "(Contact)-[:HAS_INTERACTIONS]->(InteractionHistory)-[:CONTAINS]->(Interaction)",
+        "(Interaction)-[:HANDLED_BY]->(Agent)",
+        "(Interaction)-[:IN_QUEUE]->(Queue)"
+      ],
+      "key_properties": {
+        "Interaction": [
+          "channel",
+          "status",
+          "started_at",
+          "ended_at",
+          "outcome",
+          "summary",
+          "sentiment",
+          "disposition_code",
+          "sla_result",
+          "last_activity_at"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (i:Interaction) WHERE i.started_at >= datetime($period_start) AND i.started_at < datetime($period_end) RETURN i.sentiment AS sentiment, count(i) AS interactions ORDER BY interactions DESC",
+    "params": {
+      "period_start": "required",
+      "period_end": "required"
+    },
+    "keywords": [
+      "interaction",
+      "sentiment",
+      "outcome",
+      "engagement"
+    ],
+    "negative_keywords": [
+      "queue wait",
+      "sla breach",
+      "routing"
+    ],
+    "examples": [
+      "What is the sentiment split of interactions this month?",
+      "Show interactions for this contact"
+    ],
+    "search_text": "Interaction (CDP projection) Interaction is the CDP-side projection of a CCaaS Conversation, carrying sentiment, outcome and summary for customer-360 use. cdp interaction customer interaction engagement record interaction sentiment outcome engagement (Interaction)-[:PROJECTED_FROM]->(Conversation) (Contact)-[:HAS_INTERACTIONS]->(InteractionHistory)-[:CONTAINS]->(Interaction) (Interaction)-[:HANDLED_BY]->(Agent) (Interaction)-[:IN_QUEUE]->(Queue)",
+    "domain": "cdp",
+    "schema_version": "2"
+  },
+  {
+    "id": "concept_support_agent",
+    "type": "business_concept",
+    "name": "Support Agent",
+    "aliases": [
+      "agent",
+      "CSR",
+      "customer service rep",
+      "advisor"
+    ],
+    "description": "The Agent node is the contact-centre identity of a workforce Employee. Conversations attach to it via HANDLED_BY.",
+    "base_entities": [
+      "Agent",
+      "Employee",
+      "Skill",
+      "Queue",
+      "AgentPresence",
+      "AgentCapacity"
+    ],
+    "business_rules": [
+      "(Agent)-[:IS_AGENT_FOR]->(Employee) — the Agent is the child; the Employee is the workforce record.",
+      "(Agent)-[:HAS_SKILL]->(Skill), (Queue)-[:HAS_MEMBER]->(Agent), (Queue)-[:REQUIRES_SKILL]->(Skill).",
+      "(Conversation)-[:HANDLED_BY]->(Agent). Never ASSIGNED_TO for a conversation-to-agent link.",
+      "ASSIGNED_TO exists but points to a Employee, from two different sources: (ContactProfile)-[:ASSIGNED_TO]->(Employee) and (ContactActivity)-[:ASSIGNED_TO]->(Employee). Label both ends.",
+      "(Conversation)-[:ASSIGNED_USER]->(Employee) also exists in parallel with HANDLED_BY. Use HANDLED_BY for agent productivity; ASSIGNED_USER only when the question is explicitly about the platform user.",
+      "Display name is Agent.display_name. Employee has first_name and last_name separately — there is no Employee.name or Employee.full_name.",
+      "(Agent)-[:HAS_PRESENCE]->(AgentPresence) is directed FROM Agent. Same for HAS_CAPACITY to AgentCapacity.",
+      "(Tenant)-[:HAS_AGENT]->(Agent) DOES exist (unlike most Tenant fan-outs), but matching (a:Agent) directly is cheaper."
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Agent)-[:IS_AGENT_FOR]->(Employee)",
+        "(Agent)-[:HAS_SKILL]->(Skill)",
+        "(Conversation)-[:HANDLED_BY]->(Agent)",
+        "(Queue)-[:HAS_MEMBER]->(Agent)",
+        "(Agent)-[:HAS_PRESENCE]->(AgentPresence)",
+        "(Agent)-[:HAS_CAPACITY]->(AgentCapacity)"
+      ],
+      "key_properties": {
+        "Agent": [
+          "display_name",
+          "email",
+          "status"
+        ],
+        "Employee": [
+          "first_name",
+          "last_name",
+          "work_email",
+          "status"
+        ],
+        "AgentPresence": [
+          "status",
+          "presence_state",
+          "reason_code",
+          "heartbeat_at"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (c:Conversation)-[:HANDLED_BY]->(a:Agent) WHERE c.created_at >= datetime($period_start) AND c.created_at < datetime($period_end) RETURN a.display_name AS agent, count(c) AS handled ORDER BY handled DESC LIMIT 10",
+    "params": {
+      "period_start": "required",
+      "period_end": "required"
+    },
+    "keywords": [
+      "agent",
+      "support agent",
+      "rep",
+      "who handled",
+      "agent performance"
+    ],
+    "examples": [
+      "Which agents handled the most conversations?",
+      "Which agents are available right now?"
+    ],
+    "search_text": "Support Agent The Agent node is the contact-centre identity of a workforce Employee. Conversations attach to it via HANDLED_BY. agent CSR customer service rep advisor agent support agent rep who handled agent performance (Agent)-[:IS_AGENT_FOR]->(Employee) (Agent)-[:HAS_SKILL]->(Skill) (Conversation)-[:HANDLED_BY]->(Agent) (Queue)-[:HAS_MEMBER]->(Agent) (Agent)-[:HAS_PRESENCE]->(AgentPresence) (Agent)-[:HAS_CAPACITY]->(AgentCapacity)",
+    "domain": "ccaas",
+    "schema_version": "2"
+  },
+  {
+    "id": "concept_customer",
+    "type": "business_concept",
+    "name": "Customer",
+    "aliases": [
+      "paying customer",
+      "buyer",
+      "purchased contact",
+      "existing customer"
+    ],
+    "description": "A Contact who has bought. Available two ways: the :Customer sublabel set from contact_type, or a completed Order / SalesOrder.",
+    "disambiguation": "Two definitions coexist and give different numbers. (1) Declared: Contact carries the extra label :Customer because contact_type = 'customer'. (2) Behavioural: the Contact has a completed order. State which you used. If the user asks 'how many customers', prefer the declared sublabel; if they ask 'how many customers bought', use orders.",
+    "base_entities": [
+      "Contact",
+      "Order",
+      "SalesOrder"
+    ],
+    "business_rules": [
+      "Contact key is cdp_id, NOT id. MATCH (ct:Contact {cdp_id: $cdp_id}).",
+      "Sublabels are applied in addition to Contact: :Lead, :Prospect, :Customer, from contact_type. MATCH (ct:Contact:Customer) is the fast path and uses the label index.",
+      "CDP purchase path: (Contact)-[:PLACED]->(Order). CRM purchase path: (SalesOrder)-[:PLACED_BY]->(Contact) — note the reversed direction.",
+      "Order (cdp.orders, key order_id, amount field total_amount) and SalesOrder (crm.sales_orders, key id, amount field total) are DIFFERENT nodes for different flows. Do not sum them together without knowing the tenant runs only one.",
+      "Order status values are not fixed by the schema. Pass them as a parameter ($paid_statuses) rather than hard-coding ['completed','paid'], and run a discovery query if unsure: MATCH (o:Order) RETURN DISTINCT o.status, count(*).",
+      "total_amount and total are decimal-mapped. If the CDC consumer wrote them as strings, sum() fails — coerce with toFloat() when in doubt."
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Contact)-[:PLACED]->(Order)",
+        "(SalesOrder)-[:PLACED_BY]->(Contact)",
+        "(ContactProfile)-[:OVERLAY_OF]->(Contact)"
+      ],
+      "key_properties": {
+        "Contact": [
+          "cdp_id",
+          "contact_type",
+          "first_name",
+          "last_name",
+          "acquisition_channel",
+          "acquisition_date",
+          "first_seen_at",
+          "last_seen_at"
+        ],
+        "Order": [
+          "order_id",
+          "status",
+          "total_amount",
+          "currency",
+          "payment_status",
+          "created_at"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (ct:Contact:Customer) RETURN count(ct) AS customer_count",
+    "alternate_template": "MATCH (ct:Contact)-[:PLACED]->(o:Order) WHERE o.status IN $paid_statuses RETURN count(DISTINCT ct) AS purchasing_customers",
+    "discovery_template": "MATCH (o:Order) RETURN DISTINCT o.status AS status, count(*) AS n ORDER BY n DESC",
+    "params": {
+      "paid_statuses": "optional, default ['completed','paid']"
+    },
+    "keywords": [
+      "customer",
+      "buyer",
+      "paying",
+      "purchased",
+      "existing customers"
+    ],
+    "examples": [
+      "How many customers do we have?",
+      "New customers this month"
+    ],
+    "search_text": "Customer A Contact who has bought. Available two ways: the :Customer sublabel set from contact_type, or a completed Order / SalesOrder. paying customer buyer purchased contact existing customer customer buyer paying purchased existing customers (Contact)-[:PLACED]->(Order) (SalesOrder)-[:PLACED_BY]->(Contact) (ContactProfile)-[:OVERLAY_OF]->(Contact)",
+    "domain": "cdp",
+    "schema_version": "2"
+  },
+  {
+    "id": "concept_lead",
+    "type": "business_concept",
+    "name": "Lead",
+    "aliases": [
+      "marketing lead",
+      "inbound lead",
+      "MQL",
+      "new lead"
+    ],
+    "description": "A Contact in the pre-sale stage. Expressed two ways: the :Lead sublabel from contact_type, and the CRM overlay ContactProfile.lead_status.",
+    "disambiguation": "Do not confuse the CDP sublabel with the CRM overlay. Contact:Lead is what the CDP thinks the person is. ContactProfile.lead_status is what the sales team set. They disagree regularly. Also distinguish Lead (a person) from Opportunity (an opportunity) — a converted lead is still a Contact, with (ContactProfile)-[:CONVERTED_TO]->(Opportunity).",
+    "base_entities": [
+      "Contact",
+      "ContactProfile",
+      "Opportunity",
+      "LeadSummary",
+      "LeadEnrichmentSnapshot"
+    ],
+    "business_rules": [
+      "(ContactProfile)-[:OVERLAY_OF]->(Contact) — the overlay points AT the Contact. ContactProfile.account_contact_id equals Contact.cdp_id.",
+      "Unconverted lead: cp.lead_status IS NOT NULL AND NOT EXISTS { (cp)-[:CONVERTED_TO]->(:Opportunity) }.",
+      "(Contact)-[:HAS_LEAD_SUMMARY]->(LeadSummary) and (Contact)-[:HAS_ENRICHMENT]->(LeadEnrichmentSnapshot) hang off the Contact, NOT off the ContactProfile. Do not route these through ContactProfile.",
+      "Ownership: (ContactProfile)-[:ASSIGNED_TO]->(Employee) for the rep, (ContactProfile)-[:CREATED_BY]->(Employee) for the creator.",
+      "Employment: (ContactProfile)-[:WORKS_AT]->(Account), (ContactProfile)-[:AT_SITE]->(AccountSite). Both are null for B2C tenants.",
+      "Qualification fields live on ContactProfile: bant_budget, bant_authority, bant_need, bant_timeline, lead_source, lead_status, disqualify_reason, nurture_status.",
+      "There is no (Tenant)-[:HAS_CONTACT_PROFILE]->() edge — match (cp:ContactProfile) directly."
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(ContactProfile)-[:OVERLAY_OF]->(Contact)",
+        "(ContactProfile)-[:CONVERTED_TO]->(Opportunity)",
+        "(ContactProfile)-[:ASSIGNED_TO]->(Employee)",
+        "(ContactProfile)-[:WORKS_AT]->(Account)",
+        "(Contact)-[:HAS_LEAD_SUMMARY]->(LeadSummary)",
+        "(Contact)-[:HAS_ENRICHMENT]->(LeadEnrichmentSnapshot)"
+      ],
+      "key_properties": {
+        "ContactProfile": [
+          "lead_status",
+          "lead_source",
+          "crm_status",
+          "disqualify_reason",
+          "nurture_status",
+          "created_at",
+          "assigned_at",
+          "sla_deadline"
+        ],
+        "Contact": [
+          "cdp_id",
+          "contact_type"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (cp:ContactProfile)-[:OVERLAY_OF]->(ct:Contact) WHERE cp.lead_status IS NOT NULL AND NOT EXISTS { (cp)-[:CONVERTED_TO]->(:Opportunity) } RETURN count(DISTINCT ct) AS open_lead_count",
+    "diagnostic_template": "MATCH (cp:ContactProfile) WHERE cp.lead_source IS NOT NULL WITH cp.lead_source AS dimension, sum(CASE WHEN cp.created_at >= datetime($period_start) AND cp.created_at < datetime($period_end) THEN 1 ELSE 0 END) AS current, sum(CASE WHEN cp.created_at >= datetime($compare_start) AND cp.created_at < datetime($compare_end) THEN 1 ELSE 0 END) AS previous WHERE current > 0 OR previous > 0 RETURN dimension, current, previous, current - previous AS delta ORDER BY abs(current - previous) DESC LIMIT 5",
+    "keywords": [
+      "lead",
+      "MQL",
+      "inbound",
+      "lead source",
+      "unqualified"
+    ],
+    "negative_keywords": [
+      "deal amount",
+      "pipeline value"
+    ],
+    "examples": [
+      "How many open leads?",
+      "Leads by source this week",
+      "Lead conversion rate"
+    ],
+    "search_text": "Lead A Contact in the pre-sale stage. Expressed two ways: the :Lead sublabel from contact_type, and the CRM overlay ContactProfile.lead_status. marketing lead inbound lead MQL new lead lead MQL inbound lead source unqualified (ContactProfile)-[:OVERLAY_OF]->(Contact) (ContactProfile)-[:CONVERTED_TO]->(Opportunity) (ContactProfile)-[:ASSIGNED_TO]->(Employee) (ContactProfile)-[:WORKS_AT]->(Account) (Contact)-[:HAS_LEAD_SUMMARY]->(LeadSummary) (Contact)-[:HAS_ENRICHMENT]->(LeadEnrichmentSnapshot)",
+    "domain": "crm",
+    "schema_version": "2"
+  },
+  {
+    "id": "concept_churn_risk",
+    "type": "business_concept",
+    "name": "Churn Risk",
+    "aliases": [
+      "churn score",
+      "retention risk",
+      "at-risk customer",
+      "likely to leave"
+    ],
+    "description": "Contacts with an elevated churn_score on their CustomerScore node.",
+    "base_entities": [
+      "Contact",
+      "CustomerScore"
+    ],
+    "business_rules": [
+      "(Contact)-[:HAS_SCORES]->(CustomerScore) — plural SCORES. HAS_SCORE does not exist.",
+      "CustomerScore key is cdp_id, the same value as the Contact — there is one score node per contact, not one per model run.",
+      "Available scores: engagement_score, value_score, loyalty_score, churn_score, purchase_probability, retention_score, advocacy_score, web_engagement_score, intent_score, digital_activity_score.",
+      "Score scale is not declared in the schema. Do not assume 0-1 versus 0-100. Sanity-check with: MATCH (cs:CustomerScore) RETURN min(cs.churn_score), max(cs.churn_score), avg(cs.churn_score). A threshold of 0.7 against a 0-100 scale returns everybody.",
+      "Always return updated_at with the score so the answer can flag stale scoring.",
+      "Contact name is first_name + last_name; there is no Contact.name."
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Contact)-[:HAS_SCORES]->(CustomerScore)"
+      ],
+      "key_properties": {
+        "CustomerScore": [
+          "cdp_id",
+          "churn_score",
+          "retention_score",
+          "engagement_score",
+          "value_score",
+          "updated_at"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (ct:Contact)-[:HAS_SCORES]->(cs:CustomerScore) WHERE cs.churn_score >= $threshold RETURN ct.cdp_id AS cdp_id, ct.first_name AS first_name, ct.last_name AS last_name, cs.churn_score AS churn_score, cs.updated_at AS scored_at ORDER BY cs.churn_score DESC LIMIT 20",
+    "discovery_template": "MATCH (cs:CustomerScore) RETURN min(cs.churn_score) AS min_score, max(cs.churn_score) AS max_score, avg(cs.churn_score) AS avg_score, count(cs) AS scored_contacts",
+    "params": {
+      "threshold": "required, verify scale first"
+    },
+    "keywords": [
+      "churn",
+      "at risk",
+      "retention",
+      "churn score",
+      "leaving"
+    ],
+    "examples": [
+      "Which customers are at high churn risk?",
+      "How many at-risk customers?"
+    ],
+    "search_text": "Churn Risk Contacts with an elevated churn_score on their CustomerScore node. churn score retention risk at-risk customer likely to leave churn at risk retention churn score leaving (Contact)-[:HAS_SCORES]->(CustomerScore)",
+    "domain": "cdp",
+    "schema_version": "2"
+  },
+  {
+    "id": "concept_customer_lifetime_value",
+    "type": "business_concept",
+    "name": "Customer Lifetime Value (CLV)",
+    "aliases": [
+      "CLV",
+      "LTV",
+      "lifetime value",
+      "revenue per customer"
+    ],
+    "description": "Total order value attributable to a contact.",
+    "base_entities": [
+      "Contact",
+      "Order",
+      "SalesOrder",
+      "CustomerScore"
+    ],
+    "business_rules": [
+      "CDP: (Contact)-[:PLACED]->(Order), sum o.total_amount. CRM: (SalesOrder)-[:PLACED_BY]->(Contact), sum so.total.",
+      "DO NOT sum both paths in one query unless you have confirmed the tenant uses both without overlap — for B2B2C tenants the same purchase can appear in each and CLV will double.",
+      "Filter to realised revenue by status; do not include cancelled or draft orders in a lifetime value figure.",
+      "Multi-currency: Order carries a currency property. Summing across currencies is meaningless — group by currency or filter to one.",
+      "CustomerScore.value_score is a model output, not money. Never present it as CLV."
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Contact)-[:PLACED]->(Order)",
+        "(SalesOrder)-[:PLACED_BY]->(Contact)"
+      ],
+      "key_properties": {
+        "Order": [
+          "total_amount",
+          "currency",
+          "status",
+          "created_at"
+        ],
+        "SalesOrder": [
+          "total",
+          "currency",
+          "status",
+          "confirmed_at"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (ct:Contact)-[:PLACED]->(o:Order) WHERE o.status IN $paid_statuses RETURN ct.cdp_id AS cdp_id, ct.first_name AS first_name, ct.last_name AS last_name, o.currency AS currency, sum(toFloat(o.total_amount)) AS clv, count(o) AS orders ORDER BY clv DESC LIMIT 20",
+    "params": {
+      "paid_statuses": "optional, default ['completed','paid']"
+    },
+    "keywords": [
+      "CLV",
+      "LTV",
+      "lifetime value",
+      "top customers by spend"
+    ],
+    "examples": [
+      "Top customers by lifetime value",
+      "Average CLV"
+    ],
+    "search_text": "Customer Lifetime Value (CLV) Total order value attributable to a contact. CLV LTV lifetime value revenue per customer CLV LTV lifetime value top customers by spend (Contact)-[:PLACED]->(Order) (SalesOrder)-[:PLACED_BY]->(Contact)",
+    "domain": "cdp",
+    "schema_version": "2"
+  },
+  {
+    "id": "concept_segment_membership",
+    "type": "business_concept",
+    "name": "Segment Membership",
+    "aliases": [
+      "customer segment",
+      "segment",
+      "audience",
+      "cohort"
+    ],
+    "description": "Contacts belonging to a marketing or analytics segment.",
+    "base_entities": [
+      "Contact",
+      "Segment",
+      "Tenant"
+    ],
+    "business_rules": [
+      "(Contact)-[:BELONGS_TO_SEGMENT]->(Segment). IN_SEGMENT and MEMBER_OF_SEGMENT do not exist. MEMBER_OF exists but is (Employee)-[:MEMBER_OF]->(Team) — a different thing entirely.",
+      "Segment key is segment_id, not id. Display name is segment_name, not name.",
+      "(Tenant)-[:DEFINES_SEGMENT]->(Segment) does exist and is safe to use.",
+      "A Contact can be in many segments — count DISTINCT contacts when totalling across segments."
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Contact)-[:BELONGS_TO_SEGMENT]->(Segment)",
+        "(Tenant)-[:DEFINES_SEGMENT]->(Segment)"
+      ],
+      "key_properties": {
+        "Segment": [
+          "segment_id",
+          "segment_name",
+          "description",
+          "created_at"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (ct:Contact)-[:BELONGS_TO_SEGMENT]->(s:Segment) RETURN s.segment_name AS segment, count(DISTINCT ct) AS members ORDER BY members DESC",
+    "keywords": [
+      "segment",
+      "audience",
+      "cohort",
+      "membership"
+    ],
+    "examples": [
+      "How many contacts in the VIP segment?",
+      "Segment breakdown"
+    ],
+    "search_text": "Segment Membership Contacts belonging to a marketing or analytics segment. customer segment segment audience cohort segment audience cohort membership (Contact)-[:BELONGS_TO_SEGMENT]->(Segment) (Tenant)-[:DEFINES_SEGMENT]->(Segment)",
+    "domain": "cdp",
+    "schema_version": "2"
+  },
+  {
+    "id": "concept_ai_insight",
+    "type": "business_concept",
+    "name": "AI Insights and Recommendations",
+    "aliases": [
+      "insights",
+      "next best action",
+      "recommendations",
+      "ai suggestions"
+    ],
+    "description": "Model-generated insights and recommendations attached to a contact through collection nodes.",
+    "base_entities": [
+      "Contact",
+      "Insight",
+      "Recommendation",
+      "InsightCollection",
+      "RecommendationCollection"
+    ],
+    "business_rules": [
+      "(Contact)-[:HAS_INSIGHTS]->(InsightCollection)-[:CONTAINS]->(Insight). The collection hop is mandatory — Contact does not connect to Insight directly.",
+      "(Contact)-[:HAS_RECOMMENDATIONS]->(RecommendationCollection)-[:CONTAINS]->(Recommendation).",
+      "Insight key is insight_id; Recommendation key is recommendation_id. Neither uses id.",
+      "The collection nodes are keyed by cdp_id, so you can also enter from the collection side: MATCH (ic:InsightCollection {cdp_id: $cdp_id})-[:CONTAINS]->(i:Insight).",
+      "Insight fields: insight_type, score, summary, explanation, generated_at. Recommendation fields: recommendation_type, recommendation, confidence, generated_at.",
+      "CONTAINS is overloaded — always label the collection node and the child node."
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Contact)-[:HAS_INSIGHTS]->(InsightCollection)-[:CONTAINS]->(Insight)",
+        "(Contact)-[:HAS_RECOMMENDATIONS]->(RecommendationCollection)-[:CONTAINS]->(Recommendation)"
+      ],
+      "key_properties": {
+        "Insight": [
+          "insight_id",
+          "insight_type",
+          "score",
+          "summary",
+          "explanation",
+          "generated_at"
+        ],
+        "Recommendation": [
+          "recommendation_id",
+          "recommendation_type",
+          "recommendation",
+          "confidence",
+          "generated_at"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (ct:Contact {cdp_id: $cdp_id})-[:HAS_INSIGHTS]->(:InsightCollection)-[:CONTAINS]->(i:Insight) RETURN i.insight_type AS type, i.score AS score, i.summary AS summary, i.generated_at AS generated_at ORDER BY i.generated_at DESC LIMIT 10",
+    "params": {
+      "cdp_id": "required"
+    },
+    "keywords": [
+      "insight",
+      "recommendation",
+      "next best action",
+      "ai suggestion"
+    ],
+    "examples": [
+      "What insights do we have for this customer?",
+      "Show recommendations for this contact"
+    ],
+    "search_text": "AI Insights and Recommendations Model-generated insights and recommendations attached to a contact through collection nodes. insights next best action recommendations ai suggestions insight recommendation next best action ai suggestion (Contact)-[:HAS_INSIGHTS]->(InsightCollection)-[:CONTAINS]->(Insight) (Contact)-[:HAS_RECOMMENDATIONS]->(RecommendationCollection)-[:CONTAINS]->(Recommendation)",
+    "domain": "cdp",
+    "schema_version": "2"
+  },
+  {
+    "id": "concept_deal_pipeline",
+    "type": "business_concept",
+    "name": "Opportunity Pipeline",
+    "description": "Sales opportunity pipeline with stages, forecast amounts, win rates and deal activities.",
+    "aliases": [
+      "sales pipeline",
+      "opportunities",
+      "open deals",
+      "win rate",
+      "forecast",
+      "deal pipeline"
+    ],
+    "base_entities": [
+      "Opportunity",
+      "Account",
+      "Contact",
+      "Employee",
+      "OpportunityActivity"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Opportunity)-[:WITH_ACCOUNT]->(Account)",
+        "(Opportunity)-[:PRIMARY_CONTACT]->(Contact)",
+        "(Opportunity)-[:OWNED_BY]->(Employee)",
+        "(Opportunity)-[:HAS_ACTIVITY]->(OpportunityActivity)"
+      ],
+      "key_properties": {
+        "Opportunity": [
+          "stage",
+          "amount",
+          "title",
+          "expected_close_date",
+          "closed_at",
+          "forecast_category"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (d:Opportunity) WHERE d.closed_at IS NULL RETURN d.stage AS stage, count(d) AS deals, sum(toFloat(d.amount)) AS pipeline_value ORDER BY pipeline_value DESC",
+    "keywords": [
+      "deal",
+      "opportunity",
+      "pipeline",
+      "forecast",
+      "win rate",
+      "stage"
+    ],
+    "search_text": "Opportunity Pipeline Sales opportunity pipeline with stages, forecast amounts, win rates and deal activities. sales pipeline opportunities open deals win rate forecast deal pipeline deal opportunity pipeline forecast win rate stage (Opportunity)-[:WITH_ACCOUNT]->(Account) (Opportunity)-[:PRIMARY_CONTACT]->(Contact) (Opportunity)-[:OWNED_BY]->(Employee) (Opportunity)-[:HAS_ACTIVITY]->(OpportunityActivity)"
+  },
+  {
+    "id": "concept_account",
+    "type": "business_concept",
+    "name": "Account (Account)",
+    "aliases": [
+      "company account",
+      "B2B account",
+      "organization account",
+      "client"
+    ],
+    "description": "Account is not a label. The organisational entity is Account, with AccountSite for individual locations.",
+    "disambiguation": "Do not confuse Account (a customer organisation) with Tenant (the Worktual customer who owns the database). Tenant comes from accounts.organizations; Account comes from crm.companies. A question about 'our company' means Tenant; a question about 'accounts' or 'clients' means Account.",
+    "base_entities": [
+      "Account",
+      "AccountSite",
+      "ContactProfile",
+      "Opportunity",
+      "Contract",
+      "Invoice"
+    ],
+    "business_rules": [
+      "MATCH (co:Account) DIRECTLY. (Tenant)-[:HAS_COMPANY]->(Account) is commented out in core.yaml and returns zero rows.",
+      "(Account)-[:HAS_SITE]->(AccountSite) — direction is Account to site. (Account)-[:PARENT_COMPANY]->(Account) for hierarchy; traverse it with *0.. carefully, it can be deep.",
+      "(ContactProfile)-[:WORKS_AT]->(Account) links people. Contact itself does NOT link to Account — you must go through the ContactProfile overlay.",
+      "(Opportunity)-[:WITH_ACCOUNT]->(Account), (Contract)-[:FOR_ACCOUNT]->(Account), (SalesOrder)-[:FOR_ACCOUNT]->(Account), (Invoice)-[:FOR_ACCOUNT]->(Account). Note Invoice uses FOR_ACCOUNT, not FOR_ACCOUNT.",
+      "(Account)-[:OWNED_BY]->(Employee) for the account owner."
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Account)-[:HAS_SITE]->(AccountSite)",
+        "(ContactProfile)-[:WORKS_AT]->(Account)",
+        "(Opportunity)-[:WITH_ACCOUNT]->(Account)",
+        "(Contract)-[:FOR_ACCOUNT]->(Account)",
+        "(Invoice)-[:FOR_ACCOUNT]->(Account)",
+        "(Account)-[:OWNED_BY]->(Employee)",
+        "(Account)-[:PARENT_COMPANY]->(Account)"
+      ],
+      "key_properties": {
+        "Account": [
+          "name",
+          "domain",
+          "industry",
+          "employee_count",
+          "channel_role",
+          "expansion_signal",
+          "created_at"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (co:Account) RETURN co.industry AS industry, count(co) AS accounts ORDER BY accounts DESC",
+    "keywords": [
+      "account",
+      "company",
+      "client",
+      "B2B",
+      "organisation"
+    ],
+    "negative_keywords": [
+      "tenant",
+      "our organisation"
+    ],
+    "examples": [
+      "How many accounts do we have?",
+      "Accounts by industry",
+      "Which contacts work at this account?"
+    ],
+    "search_text": "Account (Account) Account is not a label. The organisational entity is Account, with AccountSite for individual locations. company account B2B account organization account client account company client B2B organisation (Account)-[:HAS_SITE]->(AccountSite) (ContactProfile)-[:WORKS_AT]->(Account) (Opportunity)-[:WITH_ACCOUNT]->(Account) (Contract)-[:FOR_ACCOUNT]->(Account) (Invoice)-[:FOR_ACCOUNT]->(Account) (Account)-[:OWNED_BY]->(Employee) (Account)-[:PARENT_COMPANY]->(Account)",
+    "domain": "crm",
+    "schema_version": "2"
+  },
+  {
+    "id": "concept_revenue",
+    "type": "business_concept",
+    "name": "Revenue / Order Volume",
+    "aliases": [
+      "sales revenue",
+      "order count",
+      "GMV",
+      "bookings",
+      "sales"
+    ],
+    "description": "Order value and count. Two separate stores: CDP Order (self-serve / commerce) and CRM SalesOrder (sales-led).",
+    "disambiguation": "Order and SalesOrder are distinct nodes with distinct keys and distinct amount fields. Order.order_id / Order.total_amount versus SalesOrder.id / SalesOrder.total. Answer from ONE of them and name which, or return them as two labelled rows. Never add them together silently. Invoice.total is billed revenue, a third thing again — use it only for billing questions.",
+    "base_entities": [
+      "Order",
+      "SalesOrder",
+      "Invoice",
+      "Contact",
+      "Account"
+    ],
+    "business_rules": [
+      "CDP: (Contact)-[:PLACED]->(Order), amount field total_amount, date field created_at.",
+      "CRM: (SalesOrder)-[:PLACED_BY]->(Contact) and (SalesOrder)-[:FOR_ACCOUNT]->(Account), amount field total, date field confirmed_at (created_at for booked-but-unconfirmed).",
+      "Line detail: (SalesOrder)-[:HAS_LINE]->(OrderLine)-[:FOR_PRODUCT]->(Product) for CRM; (Order)-[:CONTAINS]->(Product) for CDP. HAS_LINE is also used by Quote and Invoice — label both ends.",
+      "Group by currency or filter to a single currency. Both nodes carry a currency property.",
+      "There is no (Tenant)-[:HAS_SALES_ORDER]->() edge."
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Contact)-[:PLACED]->(Order)",
+        "(Order)-[:CONTAINS]->(Product)",
+        "(SalesOrder)-[:PLACED_BY]->(Contact)",
+        "(SalesOrder)-[:FOR_ACCOUNT]->(Account)",
+        "(SalesOrder)-[:HAS_LINE]->(OrderLine)-[:FOR_PRODUCT]->(Product)"
+      ],
+      "key_properties": {
+        "Order": [
+          "order_id",
+          "total_amount",
+          "currency",
+          "status",
+          "created_at"
+        ],
+        "SalesOrder": [
+          "total",
+          "currency",
+          "status",
+          "confirmed_at",
+          "created_at"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (o:Order) WHERE o.created_at >= datetime($period_start) AND o.created_at < datetime($period_end) RETURN o.currency AS currency, count(o) AS order_count, sum(toFloat(o.total_amount)) AS revenue ORDER BY revenue DESC",
+    "alternate_template": "MATCH (so:SalesOrder) WHERE so.confirmed_at >= datetime($period_start) AND so.confirmed_at < datetime($period_end) RETURN so.currency AS currency, count(so) AS order_count, sum(toFloat(so.total)) AS revenue ORDER BY revenue DESC",
+    "params": {
+      "period_start": "required",
+      "period_end": "required"
+    },
+    "keywords": [
+      "revenue",
+      "orders",
+      "sales",
+      "GMV",
+      "bookings"
+    ],
+    "examples": [
+      "Revenue this quarter",
+      "Order volume trend",
+      "Top selling products"
+    ],
+    "search_text": "Revenue / Order Volume Order value and count. Two separate stores: CDP Order (self-serve / commerce) and CRM SalesOrder (sales-led). sales revenue order count GMV bookings sales revenue orders sales GMV bookings (Contact)-[:PLACED]->(Order) (Order)-[:CONTAINS]->(Product) (SalesOrder)-[:PLACED_BY]->(Contact) (SalesOrder)-[:FOR_ACCOUNT]->(Account) (SalesOrder)-[:HAS_LINE]->(OrderLine)-[:FOR_PRODUCT]->(Product)",
+    "domain": "commerce",
+    "schema_version": "2"
+  },
+  {
+    "id": "concept_billing_cycle",
+    "type": "business_concept",
+    "name": "Billing and Invoicing",
+    "aliases": [
+      "billing period",
+      "invoice cycle",
+      "billed amount",
+      "outstanding invoices",
+      "AR"
+    ],
+    "description": "Invoices issued to companies, and the contracts they recur under. There is no BillingCycle node — the cycle is inferred from Contract dates and Invoice issue dates.",
+    "base_entities": [
+      "Invoice",
+      "InvoiceLine",
+      "Contract",
+      "SalesOrder",
+      "Account"
+    ],
+    "business_rules": [
+      "Invoice.issue_date is a DATE. Compare with date($period_start), NOT datetime($period_start) — mixing the two raises a Neo4j type error and the agent returns nothing.",
+      "due_at and paid_at ARE datetimes. Overdue = paid_at IS NULL AND due_at < datetime().",
+      "(Invoice)-[:FOR_ACCOUNT]->(Account), (Invoice)-[:FOR_ORDER]->(SalesOrder), (Invoice)-[:FOR_OPPORTUNITY]->(Opportunity), (Invoice)-[:HAS_LINE]->(InvoiceLine).",
+      "(Contract)-[:FOR_ACCOUNT]->(Account), (Contract)-[:FROM_OPPORTUNITY]->(Opportunity), (Contract)-[:RENEWED_BY_OPPORTUNITY_OPPORTUNITY_OPPORTUNITY]->(Opportunity). Contract.arr is the recurring value; starts_at / ends_at bound the term.",
+      "Invoice carries total, tax_amount and discount_amount separately — 'billed' normally means total. Say which you used.",
+      "There is no (Tenant)-[:HAS_INVOICE]->() or (Tenant)-[:HAS_CONTRACT]->() edge."
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Invoice)-[:FOR_ACCOUNT]->(Account)",
+        "(Invoice)-[:FOR_ORDER]->(SalesOrder)",
+        "(Invoice)-[:HAS_LINE]->(InvoiceLine)",
+        "(Contract)-[:FOR_ACCOUNT]->(Account)",
+        "(Contract)-[:RENEWED_BY_OPPORTUNITY_OPPORTUNITY_OPPORTUNITY]->(Opportunity)"
+      ],
+      "key_properties": {
+        "Invoice": [
+          "number",
+          "status",
+          "total",
+          "tax_amount",
+          "discount_amount",
+          "currency",
+          "issue_date",
+          "due_at",
+          "paid_at"
+        ],
+        "Contract": [
+          "title",
+          "arr",
+          "starts_at",
+          "ends_at",
+          "renewal_reminded_at"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (inv:Invoice)-[:FOR_ACCOUNT]->(co:Account) WHERE inv.issue_date >= date($period_start) AND inv.issue_date < date($period_end) RETURN co.name AS company, inv.currency AS currency, count(inv) AS invoices, sum(toFloat(inv.total)) AS billed ORDER BY billed DESC LIMIT 10",
+    "alternate_template": "MATCH (inv:Invoice)-[:FOR_ACCOUNT]->(co:Account) WHERE inv.paid_at IS NULL AND inv.due_at < datetime() RETURN co.name AS company, count(inv) AS overdue_invoices, sum(toFloat(inv.total)) AS overdue_amount ORDER BY overdue_amount DESC LIMIT 10",
+    "params": {
+      "period_start": "required (date)",
+      "period_end": "required (date)"
+    },
+    "keywords": [
+      "billing",
+      "invoice",
+      "overdue",
+      "outstanding",
+      "ARR",
+      "contract renewal"
+    ],
+    "examples": [
+      "What did we bill this month?",
+      "Which invoices are overdue?",
+      "Contracts up for renewal"
+    ],
+    "search_text": "Billing and Invoicing Invoices issued to companies, and the contracts they recur under. There is no BillingCycle node — the cycle is inferred from Contract dates and Invoice issue dates. billing period invoice cycle billed amount outstanding invoices AR billing invoice overdue outstanding ARR contract renewal (Invoice)-[:FOR_ACCOUNT]->(Account) (Invoice)-[:FOR_ORDER]->(SalesOrder) (Invoice)-[:HAS_LINE]->(InvoiceLine) (Contract)-[:FOR_ACCOUNT]->(Account) (Contract)-[:RENEWED_BY_OPPORTUNITY_OPPORTUNITY_OPPORTUNITY]->(Opportunity)",
+    "domain": "crm",
+    "schema_version": "2"
+  },
+  {
+    "id": "concept_product_catalog",
+    "type": "business_concept",
+    "name": "Product Catalog",
+    "aliases": [
+      "products",
+      "SKU",
+      "catalog",
+      "pricing",
+      "offers",
+      "addons"
+    ],
+    "description": "Sellable inventory products, plus the CRM commercial overlays: offers, addons, tiers and price books.",
+    "disambiguation": "There are TWO product notions. Product (inventory.products, key id, a real sellable item with sku, price, stock_on_hand) and PlatformProduct (a stub label with a STRING id, used only to say which Worktual module a Role, VoiceDid or KnowledgeDocument belongs to). A question about what the tenant sells means Product. A question about module access means PlatformProduct. Matching the wrong one returns bare stub nodes with no name property, which is a common source of empty or nonsense answers.",
+    "base_entities": [
+      "Product",
+      "ProductOffer",
+      "Addon",
+      "AddonTier",
+      "PriceBook",
+      "PriceBookEntry",
+      "PlatformProduct"
+    ],
+    "business_rules": [
+      "(Tenant)-[:OFFERS]->(Product) DOES exist and is safe.",
+      "(ProductOffer)-[:FOR_PRODUCT]->(Product), (Addon)-[:FOR_PRODUCT]->(Product), (Addon)-[:HAS_TIER]->(AddonTier).",
+      "(PriceBook)-[:LISTS]->(PriceBookEntry), then (PriceBookEntry)-[:FOR_PRODUCT|FOR_OFFER|FOR_ADDON]->(...). The entry is the child of the price book — the edge is LISTS, direction PriceBook to entry.",
+      "FOR_PRODUCT is heavily overloaded — it also runs from Role, VoiceDid, KnowledgeDocument and PriceBookEntry to PlatformProduct. Always label both ends or you will pull module stubs into a catalog answer.",
+      "PlatformProduct nodes have only an id. They have no name, no price and no properties to report.",
+      "Sales quantities come from QuoteLine, OrderLine and InvoiceLine, all reached with HAS_LINE from their parent and FOR_PRODUCT to Product."
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Tenant)-[:OFFERS]->(Product)",
+        "(ProductOffer)-[:FOR_PRODUCT]->(Product)",
+        "(Addon)-[:FOR_PRODUCT]->(Product)",
+        "(Addon)-[:HAS_TIER]->(AddonTier)",
+        "(PriceBook)-[:LISTS]->(PriceBookEntry)-[:FOR_PRODUCT]->(Product)",
+        "(OrderLine)-[:FOR_PRODUCT]->(Product)"
+      ],
+      "key_properties": {
+        "Product": [
+          "name",
+          "sku",
+          "brand",
+          "category",
+          "subcategory",
+          "price",
+          "currency",
+          "stock_on_hand",
+          "status",
+          "product_type",
+          "billing_type"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (p:Product) WHERE p.status = $status RETURN p.category AS category, count(p) AS products, avg(toFloat(p.price)) AS avg_price ORDER BY products DESC",
+    "alternate_template": "MATCH (so:SalesOrder)-[:HAS_LINE]->(ol:OrderLine)-[:FOR_PRODUCT]->(p:Product) WHERE so.confirmed_at >= datetime($period_start) AND so.confirmed_at < datetime($period_end) RETURN p.name AS product, sum(toFloat(ol.quantity)) AS units, sum(toFloat(ol.amount)) AS revenue ORDER BY revenue DESC LIMIT 10",
+    "keywords": [
+      "product",
+      "SKU",
+      "catalog",
+      "price",
+      "addon",
+      "price book",
+      "best selling"
+    ],
+    "examples": [
+      "What products do we sell?",
+      "Top selling products this quarter",
+      "What is in the default price book?"
+    ],
+    "search_text": "Product Catalog Sellable inventory products, plus the CRM commercial overlays: offers, addons, tiers and price books. products SKU catalog pricing offers addons product SKU catalog price addon price book best selling (Tenant)-[:OFFERS]->(Product) (ProductOffer)-[:FOR_PRODUCT]->(Product) (Addon)-[:FOR_PRODUCT]->(Product) (Addon)-[:HAS_TIER]->(AddonTier) (PriceBook)-[:LISTS]->(PriceBookEntry)-[:FOR_PRODUCT]->(Product) (OrderLine)-[:FOR_PRODUCT]->(Product)",
+    "domain": "commerce",
+    "schema_version": "2"
+  },
+  {
+    "id": "rule_period_comparison",
+    "type": "analytical_pattern",
+    "name": "Period-over-Period Comparison",
+    "aliases": [
+      "week over week",
+      "WoW",
+      "MoM",
+      "increase decrease",
+      "compared to last week",
+      "trend"
+    ],
+    "description": "How to answer any 'did X go up or down' question in a single query.",
+    "business_rules": [
+      "Bind all four params: $period_start, $period_end, $compare_start, $compare_end. Never leave $period_end unbound.",
+      "One query with conditional aggregation, not two count queries — two queries can straddle a CDC write and disagree.",
+      "Always return current, previous, delta and pct_change. pct_change must be guarded: CASE WHEN previous = 0 THEN null ELSE round(100.0*(current-previous)/previous, 1) END.",
+      "If previous = 0 and current > 0, do not report an infinite increase — say the comparison window has no prior data.",
+      "Check that the comparison window is actually covered by the data before asserting a trend: MATCH (n:Label) RETURN min(n.created_at) AS earliest. A metric that 'tripled' because CDC backfill started mid-window is a wrong answer, not an insight.",
+      "This card has NO executable cypher of its own. Take the cypher_template or diagnostic_template from the metric card and wrap it in the CASE WHEN pattern. Do not emit this card's text as a query."
+    ],
+    "graph_mapping": {
+      "relationship_paths": []
+    },
+    "pattern_template": "MATCH (<node pattern from the metric card>) WITH <dimension expression> AS dimension, sum(CASE WHEN <date_field> >= datetime($period_start) AND <date_field> < datetime($period_end) THEN 1 ELSE 0 END) AS current, sum(CASE WHEN <date_field> >= datetime($compare_start) AND <date_field> < datetime($compare_end) THEN 1 ELSE 0 END) AS previous WHERE current > 0 OR previous > 0 RETURN dimension, current, previous, current - previous AS delta, CASE WHEN previous = 0 THEN null ELSE round(100.0*(current-previous)/previous, 1) END AS pct_change ORDER BY abs(current - previous) DESC LIMIT 5",
+    "keywords": [
+      "increase",
+      "decrease",
+      "change",
+      "week over week",
+      "compared to last",
+      "why did",
+      "trend"
+    ],
+    "examples": [
+      "Why did X increase this week?",
+      "Compare this month vs last month"
+    ],
+    "search_text": "Period-over-Period Comparison How to answer any 'did X go up or down' question in a single query. week over week WoW MoM increase decrease compared to last week trend increase decrease change week over week compared to last why did trend",
+    "domain": "analytics",
+    "schema_version": "2"
+  },
+  {
+    "id": "rule_top_contributors",
+    "type": "analytical_pattern",
+    "name": "Top Contributors Breakdown",
+    "aliases": [
+      "root cause",
+      "drivers",
+      "breakdown by dimension",
+      "what caused"
+    ],
+    "description": "How to rank dimensions by their contribution to a change.",
+    "business_rules": [
+      "Rank by abs(delta), not by current volume — the biggest queue is usually not the one that changed.",
+      "Limit to 5 dimensions and stop after naming the top 3 in the answer.",
+      "Filter out dimensions where current = 0 AND previous = 0, otherwise the result is padded with dead queues.",
+      "Available dimensions by metric: contact-centre metrics split by Queue.name, Conversation.channel, Agent.display_name, MissedContact.reason, RoutingAttempt.outcome, SLA.name. CRM metrics split by Opportunity.stage, ContactProfile.lead_source, Account.industry, Employee (owner).",
+      "This card has no executable cypher. It selects a dimension for the metric card's diagnostic_template."
+    ],
+    "graph_mapping": {
+      "relationship_paths": []
+    },
+    "keywords": [
+      "contributors",
+      "drivers",
+      "breakdown",
+      "root cause",
+      "what caused",
+      "which queue"
+    ],
+    "examples": [
+      "What drove the increase?",
+      "Top contributing queues"
+    ],
+    "search_text": "Top Contributors Breakdown How to rank dimensions by their contribution to a change. root cause drivers breakdown by dimension what caused contributors drivers breakdown root cause what caused which queue",
+    "domain": "analytics",
+    "schema_version": "2"
+  },
+  {
+    "id": "concept_period_comparison",
+    "type": "analytical_pattern",
+    "name": "Period-over-Period Comparison",
+    "description": "Compare a metric between current period and previous period; calculate absolute and percentage delta.",
+    "search_text": "Period-over-Period Comparison Compare a metric between current period and previous period; calculate absolute and percentage delta. week over week WoW MoM increase decrease trend increase decrease change week over week compared to last week why did",
+    "domain": "analytics",
+    "aliases": [
+      "week over week",
+      "WoW",
+      "MoM",
+      "increase decrease trend"
+    ],
+    "base_entities": [],
+    "business_rules": [
+      "Always compute: current period count, previous period count, delta, pct_change",
+      "Use $period_start, $period_end, $compare_start, $compare_end parameters",
+      "Prefer single aggregated query over multiple count queries"
+    ],
+    "graph_mapping": {
+      "relationship_paths": []
+    },
+    "cypher_template": "WITH $period_start AS ps, $period_end AS pe, $compare_start AS cs, $compare_end AS ce RETURN ps, pe, cs, ce",
+    "diagnostic_template": "Use metric card cypher_template twice with CASE WHEN date in current vs previous period, or one query with conditional aggregation",
+    "keywords": [
+      "increase",
+      "decrease",
+      "change",
+      "week over week",
+      "compared to last week",
+      "why did"
+    ],
+    "examples": [
+      "Why did X increase this week?",
+      "Compare this month vs last month"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_top_contributors",
+    "type": "analytical_pattern",
+    "name": "Top Contributors Breakdown",
+    "description": "Rank dimensions (queue, channel, outcome, agent) by contribution to period-over-period delta.",
+    "search_text": "Top Contributors Breakdown Rank dimensions (queue, channel, outcome, agent) by contribution to period-over-period delta. root cause drivers breakdown by dimension contributors drivers breakdown root cause what caused",
+    "domain": "analytics",
+    "aliases": [
+      "root cause",
+      "drivers",
+      "breakdown by dimension"
+    ],
+    "base_entities": [],
+    "business_rules": [
+      "Rank by abs(delta) not just current volume",
+      "Limit to top 5 dimensions",
+      "Stop after identifying top 3 contributors"
+    ],
+    "graph_mapping": {
+      "relationship_paths": []
+    },
+    "keywords": [
+      "contributors",
+      "drivers",
+      "breakdown",
+      "root cause",
+      "what caused"
+    ],
+    "examples": [
+      "What drove the increase?",
+      "Top contributing queues"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_campaign_send_volume",
+    "type": "business_concept",
+    "name": "Campaign Send Volume",
+    "description": "Count of CampaignDelivery rows that were successfully sent (status=sent) for a campaign or channel in a period.",
+    "search_text": "Campaign Send Volume Count of CampaignDelivery rows that were successfully sent (status=sent) for a campaign or channel in a period. messages sent delivery count sends how many sent sent send volume how many emails messages sent delivery count (Campaign)-[:HAS_SEND_BATCH]->(CampaignSendBatch)-[:HAS_DELIVERY]->(CampaignDelivery) (CampaignDelivery)-[:THROUGH]->(Channel) (CampaignDelivery)-[:FOR_CAMPAIGN]->(Campaign)",
+    "domain": "campaign",
+    "aliases": [
+      "messages sent",
+      "delivery count",
+      "sends",
+      "how many sent"
+    ],
+    "disambiguation": "Use CampaignDelivery.status='sent' for delivered attempts. Do not count queued/pending. Audience size is audience_count / HAS_AUDIENCE_MEMBER, not sends.",
+    "base_entities": [
+      "CampaignDelivery",
+      "Campaign",
+      "CampaignSendBatch",
+      "Channel"
+    ],
+    "business_rules": [
+      "Sent = CampaignDelivery.status = 'sent'",
+      "Filter by CampaignDelivery.created_at or opened/sent period with datetime($period_start)/datetime($period_end)",
+      "Break down by Channel via (CampaignDelivery)-[:THROUGH]->(Channel) using _channel or batch channel",
+      "Contact key is cdp_id; Campaign key is id; CampaignDelivery key is id",
+      "organization_id scopes all campaign nodes"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Campaign)-[:HAS_SEND_BATCH]->(CampaignSendBatch)-[:HAS_DELIVERY]->(CampaignDelivery)",
+        "(CampaignDelivery)-[:THROUGH]->(Channel)",
+        "(CampaignDelivery)-[:FOR_CAMPAIGN]->(Campaign)"
+      ],
+      "key_properties": {
+        "CampaignDelivery": [
+          "status",
+          "created_at",
+          "organization_id",
+          "open_count",
+          "click_count"
+        ],
+        "Campaign": [
+          "status",
+          "name",
+          "audience_count",
+          "organization_id"
+        ],
+        "CampaignSendBatch": [
+          "channel",
+          "status",
+          "size",
+          "scheduled_for"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (d:CampaignDelivery)-[:FOR_CAMPAIGN]->(c:Campaign) WHERE d.status = 'sent' AND d.created_at >= datetime($period_start) AND d.created_at < datetime($period_end) RETURN count(d) AS sent_count",
+    "diagnostic_template": "MATCH (d:CampaignDelivery)-[:THROUGH]->(ch:Channel) WHERE d.status='sent' WITH ch.name AS dimension, sum(CASE WHEN d.created_at >= datetime($period_start) AND d.created_at < datetime($period_end) THEN 1 ELSE 0 END) AS current, sum(CASE WHEN d.created_at >= datetime($compare_start) AND d.created_at < datetime($compare_end) THEN 1 ELSE 0 END) AS previous RETURN dimension, current, previous, current-previous AS delta ORDER BY abs(current-previous) DESC LIMIT 5",
+    "keywords": [
+      "sent",
+      "send volume",
+      "how many emails",
+      "messages sent",
+      "delivery count"
+    ],
+    "examples": [
+      "How many messages were sent this week?",
+      "Send volume by channel"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_campaign_open_rate",
+    "type": "business_concept",
+    "name": "Campaign Open Rate",
+    "description": "Share of sent CampaignDelivery rows that have at least one open (opened_at IS NOT NULL or open_count > 0).",
+    "search_text": "Campaign Open Rate Share of sent CampaignDelivery rows that have at least one open (opened_at IS NOT NULL or open_count > 0). open rate email opens opened open rate opens opened emails engagement (Campaign)-[:HAS_SEND_BATCH]->(CampaignSendBatch)-[:HAS_DELIVERY]->(CampaignDelivery) (CampaignDelivery)-[:FOR_CONTACT]->(Contact) (CampaignDelivery)-[:THROUGH]->(Channel)",
+    "domain": "campaign",
+    "aliases": [
+      "open rate",
+      "email opens",
+      "opened"
+    ],
+    "disambiguation": "Open rate uses CampaignDelivery engagement fields. Lifetime contact opens are on CampaignEngagement.email_open_count — different grain.",
+    "base_entities": [
+      "CampaignDelivery",
+      "Campaign",
+      "Channel",
+      "Contact"
+    ],
+    "business_rules": [
+      "Denominator: status='sent'",
+      "Numerator: opened_at IS NOT NULL OR open_count > 0",
+      "Prefer channel=email for classic open rate; push/web may not track opens the same way",
+      "Filter organization_id and campaign id/name as needed"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Campaign)-[:HAS_SEND_BATCH]->(CampaignSendBatch)-[:HAS_DELIVERY]->(CampaignDelivery)",
+        "(CampaignDelivery)-[:FOR_CONTACT]->(Contact)",
+        "(CampaignDelivery)-[:THROUGH]->(Channel)"
+      ],
+      "key_properties": {
+        "CampaignDelivery": [
+          "status",
+          "opened_at",
+          "open_count",
+          "created_at"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (d:CampaignDelivery) WHERE d.status='sent' AND d.created_at >= datetime($period_start) AND d.created_at < datetime($period_end) RETURN count(d) AS sent, sum(CASE WHEN d.opened_at IS NOT NULL OR d.open_count > 0 THEN 1 ELSE 0 END) AS opened, toFloat(sum(CASE WHEN d.opened_at IS NOT NULL OR d.open_count > 0 THEN 1 ELSE 0 END)) / count(d) AS open_rate",
+    "diagnostic_template": "",
+    "keywords": [
+      "open rate",
+      "opens",
+      "opened emails",
+      "engagement"
+    ],
+    "examples": [
+      "What is the open rate for the summer campaign?",
+      "Open rate by channel this month"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_campaign_click_rate",
+    "type": "business_concept",
+    "name": "Campaign Click Rate",
+    "description": "Share of sent deliveries with at least one click (clicked_at IS NOT NULL or click_count > 0).",
+    "search_text": "Campaign Click Rate Share of sent deliveries with at least one click (clicked_at IS NOT NULL or click_count > 0). CTR click-through rate clicks CTR click rate clicks click-through (CampaignDelivery)-[:FOR_CAMPAIGN]->(Campaign) (CampaignDelivery)-[:THROUGH]->(Channel)",
+    "domain": "campaign",
+    "aliases": [
+      "CTR",
+      "click-through rate",
+      "clicks"
+    ],
+    "disambiguation": "Per-send CTR is on CampaignDelivery. Lifetime clicks are CampaignEngagement.email_click_count.",
+    "base_entities": [
+      "CampaignDelivery",
+      "Campaign",
+      "Channel"
+    ],
+    "business_rules": [
+      "Denominator status='sent'",
+      "Numerator clicked_at IS NOT NULL OR click_count > 0",
+      "Can also compute click-to-open: clicks / opens"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(CampaignDelivery)-[:FOR_CAMPAIGN]->(Campaign)",
+        "(CampaignDelivery)-[:THROUGH]->(Channel)"
+      ],
+      "key_properties": {
+        "CampaignDelivery": [
+          "status",
+          "clicked_at",
+          "click_count",
+          "opened_at"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (d:CampaignDelivery) WHERE d.status='sent' AND d.created_at >= datetime($period_start) AND d.created_at < datetime($period_end) RETURN count(d) AS sent, sum(CASE WHEN d.clicked_at IS NOT NULL OR d.click_count > 0 THEN 1 ELSE 0 END) AS clicked, toFloat(sum(CASE WHEN d.clicked_at IS NOT NULL OR d.click_count > 0 THEN 1 ELSE 0 END)) / count(d) AS click_rate",
+    "diagnostic_template": "",
+    "keywords": [
+      "CTR",
+      "click rate",
+      "clicks",
+      "click-through"
+    ],
+    "examples": [
+      "CTR for live campaigns",
+      "Which campaign has the best click rate?"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_campaign_audience_size",
+    "type": "business_concept",
+    "name": "Campaign Audience Size",
+    "description": "Number of CDP Contacts included in a campaign audience at save/launch.",
+    "search_text": "Campaign Audience Size Number of CDP Contacts included in a campaign audience at save/launch. audience count who is targeted recipients list size audience targeted contacts audience size who received (Campaign)-[:HAS_AUDIENCE_MEMBER]->(Contact) (Campaign)-[:TARGETED_IN]->(ReceivedCampaigns) (Contact)-[:MEMBER_OF_AUDIENCE]->(Campaign) (Contact)-[:HAS_RECEIVED_CAMPAIGNS]->(ReceivedCampaigns)",
+    "domain": "campaign",
+    "aliases": [
+      "audience count",
+      "who is targeted",
+      "recipients list size"
+    ],
+    "disambiguation": "audience_count on Campaign is the snapshot number. Exact members are (Campaign)-[:HAS_AUDIENCE_MEMBER]->(Contact) or TARGETED_IN ReceivedCampaigns. Send volume can be lower after suppressions/skips.",
+    "base_entities": [
+      "Campaign",
+      "Contact",
+      "ReceivedCampaigns"
+    ],
+    "business_rules": [
+      "Prefer count((Campaign)-[:HAS_AUDIENCE_MEMBER]->(:Contact))",
+      "Campaign.audience_count is denormalized snapshot — use for quick answers if graph edges incomplete",
+      "Contact key is cdp_id",
+      "Draft audience uses DraftAudience-[:CONTAINS]->Contact before save"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Campaign)-[:HAS_AUDIENCE_MEMBER]->(Contact)",
+        "(Campaign)-[:TARGETED_IN]->(ReceivedCampaigns)",
+        "(Contact)-[:MEMBER_OF_AUDIENCE]->(Campaign)",
+        "(Contact)-[:HAS_RECEIVED_CAMPAIGNS]->(ReceivedCampaigns)"
+      ],
+      "key_properties": {
+        "Campaign": [
+          "audience_count",
+          "audience_summary",
+          "audience_filters",
+          "status"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (c:Campaign)-[:HAS_AUDIENCE_MEMBER]->(ct:Contact) WHERE c.id = $campaign_id RETURN count(ct) AS audience_size",
+    "diagnostic_template": "",
+    "keywords": [
+      "audience",
+      "targeted contacts",
+      "audience size",
+      "who received"
+    ],
+    "examples": [
+      "How large is the audience for campaign X?",
+      "List contacts in the summer sale audience"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_failed_skipped_deliveries",
+    "type": "business_concept",
+    "name": "Failed or Skipped Deliveries",
+    "description": "CampaignDelivery rows with status failed or skipped; skip_fail_reason explains suppression, bounce, missing destination, etc.",
+    "search_text": "Failed or Skipped Deliveries CampaignDelivery rows with status failed or skipped; skip_fail_reason explains suppression, bounce, missing destination, etc. send failures skipped sends undelivered suppressed sends failed skipped suppressed bounce undelivered (CampaignSendBatch)-[:HAS_DELIVERY]->(CampaignDelivery) (CampaignDelivery)-[:FOR_CAMPAIGN]->(Campaign) (EmailSuppression)-[:BLOCKED]->(CampaignDelivery)",
+    "domain": "campaign",
+    "aliases": [
+      "send failures",
+      "skipped sends",
+      "undelivered",
+      "suppressed sends"
+    ],
+    "disambiguation": "Skipped often means EmailSuppression or missing push endpoint. Failed means provider/ESP error. Not the same as unopened.",
+    "base_entities": [
+      "CampaignDelivery",
+      "EmailSuppression",
+      "Campaign",
+      "Channel"
+    ],
+    "business_rules": [
+      "status IN ['failed','skipped']",
+      "Group by skip_fail_reason for root cause",
+      "Suppression soft-links EmailSuppression-[:BLOCKED]->CampaignDelivery when ETL emits it"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(CampaignSendBatch)-[:HAS_DELIVERY]->(CampaignDelivery)",
+        "(CampaignDelivery)-[:FOR_CAMPAIGN]->(Campaign)",
+        "(EmailSuppression)-[:BLOCKED]->(CampaignDelivery)"
+      ],
+      "key_properties": {
+        "CampaignDelivery": [
+          "status",
+          "skip_fail_reason",
+          "attempt_count",
+          "created_at"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (d:CampaignDelivery) WHERE d.status IN ['failed','skipped'] AND d.created_at >= datetime($period_start) AND d.created_at < datetime($period_end) RETURN d.status AS status, d.skip_fail_reason AS reason, count(*) AS cnt ORDER BY cnt DESC",
+    "diagnostic_template": "MATCH (d:CampaignDelivery)-[:THROUGH]->(ch:Channel) WHERE d.status IN ['failed','skipped'] WITH ch.name AS dimension, sum(CASE WHEN d.created_at >= datetime($period_start) AND d.created_at < datetime($period_end) THEN 1 ELSE 0 END) AS current, sum(CASE WHEN d.created_at >= datetime($compare_start) AND d.created_at < datetime($compare_end) THEN 1 ELSE 0 END) AS previous RETURN dimension, current, previous, current-previous AS delta ORDER BY abs(current-previous) DESC LIMIT 5",
+    "keywords": [
+      "failed",
+      "skipped",
+      "suppressed",
+      "bounce",
+      "undelivered"
+    ],
+    "examples": [
+      "Why were emails skipped?",
+      "Failed deliveries by reason this week"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_email_unsubscribe_suppression",
+    "type": "business_concept",
+    "name": "Email Unsubscribe and Suppression",
+    "description": "Contacts or emails that must not receive campaign email — CampaignEngagement.email_unsubscribed and/or EmailSuppression rows.",
+    "search_text": "Email Unsubscribe and Suppression Contacts or emails that must not receive campaign email — CampaignEngagement.email_unsubscribed and/or EmailSuppression rows. unsubscribed opt out do not email suppression list unsubscribe opt out suppression do not email (Contact)-[:HAS_CAMPAIGN_ENGAGEMENT]->(CampaignEngagement) (Tenant)-[:HAS_EMAIL_SUPPRESSION]->(EmailSuppression) (Contact)-[:HAS_CONTACT_POINT]->(ContactPoint) (EmailSuppression)-[:SUPPRESSES]->(Contact)",
+    "domain": "campaign",
+    "aliases": [
+      "unsubscribed",
+      "opt out",
+      "do not email",
+      "suppression list"
+    ],
+    "disambiguation": "CampaignEngagement is per Contact (cdp_id). EmailSuppression is per email string. Both block sends; suppression also covers hard_bounce and complaint.",
+    "base_entities": [
+      "CampaignEngagement",
+      "EmailSuppression",
+      "Contact",
+      "ContactPoint"
+    ],
+    "business_rules": [
+      "Unsubscribed contact: CampaignEngagement.email_unsubscribed = true",
+      "Suppression reasons: unsub, hard_bounce, complaint",
+      "Resolve email→Contact via Contact-[:HAS_CONTACT_POINT]->ContactPoint"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Contact)-[:HAS_CAMPAIGN_ENGAGEMENT]->(CampaignEngagement)",
+        "(Tenant)-[:HAS_EMAIL_SUPPRESSION]->(EmailSuppression)",
+        "(Contact)-[:HAS_CONTACT_POINT]->(ContactPoint)",
+        "(EmailSuppression)-[:SUPPRESSES]->(Contact)"
+      ],
+      "key_properties": {
+        "CampaignEngagement": [
+          "email_unsubscribed",
+          "email_unsubscribed_at",
+          "email_unsubscribe_reason"
+        ],
+        "EmailSuppression": [
+          "email",
+          "reason",
+          "created_at"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (e:CampaignEngagement) WHERE e.email_unsubscribed = true RETURN count(e) AS unsubscribed_contacts",
+    "diagnostic_template": "",
+    "keywords": [
+      "unsubscribe",
+      "opt out",
+      "suppression",
+      "do not email"
+    ],
+    "examples": [
+      "How many contacts unsubscribed?",
+      "Suppression list size by reason"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_email_channel_readiness",
+    "type": "business_concept",
+    "name": "Email Channel Readiness",
+    "description": "Whether the tenant email channel is ready to send — ChannelSendingProfile status=ready plus sender/domain/return-path/compliance/caps health.",
+    "search_text": "Email Channel Readiness Whether the tenant email channel is ready to send — ChannelSendingProfile status=ready plus sender/domain/return-path/compliance/caps health. email ready can we send email sending profile ready email ready readiness can send configuration (Tenant)-[:HAS_SENDING_PROFILE]->(ChannelSendingProfile)-[:THROUGH]->(Channel) (Tenant)-[:HAS_EMAIL_SENDER]->(CampaignEmailSender) (Tenant)-[:HAS_EMAIL_DOMAIN]->(EmailDomain) (Tenant)-[:HAS_EMAIL_CAPS]->(EmailSendingCaps) (Tenant)-[:HAS_EMAIL_COMPLIANCE]->(EmailComplianceProfile)",
+    "domain": "campaign",
+    "aliases": [
+      "email ready",
+      "can we send email",
+      "sending profile ready"
+    ],
+    "disambiguation": "ChannelSendingProfile is the checklist gate. CampaignChannel.status=ready is per-campaign plan readiness, not tenant config.",
+    "base_entities": [
+      "ChannelSendingProfile",
+      "CampaignEmailSender",
+      "EmailDomain",
+      "EmailReturnPath",
+      "EmailComplianceProfile",
+      "EmailSendingCaps",
+      "Channel"
+    ],
+    "business_rules": [
+      "Tenant ready when ChannelSendingProfile for channel='email' has status='ready'",
+      "Also check EmailSendingCaps.health_status != 'blocked_sending'",
+      "Active sender: CampaignEmailSender.is_active=true AND status='verified'",
+      "Domain: spf_ok, dkim_ok, dmarc_ok"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Tenant)-[:HAS_SENDING_PROFILE]->(ChannelSendingProfile)-[:THROUGH]->(Channel)",
+        "(Tenant)-[:HAS_EMAIL_SENDER]->(CampaignEmailSender)",
+        "(Tenant)-[:HAS_EMAIL_DOMAIN]->(EmailDomain)",
+        "(Tenant)-[:HAS_EMAIL_CAPS]->(EmailSendingCaps)",
+        "(Tenant)-[:HAS_EMAIL_COMPLIANCE]->(EmailComplianceProfile)"
+      ],
+      "key_properties": {
+        "ChannelSendingProfile": [
+          "channel",
+          "status"
+        ],
+        "CampaignEmailSender": [
+          "is_active",
+          "status",
+          "from_email"
+        ],
+        "EmailSendingCaps": [
+          "health_status",
+          "hourly_cap",
+          "daily_cap"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (p:ChannelSendingProfile)-[:THROUGH]->(ch:Channel) WHERE ch.name = 'email' OR p.channel = 'email' RETURN p.status AS profile_status",
+    "diagnostic_template": "",
+    "keywords": [
+      "email ready",
+      "readiness",
+      "can send",
+      "configuration"
+    ],
+    "examples": [
+      "Is email channel ready?",
+      "Why can't we launch email?"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_campaigns_received_by_contact",
+    "type": "business_concept",
+    "name": "Campaigns Received by Contact",
+    "description": "All campaigns targeted to or delivered to a CDP Contact via the ReceivedCampaigns hub.",
+    "search_text": "Campaigns Received by Contact All campaigns targeted to or delivered to a CDP Contact via the ReceivedCampaigns hub. what campaigns did this contact get contact campaign history received campaigns received campaigns contact history what did we send campaigns for contact (Contact)-[:HAS_RECEIVED_CAMPAIGNS]->(ReceivedCampaigns)-[:CONTAINS]->(CampaignDelivery)-[:FOR_CAMPAIGN]->(Campaign) (Contact)-[:MEMBER_OF_AUDIENCE]->(Campaign) (CampaignDelivery)-[:FOR_CONTACT]->(Contact)",
+    "domain": "campaign",
+    "aliases": [
+      "what campaigns did this contact get",
+      "contact campaign history",
+      "received campaigns"
+    ],
+    "disambiguation": "Use Contact.cdp_id. Walk Contact-[:HAS_RECEIVED_CAMPAIGNS]->ReceivedCampaigns-[:CONTAINS]->CampaignDelivery-[:FOR_CAMPAIGN]->Campaign. Audience-only (not yet sent) uses MEMBER_OF_AUDIENCE / TARGETED_IN.",
+    "base_entities": [
+      "Contact",
+      "ReceivedCampaigns",
+      "CampaignDelivery",
+      "Campaign"
+    ],
+    "business_rules": [
+      "Contact key property is cdp_id (NOT id)",
+      "Hub key is also cdp_id",
+      "Prefer deliveries for 'received/sent'; use HAS_AUDIENCE_MEMBER for 'targeted'"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Contact)-[:HAS_RECEIVED_CAMPAIGNS]->(ReceivedCampaigns)-[:CONTAINS]->(CampaignDelivery)-[:FOR_CAMPAIGN]->(Campaign)",
+        "(Contact)-[:MEMBER_OF_AUDIENCE]->(Campaign)",
+        "(CampaignDelivery)-[:FOR_CONTACT]->(Contact)"
+      ],
+      "key_properties": {
+        "Contact": [
+          "cdp_id",
+          "first_name",
+          "last_name"
+        ],
+        "CampaignDelivery": [
+          "status",
+          "opened_at",
+          "clicked_at",
+          "channel"
+        ],
+        "Campaign": [
+          "name",
+          "status",
+          "starts_at"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (ct:Contact {cdp_id: $cdp_id})-[:HAS_RECEIVED_CAMPAIGNS]->(hub:ReceivedCampaigns)-[:CONTAINS]->(d:CampaignDelivery)-[:FOR_CAMPAIGN]->(c:Campaign) RETURN c.name AS campaign, d.status AS status, d.opened_at AS opened_at, d.clicked_at AS clicked_at ORDER BY d.created_at DESC",
+    "diagnostic_template": "",
+    "keywords": [
+      "received campaigns",
+      "contact history",
+      "what did we send",
+      "campaigns for contact"
+    ],
+    "examples": [
+      "Which campaigns did contact X receive?",
+      "Show opens for this contact across campaigns"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_anonymous_vs_identified_visitor",
+    "type": "business_concept",
+    "name": "Anonymous vs Identified Visitor",
+    "description": "WebsiteContacts mapped as Visitor. AnonymousVisitor when no CDP contact_id; IdentifiedVisitor when IDENTIFIED_AS Contact.",
+    "search_text": "Anonymous vs Identified Visitor WebsiteContacts mapped as Visitor. AnonymousVisitor when no CDP contact_id; IdentifiedVisitor when IDENTIFIED_AS Contact. website visitor anonymous visitor web push visitor visitor anonymous website web push identified (Tenant)-[:HAS_VISITOR]->(Visitor) (Visitor)-[:IDENTIFIED_AS]->(Contact) (Visitor)-[:HAS_PUSH_SUBSCRIPTION]->(PushEndpoint)",
+    "domain": "campaign",
+    "aliases": [
+      "website visitor",
+      "anonymous visitor",
+      "web push visitor"
+    ],
+    "disambiguation": "Visitor is NOT Contact. Only promote/link via contact_id. Do not create a second Contact label from website_contacts.",
+    "base_entities": [
+      "Visitor",
+      "AnonymousVisitor",
+      "IdentifiedVisitor",
+      "Contact",
+      "PushEndpoint"
+    ],
+    "business_rules": [
+      "Anonymous when contact_id IS NULL (_visitor_kind=anonymous)",
+      "Identified when (Visitor)-[:IDENTIFIED_AS]->(Contact)",
+      "Web push may match PushEndpoint by endpoint URL (soft HAS_PUSH_SUBSCRIPTION)"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Tenant)-[:HAS_VISITOR]->(Visitor)",
+        "(Visitor)-[:IDENTIFIED_AS]->(Contact)",
+        "(Visitor)-[:HAS_PUSH_SUBSCRIPTION]->(PushEndpoint)"
+      ],
+      "key_properties": {
+        "Visitor": [
+          "visitor_id",
+          "contact_id",
+          "email",
+          "subscribed",
+          "visit_count",
+          "_visitor_kind"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (v:Visitor) RETURN sum(CASE WHEN v.contact_id IS NULL THEN 1 ELSE 0 END) AS anonymous, sum(CASE WHEN v.contact_id IS NOT NULL THEN 1 ELSE 0 END) AS identified",
+    "diagnostic_template": "",
+    "keywords": [
+      "visitor",
+      "anonymous",
+      "website",
+      "web push",
+      "identified"
+    ],
+    "examples": [
+      "How many anonymous visitors subscribed?",
+      "Which visitors were linked to contacts?"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_ab_variant_performance",
+    "type": "business_concept",
+    "name": "A/B Variant Performance",
+    "description": "Compare open/click/sent metrics across CampaignDelivery.ab_variant values (a, b, holdout, winner).",
+    "search_text": "A/B Variant Performance Compare open/click/sent metrics across CampaignDelivery.ab_variant values (a, b, holdout, winner). A/B test variant a vs b holdout A/B variant holdout winner test (CampaignDelivery)-[:FOR_CAMPAIGN]->(Campaign)",
+    "domain": "campaign",
+    "aliases": [
+      "A/B test",
+      "variant a vs b",
+      "holdout"
+    ],
+    "disambiguation": "ab_variant is on CampaignDelivery. Campaign.launch_plan JSON may also hold A/B config — prefer delivery rows for measured results.",
+    "base_entities": [
+      "CampaignDelivery",
+      "Campaign"
+    ],
+    "business_rules": [
+      "Group by ab_variant",
+      "Only status='sent' in denominator for rates",
+      "holdout typically should not be messaged — verify status"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(CampaignDelivery)-[:FOR_CAMPAIGN]->(Campaign)"
+      ],
+      "key_properties": {
+        "CampaignDelivery": [
+          "ab_variant",
+          "status",
+          "opened_at",
+          "clicked_at",
+          "open_count",
+          "click_count"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (d:CampaignDelivery)-[:FOR_CAMPAIGN]->(c:Campaign) WHERE c.id = $campaign_id AND d.status='sent' RETURN d.ab_variant AS variant, count(d) AS sent, sum(CASE WHEN d.opened_at IS NOT NULL THEN 1 ELSE 0 END) AS opened, sum(CASE WHEN d.clicked_at IS NOT NULL THEN 1 ELSE 0 END) AS clicked",
+    "diagnostic_template": "",
+    "keywords": [
+      "A/B",
+      "variant",
+      "holdout",
+      "winner",
+      "test"
+    ],
+    "examples": [
+      "Which A/B variant won?",
+      "Compare open rates for variant a vs b"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_regulated_template_approval",
+    "type": "business_concept",
+    "name": "Regulated Template Approval",
+    "description": "Approval state of SMS/WhatsApp RegulatedTemplate required before regulated channel sends.",
+    "search_text": "Regulated Template Approval Approval state of SMS/WhatsApp RegulatedTemplate required before regulated channel sends. WhatsApp template status DLT approval Meta template pending WhatsApp template DLT pending approval rejected template (Tenant)-[:HAS_REGULATED_TEMPLATE]->(RegulatedTemplate)-[:THROUGH]->(Channel) (RegulatedTemplate)-[:FOR_CAMPAIGN]->(Campaign) (CampaignAlert)-[:ABOUT]->(RegulatedTemplate)",
+    "domain": "campaign",
+    "aliases": [
+      "WhatsApp template status",
+      "DLT approval",
+      "Meta template pending"
+    ],
+    "disambiguation": "RegulatedTemplate is external-approval catalog. ChannelTemplate is the in-session creative draft. CampaignAlert ABOUT RegulatedTemplate for pending/rejected alerts.",
+    "base_entities": [
+      "RegulatedTemplate",
+      "Campaign",
+      "Channel",
+      "ChannelConfig",
+      "CampaignAlert"
+    ],
+    "business_rules": [
+      "status IN draft|pending|approved|rejected",
+      "Filter channel sms|whatsapp",
+      "Link to campaign via FOR_CAMPAIGN when source_campaign_id set"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Tenant)-[:HAS_REGULATED_TEMPLATE]->(RegulatedTemplate)-[:THROUGH]->(Channel)",
+        "(RegulatedTemplate)-[:FOR_CAMPAIGN]->(Campaign)",
+        "(CampaignAlert)-[:ABOUT]->(RegulatedTemplate)"
+      ],
+      "key_properties": {
+        "RegulatedTemplate": [
+          "status",
+          "channel",
+          "name",
+          "rejected_reason",
+          "submitted_at"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (t:RegulatedTemplate) WHERE t.status = $status RETURN t.channel AS channel, t.name AS name, t.status AS status, t.rejected_reason AS rejected_reason ORDER BY t.updated_at DESC",
+    "diagnostic_template": "",
+    "keywords": [
+      "WhatsApp template",
+      "DLT",
+      "pending approval",
+      "rejected template"
+    ],
+    "examples": [
+      "Which WhatsApp templates are pending?",
+      "Why was the template rejected?"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_campaign_lifecycle",
+    "type": "business_concept",
+    "name": "Campaign Lifecycle",
+    "description": "Campaign.status lifecycle: draft → scheduled/live → completed/cancelled. source_channel is origin (standalone_campaign|crm_marketing), not a Channel node.",
+    "search_text": "Campaign Lifecycle Campaign.status lifecycle: draft → scheduled/live → completed/cancelled. source_channel is origin (standalone_campaign|crm_marketing), not a Channel node. live campaigns draft campaigns completed campaigns campaign status live draft scheduled completed campaign status (Tenant)-[:HAS_CAMPAIGN]->(Campaign)-[:IN_BRANCH]->(CampaignBranch) (Campaign)-[:CREATED_BY]->(Employee) (Campaign)-[:HAS_CAMPAIGN_CHANNEL]->(CampaignChannel)-[:THROUGH]->(Channel) (Campaign)-[:FROM_DRAFT]->(CampaignDraft)",
+    "domain": "campaign",
+    "aliases": [
+      "live campaigns",
+      "draft campaigns",
+      "completed campaigns",
+      "campaign status"
+    ],
+    "disambiguation": "Do not confuse source_channel with Channel stub (email/sms/...). Channel plans are CampaignChannel-[:THROUGH]->Channel.",
+    "base_entities": [
+      "Campaign",
+      "CampaignBranch",
+      "Employee",
+      "CampaignDraft",
+      "CampaignChannel"
+    ],
+    "business_rules": [
+      "status IN draft|scheduled|live|completed|cancelled",
+      "Branch scope via IN_BRANCH",
+      "Created by Employee via CREATED_BY",
+      "Optional FROM_DRAFT to CampaignDraft"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Tenant)-[:HAS_CAMPAIGN]->(Campaign)-[:IN_BRANCH]->(CampaignBranch)",
+        "(Campaign)-[:CREATED_BY]->(Employee)",
+        "(Campaign)-[:HAS_CAMPAIGN_CHANNEL]->(CampaignChannel)-[:THROUGH]->(Channel)",
+        "(Campaign)-[:FROM_DRAFT]->(CampaignDraft)"
+      ],
+      "key_properties": {
+        "Campaign": [
+          "status",
+          "starts_at",
+          "ends_at",
+          "source_channel",
+          "goal",
+          "audience_count"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (c:Campaign) RETURN c.status AS status, count(*) AS cnt ORDER BY cnt DESC",
+    "diagnostic_template": "",
+    "keywords": [
+      "live",
+      "draft",
+      "scheduled",
+      "completed",
+      "campaign status"
+    ],
+    "examples": [
+      "How many live campaigns?",
+      "List completed campaigns this month"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_channel_performance",
+    "type": "business_concept",
+    "name": "Campaign Channel Performance",
+    "description": "Compare send/open/click/failure metrics across marketing channels for campaigns.",
+    "search_text": "Campaign Channel Performance Compare send/open/click/failure metrics across marketing channels for campaigns. performance by channel email vs push channel breakdown by channel email vs sms push performance channel breakdown (Campaign)-[:HAS_CAMPAIGN_CHANNEL]->(CampaignChannel)-[:THROUGH]->(Channel) (Campaign)-[:HAS_SEND_BATCH]->(CampaignSendBatch)-[:THROUGH]->(Channel) (CampaignSendBatch)-[:HAS_DELIVERY]->(CampaignDelivery)",
+    "domain": "campaign",
+    "aliases": [
+      "performance by channel",
+      "email vs push",
+      "channel breakdown"
+    ],
+    "disambiguation": "Always use shared Channel stub via THROUGH from CampaignChannel, CampaignSendBatch, or CampaignDelivery — do not invent a second channel node from campaign_channels.",
+    "base_entities": [
+      "Channel",
+      "CampaignChannel",
+      "CampaignSendBatch",
+      "CampaignDelivery",
+      "Campaign"
+    ],
+    "business_rules": [
+      "Join deliveries to Channel with (CampaignDelivery)-[:THROUGH]->(Channel)",
+      "Batch also has channel property and THROUGH",
+      "CampaignChannel holds per-campaign plan status/template"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Campaign)-[:HAS_CAMPAIGN_CHANNEL]->(CampaignChannel)-[:THROUGH]->(Channel)",
+        "(Campaign)-[:HAS_SEND_BATCH]->(CampaignSendBatch)-[:THROUGH]->(Channel)",
+        "(CampaignSendBatch)-[:HAS_DELIVERY]->(CampaignDelivery)"
+      ],
+      "key_properties": {
+        "Channel": [
+          "name"
+        ],
+        "CampaignDelivery": [
+          "status",
+          "open_count",
+          "click_count"
+        ],
+        "CampaignSendBatch": [
+          "status",
+          "size",
+          "channel"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (d:CampaignDelivery)-[:THROUGH]->(ch:Channel) WHERE d.created_at >= datetime($period_start) AND d.created_at < datetime($period_end) RETURN ch.name AS channel, count(d) AS deliveries, sum(CASE WHEN d.status='sent' THEN 1 ELSE 0 END) AS sent, sum(CASE WHEN d.opened_at IS NOT NULL THEN 1 ELSE 0 END) AS opened ORDER BY sent DESC",
+    "diagnostic_template": "",
+    "keywords": [
+      "by channel",
+      "email vs sms",
+      "push performance",
+      "channel breakdown"
+    ],
+    "examples": [
+      "Compare email vs push performance",
+      "Which channel sent the most?"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_open_tickets",
+    "type": "business_concept",
+    "name": "Open Tickets",
+    "description": "Tickets whose status is not terminal (still being worked). Prefer CaseStatus.is_terminal = false over hardcoding status names.",
+    "search_text": "Open Tickets Tickets whose status is not terminal (still being worked). Prefer CaseStatus.is_terminal = false over hardcoding status names. active tickets unresolved tickets open cases backlog open tickets active backlog unresolved how many open (SupportCase)-[:USES_STATUS]->(CaseStatus) (Tenant)-[:HAS_TICKET]->(SupportCase) (Tenant)-[:HAS_DASHBOARD_METRICS]->(DashboardMetrics)",
+    "domain": "ticketing",
+    "aliases": [
+      "active tickets",
+      "unresolved tickets",
+      "open cases",
+      "backlog"
+    ],
+    "disambiguation": "NOT Conversation volume (CCAAS). Use SupportCase + CaseStatus. DashboardMetrics.open_tickets is a cached snapshot — prefer live SupportCase count for accuracy.",
+    "base_entities": [
+      "SupportCase",
+      "CaseStatus",
+      "DashboardMetrics"
+    ],
+    "business_rules": [
+      "Open = (SupportCase)-[:USES_STATUS]->(CaseStatus) WHERE CaseStatus.is_terminal = false",
+      "Always filter SupportCase.organization_id for tenant scope",
+      "Filter created_at or updated_at with datetime($period_start) / datetime($period_end) when period asked",
+      "Optional fast path: (Tenant)-[:HAS_DASHBOARD_METRICS]->(DashboardMetrics) RETURN open_tickets (snapshot at captured_at)"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(SupportCase)-[:USES_STATUS]->(CaseStatus)",
+        "(Tenant)-[:HAS_TICKET]->(SupportCase)",
+        "(Tenant)-[:HAS_DASHBOARD_METRICS]->(DashboardMetrics)"
+      ],
+      "key_properties": {
+        "SupportCase": [
+          "status",
+          "priority",
+          "created_at",
+          "updated_at",
+          "organization_id"
+        ],
+        "CaseStatus": [
+          "status",
+          "is_terminal",
+          "display_name"
+        ],
+        "DashboardMetrics": [
+          "open_tickets",
+          "captured_at"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (t:SupportCase)-[:USES_STATUS]->(ts:CaseStatus) WHERE ts.is_terminal = false AND t.organization_id = $organization_id RETURN count(t) AS open_tickets",
+    "diagnostic_template": "MATCH (t:SupportCase)-[:USES_STATUS]->(ts:CaseStatus) WHERE ts.is_terminal = false AND t.organization_id = $organization_id WITH t.priority AS dimension, sum(CASE WHEN t.created_at >= datetime($period_start) AND t.created_at < datetime($period_end) THEN 1 ELSE 0 END) AS current, sum(CASE WHEN t.created_at >= datetime($compare_start) AND t.created_at < datetime($compare_end) THEN 1 ELSE 0 END) AS previous RETURN dimension, current, previous, current - previous AS delta ORDER BY abs(current - previous) DESC LIMIT 5",
+    "keywords": [
+      "open tickets",
+      "active",
+      "backlog",
+      "unresolved",
+      "how many open"
+    ],
+    "examples": [
+      "How many open tickets do we have?",
+      "Why did open tickets increase this week?"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_overdue_tickets",
+    "type": "business_concept",
+    "name": "Overdue Tickets",
+    "description": "Non-terminal tickets whose resolution deadline (SupportCase.due_at) is before now. due_at is computed from ServiceLevelPolicy by priority at create/update.",
+    "search_text": "Overdue Tickets Non-terminal tickets whose resolution deadline (SupportCase.due_at) is before now. due_at is computed from ServiceLevelPolicy by priority at create/update. past due tickets SLA overdue missed due date late tickets overdue past due late missed deadline due_at (SupportCase)-[:USES_STATUS]->(CaseStatus) (SupportCase)-[:GOVERNED_BY]->(ServiceLevelPolicy) (Tenant)-[:HAS_DASHBOARD_METRICS]->(DashboardMetrics)",
+    "domain": "ticketing",
+    "aliases": [
+      "past due tickets",
+      "SLA overdue",
+      "missed due date",
+      "late tickets"
+    ],
+    "disambiguation": "Different from CCAAS SLAInstance.breached_at. Ticketing overdue uses SupportCase.due_at on the SupportCase node, optionally linked via GOVERNED_BY to ServiceLevelPolicy.",
+    "base_entities": [
+      "SupportCase",
+      "CaseStatus",
+      "ServiceLevelPolicy",
+      "DashboardMetrics"
+    ],
+    "business_rules": [
+      "Overdue = due_at < datetime() AND status not terminal",
+      "Join (SupportCase)-[:USES_STATUS]->(CaseStatus) WHERE is_terminal = false",
+      "Optional: (SupportCase)-[:GOVERNED_BY]->(ServiceLevelPolicy) for policy hours by priority",
+      "DashboardMetrics.overdue is cached snapshot"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(SupportCase)-[:USES_STATUS]->(CaseStatus)",
+        "(SupportCase)-[:GOVERNED_BY]->(ServiceLevelPolicy)",
+        "(Tenant)-[:HAS_DASHBOARD_METRICS]->(DashboardMetrics)"
+      ],
+      "key_properties": {
+        "SupportCase": [
+          "due_at",
+          "priority",
+          "status",
+          "organization_id",
+          "created_at"
+        ],
+        "ServiceLevelPolicy": [
+          "priority",
+          "resolution_hours",
+          "first_response_hours"
+        ],
+        "DashboardMetrics": [
+          "overdue",
+          "captured_at"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (t:SupportCase)-[:USES_STATUS]->(ts:CaseStatus) WHERE ts.is_terminal = false AND t.due_at IS NOT NULL AND t.due_at < datetime() AND t.organization_id = $organization_id RETURN count(t) AS overdue_tickets",
+    "diagnostic_template": "MATCH (t:SupportCase)-[:USES_STATUS]->(ts:CaseStatus) WHERE ts.is_terminal = false AND t.due_at IS NOT NULL AND t.due_at < datetime() AND t.organization_id = $organization_id OPTIONAL MATCH (t)-[:IN_QUEUE]->(q:SupportQueue) RETURN coalesce(q.queue_name, 'Unqueued') AS dimension, count(t) AS overdue ORDER BY overdue DESC LIMIT 10",
+    "keywords": [
+      "overdue",
+      "past due",
+      "late",
+      "missed deadline",
+      "due_at"
+    ],
+    "examples": [
+      "How many overdue tickets?",
+      "Which queue has the most overdue tickets?"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_unassigned_tickets",
+    "type": "business_concept",
+    "name": "Unassigned Tickets",
+    "description": "Open tickets with no L1 assignee (no ASSIGNED_TO StaffRole, or assignee_id null).",
+    "search_text": "Unassigned Tickets Open tickets with no L1 assignee (no ASSIGNED_TO StaffRole, or assignee_id null). no assignee unclaimed tickets tickets without agent unassigned no assignee unclaimed who owns (SupportCase)-[:ASSIGNED_TO]->(StaffRole) (SupportCase)-[:USES_STATUS]->(CaseStatus) (Tenant)-[:HAS_DASHBOARD_METRICS]->(DashboardMetrics)",
+    "domain": "ticketing",
+    "aliases": [
+      "no assignee",
+      "unclaimed tickets",
+      "tickets without agent"
+    ],
+    "disambiguation": "ASSIGNED_TO on SupportCase points to StaffRole (ticketing), NOT CRM ContactProfile ASSIGNED_TO Employee, and NOT CCAAS Conversation HANDLED_BY Agent.",
+    "base_entities": [
+      "SupportCase",
+      "StaffRole",
+      "CaseStatus",
+      "DashboardMetrics"
+    ],
+    "business_rules": [
+      "Unassigned = NOT (SupportCase)-[:ASSIGNED_TO]->(:StaffRole) OR assignee_id IS NULL",
+      "Usually also require is_terminal = false",
+      "DashboardMetrics.unassigned is snapshot"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(SupportCase)-[:ASSIGNED_TO]->(StaffRole)",
+        "(SupportCase)-[:USES_STATUS]->(CaseStatus)",
+        "(Tenant)-[:HAS_DASHBOARD_METRICS]->(DashboardMetrics)"
+      ],
+      "key_properties": {
+        "SupportCase": [
+          "assignee_id",
+          "assignee_name",
+          "status",
+          "organization_id",
+          "created_at"
+        ],
+        "DashboardMetrics": [
+          "unassigned",
+          "captured_at"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (t:SupportCase)-[:USES_STATUS]->(ts:CaseStatus) WHERE ts.is_terminal = false AND t.organization_id = $organization_id AND NOT (t)-[:ASSIGNED_TO]->(:StaffRole) RETURN count(t) AS unassigned_tickets",
+    "keywords": [
+      "unassigned",
+      "no assignee",
+      "unclaimed",
+      "who owns"
+    ],
+    "examples": [
+      "How many unassigned tickets?",
+      "Unassigned tickets by priority"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_due_today_tickets",
+    "type": "business_concept",
+    "name": "Due Today Tickets",
+    "description": "Open tickets whose due_at falls on the organization's local calendar today (OrgSettings.display_timezone).",
+    "search_text": "Due Today Tickets Open tickets whose due_at falls on the organization's local calendar today (OrgSettings.display_timezone). tickets due today due date today deadline today due today deadline today due_at today (SupportCase)-[:USES_STATUS]->(CaseStatus) (Tenant)-[:HAS_ORG_SETTINGS]->(OrgSettings) (Tenant)-[:HAS_DASHBOARD_METRICS]->(DashboardMetrics)",
+    "domain": "ticketing",
+    "aliases": [
+      "tickets due today",
+      "due date today",
+      "deadline today"
+    ],
+    "base_entities": [
+      "SupportCase",
+      "CaseStatus",
+      "OrgSettings",
+      "DashboardMetrics"
+    ],
+    "business_rules": [
+      "Use SupportCase.due_at date part in org timezone (OrgSettings.display_timezone)",
+      "Require is_terminal = false",
+      "DashboardMetrics.due_today is snapshot"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(SupportCase)-[:USES_STATUS]->(CaseStatus)",
+        "(Tenant)-[:HAS_ORG_SETTINGS]->(OrgSettings)",
+        "(Tenant)-[:HAS_DASHBOARD_METRICS]->(DashboardMetrics)"
+      ],
+      "key_properties": {
+        "SupportCase": [
+          "due_at",
+          "organization_id",
+          "status"
+        ],
+        "OrgSettings": [
+          "display_timezone"
+        ],
+        "DashboardMetrics": [
+          "due_today",
+          "captured_at"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (t:SupportCase)-[:USES_STATUS]->(ts:CaseStatus) WHERE ts.is_terminal = false AND t.due_at IS NOT NULL AND date(t.due_at) = date() AND t.organization_id = $organization_id RETURN count(t) AS due_today",
+    "keywords": [
+      "due today",
+      "deadline today",
+      "due_at today"
+    ],
+    "examples": [
+      "How many tickets are due today?",
+      "List tickets due today"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_ticket_volume",
+    "type": "business_concept",
+    "name": "SupportCase Volume",
+    "description": "Count of tickets created in a period; optionally breakdown by channel, priority, or SupportQueue.",
+    "search_text": "SupportCase Volume Count of tickets created in a period; optionally breakdown by channel, priority, or SupportQueue. tickets created case volume intake volume new tickets volume created how many tickets intake new tickets (SupportCase)-[:IN_QUEUE]->(SupportQueue) (SupportCase)-[:REPORTED_VIA]->(SupportProfile)-[:OVERLAY_OF]->(Contact) (Tenant)-[:HAS_TICKET]->(SupportCase)",
+    "domain": "ticketing",
+    "aliases": [
+      "tickets created",
+      "case volume",
+      "intake volume",
+      "new tickets"
+    ],
+    "disambiguation": "NOT Conversation Volume (CCAAS). Ticketing work items are SupportCase nodes.",
+    "base_entities": [
+      "SupportCase",
+      "SupportQueue",
+      "SupportProfile"
+    ],
+    "business_rules": [
+      "Filter by SupportCase.created_at with datetime($period_start) / datetime($period_end)",
+      "Group by SupportCase.channel property or (SupportCase)-[:IN_QUEUE]->(SupportQueue)",
+      "Person path: (SupportCase)-[:REPORTED_VIA]->(SupportProfile)-[:OVERLAY_OF]->(Contact)"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(SupportCase)-[:IN_QUEUE]->(SupportQueue)",
+        "(SupportCase)-[:REPORTED_VIA]->(SupportProfile)-[:OVERLAY_OF]->(Contact)",
+        "(Tenant)-[:HAS_TICKET]->(SupportCase)"
+      ],
+      "key_properties": {
+        "SupportCase": [
+          "created_at",
+          "channel",
+          "priority",
+          "category",
+          "organization_id"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (t:SupportCase) WHERE t.organization_id = $organization_id AND t.created_at >= datetime($period_start) AND t.created_at < datetime($period_end) RETURN t.channel AS channel, count(t) AS volume ORDER BY volume DESC",
+    "diagnostic_template": "MATCH (t:SupportCase) WHERE t.organization_id = $organization_id WITH coalesce(t.channel, 'Unknown') AS dimension, sum(CASE WHEN t.created_at >= datetime($period_start) AND t.created_at < datetime($period_end) THEN 1 ELSE 0 END) AS current, sum(CASE WHEN t.created_at >= datetime($compare_start) AND t.created_at < datetime($compare_end) THEN 1 ELSE 0 END) AS previous RETURN dimension, current, previous, current - previous AS delta ORDER BY abs(current - previous) DESC LIMIT 5",
+    "keywords": [
+      "volume",
+      "created",
+      "how many tickets",
+      "intake",
+      "new tickets"
+    ],
+    "examples": [
+      "How many tickets were created this week?",
+      "SupportCase volume by channel"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_resolved_tickets",
+    "type": "business_concept",
+    "name": "Resolved Tickets",
+    "description": "Tickets that reached a terminal status; prefer SupportCase.resolved_at or CaseStatus.is_terminal = true.",
+    "search_text": "Resolved Tickets Tickets that reached a terminal status; prefer SupportCase.resolved_at or CaseStatus.is_terminal = true. closed tickets solved tickets resolution volume resolved closed solved resolution count (SupportCase)-[:USES_STATUS]->(CaseStatus) (SupportCase)-[:RESOLVED_BY]->(StaffRole) (SupportCase)-[:ASSIGNED_TO]->(StaffRole)",
+    "domain": "ticketing",
+    "aliases": [
+      "closed tickets",
+      "solved tickets",
+      "resolution volume"
+    ],
+    "base_entities": [
+      "SupportCase",
+      "CaseStatus",
+      "StaffRole"
+    ],
+    "business_rules": [
+      "Resolved when resolved_at IS NOT NULL OR (SupportCase)-[:USES_STATUS]->(CaseStatus {is_terminal: true})",
+      "Filter period on resolved_at",
+      "Resolver (L2) via (SupportCase)-[:RESOLVED_BY]->(StaffRole); L1 via ASSIGNED_TO"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(SupportCase)-[:USES_STATUS]->(CaseStatus)",
+        "(SupportCase)-[:RESOLVED_BY]->(StaffRole)",
+        "(SupportCase)-[:ASSIGNED_TO]->(StaffRole)"
+      ],
+      "key_properties": {
+        "SupportCase": [
+          "resolved_at",
+          "status",
+          "priority",
+          "organization_id",
+          "csat_score"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (t:SupportCase) WHERE t.organization_id = $organization_id AND t.resolved_at >= datetime($period_start) AND t.resolved_at < datetime($period_end) RETURN count(t) AS resolved_tickets",
+    "keywords": [
+      "resolved",
+      "closed",
+      "solved",
+      "resolution count"
+    ],
+    "examples": [
+      "How many tickets resolved this week?",
+      "Resolved tickets by agent"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_ticket_first_response_time",
+    "type": "business_concept",
+    "name": "SupportCase First Response Time",
+    "description": "Time from ticket creation to first staff response (SupportCase.first_response_at). SLA target hours come from ServiceLevelPolicy.first_response_hours by priority.",
+    "search_text": "SupportCase First Response Time Time from ticket creation to first staff response (SupportCase.first_response_at). SLA target hours come from ServiceLevelPolicy.first_response_hours by priority. FRT time to first reply first response SLA speed to first answer first response FRT response time reply speed (SupportCase)-[:GOVERNED_BY]->(ServiceLevelPolicy) (SupportCase)-[:ASSIGNED_TO]->(StaffRole)",
+    "domain": "ticketing",
+    "aliases": [
+      "FRT",
+      "time to first reply",
+      "first response SLA",
+      "speed to first answer"
+    ],
+    "disambiguation": "CCAAS uses Conversation.first_agent_response_at / SLAInstance. Ticketing uses SupportCase.first_response_at and ServiceLevelPolicy.",
+    "base_entities": [
+      "SupportCase",
+      "ServiceLevelPolicy",
+      "StaffRole"
+    ],
+    "business_rules": [
+      "FRT seconds = duration.between(created_at, first_response_at).seconds",
+      "Only tickets with first_response_at IS NOT NULL",
+      "Met SLA if first_response_at <= created_at + ServiceLevelPolicy.first_response_hours (via GOVERNED_BY)",
+      "Average FRT = avg(duration) over period"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(SupportCase)-[:GOVERNED_BY]->(ServiceLevelPolicy)",
+        "(SupportCase)-[:ASSIGNED_TO]->(StaffRole)"
+      ],
+      "key_properties": {
+        "SupportCase": [
+          "created_at",
+          "first_response_at",
+          "priority",
+          "organization_id"
+        ],
+        "ServiceLevelPolicy": [
+          "priority",
+          "first_response_hours"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (t:SupportCase) WHERE t.organization_id = $organization_id AND t.first_response_at IS NOT NULL AND t.first_response_at >= datetime($period_start) AND t.first_response_at < datetime($period_end) RETURN avg(duration.between(t.created_at, t.first_response_at).seconds) AS avg_first_response_seconds",
+    "keywords": [
+      "first response",
+      "FRT",
+      "response time",
+      "reply speed"
+    ],
+    "examples": [
+      "What is average first response time?",
+      "Are we meeting first response SLA?"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_ticket_resolution_time",
+    "type": "business_concept",
+    "name": "SupportCase Resolution Time",
+    "description": "Duration from SupportCase.created_at to SupportCase.resolved_at for resolved tickets.",
+    "search_text": "SupportCase Resolution Time Duration from SupportCase.created_at to SupportCase.resolved_at for resolved tickets. time to resolve average resolution time ART handle time ticket resolution time time to resolve ART how long to close (SupportCase)-[:GOVERNED_BY]->(ServiceLevelPolicy) (SupportCase)-[:RESOLVED_BY]->(StaffRole) (SupportCase)-[:ASSIGNED_TO]->(StaffRole)",
+    "domain": "ticketing",
+    "aliases": [
+      "time to resolve",
+      "average resolution time",
+      "ART",
+      "handle time ticket"
+    ],
+    "disambiguation": "Not CCAAS Average Handle Time (assigned_at→resolved_at on Conversation). Ticketing ART uses created_at→resolved_at on SupportCase.",
+    "base_entities": [
+      "SupportCase",
+      "ServiceLevelPolicy",
+      "StaffRole"
+    ],
+    "business_rules": [
+      "Only where resolved_at IS NOT NULL",
+      "ART = avg(duration.between(created_at, resolved_at).seconds)",
+      "Compare against ServiceLevelPolicy.resolution_hours via GOVERNED_BY"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(SupportCase)-[:GOVERNED_BY]->(ServiceLevelPolicy)",
+        "(SupportCase)-[:RESOLVED_BY]->(StaffRole)",
+        "(SupportCase)-[:ASSIGNED_TO]->(StaffRole)"
+      ],
+      "key_properties": {
+        "SupportCase": [
+          "created_at",
+          "resolved_at",
+          "priority",
+          "organization_id"
+        ],
+        "ServiceLevelPolicy": [
+          "resolution_hours",
+          "priority"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (t:SupportCase) WHERE t.organization_id = $organization_id AND t.resolved_at IS NOT NULL AND t.resolved_at >= datetime($period_start) AND t.resolved_at < datetime($period_end) RETURN avg(duration.between(t.created_at, t.resolved_at).seconds) AS avg_resolution_seconds",
+    "keywords": [
+      "resolution time",
+      "time to resolve",
+      "ART",
+      "how long to close"
+    ],
+    "examples": [
+      "Average resolution time this month?",
+      "Resolution time by priority"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_ticket_sla_compliance",
+    "type": "business_concept",
+    "name": "SupportCase SLA Compliance",
+    "description": "Share of resolved tickets that met resolution deadline (resolved_at <= due_at) or first-response deadline.",
+    "search_text": "SupportCase SLA Compliance Share of resolved tickets that met resolution deadline (resolved_at <= due_at) or first-response deadline. SLA met rate within SLA SLA adherence on-time resolution SLA compliance within SLA breach on time (SupportCase)-[:GOVERNED_BY]->(ServiceLevelPolicy) (SupportCase)-[:USES_STATUS]->(CaseStatus)",
+    "domain": "ticketing",
+    "aliases": [
+      "SLA met rate",
+      "within SLA",
+      "SLA adherence",
+      "on-time resolution"
+    ],
+    "disambiguation": "CCAAS SLA breach uses SLAInstance.breached_at. Ticketing uses SupportCase.due_at / first_response_at vs ServiceLevelPolicy.",
+    "base_entities": [
+      "SupportCase",
+      "ServiceLevelPolicy",
+      "CaseStatus"
+    ],
+    "business_rules": [
+      "Resolution SLA met: resolved_at IS NOT NULL AND due_at IS NOT NULL AND resolved_at <= due_at",
+      "Resolution breached: open with due_at < now, OR resolved_at > due_at",
+      "First-response met: first_response_at within ServiceLevelPolicy.first_response_hours of created_at",
+      "(SupportCase)-[:GOVERNED_BY]->(ServiceLevelPolicy) matches on priority"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(SupportCase)-[:GOVERNED_BY]->(ServiceLevelPolicy)",
+        "(SupportCase)-[:USES_STATUS]->(CaseStatus)"
+      ],
+      "key_properties": {
+        "SupportCase": [
+          "due_at",
+          "resolved_at",
+          "first_response_at",
+          "created_at",
+          "priority",
+          "organization_id"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (t:SupportCase) WHERE t.organization_id = $organization_id AND t.resolved_at >= datetime($period_start) AND t.resolved_at < datetime($period_end) AND t.due_at IS NOT NULL WITH count(t) AS total, sum(CASE WHEN t.resolved_at <= t.due_at THEN 1 ELSE 0 END) AS met RETURN met, total, toFloat(met)/total AS sla_compliance_rate",
+    "keywords": [
+      "SLA",
+      "compliance",
+      "within SLA",
+      "breach",
+      "on time"
+    ],
+    "examples": [
+      "What is our ticket SLA compliance?",
+      "How many tickets breached SLA this week?"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_ticket_csat",
+    "type": "business_concept",
+    "name": "SupportCase CSAT",
+    "description": "Customer satisfaction on tickets: SupportCase.csat_score (1–5) and csat_rated_at. Supports average, promoter/detractor rates, and response rate among resolved.",
+    "search_text": "SupportCase CSAT Customer satisfaction on tickets: SupportCase.csat_score (1–5) and csat_rated_at. Supports average, promoter/detractor rates, and response rate among resolved. customer satisfaction CSAT score satisfaction rating survey score CSAT satisfaction rating promoter detractor survey (SupportCase)-[:REPORTED_VIA]->(SupportProfile)-[:OVERLAY_OF]->(Contact)",
+    "domain": "ticketing",
+    "aliases": [
+      "customer satisfaction",
+      "CSAT score",
+      "satisfaction rating",
+      "survey score"
+    ],
+    "base_entities": [
+      "SupportCase",
+      "SupportProfile",
+      "Contact"
+    ],
+    "business_rules": [
+      "Rated tickets: csat_score IS NOT NULL",
+      "average_csat = avg(csat_score) where rated",
+      "Promoter: csat_score >= 4; Detractor: csat_score <= 2; Neutral: = 3",
+      "Response rate = rated among resolved / resolved (resolved_at IS NOT NULL)",
+      "Customer-level CSAT: (Contact)<-[:OVERLAY_OF]-(SupportProfile)<-[:REPORTED_VIA]-(SupportCase)",
+      "Do NOT invent a Customer node — Customer is Contact sublabel when contact_type = customer"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(SupportCase)-[:REPORTED_VIA]->(SupportProfile)-[:OVERLAY_OF]->(Contact)"
+      ],
+      "key_properties": {
+        "SupportCase": [
+          "csat_score",
+          "csat_rated_at",
+          "resolved_at",
+          "organization_id"
+        ],
+        "Contact": [
+          "cdp_id",
+          "contact_type"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (t:SupportCase) WHERE t.organization_id = $organization_id AND t.csat_score IS NOT NULL AND t.csat_rated_at >= datetime($period_start) AND t.csat_rated_at < datetime($period_end) RETURN avg(toFloat(t.csat_score)) AS average_csat, count(t) AS rated_count",
+    "diagnostic_template": "MATCH (t:SupportCase)-[:REPORTED_VIA]->(sp:SupportProfile)-[:OVERLAY_OF]->(ct:Contact) WHERE t.organization_id = $organization_id AND t.csat_score IS NOT NULL AND t.csat_rated_at >= datetime($period_start) AND t.csat_rated_at < datetime($period_end) RETURN ct.cdp_id AS contact, avg(toFloat(t.csat_score)) AS avg_csat, count(t) AS ratings ORDER BY avg_csat ASC LIMIT 10",
+    "keywords": [
+      "CSAT",
+      "satisfaction",
+      "rating",
+      "promoter",
+      "detractor",
+      "survey"
+    ],
+    "examples": [
+      "What is average CSAT this month?",
+      "CSAT for this customer",
+      "CSAT response rate"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_ticket_escalation",
+    "type": "business_concept",
+    "name": "SupportCase Escalation",
+    "description": "Tickets escalated to an L2 resolver. Graph: SupportCase has RESOLVED_BY StaffRole and/or AuditEvent.action = ticket.escalated.",
+    "search_text": "SupportCase Escalation Tickets escalated to an L2 resolver. Graph: SupportCase has RESOLVED_BY StaffRole and/or AuditEvent.action = ticket.escalated. escalated tickets L2 handoff sent to resolver escalation volume escalation escalated resolver L2 handoff (SupportCase)-[:RESOLVED_BY]->(StaffRole) (SupportCase)-[:ASSIGNED_TO]->(StaffRole) (AuditEvent)-[:ON_TICKET]->(SupportCase) (AuditEvent)-[:ACTED_BY]->(StaffRole)",
+    "domain": "ticketing",
+    "aliases": [
+      "escalated tickets",
+      "L2 handoff",
+      "sent to resolver",
+      "escalation volume"
+    ],
+    "disambiguation": "Not CCAAS Transfer. Ticketing escalation sets resolver (RESOLVED_BY), distinct from L1 ASSIGNED_TO.",
+    "base_entities": [
+      "SupportCase",
+      "StaffRole",
+      "AuditEvent"
+    ],
+    "business_rules": [
+      "Escalated if (SupportCase)-[:RESOLVED_BY]->(StaffRole) OR AuditEvent.action = 'ticket.escalated'",
+      "Path: (AuditEvent)-[:ON_TICKET]->(SupportCase), (AuditEvent)-[:ACTED_BY]->(StaffRole)",
+      "Count distinct tickets in period via AuditEvent.created_at or when resolver_id set"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(SupportCase)-[:RESOLVED_BY]->(StaffRole)",
+        "(SupportCase)-[:ASSIGNED_TO]->(StaffRole)",
+        "(AuditEvent)-[:ON_TICKET]->(SupportCase)",
+        "(AuditEvent)-[:ACTED_BY]->(StaffRole)"
+      ],
+      "key_properties": {
+        "SupportCase": [
+          "resolver_id",
+          "assignee_id",
+          "priority",
+          "organization_id"
+        ],
+        "AuditEvent": [
+          "action",
+          "created_at",
+          "organization_id"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (ae:AuditEvent)-[:ON_TICKET]->(t:SupportCase) WHERE ae.organization_id = $organization_id AND ae.action = 'ticket.escalated' AND ae.created_at >= datetime($period_start) AND ae.created_at < datetime($period_end) RETURN count(DISTINCT t) AS escalation_volume",
+    "keywords": [
+      "escalation",
+      "escalated",
+      "resolver",
+      "L2",
+      "handoff"
+    ],
+    "examples": [
+      "How many escalations this week?",
+      "Which agent escalates the most?"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_ticket_queue_load",
+    "type": "business_concept",
+    "name": "SupportCase Queue Load",
+    "description": "Workload on SupportQueue: open ticket count, assigned count, sla_status, and membership via HAS_MEMBER StaffRole.",
+    "search_text": "SupportCase Queue Load Workload on SupportQueue: open ticket count, assigned count, sla_status, and membership via HAS_MEMBER StaffRole. team backlog queue open tickets queue workload queue SLA status queue team backlog workload queue load (SupportCase)-[:IN_QUEUE]->(SupportQueue) (SupportQueue)-[:HAS_MEMBER]->(StaffRole) (SupportQueue)-[:MIRRORED_FROM]->(Team) (Tenant)-[:HAS_TICKET_QUEUE]->(SupportQueue)",
+    "domain": "ticketing",
+    "aliases": [
+      "team backlog",
+      "queue open tickets",
+      "queue workload",
+      "queue SLA status"
+    ],
+    "disambiguation": "SupportQueue is ticketing (not CCAAS Queue). May be MIRRORED_FROM Team.",
+    "base_entities": [
+      "SupportQueue",
+      "SupportCase",
+      "StaffRole",
+      "Team"
+    ],
+    "business_rules": [
+      "Live load: count (SupportCase)-[:IN_QUEUE]->(SupportQueue) with is_terminal = false",
+      "Cached: SupportQueue.open_tickets, assigned, sla_status",
+      "(SupportQueue)-[:HAS_MEMBER]->(StaffRole)",
+      "(SupportQueue)-[:MIRRORED_FROM]->(Team) when synced from MyAccount"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(SupportCase)-[:IN_QUEUE]->(SupportQueue)",
+        "(SupportQueue)-[:HAS_MEMBER]->(StaffRole)",
+        "(SupportQueue)-[:MIRRORED_FROM]->(Team)",
+        "(Tenant)-[:HAS_TICKET_QUEUE]->(SupportQueue)"
+      ],
+      "key_properties": {
+        "SupportQueue": [
+          "queue_name",
+          "open_tickets",
+          "assigned",
+          "sla_status",
+          "organization_id"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (q:SupportQueue) WHERE q.organization_id = $organization_id OPTIONAL MATCH (t:SupportCase)-[:IN_QUEUE]->(q) OPTIONAL MATCH (t)-[:USES_STATUS]->(ts:CaseStatus) WITH q, sum(CASE WHEN ts.is_terminal = false THEN 1 ELSE 0 END) AS open_live RETURN q.queue_name AS queue, open_live, q.open_tickets AS open_cached, q.sla_status AS sla_status ORDER BY open_live DESC",
+    "keywords": [
+      "queue",
+      "team",
+      "backlog",
+      "workload",
+      "queue load"
+    ],
+    "examples": [
+      "Which queue has the highest backlog?",
+      "Queue load and SLA status"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_ticket_agent",
+    "type": "business_concept",
+    "name": "SupportCase Agent",
+    "description": "StaffRole is the ticketing workforce bridge to Employee (IS_TICKET_AGENT_FOR). Handles tickets via ASSIGNED_TO (L1) and RESOLVED_BY (L2).",
+    "search_text": "SupportCase Agent StaffRole is the ticketing workforce bridge to Employee (IS_TICKET_AGENT_FOR). Handles tickets via ASSIGNED_TO (L1) and RESOLVED_BY (L2). support agent ticketing assignee resolver case agent ticket agent assignee resolver StaffRole who is assigned (StaffRole)-[:IS_TICKET_AGENT_FOR]->(Employee) (SupportCase)-[:ASSIGNED_TO]->(StaffRole) (SupportCase)-[:RESOLVED_BY]->(StaffRole) (SupportQueue)-[:HAS_MEMBER]->(StaffRole) (Tenant)-[:HAS_TICKET_AGENT]->(StaffRole)",
+    "domain": "ticketing",
+    "aliases": [
+      "support agent ticketing",
+      "assignee",
+      "resolver",
+      "case agent"
+    ],
+    "disambiguation": "NOT CCAAS Agent (IS_AGENT_FOR / HANDLED_BY Conversation). SupportCase staff identity name/email/skills live on Employee; StaffRole holds spoke prefs + setup_user_id.",
+    "base_entities": [
+      "StaffRole",
+      "Employee",
+      "SupportCase",
+      "SupportQueue"
+    ],
+    "business_rules": [
+      "(StaffRole)-[:IS_TICKET_AGENT_FOR]->(Employee)",
+      "(SupportCase)-[:ASSIGNED_TO]->(StaffRole) for L1",
+      "(SupportCase)-[:RESOLVED_BY]->(StaffRole) for L2",
+      "(SupportQueue)-[:HAS_MEMBER]->(StaffRole)",
+      "For display name use Employee via IS_TICKET_AGENT_FOR, not a name property on StaffRole"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(StaffRole)-[:IS_TICKET_AGENT_FOR]->(Employee)",
+        "(SupportCase)-[:ASSIGNED_TO]->(StaffRole)",
+        "(SupportCase)-[:RESOLVED_BY]->(StaffRole)",
+        "(SupportQueue)-[:HAS_MEMBER]->(StaffRole)",
+        "(Tenant)-[:HAS_TICKET_AGENT]->(StaffRole)"
+      ],
+      "key_properties": {
+        "StaffRole": [
+          "id",
+          "setup_user_id",
+          "role",
+          "status",
+          "organization_id"
+        ],
+        "Employee": [
+          "first_name",
+          "last_name",
+          "work_email"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (t:SupportCase)-[:ASSIGNED_TO]->(ta:StaffRole)-[:IS_TICKET_AGENT_FOR]->(u:Employee) WHERE t.organization_id = $organization_id AND t.created_at >= datetime($period_start) AND t.created_at < datetime($period_end) RETURN u.first_name + ' ' + u.last_name AS agent, count(t) AS assigned_count ORDER BY assigned_count DESC LIMIT 10",
+    "keywords": [
+      "ticket agent",
+      "assignee",
+      "resolver",
+      "StaffRole",
+      "who is assigned"
+    ],
+    "examples": [
+      "Which agent has the most assigned tickets?",
+      "Show resolver for this ticket"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_support_requester",
+    "type": "business_concept",
+    "name": "Support Requester",
+    "description": "Person who reported a ticket. Path: SupportCase-[:REPORTED_VIA]->SupportProfile-[:OVERLAY_OF]->Contact. Contact may also have Customer sublabel via contact_type.",
+    "search_text": "Support Requester Person who reported a ticket. Path: SupportCase-[:REPORTED_VIA]->SupportProfile-[:OVERLAY_OF]->Contact. Contact may also have Customer sublabel via contact_type. ticket customer requester support contact who filed the ticket requester customer tickets support contact who reported contact tickets (SupportCase)-[:REPORTED_VIA]->(SupportProfile) (SupportProfile)-[:OVERLAY_OF]->(Contact) (SupportProfile)-[:OF_ACCOUNT]->(ClientAccount)",
+    "domain": "ticketing",
+    "aliases": [
+      "ticket customer",
+      "requester",
+      "support contact",
+      "who filed the ticket"
+    ],
+    "disambiguation": "Do NOT create or MATCH a separate Customer node from ticketing. Use Contact (and optional :Customer sublabel). SupportProfile is spoke ops overlay (like CRM ContactProfile), keyed by contact_profile.id; person key is Contact.cdp_id.",
+    "base_entities": [
+      "SupportCase",
+      "SupportProfile",
+      "Contact",
+      "ClientAccount"
+    ],
+    "business_rules": [
+      "(SupportCase)-[:REPORTED_VIA]->(SupportProfile)-[:OVERLAY_OF]->(Contact)",
+      "Optional B2B: (SupportProfile)-[:OF_ACCOUNT]->(ClientAccount)",
+      "Customer KPIs (lifetime tickets, avg CSAT) aggregate Tickets under this path",
+      "SupportProfile.total_tickets is cache only — prefer count(SupportCase) for analytics"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(SupportCase)-[:REPORTED_VIA]->(SupportProfile)",
+        "(SupportProfile)-[:OVERLAY_OF]->(Contact)",
+        "(SupportProfile)-[:OF_ACCOUNT]->(ClientAccount)"
+      ],
+      "key_properties": {
+        "SupportProfile": [
+          "id",
+          "cdp_id",
+          "status",
+          "total_tickets",
+          "organization_id"
+        ],
+        "Contact": [
+          "cdp_id",
+          "first_name",
+          "last_name",
+          "contact_type"
+        ],
+        "SupportCase": [
+          "customer_id",
+          "csat_score",
+          "created_at",
+          "resolved_at"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (t:SupportCase)-[:REPORTED_VIA]->(sp:SupportProfile)-[:OVERLAY_OF]->(ct:Contact) WHERE t.organization_id = $organization_id AND ct.cdp_id = $cdp_id RETURN count(t) AS tkt_total_tickets, avg(CASE WHEN t.csat_score IS NOT NULL THEN toFloat(t.csat_score) END) AS tkt_avg_csat_score",
+    "keywords": [
+      "requester",
+      "customer tickets",
+      "support contact",
+      "who reported",
+      "contact tickets"
+    ],
+    "examples": [
+      "How many tickets does this customer have?",
+      "Show tickets for this contact",
+      "Average CSAT for this requester"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_high_priority_open_tickets",
+    "type": "business_concept",
+    "name": "High Priority Open Tickets",
+    "description": "Open tickets with priority in urgent/high.",
+    "search_text": "High Priority Open Tickets Open tickets with priority in urgent/high. urgent open tickets critical backlog P1 P2 open urgent high priority critical P1 (SupportCase)-[:USES_STATUS]->(CaseStatus) (SupportCase)-[:GOVERNED_BY]->(ServiceLevelPolicy)",
+    "domain": "ticketing",
+    "aliases": [
+      "urgent open tickets",
+      "critical backlog",
+      "P1 P2 open"
+    ],
+    "base_entities": [
+      "SupportCase",
+      "CaseStatus",
+      "ServiceLevelPolicy"
+    ],
+    "business_rules": [
+      "is_terminal = false AND toLower(priority) IN ['urgent', 'high']",
+      "Priority keys align with ServiceLevelPolicy.priority"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(SupportCase)-[:USES_STATUS]->(CaseStatus)",
+        "(SupportCase)-[:GOVERNED_BY]->(ServiceLevelPolicy)"
+      ],
+      "key_properties": {
+        "SupportCase": [
+          "priority",
+          "status",
+          "due_at",
+          "organization_id"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (t:SupportCase)-[:USES_STATUS]->(ts:CaseStatus) WHERE ts.is_terminal = false AND toLower(t.priority) IN ['urgent', 'high'] AND t.organization_id = $organization_id RETURN count(t) AS high_priority_open",
+    "keywords": [
+      "urgent",
+      "high priority",
+      "critical",
+      "P1"
+    ],
+    "examples": [
+      "How many urgent open tickets?",
+      "High priority backlog by queue"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_ticket_note_volume",
+    "type": "business_concept",
+    "name": "SupportCase Note Volume",
+    "description": "Volume of TicketNote on tickets. visibility distinguishes internal vs customer-visible.",
+    "search_text": "SupportCase Note Volume Volume of TicketNote on tickets. visibility distinguishes internal vs customer-visible. replies comments on ticket internal notes customer visible replies notes replies comments internal note (SupportCase)<-[:HAS_TICKET_NOTE]-(TicketNote) (TicketNote)-[:AUTHORED_BY]->(StaffRole)",
+    "domain": "ticketing",
+    "aliases": [
+      "replies",
+      "comments on ticket",
+      "internal notes",
+      "customer visible replies"
+    ],
+    "disambiguation": "TicketNote is not CCAAS WorkNote on Conversation.",
+    "base_entities": [
+      "TicketNote",
+      "SupportCase",
+      "StaffRole"
+    ],
+    "business_rules": [
+      "(SupportCase)-[:HAS_TICKET_NOTE]->(TicketNote) or (TicketNote) inbound HAS_TICKET_NOTE from SupportCase",
+      "Internal: visibility = 'internal'; customer-visible otherwise",
+      "(TicketNote)-[:AUTHORED_BY]->(StaffRole)"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(SupportCase)<-[:HAS_TICKET_NOTE]-(TicketNote)",
+        "(TicketNote)-[:AUTHORED_BY]->(StaffRole)"
+      ],
+      "key_properties": {
+        "TicketNote": [
+          "visibility",
+          "created_at",
+          "organization_id",
+          "body"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (n:TicketNote) WHERE n.organization_id = $organization_id AND n.created_at >= datetime($period_start) AND n.created_at < datetime($period_end) RETURN n.visibility AS visibility, count(n) AS note_volume",
+    "keywords": [
+      "notes",
+      "replies",
+      "comments",
+      "internal note"
+    ],
+    "examples": [
+      "How many ticket notes this week?",
+      "Internal vs public reply volume"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_outbound_ticket_email",
+    "type": "business_concept",
+    "name": "Outbound SupportCase Email",
+    "description": "Emails sent to customers about tickets (OutboundEmail). kinds include ticket_created, ticket_reply, ticket_resolved.",
+    "search_text": "Outbound SupportCase Email Emails sent to customers about tickets (OutboundEmail). kinds include ticket_created, ticket_reply, ticket_resolved. customer email sent ticket acknowledgement resolution email reply email email outbound acknowledgement customer mail (OutboundEmail)-[:SENT_FOR]->(SupportCase) (InboundEmailRef)-[:THREADS_TO]->(SupportCase)",
+    "domain": "ticketing",
+    "aliases": [
+      "customer email sent",
+      "ticket acknowledgement",
+      "resolution email",
+      "reply email"
+    ],
+    "base_entities": [
+      "OutboundEmail",
+      "SupportCase",
+      "InboundEmailRef"
+    ],
+    "business_rules": [
+      "(OutboundEmail)-[:SENT_FOR]->(SupportCase)",
+      "Inbound threading: (InboundEmailRef)-[:THREADS_TO]->(SupportCase)",
+      "Filter OutboundEmail.created_at and status for delivery success"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(OutboundEmail)-[:SENT_FOR]->(SupportCase)",
+        "(InboundEmailRef)-[:THREADS_TO]->(SupportCase)"
+      ],
+      "key_properties": {
+        "OutboundEmail": [
+          "kind",
+          "status",
+          "to_email",
+          "created_at",
+          "organization_id"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (e:OutboundEmail)-[:SENT_FOR]->(t:SupportCase) WHERE e.organization_id = $organization_id AND e.created_at >= datetime($period_start) AND e.created_at < datetime($period_end) RETURN e.kind AS kind, count(e) AS email_volume",
+    "keywords": [
+      "email",
+      "outbound",
+      "acknowledgement",
+      "customer mail"
+    ],
+    "examples": [
+      "How many outbound ticket emails this week?",
+      "Failed outbound emails"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_knowledge_article",
+    "type": "business_concept",
+    "name": "Knowledge Article",
+    "description": "Published help content as KnowledgeArticle. Distinct from accounts KnowledgeDocument.",
+    "search_text": "Knowledge Article Published help content as KnowledgeArticle. Distinct from accounts KnowledgeDocument. KB article help article help center content knowledge base KB knowledge help center article (Tenant)-[:HAS_KNOWLEDGE_ARTICLE]->(KnowledgeArticle) (KnowledgeArticle)-[:AUTHORED_BY]->(StaffRole)",
+    "domain": "ticketing",
+    "aliases": [
+      "KB article",
+      "help article",
+      "help center content",
+      "knowledge base"
+    ],
+    "base_entities": [
+      "KnowledgeArticle",
+      "StaffRole",
+      "Tenant"
+    ],
+    "business_rules": [
+      "(Tenant)-[:HAS_KNOWLEDGE_ARTICLE]->(KnowledgeArticle)",
+      "Published when status = 'Published'",
+      "(KnowledgeArticle)-[:AUTHORED_BY]->(StaffRole)"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Tenant)-[:HAS_KNOWLEDGE_ARTICLE]->(KnowledgeArticle)",
+        "(KnowledgeArticle)-[:AUTHORED_BY]->(StaffRole)"
+      ],
+      "key_properties": {
+        "KnowledgeArticle": [
+          "title",
+          "category",
+          "status",
+          "views",
+          "organization_id",
+          "updated_at"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (a:KnowledgeArticle) WHERE a.organization_id = $organization_id AND a.status = 'Published' RETURN a.category AS category, count(a) AS articles, sum(a.views) AS total_views ORDER BY total_views DESC",
+    "keywords": [
+      "KB",
+      "knowledge",
+      "help center",
+      "article"
+    ],
+    "examples": [
+      "How many published KB articles?",
+      "Top viewed knowledge articles"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_ticket_dashboard_kpis",
+    "type": "business_concept",
+    "name": "SupportCase Dashboard KPIs",
+    "description": "Cached org KPI snapshot on DashboardMetrics: open_tickets, on_hold, overdue, due_today, unassigned. Use for quick home answers; live SupportCase queries for authoritative analytics.",
+    "search_text": "SupportCase Dashboard KPIs Cached org KPI snapshot on DashboardMetrics: open_tickets, on_hold, overdue, due_today, unassigned. Use for quick home answers; live SupportCase queries for authoritative analytics. home metrics dashboard snapshot open overdue due today unassigned dashboard KPI home metrics snapshot (Tenant)-[:HAS_DASHBOARD_METRICS]->(DashboardMetrics)",
+    "domain": "ticketing",
+    "aliases": [
+      "home metrics",
+      "dashboard snapshot",
+      "open overdue due today unassigned"
+    ],
+    "base_entities": [
+      "DashboardMetrics",
+      "Tenant",
+      "SupportCase"
+    ],
+    "business_rules": [
+      "(Tenant)-[:HAS_DASHBOARD_METRICS]->(DashboardMetrics)",
+      "One row per organization_id; check captured_at freshness",
+      "If snapshot stale or null, compute from SupportCase + CaseStatus instead"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Tenant)-[:HAS_DASHBOARD_METRICS]->(DashboardMetrics)"
+      ],
+      "key_properties": {
+        "DashboardMetrics": [
+          "open_tickets",
+          "on_hold",
+          "overdue",
+          "due_today",
+          "unassigned",
+          "captured_at",
+          "organization_id"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (dm:DashboardMetrics) WHERE dm.organization_id = $organization_id RETURN dm.open_tickets AS open_tickets, dm.overdue AS overdue, dm.due_today AS due_today, dm.unassigned AS unassigned, dm.captured_at AS captured_at",
+    "keywords": [
+      "dashboard",
+      "KPI",
+      "home metrics",
+      "snapshot"
+    ],
+    "examples": [
+      "Show dashboard KPIs",
+      "Open, overdue, and unassigned counts"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_client_account_tickets",
+    "type": "business_concept",
+    "name": "Client Account Tickets",
+    "description": "Tickets filed by contacts under a B2B ClientAccount (ticketing.ticketing_accounts). Not CRM Account and not MyAccount Tenant.",
+    "search_text": "Client Account Tickets Tickets filed by contacts under a B2B ClientAccount (ticketing.ticketing_accounts). Not CRM Account and not MyAccount Tenant. B2B account tickets company support volume account backlog client account B2B account tickets company support (SupportCase)-[:REPORTED_VIA]->(SupportProfile)-[:OF_ACCOUNT]->(ClientAccount) (SupportProfile)-[:OVERLAY_OF]->(Contact) (Tenant)-[:HAS_CLIENT_ACCOUNT]->(ClientAccount)",
+    "domain": "ticketing",
+    "aliases": [
+      "B2B account tickets",
+      "company support volume",
+      "account backlog"
+    ],
+    "base_entities": [
+      "ClientAccount",
+      "SupportProfile",
+      "SupportCase",
+      "Contact"
+    ],
+    "business_rules": [
+      "(SupportProfile)-[:OF_ACCOUNT]->(ClientAccount)",
+      "(SupportCase)-[:REPORTED_VIA]->(SupportProfile)",
+      "Do not confuse ClientAccount with Account (CRM) or Tenant (accounts.organizations)"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(SupportCase)-[:REPORTED_VIA]->(SupportProfile)-[:OF_ACCOUNT]->(ClientAccount)",
+        "(SupportProfile)-[:OVERLAY_OF]->(Contact)",
+        "(Tenant)-[:HAS_CLIENT_ACCOUNT]->(ClientAccount)"
+      ],
+      "key_properties": {
+        "ClientAccount": [
+          "name",
+          "status",
+          "organization_id"
+        ],
+        "SupportCase": [
+          "created_at",
+          "status",
+          "priority",
+          "csat_score"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (t:SupportCase)-[:REPORTED_VIA]->(sp:SupportProfile)-[:OF_ACCOUNT]->(ca:ClientAccount) WHERE ca.organization_id = $organization_id AND ca.name = $account_name RETURN count(t) AS ticket_count, avg(CASE WHEN t.csat_score IS NOT NULL THEN toFloat(t.csat_score) END) AS avg_csat",
+    "keywords": [
+      "client account",
+      "B2B",
+      "account tickets",
+      "company support"
+    ],
+    "examples": [
+      "How many tickets for account Acme?",
+      "CSAT by client account"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_reopened_tickets",
+    "type": "business_concept",
+    "name": "Reopened Tickets",
+    "description": "Tickets currently or historically in Reopened status (non-terminal). Indicates resolution quality issues.",
+    "search_text": "Reopened Tickets Tickets currently or historically in Reopened status (non-terminal). Indicates resolution quality issues. reopen rate came back open reopened cases reopened reopen came back (SupportCase)-[:USES_STATUS]->(CaseStatus) (AuditEvent)-[:ON_TICKET]->(SupportCase)",
+    "domain": "ticketing",
+    "aliases": [
+      "reopen rate",
+      "came back open",
+      "reopened cases"
+    ],
+    "base_entities": [
+      "SupportCase",
+      "CaseStatus",
+      "AuditEvent"
+    ],
+    "business_rules": [
+      "Status key often 'Reopened' with is_terminal = false",
+      "Prefer (SupportCase)-[:USES_STATUS]->(CaseStatus) WHERE status = 'Reopened'",
+      "Audit trail may show status transitions in AuditEvent.meta"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(SupportCase)-[:USES_STATUS]->(CaseStatus)",
+        "(AuditEvent)-[:ON_TICKET]->(SupportCase)"
+      ],
+      "key_properties": {
+        "SupportCase": [
+          "status",
+          "resolved_at",
+          "updated_at",
+          "organization_id"
+        ],
+        "CaseStatus": [
+          "status",
+          "is_terminal"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (t:SupportCase)-[:USES_STATUS]->(ts:CaseStatus) WHERE t.organization_id = $organization_id AND ts.status = 'Reopened' RETURN count(t) AS reopened_tickets",
+    "keywords": [
+      "reopened",
+      "reopen",
+      "came back"
+    ],
+    "examples": [
+      "How many reopened tickets?",
+      "Reopen rate this month"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_automation_rule_ticketing",
+    "type": "business_concept",
+    "name": "SupportCase Automation Rule",
+    "description": "Org AutomationRule that runs on ticket.created / ticket.updated to set priority, queue, assignee, or notify.",
+    "search_text": "SupportCase Automation Rule Org AutomationRule that runs on ticket.created / ticket.updated to set priority, queue, assignee, or notify. if then ticket rule auto assign rule ticket workflow rule automation rule auto assign workflow (Tenant)-[:HAS_AUTOMATION_RULE]->(AutomationRule) (AutomationRule)-[:CREATED_BY]->(StaffRole)",
+    "domain": "ticketing",
+    "aliases": [
+      "if then ticket rule",
+      "auto assign rule",
+      "ticket workflow rule"
+    ],
+    "base_entities": [
+      "AutomationRule",
+      "SupportCase",
+      "StaffRole",
+      "SupportQueue"
+    ],
+    "business_rules": [
+      "(Tenant)-[:HAS_AUTOMATION_RULE]->(AutomationRule)",
+      "event in ['ticket.created', 'ticket.updated']",
+      "conditions/actions are dynamic JSON on the node"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Tenant)-[:HAS_AUTOMATION_RULE]->(AutomationRule)",
+        "(AutomationRule)-[:CREATED_BY]->(StaffRole)"
+      ],
+      "key_properties": {
+        "AutomationRule": [
+          "name",
+          "event",
+          "enabled",
+          "priority",
+          "organization_id"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (r:AutomationRule) WHERE r.organization_id = $organization_id AND r.enabled = true RETURN r.name AS rule, r.event AS event, r.priority AS run_order ORDER BY r.priority",
+    "keywords": [
+      "automation",
+      "rule",
+      "auto assign",
+      "workflow"
+    ],
+    "examples": [
+      "What automation rules are enabled?",
+      "Rules on ticket created"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_website_traffic_volume",
+    "type": "business_concept",
+    "name": "Website Traffic & Session Volume",
+    "description": "Aggregated web sessions, pageviews, and bounce rate across tracked websites.",
+    "search_text": "Website Traffic & Session Volume Aggregated web sessions, pageviews, and bounce rate across tracked websites. website visits web traffic page views session count web traffic website sessions pageviews digital visits (Visit:DigitalVisit)-[:ON_SITE]->(TrackedSite) (BehaviourEvent)-[:IN_SESSION]->(Visit)",
+    "domain": "webtracking",
+    "aliases": [
+      "website visits",
+      "web traffic",
+      "page views",
+      "session count"
+    ],
+    "base_entities": [
+      "Visit",
+      "TrackedSite",
+      "BehaviourEvent"
+    ],
+    "business_rules": [
+      "Filter by started_at within period",
+      "Connect to TrackedSite via ON_SITE",
+      "is_bounce = true indicates single page view session"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Visit:DigitalVisit)-[:ON_SITE]->(TrackedSite)",
+        "(BehaviourEvent)-[:IN_SESSION]->(Visit)"
+      ],
+      "key_properties": {
+        "Visit": [
+          "session_id",
+          "started_at",
+          "duration_seconds",
+          "is_bounce",
+          "pageview_count",
+          "site_id"
+        ],
+        "TrackedSite": [
+          "site_id",
+          "site_url",
+          "organization_id"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (v:Visit)-[:ON_SITE]->(s:TrackedSite) WHERE v.started_at >= datetime() AND v.started_at < datetime() RETURN s.site_url AS site, count(v) AS sessions, sum(v.pageview_count) AS pageviews, avg(v.duration_seconds) AS avg_duration_sec ORDER BY sessions DESC",
+    "keywords": [
+      "web traffic",
+      "website sessions",
+      "pageviews",
+      "digital visits"
+    ],
+    "examples": [
+      "How much traffic did our site get this week?",
+      "Web sessions by site url"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_deal_win_rate",
+    "type": "business_concept",
+    "name": "Opportunity Win Rate",
+    "description": "Percentage of closed opportunities won during the selected period.",
+    "search_text": "Opportunity Win Rate Percentage of closed opportunities won during the selected period. deal win rate win rate close rate opportunity conversion win rate deal win rate close rate sales conversion (Opportunity)-[:WITH_ACCOUNT]->(Account) (Opportunity)-[:OWNED_BY]->(Employee)",
+    "domain": "crm",
+    "aliases": [
+      "deal win rate",
+      "win rate",
+      "close rate",
+      "opportunity conversion"
+    ],
+    "base_entities": [
+      "Opportunity",
+      "Account",
+      "Employee"
+    ],
+    "business_rules": [
+      "Closed opportunities have stage IN [\"closed_won\", \"closed_lost\"]",
+      "Win rate = count(closed_won) / (count(closed_won) + count(closed_lost))"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Opportunity)-[:WITH_ACCOUNT]->(Account)",
+        "(Opportunity)-[:OWNED_BY]->(Employee)"
+      ],
+      "key_properties": {
+        "Opportunity": [
+          "id",
+          "stage",
+          "amount",
+          "closed_at",
+          "organization_id"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (o:Opportunity) WHERE o.stage IN [\"closed_won\", \"closed_lost\"] AND o.closed_at >= datetime() AND o.closed_at < datetime() WITH count(o) AS total, sum(CASE WHEN o.stage = \"closed_won\" THEN 1 ELSE 0 END) AS won RETURN total, won, CASE WHEN total = 0 THEN 0.0 ELSE toFloat(won)/total END AS win_rate",
+    "keywords": [
+      "win rate",
+      "deal win rate",
+      "close rate",
+      "sales conversion"
+    ],
+    "examples": [
+      "What is our deal win rate this quarter?",
+      "Opportunity win rate by sales rep"
+    ],
+    "schema_version": "1"
+  },
+  {
+    "id": "concept_sales_cycle_length",
+    "type": "business_concept",
+    "name": "Sales Cycle Length",
+    "description": "Average duration in days from opportunity creation to close.",
+    "search_text": "Sales Cycle Length Average duration in days from opportunity creation to close. sales velocity deal velocity time to close days to close sales cycle time to close deal velocity cycle length (Opportunity)-[:WITH_ACCOUNT]->(Account)",
+    "domain": "crm",
+    "aliases": [
+      "sales velocity",
+      "deal velocity",
+      "time to close",
+      "days to close"
+    ],
+    "base_entities": [
+      "Opportunity",
+      "Account"
+    ],
+    "business_rules": [
+      "Calculated on closed_won opportunities",
+      "Cycle length = duration.inDays(created_at, closed_at).days"
+    ],
+    "graph_mapping": {
+      "relationship_paths": [
+        "(Opportunity)-[:WITH_ACCOUNT]->(Account)"
+      ],
+      "key_properties": {
+        "Opportunity": [
+          "created_at",
+          "closed_at",
+          "stage",
+          "amount",
+          "organization_id"
+        ]
+      }
+    },
+    "cypher_template": "MATCH (o:Opportunity) WHERE o.stage = \"closed_won\" AND o.closed_at >= datetime() AND o.closed_at < datetime() RETURN avg(duration.inDays(o.created_at, o.closed_at).days) AS avg_sales_cycle_days",
+    "keywords": [
+      "sales cycle",
+      "time to close",
+      "deal velocity",
+      "cycle length"
+    ],
+    "examples": [
+      "How long does it take to close a deal?",
+      "Average sales cycle length this year"
+    ],
+    "schema_version": "1"
+  }
+]

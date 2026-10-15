@@ -1,0 +1,145 @@
+{
+  "question": "Why are contracts not leading to invoices?",
+  "answer": "Total contract value is 0.00 across 2 active contracts.\n\n| Contract Title | Contract Status | Deal Title | Deal Stage | Account Name | Quote Count | Invoice Count |\n| :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n| Contract \u2014 Netflix \u2014 Kirti Patidar | active | Netflix \u2014 Kirti Patidar | discover | Netflix | 0 | 0 |\n| Contract \u2014 Dell \u2014 vighesh s | active | Dell \u2014 vighesh s | closed_won | Aspero | 0 | 0 |\n| **Total** | | | | | **0** | **0** |\n\nContracts are not leading to invoices because no quotes have been created or linked for either contract. \n\n* **Missing Quote Documentation:** Both `Contract \u2014 Netflix \u2014 Kirti Patidar` and `Contract \u2014 Dell \u2014 vighesh s` have a Quote Count of 0, which blocks the transition to invoicing.\n* **Pipeline Stagnation:** The `Netflix \u2014 Kirti Patidar` deal is stuck in the `discover` stage despite an active contract, while the `Dell \u2014 vighesh s` deal is marked as `closed_won` but lacks the quotes and invoices required to finalize the transaction.\n\nYou should audit quote creation for the `Dell \u2014 vighesh s` deal and review why the `Netflix \u2014 Kirti Patidar` deal stage is not aligned with its active contract status.",
+  "trace": {
+    "question": "Why are contracts not leading to invoices?",
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1015,
+      "role": "admin"
+    },
+    "model": "worktual-gemma",
+    "tasks": [
+      {
+        "status": "ok",
+        "store": "sql",
+        "sql": "WITH rpt_contracts AS (\nSELECT src.id, src.organization_id, src.title, src.company_id, src.company_name, src.deal_id, src.starts_at, src.ends_at, src.arr, src.billing_frequency, src.auto_renew, src.status, src.renew_deal_id, src.created_at FROM (\nSELECT \n  ct.id,\n  ct.organization_id,\n  ct.title,\n  ct.company_id,\n  c.name AS company_name,\n  ct.deal_id,\n  ct.starts_at,\n  ct.ends_at,\n  COALESCE(ct.arr, 0) AS arr,\n  ct.billing_frequency,\n  ct.auto_renew,\n  ct.status,\n  ct.renew_deal_id,\n  ct.created_at\nFROM crm.contracts ct\nLEFT JOIN crm.companies c ON c.id = ct.company_id AND c.organization_id = ct.organization_id\nWHERE ct.organization_id = %(_org_id)s\n) src WHERE TRUE\n)\nSELECT CAST(COUNT(*) AS BIGINT) AS active_contracts, CAST(COALESCE(SUM(arr), 0) AS DECIMAL(15, 2)) AS total_contract_arr FROM rpt_contracts AS contracts WHERE status = 'active' AND TRUE AND TRUE AND TRUE LIMIT 500",
+        "views": [
+          "contracts"
+        ],
+        "guard_notes": [
+          "row cap 500 applied"
+        ],
+        "bound_params": {
+          "_org_id": 1003,
+          "_user_id": 1015,
+          "user_id": 1015,
+          "organization_id": 1003,
+          "org_id": 1003,
+          "tenant_id": 1003,
+          "current_user_id": 1015
+        },
+        "rows": [
+          {
+            "active_contracts": 2,
+            "total_contract_arr": "0.00"
+          }
+        ],
+        "kpi_id": "contract_arr",
+        "time_status": "all_time",
+        "attempts": [
+          {
+            "raw": "{\"tool\":\"run_kpi\",\"kpi_id\":\"contract_arr\",\"dimension\":null}",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "contract_arr"
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "tool": "run_kpi",
+        "requested_kpi": "contract_arr",
+        "requested_dimension": null,
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "contract_arr",
+          "goal": "Total contract value",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "kpi",
+          "depends_on": []
+        }
+      },
+      {
+        "status": "ok",
+        "rows": [
+          {
+            "contract_title": "Contract \u2014 Netflix \u2014 Kirti Patidar",
+            "contract_status": "active",
+            "deal_title": "Netflix \u2014 Kirti Patidar",
+            "deal_stage": "discover",
+            "account_name": "Netflix",
+            "quote_count": 0,
+            "quote_statuses": [],
+            "invoice_count": 0,
+            "invoice_statuses": []
+          },
+          {
+            "contract_title": "Contract \u2014 Dell \u2014 vighesh s",
+            "contract_status": "active",
+            "deal_title": "Dell \u2014 vighesh s",
+            "deal_stage": "closed_won",
+            "account_name": "Aspero",
+            "quote_count": 0,
+            "quote_statuses": [],
+            "invoice_count": 0,
+            "invoice_statuses": []
+          }
+        ],
+        "sql": "MATCH (c:Contract) OPTIONAL MATCH (d:Deal {id: c.deal_id}) OPTIONAL MATCH (q:Quote) WHERE q.deal_id = d.id OPTIONAL MATCH (i:Invoice {deal_id: d.id}) OPTIONAL MATCH (a:Account {id: c.company_id}) RETURN coalesce(c.title, 'Contract \u2014 ' + coalesce(d.title, 'General')) AS contract_title, c.status AS contract_status, coalesce(d.title, 'Unlinked Deal') AS deal_title, coalesce(d.stage, 'No Stage') AS deal_stage, coalesce(a.name, 'Unlinked Account') AS account_name, count(DISTINCT q) AS quote_count, collect(DISTINCT q.status) AS quote_statuses, count(DISTINCT i) AS invoice_count, collect(DISTINCT i.status) AS invoice_statuses\nLIMIT 100",
+        "tool": "kg",
+        "attempts_made": 1,
+        "kg_notes": "### Contract to Invoice Conversion Gap\n\nThere are 2 active contracts that have not transitioned to the invoicing stage, resulting in 0 total quotes and 0 total invoices generated.\n\n| Contract Title | Contract Status | Deal Title | Deal Stage | Account Name | Quote Count | Invoice Count |\n| :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n| Contract \u2014 Netflix \u2014 Kirti Patidar | active | Netflix \u2014 Kirti Patidar | discover | Netflix | 0 | 0 |\n| Contract \u2014 Dell \u2014 vighesh s | active | Dell \u2014 vighesh s | closed_won | Aspero | 0 | 0 |\n| **Total** | | | | | **0** | **0** |\n\n### Commercial Diagnosis\n\nThe breakdown of the contract-to-invoice pipeline reveals two distinct bottlenecks preventing revenue realization:\n\n*   **Missing Quote Documentation:** Both active contracts, `Contract \u2014 Netflix \u2014 Kirti Patidar` and `Contract \u2014 Dell \u2014 vighesh s`, show a Quote Count of 0. This indicates a data gap where quotes have not been created or linked to the deals, preventing the transition to the invoicing stage.\n*   **Pipeline Stagnation:** \n    *   For the `Netflix \u2014 Kirti Patidar` deal (Account: Netflix), the stage is currently stuck in `discover`, despite the contract being marked as `active`. \n    *   For the `Dell \u2014 vighesh s` deal (Account: Aspero), the stage is marked as `closed_won`, yet no quotes or invoices have been generated to finalize the transaction.\n\n### Recommended Next Steps\n\n*   **Audit Quote Creation:** Immediately verify if quotes exist for the `Dell \u2014 vighesh s` deal to resolve the discrepancy between the `closed_won` status and the zero invoice count.\n*   **Stage Alignment:** Review the `Netflix \u2014 Kirti Patidar` deal to determine why the contract is `active` while the deal remains in the `discover` stage.\n*   **Process Standardization:** Implement a mandatory link between `closed_won` deal stages and quote generation to ensure all active contracts move toward the invoicing phase.",
+        "task": {
+          "id": "t2",
+          "executor": "kg",
+          "kpi": null,
+          "goal": "Walk contracts to invoices: check contract status, linked deals, linked quotes, and invoice creation status",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "why_breakdown",
+          "depends_on": [
+            "t1"
+          ]
+        }
+      }
+    ],
+    "domain_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"deep\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"contract_arr\",\n      \"goal\": \"Total contract value\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"dimension\": null,\n      \"answer_type\": \"kpi\",\n      \"depends_on\": []\n    },\n    {\n      \"id\": \"t2\",\n      \"executor\": \"kg\",\n      \"kpi\": null,\n      \"goal\": \"Walk contracts to invoices: check contract status, linked deals, linked quotes, and invoice creation status\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"dimension\": null,\n      \"answer_type\": \"why_breakdown\",\n      \"depends_on\": [\"t1\"]\n    }\n  ]\n}\n```",
+    "plan": {
+      "kind": "plan",
+      "depth": "deep",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "contract_arr",
+          "goal": "Total contract value",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "kpi",
+          "depends_on": []
+        },
+        {
+          "id": "t2",
+          "executor": "kg",
+          "kpi": null,
+          "goal": "Walk contracts to invoices: check contract status, linked deals, linked quotes, and invoice creation status",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "why_breakdown",
+          "depends_on": [
+            "t1"
+          ]
+        }
+      ]
+    },
+    "facts": "time_requested: all time\nperiod_applied: overall (no date filter, UTC)\ntime_status: all_time\ncatalog_kpi: contract_arr\nRESULT: 1 row(s)\ntask_goal: Total contract value\n  active_contracts=2 | total_contract_arr=0.00\n\ntime_requested: all time\ntime_status: kg\nRESULT: 2 group(s)\ngroup_by: group\ntotal_quote_count: 0\n  Contract \u2014 Netflix \u2014 Kirti Patidar / active / Netflix \u2014 Kirti Patidar / discover / Netflix / [] / 0 / []: 0\n  Contract \u2014 Dell \u2014 vighesh s / active / Dell \u2014 vighesh s / closed_won / Aspero / [] / 0 / []: 0\nkg_notes:\n### Contract to Invoice Conversion Gap\n\nThere are 2 active contracts that have not transitioned to the invoicing stage, resulting in 0 total quotes and 0 total invoices generated.\n\n| Contract Title | Contract Status | Deal Title | Deal Stage | Account Name | Quote Count | Invoice Count |\n| :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n| Contract \u2014 Netflix \u2014 Kirti Patidar | active | Netflix \u2014 Kirti Patidar | discover | Netflix | 0 | 0 |\n| Contract \u2014 Dell \u2014 vighesh s | active | Dell \u2014 vighesh s | closed_won | Aspero | 0 | 0 |\n| **Total** | | | | | **0** | **0** |\n\n### Commercial Diagnosis\n\nThe breakdown of the contract-to-invoice pipeline reveals two distinct bottlenecks preventing revenue realization:\n\n*   **Missing Quote Documentation:** Both active contracts, `Contract \u2014 Netflix \u2014 Kirti Patidar` and `Contract \u2014 Dell \u2014 vighesh s`, show a Quote Count of 0. This indicates a data gap where quotes have not been created or linked to the deals, preventing the transition to the invoicing stage.\n*   **Pipeline Stagnation:** \n    *   For the `Netflix \u2014 Kirti Patidar` deal (Account: Netflix), the stage is currently stuck in `discover`, despite the contract being marked as `active`. \n    *   For the `Dell \u2014 vighesh s` deal (Account: Aspero), the stage is marked as `closed_won`, yet no quotes or invoices have been generated to finalize the transaction.\n\n### Recommended Next Steps\n\n*   **Audit Quote Creation:** Immediately verify if quotes exist for the `Dell \u2014 vighesh s` deal to resolve the discrepancy between the `closed_won` status and the zero invoice count.\n*   **Stage Alignment:** Review the `Netflix \u2014 Kirti Patidar` deal to determine why the contract is `active` while the deal remains in the `discover` stage.\n*   **Process Standardization:** Implement a mandatory link between `closed_won` deal stages and quote generation to ensure all active contracts move toward the invoicing phase.",
+    "grounded": true,
+    "briefing_raw": "Total contract value is 0.00 across 2 active contracts.\n\n| Contract Title | Contract Status | Deal Title | Deal Stage | Account Name | Quote Count | Invoice Count |\n| :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n| Contract \u2014 Netflix \u2014 Kirti Patidar | active | Netflix \u2014 Kirti Patidar | discover | Netflix | 0 | 0 |\n| Contract \u2014 Dell \u2014 vighesh s | active | Dell \u2014 vighesh s | closed_won | Aspero | 0 | 0 |\n| **Total** | | | | | **0** | **0** |\n\nContracts are not leading to invoices because no quotes have been created or linked for either contract. \n\n* **Missing Quote Documentation:** Both `Contract \u2014 Netflix \u2014 Kirti Patidar` and `Contract \u2014 Dell \u2014 vighesh s` have a Quote Count of 0, which blocks the transition to invoicing.\n* **Pipeline Stagnation:** The `Netflix \u2014 Kirti Patidar` deal is stuck in the `discover` stage despite an active contract, while the `Dell \u2014 vighesh s` deal is marked as `closed_won` but lacks the quotes and invoices required to finalize the transaction.\n\nYou should audit quote creation for the `Dell \u2014 vighesh s` deal and review why the `Netflix \u2014 Kirti Patidar` deal stage is not aligned with its active contract status."
+  }
+}

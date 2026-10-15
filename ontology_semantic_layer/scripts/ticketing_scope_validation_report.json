@@ -1,0 +1,75 @@
+{
+  "org": 1000,
+  "api": "http://127.0.0.1:8765",
+  "agents": {
+    "resolver": 1000,
+    "agent": 1004,
+    "admin": 1005
+  },
+  "passed": 5,
+  "failed": 2,
+  "scenarios": [
+    {
+      "name": "admin_org_open_tickets",
+      "passed": true,
+      "note": "api=1.0 pg=1.0",
+      "api_value": 1.0,
+      "pg_value": 1.0,
+      "extra": null
+    },
+    {
+      "name": "admin_mine_open_tickets",
+      "passed": true,
+      "note": "api=0.0 pg=0.0",
+      "api_value": 0.0,
+      "pg_value": 0.0,
+      "extra": null
+    },
+    {
+      "name": "agent_ticket_volume",
+      "passed": true,
+      "note": "api=37.0 pg=37.0",
+      "api_value": 37.0,
+      "pg_value": 37.0,
+      "extra": null
+    },
+    {
+      "name": "resolver_open_tickets",
+      "passed": true,
+      "note": "api=0.0 pg=0.0",
+      "api_value": 0.0,
+      "pg_value": 0.0,
+      "extra": null
+    },
+    {
+      "name": "admin_sql_list_org",
+      "passed": false,
+      "note": "{'code': 'internal', 'message': 'SQL agent failed. Check server logs.'}",
+      "api_value": 0,
+      "pg_value": 113.0,
+      "extra": {
+        "http": 500
+      }
+    },
+    {
+      "name": "admin_sql_list_mine",
+      "passed": false,
+      "note": "{'code': 'internal', 'message': 'SQL agent failed. Check server logs.'}",
+      "api_value": 0,
+      "pg_value": 1.0,
+      "extra": {
+        "http": 500
+      }
+    },
+    {
+      "name": "crm_accounts_identity",
+      "passed": true,
+      "note": "identity=accounts role=agent",
+      "api_value": null,
+      "pg_value": null,
+      "extra": {
+        "user_id": 1001
+      }
+    }
+  ]
+}

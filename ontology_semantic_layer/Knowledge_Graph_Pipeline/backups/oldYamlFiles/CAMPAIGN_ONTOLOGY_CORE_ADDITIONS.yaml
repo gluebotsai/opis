@@ -1,0 +1,457 @@
+# =============================================================================
+# CAMPAIGN — paste into core.yaml (additions only)
+# Audit: prisma FKs + launch/send/config product behavior (Aug 2026)
+# =============================================================================
+# Reuses (do NOT recreate):
+#   Tenant, User, Contact, ContactPoint, Channel, ChannelConfig, PlatformProduct
+#
+# Label conflicts avoided:
+#   Recommendation → CampaignIdea
+#   Notification   → CampaignAlert
+#   Agent          → CampaignDraft
+#   OutboundEmail  → CampaignDelivery
+#   ReplyTemplate  → ChannelTemplate
+#
+# Hubs:
+#   Contact -[:HAS_RECEIVED_CAMPAIGNS]-> ReceivedCampaigns
+#   deliveries / engagement / audience hang under ReceivedCampaigns
+#   CampaignChannel / batches / templates -[:THROUGH]-> Channel (name stub)
+#   Visitor (:AnonymousVisitor | :IdentifiedVisitor)
+# =============================================================================
+
+
+# ---------- 1) stub_labels — ADD ----------
+#   ReceivedCampaigns: {key: cdp_id}
+#   DraftAudience:     {key: session_id}
+#   GenerationBatch:   {key: id}
+
+
+# ---------- 2) PATCH Contact (cdp.customer_profile) — ADD relationship --------
+#   - {type: HAS_RECEIVED_CAMPAIGNS, direction: out, target_label: ReceivedCampaigns, target_key: cdp_id, from_column: cdp_id}
+#
+# Contact → ContactPoint already mapped from cdp.identity_keys (email/phone).
+# Campaign send/audience resolve destinations through that — do not remap.
+
+
+# ---------- 3) campaign tables — APPEND under tables: -----------------------
+
+  # ---------- campaign (spoke; reuse Tenant / User / Contact / Channel) ----------
+
+  campaign.branches:
+    mode: node
+    label: CampaignBranch
+    key: id
+    properties: [id, organization_id, name, is_default, created_at, updated_at]
+    relationships:
+      - {type: HAS_CAMPAIGN_BRANCH, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  campaign.organization_products:
+    mode: node
+    label: ProductEntitlement
+    key: id
+    properties: [id, organization_id, branch_id, product_code, status,
+                 starts_at, ends_at, created_at, updated_at]
+    relationships:
+      - {type: HAS_PRODUCT_ENTITLEMENT, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: FOR_BRANCH, direction: out, target_label: CampaignBranch, target_key: id, from_column: branch_id}
+      - {type: FOR_PRODUCT, direction: out, target_label: PlatformProduct, target_key: id, from_column: product_code, create_target: true}
+
+  campaign.campaigns:
+    mode: node
+    label: Campaign
+    key: id
+    custom_field: launch_plan
+    properties: [id, organization_id, branch_id, name, description, status,
+                 starts_at, ends_at, source_channel, created_by_user_id,
+                 goal, objective, session_id, audience_summary, audience_filters,
+                 audience_count, launch_local_date, launch_local_time, timezone,
+                 created_at, updated_at]
+    relationships:
+      - {type: HAS_CAMPAIGN, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: IN_BRANCH, direction: out, target_label: CampaignBranch, target_key: id, from_column: branch_id}
+      - {type: CREATED_BY, direction: out, target_label: User, target_key: id, from_column: created_by_user_id}
+      - {type: FROM_DRAFT, direction: out, target_label: CampaignDraft, target_key: id, from_column: session_id}
+      # source_channel = standalone_campaign|crm_marketing (origin attribute, not Channel)
+
+  campaign.campaign_channels:
+    mode: node
+    label: CampaignChannel
+    key: id
+    properties: [id, campaign_id, organization_id, channel, template_id,
+                 how_it_works, planned_launch_at, status, created_at, updated_at]
+    relationships:
+      - {type: HAS_CAMPAIGN_CHANNEL, direction: in, target_label: Campaign, target_key: id, from_column: campaign_id}
+      - {type: THROUGH, direction: out, target_label: Channel, target_key: name, from_column: channel, create_target: true}
+      # logical ref used by send workers (indexed; no Prisma @relation)
+      - {type: USES_TEMPLATE, direction: out, target_label: ChannelTemplate, target_key: id, from_column: template_id}
+
+  campaign.campaign_channels_tenant_channel:
+    table: campaign.campaign_channels
+    mode: relationship_only
+    from_label: Tenant
+    from_key: id
+    from_column: organization_id
+    to_label: Channel
+    to_key: name
+    to_column: channel
+    type: HAS_CHANNEL
+    on_delete: ignore
+
+  campaign.campaign_audience:
+    table: campaign.campaign_audience
+    mode: relationship_only
+    from_label: Campaign
+    from_key: id
+    from_column: campaign_id
+    to_label: ReceivedCampaigns
+    to_key: cdp_id
+    to_column: contact_id
+    type: TARGETED_IN
+
+  campaign.campaign_audience_contact:
+    table: campaign.campaign_audience
+    mode: relationship_only
+    from_label: Campaign
+    from_key: id
+    from_column: campaign_id
+    to_label: Contact
+    to_key: cdp_id
+    to_column: contact_id
+    type: HAS_AUDIENCE_MEMBER
+    on_delete: ignore
+
+  campaign.campaign_audience_member_of:
+    table: campaign.campaign_audience
+    mode: relationship_only
+    from_label: Contact
+    from_key: cdp_id
+    from_column: contact_id
+    to_label: Campaign
+    to_key: id
+    to_column: campaign_id
+    type: MEMBER_OF_AUDIENCE
+    on_delete: ignore
+
+  campaign.campaign_agent_sessions:
+    mode: node
+    label: CampaignDraft
+    key: id
+    properties: [id, organization_id, branch_id, created_by_user_id, module,
+                 stage, created_at, updated_at]
+    relationships:
+      - {type: HAS_CAMPAIGN_DRAFT, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: IN_BRANCH, direction: out, target_label: CampaignBranch, target_key: id, from_column: branch_id}
+      - {type: CREATED_BY, direction: out, target_label: User, target_key: id, from_column: created_by_user_id}
+      - {type: HAS_DRAFT_AUDIENCE, direction: out, target_label: DraftAudience, target_key: session_id, from_column: id}
+
+  campaign.campaign_audience_refs:
+    table: campaign.campaign_audience_refs
+    mode: relationship_only
+    from_label: DraftAudience
+    from_key: session_id
+    from_column: session_id
+    to_label: Contact
+    to_key: cdp_id
+    to_column: contact_id
+    type: CONTAINS
+
+  campaign.campaign_channel_templates:
+    mode: node
+    label: ChannelTemplate
+    key: id
+    custom_field: fields
+    properties: [id, session_id, organization_id, branch_id, channel, logo,
+                 launch_at, how_it_works, generation_batch_id,
+                 created_at, updated_at]
+    relationships:
+      - {type: HAS_CHANNEL_TEMPLATE, direction: in, target_label: CampaignDraft, target_key: id, from_column: session_id}
+      - {type: THROUGH, direction: out, target_label: Channel, target_key: name, from_column: channel, create_target: true}
+      - {type: IN_BRANCH, direction: out, target_label: CampaignBranch, target_key: id, from_column: branch_id}
+      - {type: IN_GENERATION_BATCH, direction: out, target_label: GenerationBatch, target_key: id, from_column: generation_batch_id, create_target: true}
+
+  campaign.campaign_template_messages:
+    mode: node
+    label: TemplateMessage
+    key: id
+    properties: [id, template_id, role, seq, kind, created_at]
+    relationships:
+      - {type: HAS_TEMPLATE_MESSAGE, direction: in, target_label: ChannelTemplate, target_key: id, from_column: template_id}
+
+  # ----- Configuration / readiness (tenant-scoped) -----
+
+  campaign.channel_sending_profiles:
+    mode: node
+    label: ChannelSendingProfile
+    key: id
+    custom_field: checklist
+    properties: [id, organization_id, channel, status, created_at, updated_at]
+    relationships:
+      - {type: HAS_SENDING_PROFILE, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: THROUGH, direction: out, target_label: Channel, target_key: name, from_column: channel, create_target: true}
+
+  campaign.push_channel_settings:
+    mode: node
+    label: PushSettings
+    key: id
+    properties: [id, organization_id, channel, status, created_at, updated_at]
+    relationships:
+      - {type: HAS_PUSH_SETTINGS, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: THROUGH, direction: out, target_label: Channel, target_key: name, from_column: channel, create_target: true}
+
+  # One per org — key by organization_id so send path can join cleanly
+  campaign.email_org_profiles:
+    mode: node
+    label: EmailComplianceProfile
+    key: organization_id
+    properties: [id, organization_id, legal_name, street, city, country, phone,
+                 created_at, updated_at]
+    relationships:
+      - {type: HAS_EMAIL_COMPLIANCE, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  campaign.email_senders:
+    mode: node
+    label: CampaignEmailSender
+    key: id
+    properties: [id, organization_id, display_name, from_email, reply_to, status,
+                 verified_at, is_active, created_at, updated_at]
+    relationships:
+      - {type: HAS_EMAIL_SENDER, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  campaign.email_domains:
+    mode: node
+    label: EmailDomain
+    key: id
+    properties: [id, organization_id, domain, spf_ok, dkim_ok, dmarc_ok, status,
+                 provider_domain_id, dns_records, dkim_selector, dkim_public_key,
+                 created_at, updated_at]
+    relationships:
+      - {type: HAS_EMAIL_DOMAIN, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  campaign.email_return_paths:
+    mode: node
+    label: EmailReturnPath
+    key: organization_id
+    properties: [id, organization_id, domain, status, created_at, updated_at]
+    relationships:
+      - {type: HAS_EMAIL_RETURN_PATH, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  campaign.email_sending_caps:
+    mode: node
+    label: EmailSendingCaps
+    key: organization_id
+    custom_field: health_stats
+    properties: [id, organization_id, batch_size, hourly_cap, daily_cap,
+                 warmup_stage, health_status, created_at, updated_at]
+    relationships:
+      - {type: HAS_EMAIL_CAPS, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  campaign.email_suppressions:
+    mode: node
+    label: EmailSuppression
+    key: id
+    properties: [id, organization_id, email, reason, created_at]
+    relationships:
+      - {type: HAS_EMAIL_SUPPRESSION, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  campaign.sms_channel_settings:
+    mode: node
+    label: SmsSettings
+    key: organization_id
+    # ETL: set channel='sms' so THROUGH resolves to shared Channel stub
+    properties: [id, organization_id, status, created_at, updated_at, channel]
+    relationships:
+      - {type: HAS_SMS_SETTINGS, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: THROUGH, direction: out, target_label: Channel, target_key: name, from_column: channel, create_target: true}
+
+  campaign.regulated_channel_templates:
+    mode: node
+    label: RegulatedTemplate
+    key: id
+    properties: [id, organization_id, channel, name, external_id,
+                 provider_template_id, language, category, header, body, footer,
+                 buttons, status, rejected_reason, channel_config_id,
+                 submitted_at, last_status_checked_at, created_by_user_id,
+                 campaign_name, goal, objective, source_campaign_id,
+                 created_at, updated_at]
+    relationships:
+      - {type: HAS_REGULATED_TEMPLATE, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: THROUGH, direction: out, target_label: Channel, target_key: name, from_column: channel, create_target: true}
+      - {type: USES_CHANNEL_CONFIG, direction: out, target_label: ChannelConfig, target_key: id, from_column: channel_config_id}
+      - {type: CREATED_BY, direction: out, target_label: User, target_key: id, from_column: created_by_user_id}
+      - {type: FOR_CAMPAIGN, direction: out, target_label: Campaign, target_key: id, from_column: source_campaign_id}
+
+  # ----- Launch / send path -----
+
+  campaign.campaign_send_batches:
+    mode: node
+    label: CampaignSendBatch
+    key: id
+    properties: [id, organization_id, campaign_id, channel, seq, scheduled_for,
+                 status, size, created_at, updated_at]
+    relationships:
+      - {type: HAS_SEND_BATCH, direction: in, target_label: Campaign, target_key: id, from_column: campaign_id}
+      - {type: THROUGH, direction: out, target_label: Channel, target_key: name, from_column: channel, create_target: true}
+      # email planner reads caps for size/hourly/daily/health block
+      - {type: GATED_BY_CAPS, direction: out, target_label: EmailSendingCaps, target_key: organization_id, from_column: organization_id}
+
+  campaign.campaign_send_recipients:
+    mode: node
+    label: CampaignDelivery
+    key: id
+    # ETL: copy parent batch.channel → _channel for metrics / THROUGH
+    properties: [id, organization_id, batch_id, campaign_id, contact_id, email,
+                 destination, platform, status, skip_fail_reason,
+                 provider_message_id, attempt_count, ab_variant, opened_at,
+                 clicked_at, open_count, click_count, created_at, updated_at,
+                 _channel]
+    relationships:
+      - {type: HAS_DELIVERY, direction: in, target_label: CampaignSendBatch, target_key: id, from_column: batch_id}
+      - {type: FOR_CAMPAIGN, direction: out, target_label: Campaign, target_key: id, from_column: campaign_id}
+      - {type: CONTAINS, direction: in, target_label: ReceivedCampaigns, target_key: cdp_id, from_column: contact_id}
+      - {type: FOR_CONTACT, direction: out, target_label: Contact, target_key: cdp_id, from_column: contact_id}
+      - {type: THROUGH, direction: out, target_label: Channel, target_key: name, from_column: _channel, create_target: true}
+      - {type: COMPLIES_WITH, direction: out, target_label: EmailComplianceProfile, target_key: organization_id, from_column: organization_id}
+
+  campaign.push_endpoints:
+    mode: node
+    label: PushEndpoint
+    key: id
+    properties: [id, organization_id, contact_id, channel, platform, endpoint,
+                 label, active, created_at, updated_at]
+    relationships:
+      - {type: HAS_PUSH_ENDPOINT, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: FOR_CONTACT, direction: out, target_label: Contact, target_key: cdp_id, from_column: contact_id}
+      - {type: THROUGH, direction: out, target_label: Channel, target_key: name, from_column: channel, create_target: true}
+
+  # ETL: _visitor_kind = contact_id IS NULL ? 'anonymous' : 'identified'
+  campaign.website_contacts:
+    mode: node
+    label: Visitor
+    key: id
+    sublabels:
+      column: _visitor_kind
+      mapping:
+        anonymous: AnonymousVisitor
+        identified: IdentifiedVisitor
+    properties: [id, organization_id, visitor_id, contact_id, email, phone,
+                 first_name, last_name, origin, path, user_agent, subscribed,
+                 endpoint, platform, visit_count, first_seen_at, last_seen_at,
+                 subscribed_at, created_at, updated_at, _visitor_kind]
+    relationships:
+      - {type: HAS_VISITOR, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: IDENTIFIED_AS, direction: out, target_label: Contact, target_key: cdp_id, from_column: contact_id}
+
+  campaign.campaign_contact_engagement:
+    mode: node
+    label: CampaignEngagement
+    key: id
+    properties: [id, organization_id, contact_id, email_unsubscribed,
+                 email_unsubscribed_at, email_unsubscribe_reason,
+                 last_email_opened_at, last_email_clicked_at,
+                 email_open_count, email_click_count, created_at, updated_at]
+    relationships:
+      - {type: HAS_CAMPAIGN_ENGAGEMENT, direction: in, target_label: Contact, target_key: cdp_id, from_column: contact_id}
+      - {type: CONTAINS, direction: in, target_label: ReceivedCampaigns, target_key: cdp_id, from_column: contact_id}
+      - {type: FOR_TENANT, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  campaign.tenant_industry_packs:
+    mode: node
+    label: IndustryPack
+    key: organization_id
+    properties: [id, organization_id, pack_id, seed_industry_type,
+                 created_at, updated_at]
+    relationships:
+      - {type: HAS_INDUSTRY_PACK, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+
+  campaign.campaign_recommendations:
+    mode: node
+    label: CampaignIdea
+    key: id
+    properties: [id, organization_id, branch_id, created_by_user_id, public_id,
+                 status, title, created_at, updated_at]
+    relationships:
+      - {type: HAS_CAMPAIGN_IDEA, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: IN_BRANCH, direction: out, target_label: CampaignBranch, target_key: id, from_column: branch_id}
+      - {type: CREATED_BY, direction: out, target_label: User, target_key: id, from_column: created_by_user_id}
+
+  campaign.app_notifications:
+    mode: node
+    label: CampaignAlert
+    key: id
+    # ETL parse source_key → _about_campaign_id / _about_template_id / _about_channel
+    # Patterns: campaign:{event}:{id}, campaign:paused:{id}:{channel},
+    #           template:{status}:{id}, whatsapp:library-*:{templateId},
+    #           whatsapp:approved:{campaignId}
+    properties: [id, organization_id, user_id, kind, title, body, href,
+                 source_key, created_at, read_at,
+                 _about_campaign_id, _about_template_id, _about_channel]
+    relationships:
+      - {type: HAS_CAMPAIGN_ALERT, direction: in, target_label: Tenant, target_key: id, from_column: organization_id}
+      - {type: NOTIFIES, direction: out, target_label: User, target_key: id, from_column: user_id}
+      - {type: ABOUT, direction: out, target_label: Campaign, target_key: id, from_column: _about_campaign_id}
+      - {type: ABOUT, direction: out, target_label: RegulatedTemplate, target_key: id, from_column: _about_template_id}
+      - {type: THROUGH, direction: out, target_label: Channel, target_key: name, from_column: _about_channel, create_target: true}
+
+
+# =============================================================================
+# 4) ETL soft joins — product behavior with NO single FK column
+#    Emit these in the graph loader; do not invent broken key mappings in YAML.
+# =============================================================================
+#
+# A. CampaignChannel ↔ CampaignSendBatch  (launch workers; unique campaign+channel+seq)
+#    MATCH on (campaign_id, channel)
+#    (CampaignChannel)-[:HAS_SEND_BATCH]->(CampaignSendBatch)
+#    (CampaignSendBatch)-[:FOR_CAMPAIGN_CHANNEL]->(CampaignChannel)
+#
+# B. CampaignDelivery → PushEndpoint  (push-launch freezes destination = endpoint)
+#    MATCH org + destination ≈ endpoint
+#    (CampaignDelivery)-[:DELIVERED_TO_ENDPOINT]->(PushEndpoint)
+#
+# C. CampaignDelivery → Visitor  (web-push fallback via website_contacts email/phone)
+#    When contact_id null and website match found
+#    (CampaignDelivery)-[:DELIVERED_VIA_VISITOR]->(Visitor)
+#
+# D. Visitor → PushEndpoint  (subscribe copies endpoint into push_endpoints)
+#    MATCH org + endpoint
+#    (Visitor)-[:HAS_PUSH_SUBSCRIPTION]->(PushEndpoint)
+#
+# E. Visitor / PushEndpoint → Contact via identity (before contact_id stamp)
+#    Match email/phone to ContactPoint.key_value then Contact
+#    (Visitor)-[:MATCHED_BY_IDENTITY]->(Contact)   # optional; IDENTIFIED_AS after stamp
+#
+# F. EmailSuppression → Contact  (skip logic joins email → identity_keys)
+#    MATCH org + email → ContactPoint → Contact
+#    (EmailSuppression)-[:SUPPRESSES]->(Contact)
+#    When delivery skipped for suppression:
+#    (EmailSuppression)-[:BLOCKED]->(CampaignDelivery)
+#
+# G. CampaignEmailSender → EmailDomain  (domain of from_email)
+#    MATCH org + lower(split_part(from_email,'@',2)) = EmailDomain.domain
+#    (CampaignEmailSender)-[:AUTHENTICATED_ON]->(EmailDomain)
+#
+# H. EmailReturnPath → EmailDomain  (same domain string within org)
+#    (EmailReturnPath)-[:FOR_DOMAIN]->(EmailDomain)
+#
+# I. Active sender used at email send time
+#    (CampaignDelivery)-[:SENT_FROM]->(CampaignEmailSender)  where is_active + verified
+#
+# J. Email readiness checklist feeds ChannelSendingProfile(channel=email)
+#    Each of: CampaignEmailSender, EmailDomain, EmailReturnPath,
+#             EmailComplianceProfile, EmailSendingCaps, PushSettings
+#    -[:FEEDS_READYNESS]->(ChannelSendingProfile)
+#
+# K. CampaignIdea → Campaign / CampaignDraft when “used”
+#    Product sets status=used only — NO campaign_id column today.
+#    Persist used_campaign_id / seeded_session_id then add USED_FOR / SEEDED_DRAFT.
+#
+# L. ChannelTemplate cohorts already covered via GenerationBatch stub
+#    (generation_batch_id → IN_GENERATION_BATCH)
+
+
+# =============================================================================
+# 5) Intentionally NOT edges (properties / agent-layer only)
+# =============================================================================
+# - audience_filters JSON (Campaign / draft payload) — CDP filter predicates
+# - source_channel enum — origin surface, not marketing Channel
+# - session-only source_recommendation_id (socket / in-memory)
+# - secrets: settings JSON, auth_keys, dkim_private_key_encrypted, verify_token

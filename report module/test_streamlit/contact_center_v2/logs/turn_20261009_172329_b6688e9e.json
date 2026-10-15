@@ -1,0 +1,60 @@
+{
+  "turn_id": "b6688e9e",
+  "timestamp": "2026-10-09T11:53:29.409400+00:00",
+  "question": "how many conversations are abandoned.. ",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1016,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Abandoned conversations</strong></p><p>There were <strong>0</strong> abandoned conversations for all time.</p><p>Would you like to see how many conversations were handled during this same period?</p>",
+  "card": "card: kpi r1",
+  "facts": "result_id: r1\nwindow: all time\nkpi: abandoned\ncertified: true\nunit: conversations\ntask_goal: Count the number of abandoned conversations.\nanswer_type: number\nrow_count: 1\nrow 1: abandoned=0",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1016,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "how many conversations are abandoned.. ",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants to know the total number of abandoned conversations.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Count the number of abandoned conversations.",
+          "time": "all time",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "abandoned",
+        "row_count": 1
+      }
+    ],
+    "facts": "result_id: r1\nwindow: all time\nkpi: abandoned\ncertified: true\nunit: conversations\ntask_goal: Count the number of abandoned conversations.\nanswer_type: number\nrow_count: 1\nrow 1: abandoned=0",
+    "grounded": true,
+    "card": "card: kpi r1"
+  },
+  "error": null
+}

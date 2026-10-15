@@ -1,0 +1,142 @@
+version: 2
+
+models:
+  - name: stg_tickets
+    columns:
+      - name: ticket_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: stg_users
+    columns:
+      - name: user_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: stg_agent_queues
+    columns:
+      - name: queue_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: stg_customers
+    columns:
+      - name: customer_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: stg_accounts
+    columns:
+      - name: account_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: stg_ticketing_organizations
+    columns:
+      - name: organization_id
+        tests: [unique, not_null]
+
+  - name: stg_ticket_statuses
+    columns:
+      - name: ticket_status_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: stg_ticket_notes
+    columns:
+      - name: ticket_note_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+      - name: ticket_id
+        tests: [not_null]
+
+  - name: stg_sla_policies
+    columns:
+      - name: sla_policy_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: stg_ticketing_setup_users
+    columns:
+      - name: myaccount_user_id
+        tests: [unique, not_null]
+
+  - name: stg_ticketing_setup_teams
+    columns:
+      - name: team_id
+        tests: [unique, not_null]
+
+  - name: stg_agent_queue_members
+    columns:
+      - name: queue_membership_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+      - name: queue_id
+        tests: [not_null]
+      - name: user_id
+        tests: [not_null]
+
+  - name: stg_audit_events
+    columns:
+      - name: audit_event_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: stg_proactive_recommendations
+    columns:
+      - name: recommendation_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: stg_proactive_approvals
+    columns:
+      - name: approval_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: stg_kb_articles
+    columns:
+      - name: kb_article_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: stg_macros
+    columns:
+      - name: macro_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: stg_notifications
+    columns:
+      - name: notification_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: stg_outbound_email_log
+    columns:
+      - name: outbound_email_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]
+
+  - name: stg_proactive_audit
+    columns:
+      - name: proactive_audit_id
+        tests: [unique, not_null]
+      - name: organization_id
+        tests: [not_null]

@@ -1,0 +1,995 @@
+version: 1
+product: crm
+metrics:
+  account_volume:
+    label: Account Volume
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - company_industry
+    - channel_role
+    - owner_name
+    - parent_company_name
+    when: Period aggregate for account volume.
+    requires_skus:
+    - crm
+    min_role: agent
+  active_arr:
+    label: Active Arr
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - channel_role
+    when: Period aggregate for active arr.
+    requires_skus:
+    - crm
+    min_role: agent
+  average_closed_deal:
+    label: Average Closed Deal
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    when: Period aggregate for average closed deal.
+    requires_skus:
+    - crm
+    min_role: agent
+  average_contact_volume:
+    label: Average Contact Volume
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    when: Period aggregate for average contact volume.
+    requires_skus:
+    - crm
+    min_role: agent
+  average_customer_contact_count:
+    label: Average Customer Contact Count
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    when: Period aggregate for average customer contact count.
+    requires_skus:
+    - crm
+    min_role: agent
+  average_customer_conversion_rate:
+    label: Average Customer Conversion Rate
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    when: Period aggregate for average customer conversion rate.
+    requires_skus:
+    - crm
+    min_role: agent
+  average_deal_lost:
+    label: Average Deal Lost
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    when: Period aggregate for average deal lost.
+    requires_skus:
+    - crm
+    min_role: agent
+  average_deal_value:
+    label: Average Deal Value
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for average deal value.
+    requires_skus:
+    - crm
+    min_role: agent
+  average_deal_volume:
+    label: Average Deal Volume
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    when: Period aggregate for average deal volume.
+    requires_skus:
+    - crm
+    min_role: agent
+  average_deal_won_rate:
+    label: Average Deal Won Rate
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    when: Period aggregate for average deal won rate.
+    requires_skus:
+    - crm
+    min_role: agent
+  average_deals_won:
+    label: Average Deals Won
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    when: Period aggregate for average deals won.
+    requires_skus:
+    - crm
+    min_role: agent
+  average_distinct_product_sold_count:
+    label: Average Distinct Product Sold Count
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    when: Period aggregate for average distinct product sold count.
+    requires_skus:
+    - crm
+    min_role: agent
+  average_eligible_lead_count:
+    label: Average Eligible Lead Count
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    when: Period aggregate for average eligible lead count.
+    requires_skus:
+    - crm
+    min_role: agent
+  average_loss_rate:
+    label: Average Loss Rate
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    when: Period aggregate for average loss rate.
+    requires_skus:
+    - crm
+    min_role: agent
+  average_mql_contact_count:
+    label: Average Mql Contact Count
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    when: Period aggregate for average mql contact count.
+    requires_skus:
+    - crm
+    min_role: agent
+  average_mql_rate:
+    label: Average Mql Rate
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    when: Period aggregate for average mql rate.
+    requires_skus:
+    - crm
+    min_role: agent
+  average_new_lead_volume:
+    label: Average New Lead Volume
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    when: Period aggregate for average new lead volume.
+    requires_skus:
+    - crm
+    min_role: agent
+  average_open_pipeline_value:
+    label: Average Open Pipeline Value
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    when: Period aggregate for average open pipeline value.
+    requires_skus:
+    - crm
+    min_role: agent
+  average_order_value:
+    label: Average Order Value
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for average order value.
+    requires_skus:
+    - crm
+    min_role: agent
+  average_product_revenue:
+    label: Average Product Revenue
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    when: Period aggregate for average product revenue.
+    requires_skus:
+    - crm
+    min_role: agent
+  average_proposal_acceptance_rate:
+    label: Average Proposal Acceptance Rate
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    when: Period aggregate for average proposal acceptance rate.
+    requires_skus:
+    - crm
+    min_role: agent
+  average_proposal_accepted:
+    label: Average Proposal Accepted
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    when: Period aggregate for average proposal accepted.
+    requires_skus:
+    - crm
+    min_role: agent
+  average_proposal_sent:
+    label: Average Proposal Sent
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    when: Period aggregate for average proposal sent.
+    requires_skus:
+    - crm
+    min_role: agent
+  average_sales_cycle_days:
+    label: Average Sales Cycle Days
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for average sales cycle days.
+    requires_skus:
+    - crm
+    min_role: agent
+  average_selling_price:
+    label: Average Selling Price
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for average selling price.
+    requires_skus:
+    - crm
+    min_role: agent
+  average_units_sold:
+    label: Average Units Sold
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    when: Period aggregate for average units sold.
+    requires_skus:
+    - crm
+    min_role: agent
+  average_win_rate_of_the_agent:
+    label: Average Win Rate Of The Agent
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - owner_name
+    when: Period aggregate for average win rate of the agent.
+    requires_skus:
+    - crm
+    min_role: agent
+  closed_deals_metric:
+    label: Closed Deals Metric
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - stage
+    - deal_status_proxy
+    - lost_reason
+    - owner_name
+    - owner_team_id
+    when: Period aggregate for closed deals metric.
+    requires_skus:
+    - crm
+    min_role: agent
+  completed_deal_activities_metric:
+    label: Completed Deal Activities Metric
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - activity_type
+    - owner_name
+    - deal_stage
+    when: Period aggregate for completed deal activities metric.
+    requires_skus:
+    - crm
+    min_role: agent
+  contact_activity_volume:
+    label: Contact Activity Volume
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - activity_type
+    - folder
+    - contact_lifecycle_stage
+    when: Period aggregate for contact activity volume.
+    requires_skus:
+    - crm
+    min_role: agent
+  contact_volume:
+    label: Contact Volume
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - lifecycle_stage
+    - lead_source
+    - lead_status
+    - owner_name
+    - lead_score
+    - lead_band
+    when: Period aggregate for contact volume.
+    requires_skus:
+    - crm
+    min_role: agent
+  contacts_with_orders_metric:
+    label: Contacts With Orders Metric
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for contacts with orders metric.
+    requires_skus:
+    - crm
+    min_role: agent
+  contract_renewal_rate:
+    label: Contract Renewal Rate
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - channel_role
+    when: Period aggregate for contract renewal rate.
+    requires_skus:
+    - crm
+    min_role: agent
+  contract_volume:
+    label: Contract Volume
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - channel_role
+    when: Period aggregate for contract volume.
+    requires_skus:
+    - crm
+    min_role: agent
+  contracts_due_for_renewal:
+    label: Contracts Due For Renewal
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - channel_role
+    when: Period aggregate for contracts due for renewal.
+    requires_skus:
+    - crm
+    min_role: agent
+  customer_contact_count:
+    label: Customer Contact Count
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - lifecycle_stage
+    - lead_source
+    - lead_status
+    - owner_name
+    - lead_score
+    - lead_band
+    when: Period aggregate for customer contact count.
+    requires_skus:
+    - crm
+    min_role: agent
+  customer_conversion_rate:
+    label: Customer Conversion Rate
+    kind: count
+    scope: org
+    dims:
+    - lifecycle_stage
+    - lead_source
+    when: Contact-to-customer conversion over a period.
+    requires_skus:
+    - crm
+    min_role: agent
+  customer_lifetime_value:
+    label: Customer Lifetime Value
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for customer lifetime value.
+    requires_skus:
+    - crm
+    min_role: agent
+  days_sales_outstanding:
+    label: Days Sales Outstanding
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for days sales outstanding.
+    requires_skus:
+    - crm
+    min_role: agent
+  days_to_pay_total:
+    label: Days To Pay Total
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - invoice_status
+    - created_by_name
+    when: Period aggregate for days to pay total.
+    requires_skus:
+    - crm
+    min_role: agent
+  deal_activity_completion_rate:
+    label: Deal Activity Completion Rate
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - activity_type
+    - owner_name
+    - deal_stage
+    when: Period aggregate for deal activity completion rate.
+    requires_skus:
+    - crm
+    min_role: agent
+  deal_activity_volume:
+    label: Deal Activity Volume
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - activity_type
+    - owner_name
+    - deal_stage
+    when: Period aggregate for deal activity volume.
+    requires_skus:
+    - crm
+    min_role: agent
+  deal_volume:
+    label: Deal Volume
+    kind: count
+    scope: owner_or_team
+    dims:
+    - stage
+    - owner_name
+    when: Count deals created or active in a period.
+    requires_skus:
+    - crm
+    min_role: agent
+  deals_with_quote_metric:
+    label: Deals With Quote Metric
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - quote_status
+    - deal_stage
+    - owner_name
+    when: Period aggregate for deals with quote metric.
+    requires_skus:
+    - crm
+    min_role: agent
+  distinct_products_sold_count:
+    label: Distinct Products Sold Count
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - order_status
+    - product_name
+    - product_sku
+    - product_category
+    - product_subcategory
+    - product_brand
+    - product_billing_type
+    when: Period aggregate for distinct products sold count.
+    requires_skus:
+    - crm
+    min_role: agent
+  eligible_lead_contact_count:
+    label: Eligible Lead Contact Count
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - lifecycle_stage
+    - lead_source
+    - lead_status
+    - owner_name
+    - lead_score
+    - lead_band
+    when: Period aggregate for eligible lead contact count.
+    requires_skus:
+    - crm
+    min_role: agent
+  franchise_node_volume:
+    label: Franchise Node Volume
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - company_industry
+    - channel_role
+    - owner_name
+    - parent_company_name
+    when: Period aggregate for franchise node volume.
+    requires_skus:
+    - crm
+    min_role: agent
+  funnel_eligible_contact_count:
+    label: Funnel Eligible Contact Count
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - lifecycle_stage
+    - lead_source
+    - lead_status
+    - owner_name
+    - lead_score
+    - lead_band
+    when: Period aggregate for funnel eligible contact count.
+    requires_skus:
+    - crm
+    min_role: agent
+  invoice_outstanding_amount:
+    label: Invoice Outstanding Amount
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - invoice_status
+    - created_by_name
+    when: Period aggregate for invoice outstanding amount.
+    requires_skus:
+    - crm
+    min_role: agent
+  invoiced_product_revenue:
+    label: Invoiced Product Revenue
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - invoice_status
+    - line_kind
+    - product_name
+    - product_category
+    when: Period aggregate for invoiced product revenue.
+    requires_skus:
+    - crm
+    min_role: agent
+  lifetime_order_value_total:
+    label: Lifetime Order Value Total
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for lifetime order value total.
+    requires_skus:
+    - crm
+    min_role: agent
+  loss_rate:
+    label: Loss Rate
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - stage
+    - deal_status_proxy
+    - lost_reason
+    - owner_name
+    - owner_team_id
+    when: Period aggregate for loss rate.
+    requires_skus:
+    - crm
+    min_role: agent
+  lost_deal_amount_total:
+    label: Lost Deal Amount Total
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - stage
+    - deal_status_proxy
+    - lost_reason
+    - owner_name
+    - owner_team_id
+    when: Period aggregate for lost deal amount total.
+    requires_skus:
+    - crm
+    min_role: agent
+  lost_deals_metric:
+    label: Lost Deals Metric
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - stage
+    - deal_status_proxy
+    - lost_reason
+    - owner_name
+    - owner_team_id
+    when: Period aggregate for lost deals metric.
+    requires_skus:
+    - crm
+    min_role: agent
+  mql_contact_count:
+    label: Mql Contact Count
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - lifecycle_stage
+    - lead_source
+    - lead_status
+    - owner_name
+    - lead_score
+    - lead_band
+    when: Period aggregate for mql contact count.
+    requires_skus:
+    - crm
+    min_role: agent
+  mql_rate:
+    label: MQL Rate
+    kind: count
+    scope: org
+    dims:
+    - lifecycle_stage
+    - lead_source
+    when: Marketing-qualified rate over contacts in a period.
+    requires_skus:
+    - crm
+    min_role: agent
+  new_lead_volume:
+    label: New Lead Volume
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - lifecycle_stage
+    - lead_source
+    - lead_status
+    - owner_name
+    - lead_score
+    - lead_band
+    when: Period aggregate for new lead volume.
+    requires_skus:
+    - crm
+    min_role: agent
+  open_pipeline_value:
+    label: Open Pipeline
+    kind: count
+    scope: owner_or_team
+    dims:
+    - stage
+    - owner_name
+    when: Aggregate open pipeline value for a period or owner.
+    requires_skus:
+    - crm
+    min_role: agent
+  open_task_volume:
+    label: Open Task Volume
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - activity_type
+    - folder
+    - contact_lifecycle_stage
+    when: Period aggregate for open task volume.
+    requires_skus:
+    - crm
+    min_role: agent
+  order_gmv:
+    label: Order Gmv
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - order_status
+    - contact_lifecycle_stage
+    - created_by_name
+    when: Period aggregate for order gmv.
+    requires_skus:
+    - crm
+    min_role: agent
+  order_volume:
+    label: Order Volume
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - order_status
+    - contact_lifecycle_stage
+    - created_by_name
+    when: Period aggregate for order volume.
+    requires_skus:
+    - crm
+    min_role: agent
+  paid_invoices_metric:
+    label: Paid Invoices Metric
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - invoice_status
+    - created_by_name
+    when: Period aggregate for paid invoices metric.
+    requires_skus:
+    - crm
+    min_role: agent
+  pipeline_coverage_ratio:
+    label: Pipeline Coverage Ratio
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for pipeline coverage ratio.
+    requires_skus:
+    - crm
+    min_role: agent
+  product_revenue:
+    label: Product Revenue
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - order_status
+    - product_name
+    - product_sku
+    - product_category
+    - product_subcategory
+    - product_brand
+    - product_billing_type
+    when: Period aggregate for product revenue.
+    requires_skus:
+    - crm
+    min_role: agent
+  product_revenue_total:
+    label: Product Revenue Total
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - order_status
+    - product_name
+    - product_sku
+    - product_category
+    - product_subcategory
+    - product_brand
+    - product_billing_type
+    when: Period aggregate for product revenue total.
+    requires_skus:
+    - crm
+    min_role: agent
+  proposal_acceptance_rate:
+    label: Proposal Acceptance Rate
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - proposal_status
+    - owner_name
+    when: Period aggregate for proposal acceptance rate.
+    requires_skus:
+    - crm
+    min_role: agent
+  proposal_accepted_metric:
+    label: Proposal Accepted Metric
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - proposal_status
+    - owner_name
+    when: Period aggregate for proposal accepted metric.
+    requires_skus:
+    - crm
+    min_role: agent
+  proposal_sent_metric:
+    label: Proposal Sent Metric
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - proposal_status
+    - owner_name
+    when: Period aggregate for proposal sent metric.
+    requires_skus:
+    - crm
+    min_role: agent
+  quote_to_close_rate:
+    label: Quote To Close Rate
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - quote_status
+    - deal_stage
+    - owner_name
+    when: Period aggregate for quote to close rate.
+    requires_skus:
+    - crm
+    min_role: agent
+  quoted_product_revenue:
+    label: Quoted Product Revenue
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - quote_status
+    - product_name
+    - product_category
+    - owner_name
+    when: Period aggregate for quoted product revenue.
+    requires_skus:
+    - crm
+    min_role: agent
+  renewed_contracts_metric:
+    label: Renewed Contracts Metric
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - channel_role
+    when: Period aggregate for renewed contracts metric.
+    requires_skus:
+    - crm
+    min_role: agent
+  repeat_customers_metric:
+    label: Repeat Customers Metric
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for repeat customers metric.
+    requires_skus:
+    - crm
+    min_role: agent
+  repurchase_rate:
+    label: Repurchase Rate
+    kind: count
+    scope: org
+    dims: []
+    when: Period aggregate for repurchase rate.
+    requires_skus:
+    - crm
+    min_role: agent
+  sales_agent_win_rate:
+    label: Sales Agent Win Rate
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - stage
+    - deal_status_proxy
+    - lost_reason
+    - owner_name
+    - owner_team_id
+    when: Period aggregate for sales agent win rate.
+    requires_skus:
+    - crm
+    min_role: agent
+  sales_cycle_days_total:
+    label: Sales Cycle Days Total
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - stage
+    - deal_status_proxy
+    - lost_reason
+    - owner_name
+    - owner_team_id
+    when: Period aggregate for sales cycle days total.
+    requires_skus:
+    - crm
+    min_role: agent
+  total_account_locations:
+    label: Total Account Locations
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - company_industry
+    - channel_role
+    - owner_name
+    - parent_company_name
+    when: Period aggregate for total account locations.
+    requires_skus:
+    - crm
+    min_role: agent
+  units_sold:
+    label: Units Sold
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - order_status
+    - product_name
+    - product_sku
+    - product_category
+    - product_subcategory
+    - product_brand
+    - product_billing_type
+    when: Period aggregate for units sold.
+    requires_skus:
+    - crm
+    min_role: agent
+  won_deal_amount_total:
+    label: Won Deal Amount Total
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - stage
+    - deal_status_proxy
+    - lost_reason
+    - owner_name
+    - owner_team_id
+    when: Period aggregate for won deal amount total.
+    requires_skus:
+    - crm
+    min_role: agent
+  won_deal_rate:
+    label: Win Rate
+    kind: count
+    scope: owner_or_team
+    dims:
+    - stage
+    - owner_name
+    - owner_team_id
+    when: "Period or owner win rate \u2014 not this deal's stage."
+    requires_skus:
+    - crm
+    min_role: agent
+  won_deals_for_avg:
+    label: Won Deals For Avg
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - stage
+    - deal_status_proxy
+    - lost_reason
+    - owner_name
+    - owner_team_id
+    when: Period aggregate for won deals for avg.
+    requires_skus:
+    - crm
+    min_role: agent
+  won_deals_metric:
+    label: Won Deals Metric
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - stage
+    - deal_status_proxy
+    - lost_reason
+    - owner_name
+    - owner_team_id
+    when: Period aggregate for won deals metric.
+    requires_skus:
+    - crm
+    min_role: agent
+  won_deals_with_accepted_quote_metric:
+    label: Won Deals With Accepted Quote Metric
+    kind: count
+    scope: org
+    dims:
+    - business_type
+    - quote_status
+    - deal_stage
+    - owner_name
+    when: Period aggregate for won deals with accepted quote metric.
+    requires_skus:
+    - crm
+    min_role: agent

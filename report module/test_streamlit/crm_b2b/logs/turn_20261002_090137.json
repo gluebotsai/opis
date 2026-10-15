@@ -1,0 +1,171 @@
+{
+  "question": "why email activities are more when compare to other activities?",
+  "answer": "There are 1,114 total activities, with email being the dominant type at 750 counts.\n\n| Activity Type | Activity Count |\n| :--- | :--- |\n| email | 750 |\n| meeting | 179 |\n| note | 172 |\n| task | 7 |\n| call | 5 |\n| sms | 1 |\n\nEmail activities represent 67% of all recorded touchpoints and are concentrated among 149 contacts. While email is used for broad outreach, meeting activity shows much higher engagement density, with 179 meetings distributed across only 22 contacts. This indicates a heavy reliance on asynchronous communication for volume, while high-touch relationship management is reserved for a much smaller group.\n\nYou may want to review the low volume of TaskActivity (7 counts) to ensure follow-up actions are being formally logged in the system.",
+  "trace": {
+    "question": "why email activities are more when compare to other activities?",
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1015,
+      "role": "admin"
+    },
+    "model": "worktual-gemma",
+    "tasks": [
+      {
+        "status": "ok",
+        "store": "sql",
+        "sql": "WITH rpt_activities AS (\nSELECT src.id, src.organization_id, src.activity_source, src.deal_id, src.contact_id, src.type, src.subject, src.body, src.task_status, src.due_at, src.completed_at, src.performed_by_user_id, src.assignee_user_id, src.owner_name, src.created_at FROM (\nSELECT \n  u.id,\n  u.organization_id,\n  u.activity_source,\n  u.deal_id,\n  u.contact_id,\n  u.type,\n  u.subject,\n  u.body,\n  u.task_status,\n  u.due_at,\n  u.completed_at,\n  u.performed_by_user_id,\n  u.assignee_user_id,\n  su.first_name || ' ' || COALESCE(su.last_name, '') AS owner_name,\n  u.created_at\nFROM (\n  SELECT \n    da.id,\n    da.organization_id,\n    'deal' AS activity_source,\n    da.deal_id,\n    NULL::text AS contact_id,\n    da.type::text AS type,\n    da.subject,\n    da.body,\n    NULL::text AS task_status,\n    da.due_at,\n    da.completed_at,\n    da.created_by_user_id AS performed_by_user_id,\n    NULL::bigint AS assignee_user_id,\n    da.created_at\n  FROM crm.deal_activities da\n  WHERE da.organization_id = %(_org_id)s\n  UNION ALL\n  SELECT \n    ca.id,\n    ca.organization_id,\n    'contact' AS activity_source,\n    NULL::text AS deal_id,\n    ca.contact_id,\n    ca.type::text AS type,\n    ca.subject,\n    ca.body,\n    ca.task_status::text AS task_status,\n    ca.due_at,\n    ca.completed_at,\n    ca.created_by_user_id AS performed_by_user_id,\n    ca.assignee_user_id,\n    ca.created_at\n  FROM crm.contact_activities ca\n  WHERE ca.organization_id = %(_org_id)s\n) u\nLEFT JOIN accounts.setup_users su ON su.id = u.performed_by_user_id\n) src WHERE TRUE\n)\nSELECT COALESCE(CAST(type AS TEXT), 'Unassigned') AS type, type AS activity_type, CAST(COUNT(*) AS BIGINT) AS activity_count FROM rpt_activities AS activities WHERE TRUE AND TRUE AND TRUE GROUP BY type, COALESCE(CAST(type AS TEXT), 'Unassigned') ORDER BY activity_count DESC LIMIT 500",
+        "views": [
+          "activities"
+        ],
+        "guard_notes": [
+          "row cap 500 applied"
+        ],
+        "bound_params": {
+          "_org_id": 1003,
+          "_user_id": 1015,
+          "user_id": 1015,
+          "organization_id": 1003,
+          "org_id": 1003,
+          "tenant_id": 1003,
+          "current_user_id": 1015
+        },
+        "rows": [
+          {
+            "type": "email",
+            "activity_type": "email",
+            "activity_count": 750
+          },
+          {
+            "type": "meeting",
+            "activity_type": "meeting",
+            "activity_count": 179
+          },
+          {
+            "type": "note",
+            "activity_type": "note",
+            "activity_count": 172
+          },
+          {
+            "type": "task",
+            "activity_type": "task",
+            "activity_count": 7
+          },
+          {
+            "type": "call",
+            "activity_type": "call",
+            "activity_count": 5
+          },
+          {
+            "type": "sms",
+            "activity_type": "sms",
+            "activity_count": 1
+          }
+        ],
+        "kpi_id": "activity_volume",
+        "dimension": "type",
+        "time_status": "all_time",
+        "attempts": [
+          {
+            "raw": "{\"tool\":\"run_kpi\",\"kpi_id\":\"activity_volume\",\"dimension\":\"type\"}",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "activity_volume",
+              "dimension": "type"
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "tool": "run_kpi",
+        "requested_kpi": "activity_volume",
+        "requested_dimension": "type",
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "activity_volume",
+          "goal": "Activity volume by type to confirm the mix",
+          "time": "all time",
+          "scope": "org",
+          "dimension": "type",
+          "answer_type": "breakdown",
+          "depends_on": []
+        }
+      },
+      {
+        "status": "ok",
+        "rows": [
+          {
+            "activity_type": "EmailActivity",
+            "activity_count": 750,
+            "contacts_reached": 149
+          },
+          {
+            "activity_type": "GeneralActivity",
+            "activity_count": 188,
+            "contacts_reached": 125
+          },
+          {
+            "activity_type": "MeetingActivity",
+            "activity_count": 179,
+            "contacts_reached": 22
+          },
+          {
+            "activity_type": "TaskActivity",
+            "activity_count": 7,
+            "contacts_reached": 5
+          }
+        ],
+        "sql": "MATCH (ca:ContactActivity) RETURN coalesce([l IN labels(ca) WHERE l <> 'ContactActivity' AND l <> 'Sales'][0], 'GeneralActivity') AS activity_type, count(ca) AS activity_count, count(DISTINCT ca.contact_id) AS contacts_reached ORDER BY activity_count DESC\nLIMIT 100",
+        "tool": "kg",
+        "attempts_made": 1,
+        "kg_notes": "### Activity Mix Breakdown\n\nThe organization has recorded a total of 1,124 activities across 301 contacts. Email activities represent the vast majority of engagement, totaling 750 instances, which accounts for approximately 67% of all recorded touchpoints.\n\n| Activity Type | Activity Count | Contacts Reached |\n| :--- | :--- | :--- |\n| EmailActivity | 750 | 149 |\n| GeneralActivity | 188 | 125 |\n| MeetingActivity | 179 | 22 |\n| TaskActivity | 7 | 5 |\n| **Total** | **1,124** | **301** |\n\n### Email Volume Drivers\n\nThe data indicates a heavy reliance on asynchronous communication. While EmailActivity leads with 750 counts, it is concentrated among 149 contacts. In contrast, MeetingActivity shows a much higher density of engagement per contact, with 179 meetings distributed across only 22 contacts. This suggests that while emails are the primary method for broad outreach and volume, high-touch relationship management (meetings) is being conducted with a much smaller, more select group of contacts.\n\n### Operational Recommendations\n\n* **Evaluate Email Efficiency:** Review the 750 email activities to determine if the high volume is driving meaningful conversions or if it represents repetitive outreach to the same 149 contacts.\n* **Optimize Meeting Conversion:** Analyze the transition from the high-volume email segment (149 contacts) to the high-engagement meeting segment (22 contacts) to identify successful patterns for booking more face-to-face time.\n* **Task Management Audit:** Address the low volume of TaskActivity (7 counts) to ensure that follow-up actions are being formally logged in the system rather than occurring via unrecorded channels.",
+        "task": {
+          "id": "t2",
+          "executor": "kg",
+          "kpi": null,
+          "goal": "Analyze ContactActivity touch mix: email vs meeting vs task vs note vs call, and identify which contacts/owners are driving the email volume",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "why_breakdown",
+          "depends_on": [
+            "t1"
+          ]
+        }
+      }
+    ],
+    "domain_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"deep\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"activity_volume\",\n      \"goal\": \"Activity volume by type to confirm the mix\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"dimension\": \"type\",\n      \"answer_type\": \"breakdown\",\n      \"depends_on\": []\n    },\n    {\n      \"id\": \"t2\",\n      \"executor\": \"kg\",\n      \"kpi\": null,\n      \"goal\": \"Analyze ContactActivity touch mix: email vs meeting vs task vs note vs call, and identify which contacts/owners are driving the email volume\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"dimension\": null,\n      \"answer_type\": \"why_breakdown\",\n      \"depends_on\": [\n        \"t1\"\n      ]\n    }\n  ]\n}\n```",
+    "plan": {
+      "kind": "plan",
+      "depth": "deep",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "activity_volume",
+          "goal": "Activity volume by type to confirm the mix",
+          "time": "all time",
+          "scope": "org",
+          "dimension": "type",
+          "answer_type": "breakdown",
+          "depends_on": []
+        },
+        {
+          "id": "t2",
+          "executor": "kg",
+          "kpi": null,
+          "goal": "Analyze ContactActivity touch mix: email vs meeting vs task vs note vs call, and identify which contacts/owners are driving the email volume",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "why_breakdown",
+          "depends_on": [
+            "t1"
+          ]
+        }
+      ]
+    },
+    "facts": "time_requested: all time\nperiod_applied: overall (no date filter, UTC)\ntime_status: all_time\ncatalog_kpi: activity_volume\nRESULT: 6 group(s)\ngroup_by: type\ntotal_activity_count: 1114\n  email / email: 750\n  meeting / meeting: 179\n  note / note: 172\n  task / task: 7\n  call / call: 5\n  sms / sms: 1\n\ntime_requested: all time\ntime_status: kg\nRESULT: 4 group(s)\ngroup_by: group\ntotal_activity_count: 1124\n  EmailActivity / 149: 750\n  GeneralActivity / 125: 188\n  MeetingActivity / 22: 179\n  TaskActivity / 5: 7\nkg_notes:\n### Activity Mix Breakdown\n\nThe organization has recorded a total of 1,124 activities across 301 contacts. Email activities represent the vast majority of engagement, totaling 750 instances, which accounts for approximately 67% of all recorded touchpoints.\n\n| Activity Type | Activity Count | Contacts Reached |\n| :--- | :--- | :--- |\n| EmailActivity | 750 | 149 |\n| GeneralActivity | 188 | 125 |\n| MeetingActivity | 179 | 22 |\n| TaskActivity | 7 | 5 |\n| **Total** | **1,124** | **301** |\n\n### Email Volume Drivers\n\nThe data indicates a heavy reliance on asynchronous communication. While EmailActivity leads with 750 counts, it is concentrated among 149 contacts. In contrast, MeetingActivity shows a much higher density of engagement per contact, with 179 meetings distributed across only 22 contacts. This suggests that while emails are the primary method for broad outreach and volume, high-touch relationship management (meetings) is being conducted with a much smaller, more select group of contacts.\n\n### Operational Recommendations\n\n* **Evaluate Email Efficiency:** Review the 750 email activities to determine if the high volume is driving meaningful conversions or if it represents repetitive outreach to the same 149 contacts.\n* **Optimize Meeting Conversion:** Analyze the transition from the high-volume email segment (149 contacts) to the high-engagement meeting segment (22 contacts) to identify successful patterns for booking more face-to-face time.\n* **Task Management Audit:** Address the low volume of TaskActivity (7 counts) to ensure that follow-up actions are being formally logged in the system rather than occurring via unrecorded channels.",
+    "grounded": true,
+    "briefing_raw": "There are 1,114 total activities, with email being the dominant type at 750 counts.\n\n| Activity Type | Activity Count |\n| :--- | :--- |\n| email | 750 |\n| meeting | 179 |\n| note | 172 |\n| task | 7 |\n| call | 5 |\n| sms | 1 |\n\nEmail activities represent 67% of all recorded touchpoints and are concentrated among 149 contacts. While email is used for broad outreach, meeting activity shows much higher engagement density, with 179 meetings distributed across only 22 contacts. This indicates a heavy reliance on asynchronous communication for volume, while high-touch relationship management is reserved for a much smaller group.\n\nYou may want to review the low volume of TaskActivity (7 counts) to ensure follow-up actions are being formally logged in the system."
+  }
+}

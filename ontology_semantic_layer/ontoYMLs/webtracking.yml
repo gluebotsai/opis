@@ -1,0 +1,183 @@
+ontology:
+  name: web_tracking_ontology
+  purpose: >
+    Give the Web Tracking agents a complete and simple understanding of the
+    product so they can read a site owner's question correctly, fetch the right
+    numbers for that one website, and explain the result in business language.
+
+  entities:
+    Tenant:
+      definition: The company that observe the visistors behaviour through their owned one or more websites.
+      identifier: dim_websites.organization_id
+
+    Website:
+      definition: The site where visitors browse products, view content, and take actions.
+      identifier: dim_websites.website_id
+
+    Visitor:
+      definition: A person browsing the website, recognised by a browser cookie.
+      identifier: [dim_visitors.website_id, dim_visitors.visitor_id]
+
+    KnownUser:
+      definition: The real identity behind a visitor after they log in, register, or identified.
+      identifier: [dim_known_users.website_id, dim_known_users.user_id, dim_known_users.visitor_id]
+
+    WebSession:
+      definition: One visit. It starts when the visitor arrives and ends when they leave or go idle.
+      identifier: dim_sessions.session_id
+
+    Page:
+      definition: A URL path on the website, that a visitor visits to view content or products.
+      identifier: fact_page_views.page_path
+
+    PageView:
+      definition: One time a page was opened during a session by a visitor.
+      identifier: fact_page_views.page_view_id
+
+    Interaction:
+      definition: A physical action taken on a page by a visitor, such as a click, scroll, hover, rage click, or dead click.
+      identifier: fact_interaction_events.event_id
+
+    Form:
+      definition: A form on the website that a visitor fills in to enquire or sign up.
+      identifier: fact_form_events.form_id
+
+    FormEvent:
+      definition: One step a visitor took in a form, such as viewing, starting, submitting, succeeding, failing, or abandoning it.
+      identifier: fact_form_events.event_id
+
+    Product:
+      definition: An item/offering in the website's catalogue that visitors can view and buy.
+      identifier: fact_product_interactions.product_id
+
+    ProductAction:
+      definition: Something a visitor did with a product, such as viewing it, adding it to cart, or starting checkout.
+      identifier: fact_product_interactions.interaction_id
+
+    Conversion:
+      definition: A goal the site owner cares about that a visitor completed, such as a purchase, signup, login, or checkout start.
+      identifier: fact_conversion_events.conversion_id
+
+    CustomEvent:
+      definition: A business action the site owner named themselves and asked the SDK to track.
+      identifier: fact_custom_events.event_id
+
+    TrafficSource:
+      definition: How a visit arrived, such as a search engine, a referring site, an email, or direct.
+      identifier: [dim_sessions.referrer_domain, dim_sessions.utm_source, dim_sessions.utm_medium]
+
+    Campaign:
+      definition: A marketing activity that sent visits to the website.
+      identifier: [dim_sessions.utm_campaign, dim_sessions.wt_campaign_id]
+
+    PerformanceMeasure:
+      definition: How fast and stable a page felt in the visitor's browser.
+      identifier: fact_performance_events.event_id
+
+    Error:
+      definition: A script or loading failure that happened on a page during a visit.
+      identifier: fact_error_events.event_id
+
+  relations:
+    - Tenant - owns -> Website
+    - Website - has_visitor -> Visitor
+    - Website - has_page -> Page
+    - Website - has_form -> Form
+    - Website - has_product -> Product
+
+    - Visitor - makes -> Session
+    - Visitor - identified_as -> KnownUser
+    - Session - belongs_to -> Visitor
+
+    - Session - arrives_via -> TrafficSource
+    - Session - arrives_from -> Campaign
+    - Session - starts_on -> Page
+    - Session - ends_on -> Page
+    - Session - contains -> PageView
+
+    - PageView - views -> Page
+    - PageView - has_interaction -> Interaction
+    - PageView - has_performance -> PerformanceMeasure
+
+    - Interaction - occurs_in -> Session
+    - Interaction - performed_by -> Visitor
+
+    - FormEvent - about -> Form
+    - FormEvent - occurs_on -> PageView
+    - FormEvent - occurs_in -> Session
+    - FormEvent - performed_by -> Visitor
+
+    - ProductAction - about -> Product
+    - ProductAction - occurs_in -> Session
+    - ProductAction - performed_by -> Visitor
+
+    - Conversion - occurs_in -> Session
+    - Conversion - performed_by -> Visitor
+    - Conversion - occurs_on -> PageView
+    - Conversion - relates_to -> Product
+    - Conversion - attributed_to -> Campaign
+
+    - CustomEvent - occurs_in -> Session
+    - CustomEvent - performed_by -> Visitor
+    - Error - occurs_on -> PageView
+    - Error - occurs_in -> Session
+
+  synonyms:
+    Tenant: [organization, account, customer]
+    Website: [site, domain, store]
+    Visitor: [people, users, audience, anonymous visitors, live_visitor, online_now, live_users, active_now, currently_browsing, Online Visitor]
+    KnownUser: [identified visitor, logged in user, known visitor]
+    Session: [visit, traffic, visits, traffic volume]
+    Page: [url, top pages, landing page, entry page, exit page]
+    PageView: [view, impression, page load]
+    Interaction: [click, scroll, hover, rage click, dead click, frustration]
+    Form: [contact form, enquiry form, lead form]
+    FormEvent: [form submit, form submission, form abandon, form drop off]
+    Product: [item, sku, offering, service]
+    ProductAction: [add to cart, wishlist, product view, checkout start]
+    Conversion: [goal, signup, sale, order, purchase, revenue]
+    TrafficSource: [source, referrer, channel, where they came from, utm, utm source, google, direct]
+    Campaign: [utm, ad, marketing campaign, utm_campaign]
+    PerformanceMeasure: [speed, page speed, lcp, core web vitals]
+    Error: [bug, js error, broken page, javascript errors, js errors, script error]
+
+  taxonomy:
+    website.site_type: [blog, ecommerce]
+    session.device: [desktop, mobile, tablet]
+    interaction.event_type: [click, move, scroll, scroll_depth, rage_click, dead_click, hover]
+    form_event.event_type: [form_view, form_start, form_focus, form_change, form_validation, form_submit, form_success, form_failure, form_abandon]
+    product_action.section: [product_view, add_to_cart, remove_from_cart, add_to_wishlist, remove_from_wishlist, begin_checkout, featured, listing]
+    conversion.conversion_type: [purchase, refund, signup, login, register, begin_checkout, custom]
+    performance.metric_name: [LCP, FCP, CLS, INP, TTFB]
+    performance.rating: [good, needs-improvement, poor]
+    error.error_type: [javascript, unhandledrejection, resource]
+    known_user.method: [identify, login, register, signup]
+    visitor.recency: [new, returning, online]
+
+  business_rules:
+    - Every answer is about one website only. Never mix data from two websites.
+    - A visitor is a person, a session is one visit, and a page view is one page opening. These are three different counts and are never swapped.
+    - One visitor can have many sessions, so visitor count is normally lower than session count.
+    - A known user is the same person as the visitor, not an extra visitor.
+    - A bounce is a session where the visitor saw one page and left almost immediately.
+    - The landing page is the first page view of a session and the exit page is the last one. Both are worked out from page views, not stored on the session.
+    - New and returning are counted inside the chosen period. One session in the period is new, more than one is returning.
+    - Online now means a session active in the last five minutes. It is not the same as visitors today.
+    - Traffic source and campaign describe one visit, not the visitor's whole history.
+    - A click, scroll or rage click happens on a page view. It is not a page view itself.
+    - A form submission is a lead and a purchase is a sale. They are separate success paths and must never be added together.
+    - Adding to cart or starting checkout is interest, not a completed purchase.
+    - Revenue comes only from purchase conversions, and a refund reverses it.
+    - Speed measurements and errors describe site health, not traffic volume.
+    - Every count is for a time period. Use the period the user asked for, or the dashboard period if they did not say.
+    - A follow-up question keeps the same entity, filter and period unless the user changes them.
+    - Online visitor and live visitor mean the same thing. It is a visitor who had session activity in the last 5 minutes. It is not the same as visitors today.
+
+    - A city name like Chennai or London is a city, not a country. Read place names as city first and only as country when it really is one.
+    - When the user asks about source, campaign or UTM, use the campaign and source tags first. Use the referring site only when no tags exist.
+    - Direct traffic means the visit arrived with no referring site and no source tags.
+    - Live users, online now and right now mean sessions active in the last five minutes, never visitors today.
+    - A question about one visitor, their profile or their journey is a lookup, not a KPI. List what that person did instead of making up a number.
+    - When the user names a form, filter by that form. Do not answer with all forms together.
+    - Device, browser, country and source belong to the visit, so break them down by sessions rather than by visitors.
+    - Break a number down only by things that number actually supports. If a breakdown is not possible, say so instead of guessing.

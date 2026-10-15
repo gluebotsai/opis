@@ -1,0 +1,21 @@
+{
+  "name": "@ai-contact-center/api-paths",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "check-types": "tsc --noEmit",
+    "dev": "tsc --watch"
+  },
+  "devDependencies": {
+    "@ai-contact-center/config": "*",
+    "typescript": "^5.8.3"
+  }
+}

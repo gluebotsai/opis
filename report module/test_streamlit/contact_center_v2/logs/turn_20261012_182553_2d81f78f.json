@@ -1,0 +1,61 @@
+{
+  "turn_id": "2d81f78f",
+  "timestamp": "2026-10-12T12:55:53.431024+00:00",
+  "question": "what is the total sla breach rate?",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1036,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>SLA breach rate</strong></p>\n<p>The SLA breach rate is not available in Contact Center reports.</p>\n<p>Would you like to see the first-reply SLA rate instead?</p>",
+  "card": "card: none",
+  "facts": "result_id: r1\nwindow: all time\ncertified: false\ntask_goal: Calculate the total SLA breach rate.\nanswer_type: percentage\nUNAVAILABLE\nreason: SLA breach rate is not in Contact Center reports.",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1036,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "what is the total sla breach rate?",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants to know the total SLA breach rate.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Calculate the total SLA breach rate.",
+          "time": "all time",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "percentage"
+        }
+      ]
+    },
+    "unavailable": true,
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "unavailable",
+        "error_type": null,
+        "certified": false,
+        "kpi_id": null,
+        "row_count": 0
+      }
+    ],
+    "facts": "result_id: r1\nwindow: all time\ncertified: false\ntask_goal: Calculate the total SLA breach rate.\nanswer_type: percentage\nUNAVAILABLE\nreason: SLA breach rate is not in Contact Center reports.",
+    "grounded": true,
+    "card": "card: none"
+  },
+  "error": null
+}

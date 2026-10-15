@@ -1,0 +1,189 @@
+/**
+ * Admin — Partners
+ * Extends admin-users-light.css; page-specific KPI + column density only.
+ */
+
+.admin-partners-page .admin-partners-kpi-card__icon--countries {
+  background: color-mix(in srgb, #3a9ee0 12%, #fff);
+  color: #3a9ee0;
+}
+
+.admin-partners-page .admin-partners-table {
+  table-layout: fixed;
+}
+
+.admin-partners-page .admin-partners-table th:nth-child(1),
+.admin-partners-page .admin-partners-table td:nth-child(1) {
+  width: 18%;
+}
+
+.admin-partners-page .admin-partners-table th:nth-child(2),
+.admin-partners-page .admin-partners-table td:nth-child(2) {
+  width: 14%;
+}
+
+.admin-partners-page .admin-partners-table th:nth-child(3),
+.admin-partners-page .admin-partners-table td:nth-child(3) {
+  width: 18%;
+}
+
+.admin-partners-page .admin-partners-table th:nth-child(4),
+.admin-partners-page .admin-partners-table td:nth-child(4) {
+  width: 10%;
+}
+
+.admin-partners-page .admin-partners-table th:nth-child(5),
+.admin-partners-page .admin-partners-table td:nth-child(5) {
+  width: 16%;
+}
+
+.admin-partners-page .admin-partners-table th:nth-child(6),
+.admin-partners-page .admin-partners-table td:nth-child(6) {
+  width: 10%;
+}
+
+.admin-partners-page .admin-partners-table th:nth-child(7),
+.admin-partners-page .admin-partners-table td:nth-child(7) {
+  width: 12%;
+}
+
+@media (max-width: 1360px), (max-height: 720px) {
+  .admin-partners-page .admin-partners-table th:nth-child(4),
+  .admin-partners-page .admin-partners-table td:nth-child(4),
+  .admin-partners-page .admin-partners-table th:nth-child(7),
+  .admin-partners-page .admin-partners-table td:nth-child(7) {
+    display: none;
+  }
+}
+
+/* Create partner — field grid inside overlay (steps live in admin-users-light.css) */
+.admin-partner-create-overlay__fields {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr;
+}
+
+.admin-partner-create-overlay__fields .field,
+.admin-partner-create-overlay__fields .field--full {
+  display: grid;
+  gap: 8px;
+  grid-column: 1 / -1;
+}
+
+.admin-partner-create-overlay__fields .field span,
+.admin-partner-create-overlay__fields .field--full > span:first-child {
+  color: #3f3f49;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.admin-partner-create-overlay__fields .field input,
+.admin-partner-create-overlay__fields .field select,
+.admin-partner-create-overlay__fields .field textarea {
+  background: #ffffff;
+  border: 1px solid #c9c9cf;
+  border-radius: 8px;
+  color: #0b0b10;
+  font: inherit;
+  min-height: 40px;
+  padding: 10px 12px;
+  width: 100%;
+}
+
+/* Long emails wrap to a new line (native input cannot wrap) */
+.admin-partner-create-overlay__fields .field textarea.field__input--wrap {
+  field-sizing: content;
+  max-height: 7.5rem;
+  min-height: 40px;
+  overflow-wrap: anywhere;
+  overflow-y: auto;
+  resize: none;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.admin-partner-create-overlay__fields .field select {
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%237E7E88' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-position: right 16px center;
+  background-repeat: no-repeat;
+  background-size: 16px 16px;
+  cursor: pointer;
+  padding-right: 48px;
+}
+
+.admin-partner-create-overlay__fields .field.is-invalid > input,
+.admin-partner-create-overlay__fields .field.is-invalid > select,
+.admin-partner-create-overlay__fields .field.is-invalid > textarea {
+  border-color: #db4437;
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, #c73e32 22%, transparent),
+    0 6px 16px color-mix(in srgb, #c73e32 18%, transparent);
+}
+
+.admin-partner-create-overlay__fields .admin-wizard-field__error {
+  color: #c73e32;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.admin-partner-create-overlay__fields .checkbox-field {
+  align-items: center;
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
+
+.admin-partner-create-overlay__fields .checkbox-field input {
+  min-height: auto;
+  width: auto;
+}
+
+.admin-partner-create-overlay__fields .admin-users-field--mobile .mobile-field,
+.admin-partner-create-overlay__fields .field.is-invalid .mobile-field {
+  width: 100%;
+}
+
+.admin-partner-create-overlay__fields .field.is-invalid .mobile-field {
+  border-color: #db4437;
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, #c73e32 22%, transparent),
+    0 6px 16px color-mix(in srgb, #c73e32 18%, transparent);
+}
+
+.admin-partner-create-overlay__fields .admin-portal-password-field {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #c9c9cf;
+  border-radius: 8px;
+  display: flex;
+  gap: 4px;
+  min-height: 40px;
+  padding-right: 4px;
+  width: 100%;
+}
+
+.admin-partner-create-overlay__fields .admin-portal-password-field input {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  flex: 1;
+  min-height: 38px;
+  padding: 10px 12px;
+  width: 100%;
+}
+
+.admin-partner-create-overlay__fields .admin-portal-password-field input:focus {
+  box-shadow: none;
+  outline: none;
+}
+
+.admin-partner-create-overlay__fields .field.is-invalid .admin-portal-password-field {
+  border-color: #db4437;
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, #c73e32 22%, transparent),
+    0 6px 16px color-mix(in srgb, #c73e32 18%, transparent);
+}

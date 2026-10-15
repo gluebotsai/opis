@@ -1,0 +1,185 @@
+{
+  "question": "Why do some agents have a much higher average handling time while others have much less?",
+  "answer": "The requested data regarding \"average handling time\" is not available in the CRM, so a comparison of agent performance based on duration cannot be performed.\n\nThe available agent operations data for the overall period shows a total of 2,347 jobs across 13 owners. The breakdown of these operations is as follows:\n\n| Owner | Total Jobs |\n| :--- | :--- |\n| *Data unavailable for specific owner names in provided results* | 2,347 |\n\nThe operations consist primarily of scoring (454), nurture (sent: 101, skipped: 323, waited: 16), and lifecycle (waited: 394, skipped: 23, pending: 31). Because handling time metrics are not stored in the system, it is not possible to correlate these operational volumes with agent speed or duration.",
+  "trace": {
+    "question": "Why do some agents have a much higher average handling time while others have much less?",
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1017,
+      "role": "sales_manager"
+    },
+    "model": "worktual-gemma",
+    "tasks": [
+      {
+        "status": "ok",
+        "store": "sql",
+        "sql": "WITH rpt_agent_jobs AS (\nSELECT src.id, src.organization_id, src.job_type, src.contact_id, src.status, src.created_at, src.updated_at FROM (\nSELECT \n  id,\n  organization_id,\n  job_type,\n  contact_id,\n  status,\n  created_at,\n  updated_at\nFROM (\n  SELECT id, organization_id, 'enrichment' AS job_type, contact_id, status::text AS status, created_at, updated_at FROM crm.lead_enrichment_jobs WHERE organization_id = %(_org_id)s\n  UNION ALL\n  SELECT id, organization_id, 'scoring' AS job_type, contact_id, status::text AS status, created_at, updated_at FROM crm.lead_scoring_jobs WHERE organization_id = %(_org_id)s\n  UNION ALL\n  SELECT id, organization_id, 'nurture' AS job_type, contact_id, status::text AS status, created_at, updated_at FROM crm.lead_nurture_jobs WHERE organization_id = %(_org_id)s\n  UNION ALL\n  SELECT id, organization_id, 'lifecycle' AS job_type, contact_id, status::text AS status, created_at, updated_at FROM crm.lead_lifecycle_jobs WHERE organization_id = %(_org_id)s\n) aj\n) src WHERE TRUE\n)\nSELECT job_type, status, CAST(COUNT(*) AS BIGINT) AS job_count FROM rpt_agent_jobs AS agent_jobs WHERE TRUE AND TRUE AND TRUE GROUP BY job_type, status ORDER BY job_type, status LIMIT 500",
+        "views": [
+          "agent_jobs"
+        ],
+        "guard_notes": [
+          "row cap 500 applied"
+        ],
+        "bound_params": {
+          "_org_id": 1003,
+          "_user_id": 1017,
+          "user_id": 1017,
+          "organization_id": 1003,
+          "org_id": 1003,
+          "tenant_id": 1003,
+          "current_user_id": 1017
+        },
+        "rows": [
+          {
+            "job_type": "enrichment",
+            "status": "enriched",
+            "job_count": 44
+          },
+          {
+            "job_type": "enrichment",
+            "status": "skipped",
+            "job_count": 944
+          },
+          {
+            "job_type": "lifecycle",
+            "status": "applied",
+            "job_count": 1
+          },
+          {
+            "job_type": "lifecycle",
+            "status": "failed",
+            "job_count": 5
+          },
+          {
+            "job_type": "lifecycle",
+            "status": "pending",
+            "job_count": 31
+          },
+          {
+            "job_type": "lifecycle",
+            "status": "skipped",
+            "job_count": 23
+          },
+          {
+            "job_type": "lifecycle",
+            "status": "waited",
+            "job_count": 394
+          },
+          {
+            "job_type": "nurture",
+            "status": "analyzing",
+            "job_count": 7
+          },
+          {
+            "job_type": "nurture",
+            "status": "pending",
+            "job_count": 4
+          },
+          {
+            "job_type": "nurture",
+            "status": "sent",
+            "job_count": 101
+          },
+          {
+            "job_type": "nurture",
+            "status": "skipped",
+            "job_count": 323
+          },
+          {
+            "job_type": "nurture",
+            "status": "waited",
+            "job_count": 16
+          },
+          {
+            "job_type": "scoring",
+            "status": "scored",
+            "job_count": 454
+          }
+        ],
+        "kpi_id": "agent_operations",
+        "time_status": "all_time",
+        "attempts": [
+          {
+            "raw": "{\"tool\":\"run_kpi\",\"kpi_id\":\"agent_operations\",\"dimension\":\"owner\"}",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "agent_operations",
+              "dimension": "owner"
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "tool": "run_kpi",
+        "requested_kpi": "agent_operations",
+        "requested_dimension": "owner",
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "agent_operations",
+          "goal": "Average handling time by agent to identify the variance",
+          "time": "all time",
+          "scope": "org",
+          "dimension": "owner",
+          "answer_type": "breakdown",
+          "depends_on": []
+        }
+      },
+      {
+        "status": "error",
+        "error_type": "ERROR",
+        "error": "The CRM schema does not store 'handling time' or 'agent duration' metrics for deals or activities. I can analyze lost reasons, forecast risks, or commercial paths, but I cannot correlate these with agent handling times as that data is not available in the graph.",
+        "rows": [],
+        "sql": "",
+        "tool": "kg",
+        "attempts_made": 1,
+        "task": {
+          "id": "t2",
+          "executor": "kg",
+          "kpi": null,
+          "goal": "Lost reasons, forecast stall, and commercial path for deals handled by agents with high vs low handling times",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "why_breakdown",
+          "depends_on": [
+            "t1"
+          ]
+        }
+      }
+    ],
+    "domain_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"deep\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"agent_operations\",\n      \"goal\": \"Average handling time by agent to identify the variance\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"dimension\": \"owner\",\n      \"answer_type\": \"breakdown\",\n      \"depends_on\": []\n    },\n    {\n      \"id\": \"t2\",\n      \"executor\": \"kg\",\n      \"kpi\": null,\n      \"goal\": \"Lost reasons, forecast stall, and commercial path for deals handled by agents with high vs low handling times\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"dimension\": null,\n      \"answer_type\": \"why_breakdown\",\n      \"depends_on\": [\n        \"t1\"\n      ]\n    }\n  ]\n}\n```",
+    "plan": {
+      "kind": "plan",
+      "depth": "deep",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "agent_operations",
+          "goal": "Average handling time by agent to identify the variance",
+          "time": "all time",
+          "scope": "org",
+          "dimension": "owner",
+          "answer_type": "breakdown",
+          "depends_on": []
+        },
+        {
+          "id": "t2",
+          "executor": "kg",
+          "kpi": null,
+          "goal": "Lost reasons, forecast stall, and commercial path for deals handled by agents with high vs low handling times",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "why_breakdown",
+          "depends_on": [
+            "t1"
+          ]
+        }
+      ]
+    },
+    "facts": "time_requested: all time\nperiod_applied: overall (no date filter, UTC)\ntime_status: all_time\ncatalog_kpi: agent_operations\nRESULT: 13 group(s)\ngroup_by: owner\ntotal_job_count: 2347\n  enrichment / enriched: 44\n  enrichment / skipped: 944\n  lifecycle / applied: 1\n  lifecycle / failed: 5\n  lifecycle / pending: 31\n  lifecycle / skipped: 23\n  lifecycle / waited: 394\n  nurture / analyzing: 7\n  nurture / pending: 4\n  nurture / sent: 101\n  nurture / skipped: 323\n  nurture / waited: 16\n  scoring / scored: 454\n\nEXECUTION_ERROR\ntime_requested: all time\ntime_status: kg\nerror_type: ERROR\nmessage: The CRM schema does not store 'handling time' or 'agent duration' metrics for deals or activities. I can analyze lost reasons, forecast risks, or commercial paths, but I cannot correlate these with agent handling times as that data is not available in the graph.\ntask_goal: Lost reasons, forecast stall, and commercial path for deals handled by agents with high vs low handling times",
+    "grounded": true,
+    "briefing_raw": "The requested data regarding \"average handling time\" is not available in the CRM, so a comparison of agent performance based on duration cannot be performed.\n\nThe available agent operations data for the overall period shows a total of 2,347 jobs across 13 owners. The breakdown of these operations is as follows:\n\n| Owner | Total Jobs |\n| :--- | :--- |\n| *Data unavailable for specific owner names in provided results* | 2,347 |\n\nThe operations consist primarily of scoring (454), nurture (sent: 101, skipped: 323, waited: 16), and lifecycle (waited: 394, skipped: 23, pending: 31). Because handling time metrics are not stored in the system, it is not possible to correlate these operational volumes with agent speed or duration."
+  }
+}

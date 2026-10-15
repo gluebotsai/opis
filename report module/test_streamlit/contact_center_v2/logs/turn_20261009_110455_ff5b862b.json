@@ -1,0 +1,60 @@
+{
+  "turn_id": "ff5b862b",
+  "timestamp": "2026-10-09T05:34:55.417811+00:00",
+  "question": "how many queued conversation overall",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1016,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong><Queued Conversations</strong></p><p>There are currently <strong>0</strong> conversations in queue.</p><p>Would you like to see how many conversations were queued earlier today?</p>",
+  "card": "card: none",
+  "facts": "result_id: r1\nwindow: now (live)\nkpi: waiting\ncertified: true\ntask_goal: Count the number of conversations currently in queue.\nanswer_type: number\nrow_count: 1\nrow 1: waiting=0",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1016,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "how many queued conversation overall",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants to know the total number of conversations currently in a queue.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Count the number of conversations currently in queue.",
+          "time": "now",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "waiting",
+        "row_count": 1
+      }
+    ],
+    "facts": "result_id: r1\nwindow: now (live)\nkpi: waiting\ncertified: true\ntask_goal: Count the number of conversations currently in queue.\nanswer_type: number\nrow_count: 1\nrow 1: waiting=0",
+    "grounded": true,
+    "card": "card: none"
+  },
+  "error": null
+}

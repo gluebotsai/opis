@@ -1,0 +1,216 @@
+version: 1
+description: >
+  Gold NL→SQL pairs for metric-miss / explore path. Retrieved lexically.
+  Never SELECT *. Always named columns. Latest-child uses DISTINCT ON.
+
+examples:
+  - id: handled_by_agent_channel
+    question: which agents handled more chats channel wise
+    aliases:
+      - which agents handled
+      - which agent handled
+      - handled by agent by channel
+      - agent volume by channel
+      - chats by agent and channel
+      - more chats channel wise
+    tables:
+      - ccass.conversations
+      - ccass.agents
+    join_path:
+      - ccass.conversations
+      - ccass.agents
+    sql: |
+      SELECT
+        a.display_name AS agent,
+        c.channel,
+        COUNT(*) AS conversations
+      FROM ccass.conversations c
+      JOIN ccass.agents a ON a.id = c.assigned_agent_id
+      WHERE (c.status IN ('resolved', 'closed') OR c.ended_at IS NOT NULL)
+        AND COALESCE(c.assigned_at, c.resolved_at, c.ended_at, c.created_at) >= TIMESTAMP '{{period_start}}'
+        AND COALESCE(c.assigned_at, c.resolved_at, c.ended_at, c.created_at) < TIMESTAMP '{{period_end}}'
+      GROUP BY a.display_name, c.channel
+      ORDER BY conversations DESC
+
+  - id: agent_messages_per_channel
+    question: how many agent messages per channel
+    aliases: [agent message volume, messages by channel, outbound agent replies]
+    tables:
+      - ccass.conversations
+      - ccass.conversation_messages
+    join_path:
+      - ccass.conversations
+      - ccass.conversation_messages
+    sql: |
+      SELECT c.channel, COUNT(*) AS agent_messages
+      FROM ccass.conversation_messages m
+      JOIN ccass.conversations c ON c.id = m.conversation_id
+      WHERE m.sender_type = 'agent'
+        AND m.created_at >= TIMESTAMP '{{period_start}}'
+        AND m.created_at < TIMESTAMP '{{period_end}}'
+      GROUP BY c.channel
+      ORDER BY agent_messages DESC
+
+  - id: disposition_mix_by_queue
+    question: disposition mix by queue
+    aliases: [outcomes by queue, disposition per queue, close reasons by queue]
+    tables:
+      - ccass.conversations
+      - ccass.conversation_dispositions
+      - ccass.dispositions
+      - ccass.queues
+    join_path:
+      - ccass.conversations
+      - ccass.queues
+      - ccass.conversation_dispositions
+      - ccass.dispositions
+    sql: |
+      WITH latest_disposition AS (
+        SELECT DISTINCT ON (cd.conversation_id)
+          cd.conversation_id,
+          d.label
+        FROM ccass.conversation_dispositions cd
+        JOIN ccass.dispositions d ON d.id = cd.disposition_id
+        ORDER BY cd.conversation_id, cd.applied_at DESC
+      )
+      SELECT
+        q.name AS queue,
+        ld.label AS disposition,
+        COUNT(*) AS conversations
+      FROM ccass.conversations c
+      JOIN ccass.queues q ON q.id = c.queue_id
+      JOIN latest_disposition ld ON ld.conversation_id = c.id
+      WHERE (c.status IN ('resolved', 'closed') OR c.ended_at IS NOT NULL)
+        AND COALESCE(c.assigned_at, c.resolved_at, c.ended_at, c.created_at) >= TIMESTAMP '{{period_start}}'
+        AND COALESCE(c.assigned_at, c.resolved_at, c.ended_at, c.created_at) < TIMESTAMP '{{period_end}}'
+      GROUP BY q.name, ld.label
+      ORDER BY conversations DESC
+
+  - id: daily_volume_by_channel
+    question: one line per channel by day
+    aliases: [day by channel, channel trend, volume per channel over time]
+    tables: [ccass.conversations]
+    sql: |
+      SELECT
+        DATE_TRUNC('day', COALESCE(assigned_at, resolved_at, ended_at, created_at))::date AS day,
+        channel,
+        COUNT(*) AS conversations
+      FROM ccass.conversations
+      WHERE (status IN ('resolved', 'closed') OR ended_at IS NOT NULL)
+        AND COALESCE(assigned_at, resolved_at, ended_at, created_at) >= TIMESTAMP '{{period_start}}'
+        AND COALESCE(assigned_at, resolved_at, ended_at, created_at) < TIMESTAMP '{{period_end}}'
+      GROUP BY 1, channel
+      ORDER BY 1, channel
+
+  - id: transfer_destinations
+    question: transfers by destination queue
+    aliases: [where did we transfer, transfer destination]
+    tables:
+      - ccass.conversation_transfers
+      - ccass.queues
+    join_path:
+      - ccass.conversation_transfers
+      - ccass.queues
+    sql: |
+      SELECT q.name AS destination_queue, COUNT(*) AS transfers
+      FROM ccass.conversation_transfers t
+      JOIN ccass.queues q ON q.id = t.to_queue_id
+      WHERE t.requested_at >= TIMESTAMP '{{period_start}}'
+        AND t.requested_at < TIMESTAMP '{{period_end}}'
+      GROUP BY q.name
+      ORDER BY transfers DESC
+
+  - id: offer_accept_rate
+    question: offer acceptance rate
+    aliases: [accepted offers, assignment accept]
+    tables: [ccass.conversation_assignments]
+    sql: |
+      SELECT
+        COUNT(*) FILTER (WHERE accepted_at IS NOT NULL) AS accepted,
+        COUNT(*) FILTER (WHERE expired_at IS NOT NULL) AS expired,
+        COUNT(*) FILTER (WHERE rejected_at IS NOT NULL) AS rejected,
+        COUNT(*) AS offered
+      FROM ccass.conversation_assignments
+      WHERE offered_at >= TIMESTAMP '{{period_start}}'
+        AND offered_at < TIMESTAMP '{{period_end}}'
+
+  - id: sla_breaches
+    question: SLA breaches
+    aliases: [breached sla, missed sla policy]
+    tables:
+      - ccass.conversations
+      - ccass.conversation_sla_state
+      - ccass.sla_policies
+    join_path:
+      - ccass.conversations
+      - ccass.conversation_sla_state
+      - ccass.sla_policies
+    sql: |
+      SELECT p.name AS sla_policy, COUNT(*) AS breached
+      FROM ccass.conversation_sla_state s
+      JOIN ccass.conversations c ON c.id = s.conversation_id
+      JOIN ccass.sla_policies p ON p.id = s.sla_policy_id
+      WHERE s.breached_at IS NOT NULL
+        AND s.breached_at >= TIMESTAMP '{{period_start}}'
+        AND s.breached_at < TIMESTAMP '{{period_end}}'
+      GROUP BY p.name
+      ORDER BY breached DESC
+
+  - id: ready_occupancy
+    question: agent ready vs busy time
+    aliases: [occupancy, presence mix, ready time]
+    tables:
+      - ccass.agents
+      - ccass.agent_presence_history
+    join_path:
+      - ccass.agents
+      - ccass.agent_presence_history
+    sql: |
+      SELECT
+        a.display_name,
+        h.new_state,
+        SUM(EXTRACT(EPOCH FROM (COALESCE(h.ended_at, NOW()) - h.started_at))) AS seconds
+      FROM ccass.agent_presence_history h
+      JOIN ccass.agents a ON a.id = h.agent_id
+      WHERE h.started_at >= TIMESTAMP '{{period_start}}'
+        AND h.started_at < TIMESTAMP '{{period_end}}'
+      GROUP BY a.display_name, h.new_state
+      ORDER BY a.display_name, seconds DESC
+
+  - id: avg_handle_time_by_channel
+    question: average handle time by channel
+    aliases: [aht by channel, handle time by channel, avg handle per channel]
+    tables: [ccass.conversations]
+    sql: |
+      SELECT
+        channel,
+        AVG(EXTRACT(EPOCH FROM (COALESCE(resolved_at, ended_at) - assigned_at)))
+          FILTER (
+            WHERE assigned_at IS NOT NULL
+              AND COALESCE(resolved_at, ended_at) IS NOT NULL
+          ) AS avg_handle_seconds,
+        COUNT(*) FILTER (WHERE status IN ('resolved', 'closed') OR ended_at IS NOT NULL)
+          AS conversations
+      FROM ccass.conversations
+      WHERE COALESCE(assigned_at, resolved_at, ended_at, created_at) >= TIMESTAMP '{{period_start}}'
+        AND COALESCE(assigned_at, resolved_at, ended_at, created_at) < TIMESTAMP '{{period_end}}'
+      GROUP BY channel
+      ORDER BY conversations DESC
+
+  - id: delivery_failures
+    question: message delivery failures
+    aliases: [failed delivery, retries, undelivered]
+    tables:
+      - ccass.conversation_messages
+      - ccass.message_delivery_attempts
+    join_path:
+      - ccass.conversation_messages
+      - ccass.message_delivery_attempts
+    sql: |
+      SELECT a.status, COUNT(*) AS attempts
+      FROM ccass.message_delivery_attempts a
+      JOIN ccass.conversation_messages m ON m.id = a.message_id
+      WHERE a.attempted_at >= TIMESTAMP '{{period_start}}'
+        AND a.attempted_at < TIMESTAMP '{{period_end}}'
+      GROUP BY a.status
+      ORDER BY attempts DESC

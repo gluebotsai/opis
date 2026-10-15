@@ -1,0 +1,174 @@
+# Certified Few-Shot SQL Examples for B2B CRM
+
+examples:
+  - id: count_total_deals_overall
+    goal: "How many deals are there in total?"
+    tags: [deals, count, total_deals, overall]
+    answer_type: kpi
+    role: admin
+    sql: |
+      SELECT COUNT(*)::bigint AS total_deals
+      FROM rpt.deals;
+
+  - id: rep_deals_lookup_by_id
+    goal: "How many deals are there for sales rep 1017?"
+    tags: [deals, rep, owner, user_id, 1017]
+    answer_type: list
+    role: admin
+    sql: |
+      SELECT id, title, stage, amount, COALESCE(currency_code, 'USD') AS currency_code, company_name, created_at
+      FROM rpt.deals
+      WHERE owner_user_id = 1017
+      ORDER BY created_at DESC;
+
+  - id: rep_deals_lookup_by_name
+    goal: "Show deals owned by Yaswanth"
+    tags: [deals, rep, owner, name, yaswanth]
+    answer_type: list
+    role: admin
+    sql: |
+      SELECT id, title, stage, amount, COALESCE(currency_code, 'USD') AS currency_code, company_name, created_at
+      FROM rpt.deals
+      WHERE owner_name ILIKE '%yaswanth%'
+      ORDER BY created_at DESC;
+
+  - id: total_active_pipeline
+    goal: "What is our total active pipeline value?"
+    tags: [pipeline, active, open_deals, currency]
+    answer_type: breakdown
+    role: admin
+    sql: |
+      SELECT 
+        COALESCE(currency_code, 'USD') AS currency_code,
+        COUNT(*)::bigint AS deal_count,
+        ROUND(SUM(amount), 2) AS total_pipeline
+      FROM rpt.deals
+      WHERE is_open = true
+      GROUP BY COALESCE(currency_code, 'USD')
+      ORDER BY total_pipeline DESC;
+
+  - id: pipeline_by_stage_breakdown
+    goal: "Show pipeline volume and amount by stage"
+    tags: [stage, pipeline, breakdown]
+    answer_type: breakdown
+    role: sales_manager
+    sql: |
+      SELECT 
+        stage,
+        COUNT(*)::bigint AS deal_count,
+        ROUND(SUM(amount), 2) AS total_amount,
+        ROUND(SUM(weighted_amount), 2) AS weighted_total
+      FROM rpt.deals
+      WHERE is_open = true
+      GROUP BY stage
+      ORDER BY total_amount DESC;
+
+  - id: pipeline_by_rep_ranking
+    goal: "Break down pipeline by sales rep"
+    tags: [owner, rep, ranking, pipeline]
+    answer_type: ranking
+    role: sales_manager
+    sql: |
+      SELECT 
+        COALESCE(owner_name, 'Unassigned') AS owner_name,
+        COUNT(*)::bigint AS deal_count,
+        ROUND(SUM(amount), 2) AS total_pipeline
+      FROM rpt.deals
+      WHERE is_open = true
+      GROUP BY COALESCE(owner_name, 'Unassigned')
+      ORDER BY total_pipeline DESC;
+
+  - id: list_overdue_invoices
+    goal: "List all overdue invoices and past due amounts"
+    tags: [invoices, overdue, ar, finance]
+    answer_type: list
+    role: finance
+    sql: |
+      SELECT invoice_number, company_name, total, currency_code, due_at, owner_name
+      FROM rpt.invoices
+      WHERE is_overdue = true
+      ORDER BY due_at ASC
+      LIMIT 50;
+
+  - id: top_open_opportunities_ranking
+    goal: "Show top 10 largest open opportunities"
+    tags: [opportunities, ranking, top_deals, largest]
+    answer_type: ranking
+    role: sales_manager
+    sql: |
+      SELECT id, title, amount, COALESCE(currency_code, 'USD') AS currency_code, stage, company_name, owner_name
+      FROM rpt.deals
+      WHERE is_open = true
+      ORDER BY amount DESC
+      LIMIT 10;
+
+  - id: lead_status_funnel_mix
+    goal: "What is our current lead status mix?"
+    tags: [contacts, leads, funnel, mix]
+    answer_type: breakdown
+    role: sales_manager
+    sql: |
+      SELECT 
+        lead_status,
+        COUNT(*)::bigint AS lead_count
+      FROM rpt.contacts
+      WHERE is_active = true
+        AND contact_type = 'lead'
+      GROUP BY lead_status
+      ORDER BY lead_count DESC;
+
+  - id: activity_volume_by_type
+    goal: "Show sales activity volume by type this month"
+    tags: [activities, volume, type, touches]
+    answer_type: breakdown
+    role: sales_manager
+    sql: |
+      SELECT 
+        type AS activity_type,
+        COUNT(*)::bigint AS activity_count
+      FROM rpt.activities
+      WHERE created_at >= :start AND created_at < :end
+      GROUP BY type
+      ORDER BY activity_count DESC;
+
+  - id: won_revenue_by_month
+    goal: "Show won revenue trend for the last 6 months"
+    tags: [revenue, trend, won_deals, monthly]
+    answer_type: trend
+    role: sales_manager
+    sql: |
+      SELECT 
+        TO_CHAR(close_ts, 'YYYY-MM') AS month,
+        COUNT(*)::bigint AS won_deal_count,
+        ROUND(SUM(amount), 2) AS won_revenue
+      FROM rpt.deals
+      WHERE is_won = true AND close_ts >= (NOW() - INTERVAL '6 months')
+      GROUP BY 1
+      ORDER BY month ASC;
+
+  - id: find_open_deals_named
+    goal: "Find open deals named expansion"
+    tags: [deals, list, find, name, ilike, expansion]
+    answer_type: list
+    role: admin
+    sql: |
+      SELECT id, title, stage, amount, COALESCE(currency_code, 'USD') AS currency_code, company_name, owner_name
+      FROM rpt.deals
+      WHERE is_open = TRUE
+        AND title ILIKE '%expansion%' ESCAPE '\'
+      ORDER BY created_at DESC
+      LIMIT 50;
+
+  - id: accounts_receivable_balance
+    goal: "What is our total outstanding invoice amount?"
+    tags: [invoices, outstanding, ar, collections]
+    answer_type: kpi
+    role: finance
+    sql: |
+      SELECT 
+        currency_code,
+        COUNT(*)::bigint AS invoice_count,
+        ROUND(SUM(total), 2) AS total_outstanding
+      FROM rpt.invoices
+      WHERE status IN ('sent', 'overdue')
+      GROUP BY currency_code;

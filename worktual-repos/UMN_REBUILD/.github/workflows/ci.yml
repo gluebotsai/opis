@@ -1,0 +1,72 @@
+name: ur-signaling CI
+
+# Runs when this directory is the GitHub Actions workflow root
+# (ur-signaling as repo root), or when the monorepo configures
+# a path filter / working-directory that uses this file.
+
+on:
+  push:
+    paths:
+      - "**"
+  pull_request:
+    paths:
+      - "**"
+
+jobs:
+  build-test:
+    runs-on: ubuntu-22.04
+    services:
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            cmake g++-12 pkg-config libhiredis-dev libsofia-sip-ua-dev redis-tools
+
+      - name: Build
+        working-directory: ${{ github.workspace }}
+        run: |
+          if [[ -f scripts/build.sh ]]; then
+            ROOT="."
+          elif [[ -f ur-signaling/scripts/build.sh ]]; then
+            ROOT="ur-signaling"
+          else
+            echo "ur-signaling tree not found" >&2
+            exit 1
+          fi
+          echo "ROOT=${ROOT}" >> "$GITHUB_ENV"
+          (cd "${ROOT}" && ./scripts/build.sh)
+
+      - name: Unit tests (ctest)
+        run: ctest --test-dir "${ROOT}/build" --output-on-failure
+
+      - name: Redis integration smokes
+        env:
+          UR_REDIS_PUBSUB_HOST: 127.0.0.1
+          UR_REDIS_PUBSUB_PORT: "6379"
+          UR_REDIS_PUBSUB_PASSWORD: ""
+          UR_REDIS_STORE_HOST: 127.0.0.1
+          UR_REDIS_STORE_PORT: "6379"
+          UR_REDIS_STORE_PASSWORD: ""
+        run: |
+          cd "${ROOT}"
+          CI_CFG=configs/ur-signaling.ci.json
+          ./scripts/redis-smoke.sh "${CI_CFG}"
+          ./scripts/interrogator-smoke.sh "${CI_CFG}"
+          ./scripts/controller-interrogator-smoke.sh "${CI_CFG}"
+          ./scripts/live-call-lookup-smoke.sh "${CI_CFG}"
+          ./scripts/redis-failover-smoke.sh "${CI_CFG}"
+          ./scripts/dual-subscriber-smoke.sh "${CI_CFG}"
+          ./scripts/invite-livecall-smoke.sh "${CI_CFG}"

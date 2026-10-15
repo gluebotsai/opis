@@ -1,0 +1,61 @@
+# Business Glossary — B2B CRM reporting
+# Meaning first. Do not pick a KPI because its name looks similar.
+
+terms:
+  deal:
+    definition: "An opportunity on rpt.deals. Words: deal, opportunity, pipeline, won, lost, stage, forecast."
+    maps_to_view: rpt.deals
+  lead:
+    definition: "A person on rpt.contacts whose CDP contact_type is lead. Not prospect, contact, or customer. Not a deal. How many leads = lead_count, not unassigned_leads and not all contacts."
+    maps_to_kpi: lead_count
+  contacted_lead:
+    definition: "Leads (contact_type = lead) whose lead_status is contacted. Not deal qualification. Not logged calls (that is activity_volume)."
+    maps_to_kpi: lead_count
+  unassigned_lead:
+    definition: "Active leads (contact_type = lead) with no owner. Only when they said unassigned / unowned / orphan."
+    maps_to_kpi: unassigned_leads
+  quote:
+    definition: "rpt.quotes. Quote acceptance is not win_rate."
+    maps_to_kpi: quote_acceptance_rate
+  invoice:
+    definition: "rpt.invoices. Paid invoices are collections. Unpaid are AR."
+    maps_to_view: rpt.invoices
+  activity:
+    definition: "Logged touches on rpt.activities (call, meeting, email, task). Not lead_status contacted."
+    maps_to_kpi: activity_volume
+  contract:
+    definition: "rpt.contracts. ARR and renewals. Not pipeline."
+    maps_to_kpi: contract_arr
+  pipeline:
+    definition: "SUM of open deal amount. Not booked revenue. Not collected cash."
+    maps_to_kpi: total_pipeline
+  weighted_pipeline:
+    definition: "Open deal amount times stage weight."
+    maps_to_kpi: weighted_pipeline
+  booked_revenue:
+    definition: "Closed-won deal amount. Sales default for the word revenue."
+    maps_to_kpi: won_revenue
+  collected_revenue:
+    definition: "Paid invoice total. Finance default for the word revenue."
+    maps_to_kpi: collected_revenue
+  revenue:
+    definition: "Ambiguous. Bookings = won_revenue. Collections = collected_revenue. Never add them. Admin bare revenue = both, labeled."
+    maps_to_kpi: null
+  ar:
+    definition: "Unpaid sent/overdue invoices."
+    maps_to_kpi: invoice_outstanding
+  win_rate:
+    definition: "Won deals / decided deals. Not quote acceptance."
+    maps_to_kpi: win_rate
+  aging:
+    definition: "One average of deal age in days."
+    maps_to_kpi: average_aging
+  aging_bands:
+    definition: "Deal age buckets. Only if they asked for bands."
+    maps_to_kpi: aging_bands
+  stagnant_deals:
+    definition: "Open deals with no recent activity."
+    maps_to_kpi: days_since_last_touch
+  arr:
+    definition: "Active contract ARR."
+    maps_to_kpi: contract_arr

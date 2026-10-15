@@ -1,0 +1,60 @@
+{
+  "turn_id": "4637da21",
+  "timestamp": "2026-10-09T11:50:04.815898+00:00",
+  "question": "average hold time.. ",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1016,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Average hold time</strong></p>\n<p>The average hold time for all time is <strong>0.00 minutes</strong>.</p>\n<p>Would you like to see this average broken down by channel or queue?</p>",
+  "card": "card: kpi r1",
+  "facts": "result_id: r1\nwindow: all time\nkpi: avg_hold_time\ncertified: true\nunit: minutes\ntask_goal: Calculate the average hold time.\nanswer_type: number\nrow_count: 1\nrow 1: avg_hold_time=0.00",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1016,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "average hold time.. ",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants to know the average hold time for all time.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Calculate the average hold time.",
+          "time": "all time",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "avg_hold_time",
+        "row_count": 1
+      }
+    ],
+    "facts": "result_id: r1\nwindow: all time\nkpi: avg_hold_time\ncertified: true\nunit: minutes\ntask_goal: Calculate the average hold time.\nanswer_type: number\nrow_count: 1\nrow 1: avg_hold_time=0.00",
+    "grounded": true,
+    "card": "card: kpi r1"
+  },
+  "error": null
+}

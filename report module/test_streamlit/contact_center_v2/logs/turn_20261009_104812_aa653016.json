@@ -1,0 +1,60 @@
+{
+  "turn_id": "aa653016",
+  "timestamp": "2026-10-09T05:18:12.743049+00:00",
+  "question": "how many conversations were transferred last 7 days?",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1016,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Transferred conversations</strong></p><p>There were <strong>0</strong> transferred conversations in the past 7 days (UTC).</p><p>Would you like to see which queues had the most transfers during this period?</p>",
+  "card": "card: none",
+  "facts": "result_id: r1\nwindow: past 7 days (UTC)\nkpi: transferred\ncertified: true\ntask_goal: Count the number of conversations that were transferred in the last 7 days.\nanswer_type: number\nrow_count: 1\nrow 1: transferred=0",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1016,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "how many conversations were transferred last 7 days?",
+    "plan": {
+      "kind": "plan",
+      "understanding": "Count the total number of conversations that were transferred in the last 7 days.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Count the number of conversations that were transferred in the last 7 days.",
+          "time": "last 7 days",
+          "scope": "org",
+          "slice": [],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "transferred",
+        "row_count": 1
+      }
+    ],
+    "facts": "result_id: r1\nwindow: past 7 days (UTC)\nkpi: transferred\ncertified: true\ntask_goal: Count the number of conversations that were transferred in the last 7 days.\nanswer_type: number\nrow_count: 1\nrow 1: transferred=0",
+    "grounded": true,
+    "card": "card: none"
+  },
+  "error": null
+}

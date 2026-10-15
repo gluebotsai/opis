@@ -1,0 +1,98 @@
+{
+  "question": "give me the open task count based on the agents",
+  "answer": "There are 5 open tasks in total.\n\nThe breakdown by agent is as follows:\n* Agent 1015: 3 open tasks\n* Agent 1028: 1 open task\n* Agent 1066: 1 open task",
+  "trace": {
+    "question": "give me the open task count based on the agents",
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1015,
+      "role": "admin"
+    },
+    "model": "worktual-gemma",
+    "tasks": [
+      {
+        "status": "ok",
+        "store": "sql",
+        "sql": "WITH rpt_activities AS (\nSELECT src.id, src.organization_id, src.activity_source, src.deal_id, src.contact_id, src.type, src.subject, src.body, src.task_status, src.due_at, src.completed_at, src.performed_by_user_id, src.assignee_user_id, src.created_at FROM (\nSELECT \n  id,\n  organization_id,\n  activity_source,\n  deal_id,\n  contact_id,\n  type,\n  subject,\n  body,\n  task_status,\n  due_at,\n  completed_at,\n  performed_by_user_id,\n  assignee_user_id,\n  created_at\nFROM (\n  SELECT \n    da.id,\n    da.organization_id,\n    'deal' AS activity_source,\n    da.deal_id,\n    NULL::text AS contact_id,\n    da.type::text AS type,\n    da.subject,\n    da.body,\n    NULL::text AS task_status,\n    da.due_at,\n    da.completed_at,\n    da.created_by_user_id AS performed_by_user_id,\n    NULL::bigint AS assignee_user_id,\n    da.created_at\n  FROM crm.deal_activities da\n  WHERE da.organization_id = %(_org_id)s\n  UNION ALL\n  SELECT \n    ca.id,\n    ca.organization_id,\n    'contact' AS activity_source,\n    NULL::text AS deal_id,\n    ca.contact_id,\n    ca.type::text AS type,\n    ca.subject,\n    ca.body,\n    ca.task_status::text AS task_status,\n    ca.due_at,\n    ca.completed_at,\n    ca.created_by_user_id AS performed_by_user_id,\n    ca.assignee_user_id,\n    ca.created_at\n  FROM crm.contact_activities ca\n  WHERE ca.organization_id = %(_org_id)s\n) u\n) src WHERE TRUE\n)\nSELECT assignee_user_id AS assignee_user_id, CAST(COUNT(*) AS BIGINT) AS open_task_count, CAST(COUNT(*) FILTER(WHERE due_at IS NOT NULL AND due_at < CURRENT_TIMESTAMP) AS BIGINT) AS overdue_task_count FROM rpt_activities AS activities WHERE type = 'task' AND task_status IN ('open', 'in_progress') AND TRUE AND TRUE AND TRUE GROUP BY assignee_user_id ORDER BY assignee_user_id ASC LIMIT 500",
+        "views": [
+          "activities"
+        ],
+        "guard_notes": [
+          "row cap 500 applied"
+        ],
+        "bound_params": {
+          "_org_id": 1003,
+          "_user_id": 1015,
+          "user_id": 1015,
+          "organization_id": 1003,
+          "org_id": 1003,
+          "tenant_id": 1003,
+          "current_user_id": 1015
+        },
+        "rows": [
+          {
+            "assignee_user_id": 1015,
+            "open_task_count": 3,
+            "overdue_task_count": 2
+          },
+          {
+            "assignee_user_id": 1028,
+            "open_task_count": 1,
+            "overdue_task_count": 1
+          },
+          {
+            "assignee_user_id": 1066,
+            "open_task_count": 1,
+            "overdue_task_count": 1
+          }
+        ],
+        "kpi_id": "open_task_count",
+        "time_status": "all_time",
+        "attempts": [
+          {
+            "raw": "{\"tool\":\"run_kpi\",\"kpi_id\":\"open_task_count\",\"dimension\":\"assignee_user_id\"}",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "open_task_count",
+              "dimension": "assignee_user_id"
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "tool": "run_kpi",
+        "requested_kpi": "open_task_count",
+        "requested_dimension": "assignee_user_id",
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "open_task_count",
+          "goal": "Count open tasks broken down by agent",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "breakdown",
+          "depends_on": []
+        }
+      }
+    ],
+    "domain_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"standard\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"open_task_count\",\n      \"goal\": \"Count open tasks broken down by agent\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"answer_type\": \"breakdown\",\n      \"depends_on\": []\n    }\n  ]\n}\n```",
+    "plan": {
+      "kind": "plan",
+      "depth": "standard",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "open_task_count",
+          "goal": "Count open tasks broken down by agent",
+          "time": "all time",
+          "scope": "org",
+          "answer_type": "breakdown",
+          "depends_on": []
+        }
+      ]
+    },
+    "facts": "time_requested: all time\nperiod_applied: overall (no date filter, UTC)\ntime_status: all_time\ncatalog_kpi: open_task_count\nRESULT: 3 group(s)\ngroup_by: group\ntotal_open_task_count: 5\n  1015 / 2: 3\n  1028 / 1: 1\n  1066 / 1: 1",
+    "grounded": true,
+    "briefing_raw": "There are 5 open tasks in total.\n\nThe breakdown by agent is as follows:\n* Agent 1015: 3 open tasks\n* Agent 1028: 1 open task\n* Agent 1066: 1 open task"
+  }
+}

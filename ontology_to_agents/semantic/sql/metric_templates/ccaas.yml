@@ -1,0 +1,671 @@
+metrics:
+  total_conversations:
+    product: ccaas
+    result_column: total_conversations
+    default_zero: true
+    sql: 'SELECT COUNT(conversation_id)::bigint AS total_conversations
+
+      FROM ccass_marts_aiccaas.mart_conversations
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  open_conversations:
+    product: ccaas
+    result_column: open_conversations
+    default_zero: true
+    sql: 'SELECT COUNT(conversation_id)::bigint AS open_conversations
+
+      FROM ccass_marts_aiccaas.mart_conversations
+
+      WHERE organization_id = %s AND is_open = true{{extra_where}}
+
+      '
+  ai_containment_rate:
+    product: ccaas
+    result_column: ai_containment_rate
+    sql: "SELECT\n  COUNT(*) FILTER (WHERE is_ai_only_completed = true)::float\n \
+      \ / NULLIF(COUNT(*), 0) AS ai_containment_rate\nFROM ccass_marts_aiccaas.mart_conversations\n\
+      WHERE organization_id = %s{{extra_where}}\n"
+  average_handle_time:
+    product: ccaas
+    result_column: average_handle_time
+    sql: "SELECT\n  SUM(human_handle_seconds)::float\n  / NULLIF(COUNT(*) FILTER (WHERE\
+      \ is_completed_leg = true), 0) AS average_handle_time\nFROM ccass_marts_aiccaas.mart_conversation_assignments\n\
+      WHERE organization_id = %s{{extra_where}}\n"
+  sla_breach_rate:
+    product: ccaas
+    result_column: sla_breach_rate
+    default_zero: true
+    time_column: updated_at
+    table: mart_conversation_sla_state
+    sql: "SELECT\n  COUNT(*) FILTER (WHERE breached_at IS NOT NULL)::float\n  / NULLIF(COUNT(*),\
+      \ 0) AS sla_breach_rate\nFROM ccass_marts_aiccaas.mart_conversation_sla_state\n\
+      WHERE organization_id = %s{{extra_where}}\n"
+  missed_contact_rate:
+    product: ccaas
+    result_column: missed_contact_rate
+    default_zero: true
+    time_column: offered_at
+    table: mart_conversation_assignments
+    sql: "SELECT\n  COUNT(*) FILTER (WHERE lower(state) IN ('rejected', 'expired'))::float\n\
+      \  / NULLIF(COUNT(*), 0) AS missed_contact_rate\nFROM ccass_marts_aiccaas.mart_conversation_assignments\n\
+      WHERE organization_id = %s{{extra_where}}\n"
+  agent_assist_adoption_rate:
+    product: ccaas
+    result_column: agent_assist_adoption_rate
+    time_column: created_at
+    table: mart_copilot_turns
+    sql: "SELECT\n  COUNT(*) FILTER (WHERE suggestion_disposition IN ('accepted',\
+      \ 'modified'))::float\n  / NULLIF(COUNT(*), 0) AS agent_assist_adoption_rate\n\
+      FROM ccass_marts_aiccaas.mart_copilot_turns\nWHERE organization_id = %s{{extra_where}}\n"
+    default_zero: true
+  agent_assist_modification_rate:
+    product: ccaas
+    result_column: agent_assist_modification_rate
+    time_column: created_at
+    table: mart_copilot_turns
+    sql: "SELECT\n  COUNT(*) FILTER (WHERE suggestion_disposition = 'modified')::float\n\
+      \  / NULLIF(\n    COUNT(*) FILTER (WHERE suggestion_disposition IN ('accepted',\
+      \ 'modified')),\n    0\n  ) AS agent_assist_modification_rate\nFROM ccass_marts_aiccaas.mart_copilot_turns\n\
+      WHERE organization_id = %s{{extra_where}}\n"
+  active_agents:
+    product: ccaas
+    result_column: active_agents
+    time_column: created_at
+    table: mart_agents
+    sql: 'SELECT COUNT(agent_id)::bigint AS active_agents
+
+      FROM ccass_marts_aiccaas.mart_agents
+
+      WHERE organization_id = %s{{extra_where}} AND lower(status) = ''active''
+
+      '
+  active_agents_setup:
+    product: ccaas
+    result_column: active_agents_setup
+    time_column: created_at
+    table: mart_setup_users
+    sql: 'SELECT COUNT(user_id)::bigint AS active_agents_setup
+
+      FROM ccass_marts_aiccaas.mart_setup_users
+
+      WHERE organization_id = %s{{extra_where}} AND lower(status) = ''active''
+
+      '
+  agent_assist_accepted_or_modified:
+    product: ccaas
+    result_column: agent_assist_accepted_or_modified
+    time_column: created_at
+    table: mart_copilot_turns
+    sql: 'SELECT COUNT(suggestion_id)::bigint AS agent_assist_accepted_or_modified
+
+      FROM ccass_marts_aiccaas.mart_copilot_turns
+
+      WHERE organization_id = %s{{extra_where}} AND suggestion_disposition IN (''accepted'',
+      ''modified'')
+
+      '
+  agent_assist_modified:
+    product: ccaas
+    result_column: agent_assist_modified
+    time_column: created_at
+    table: mart_copilot_turns
+    sql: 'SELECT COUNT(suggestion_id)::bigint AS agent_assist_modified
+
+      FROM ccass_marts_aiccaas.mart_copilot_turns
+
+      WHERE organization_id = %s{{extra_where}} AND suggestion_disposition = ''modified''
+
+      '
+  agent_assist_suggestions_total:
+    product: ccaas
+    result_column: agent_assist_suggestions_total
+    time_column: created_at
+    table: mart_copilot_turns
+    sql: 'SELECT COUNT(suggestion_id)::bigint AS agent_assist_suggestions_total
+
+      FROM ccass_marts_aiccaas.mart_copilot_turns
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  agents_assigned_callback:
+    product: ccaas
+    result_column: agents_assigned_callback
+    time_column: created_at
+    table: mart_agent_tasks
+    sql: 'SELECT COUNT(DISTINCT assigned_user_id)::bigint AS agents_assigned_callback
+
+      FROM ccass_marts_aiccaas.mart_agent_tasks
+
+      WHERE organization_id = %s{{extra_where}} AND lower(task_type) = ''callback''
+
+      '
+  ai_handover_rate:
+    product: ccaas
+    result_column: ai_handover_rate
+    time_column: created_at
+    table: mart_conversations
+    sql: "SELECT\n  COUNT(*) FILTER (WHERE had_handoff = true)::float\n  / NULLIF(COUNT(*),\
+      \ 0) AS ai_handover_rate\nFROM ccass_marts_aiccaas.mart_conversations\nWHERE\
+      \ organization_id = %s{{extra_where}}\n"
+    default_zero: true
+  ai_only_completed_conversations:
+    product: ccaas
+    result_column: ai_only_completed_conversations
+    time_column: created_at
+    table: mart_conversations
+    sql: 'SELECT COUNT(conversation_id)::bigint AS ai_only_completed_conversations
+
+      FROM ccass_marts_aiccaas.mart_conversations
+
+      WHERE organization_id = %s{{extra_where}} AND is_ai_only_completed = true
+
+      '
+  average_first_response_time:
+    product: ccaas
+    result_column: average_first_response_time
+    time_column: created_at
+    table: mart_conversations
+    sql: 'SELECT AVG(first_response_seconds)::float AS average_first_response_time
+
+      FROM ccass_marts_aiccaas.mart_conversations
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  average_speed_of_answer:
+    product: ccaas
+    result_column: average_speed_of_answer
+    time_column: created_at
+    table: mart_conversations
+    sql: 'SELECT AVG(speed_of_answer_seconds)::float AS average_speed_of_answer
+
+      FROM ccass_marts_aiccaas.mart_conversations
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  breached_sla_count:
+    product: ccaas
+    result_column: breached_sla_count
+    time_column: updated_at
+    table: mart_conversation_sla_state
+    sql: 'SELECT SUM(CASE WHEN breached_at IS NOT NULL THEN 1 ELSE 0 END) AS breached_sla_count
+
+      FROM ccass_marts_aiccaas.mart_conversation_sla_state
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  call_volume:
+    product: ccaas
+    result_column: call_volume
+    time_column: created_at
+    table: mart_conversations
+    sql: 'SELECT COUNT(conversation_id)::bigint AS call_volume
+
+      FROM ccass_marts_aiccaas.mart_conversations
+
+      WHERE organization_id = %s{{extra_where}} AND lower(channel) = ''voice''
+
+      '
+    default_zero: true
+  callback_tasks:
+    product: ccaas
+    result_column: callback_tasks
+    time_column: created_at
+    table: mart_agent_tasks
+    sql: 'SELECT COUNT(task_id)::bigint AS callback_tasks
+
+      FROM ccass_marts_aiccaas.mart_agent_tasks
+
+      WHERE organization_id = %s{{extra_where}} AND lower(task_type) = ''callback''
+
+      '
+  chat_volume:
+    product: ccaas
+    result_column: chat_volume
+    time_column: created_at
+    table: mart_conversations
+    sql: 'SELECT COUNT(conversation_id)::bigint AS chat_volume
+
+      FROM ccass_marts_aiccaas.mart_conversations
+
+      WHERE organization_id = %s{{extra_where}} AND lower(channel) != ''voice''
+
+      '
+    default_zero: true
+  completed_leg_count:
+    product: ccaas
+    result_column: completed_leg_count
+    time_column: offered_at
+    table: mart_conversation_assignments
+    sql: 'SELECT COUNT(*) FILTER (WHERE is_completed_leg = true)::bigint AS completed_leg_count
+
+      FROM ccass_marts_aiccaas.mart_conversation_assignments
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  email_volume:
+    product: ccaas
+    result_column: email_volume
+    time_column: created_at
+    table: mart_conversations
+    sql: 'SELECT COUNT(conversation_id)::bigint AS email_volume
+
+      FROM ccass_marts_aiccaas.mart_conversations
+
+      WHERE organization_id = %s{{extra_where}} AND lower(channel) = ''email''
+
+      '
+    default_zero: true
+  facebook_volume:
+    product: ccaas
+    result_column: facebook_volume
+    time_column: created_at
+    table: mart_conversations
+    sql: 'SELECT COUNT(conversation_id)::bigint AS facebook_volume
+
+      FROM ccass_marts_aiccaas.mart_conversations
+
+      WHERE organization_id = %s{{extra_where}} AND lower(channel) = ''facebook''
+
+      '
+    default_zero: true
+  follow_up_tasks:
+    product: ccaas
+    result_column: follow_up_tasks
+    time_column: created_at
+    table: mart_agent_tasks
+    sql: 'SELECT COUNT(task_id)::bigint AS follow_up_tasks
+
+      FROM ccass_marts_aiccaas.mart_agent_tasks
+
+      WHERE organization_id = %s{{extra_where}} AND lower(task_type) = ''follow_up''
+
+      '
+  handled_volume:
+    product: ccaas
+    result_column: handled_volume
+    time_column: created_at
+    table: mart_conversations
+    sql: 'SELECT COUNT(*) FILTER (WHERE is_handled = true)::bigint AS handled_volume
+
+      FROM ccass_marts_aiccaas.mart_conversations
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  handling_or_wrap_seconds:
+    product: ccaas
+    result_column: handling_or_wrap_seconds
+    time_column: started_at
+    table: mart_agent_presence_history
+    sql: 'SELECT SUM(interval_seconds) AS handling_or_wrap_seconds
+
+      FROM ccass_marts_aiccaas.mart_agent_presence_history
+
+      WHERE organization_id = %s{{extra_where}} AND is_handling_or_wrap = true
+
+      '
+  handoff_conversations:
+    product: ccaas
+    result_column: handoff_conversations
+    time_column: created_at
+    table: mart_conversations
+    sql: 'SELECT COUNT(conversation_id)::bigint AS handoff_conversations
+
+      FROM ccass_marts_aiccaas.mart_conversations
+
+      WHERE organization_id = %s{{extra_where}} AND had_handoff = true
+
+      '
+  handover_rate:
+    product: ccaas
+    result_column: handover_rate
+    time_column: requested_at
+    table: mart_conversation_transfers
+    sql: "SELECT\n  (SELECT COUNT(transfer_id)::bigint FROM ccass_marts_aiccaas.mart_conversation_transfers\
+      \ WHERE organization_id = %s{{extra_where}})::float\n  / NULLIF((SELECT COUNT(conversation_id)::bigint\
+      \ FROM ccass_marts_aiccaas.mart_conversations WHERE organization_id = %s{{extra_where}}),\
+      \ 0)\n  AS handover_rate\n"
+    default_zero: true
+  human_agent_occupancy_rate_capacity:
+    product: ccaas
+    result_column: human_agent_occupancy_rate_capacity
+    time_column: updated_at
+    table: mart_agent_capacity
+    sql: "SELECT\n  (SUM(active_count))::float\n  / NULLIF((SUM(max_concurrency)),\
+      \ 0) AS human_agent_occupancy_rate_capacity\nFROM ccass_marts_aiccaas.mart_agent_capacity\n\
+      WHERE organization_id = %s{{extra_where}}\n"
+    default_zero: true
+  human_agent_occupancy_rate_presence:
+    product: ccaas
+    result_column: human_agent_occupancy_rate_presence
+    time_column: started_at
+    table: mart_agent_presence_history
+    sql: "SELECT\n  (SUM(interval_seconds))::float\n  / NULLIF((SUM(interval_seconds)),\
+      \ 0) AS human_agent_occupancy_rate_presence\nFROM ccass_marts_aiccaas.mart_agent_presence_history\n\
+      WHERE organization_id = %s{{extra_where}} AND is_handling_or_wrap = true\n"
+    default_zero: true
+  human_handle_seconds_sum:
+    product: ccaas
+    result_column: human_handle_seconds_sum
+    time_column: offered_at
+    table: mart_conversation_assignments
+    sql: 'SELECT SUM(human_handle_seconds) AS human_handle_seconds_sum
+
+      FROM ccass_marts_aiccaas.mart_conversation_assignments
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  instagram_volume:
+    product: ccaas
+    result_column: instagram_volume
+    time_column: created_at
+    table: mart_conversations
+    sql: 'SELECT COUNT(conversation_id)::bigint AS instagram_volume
+
+      FROM ccass_marts_aiccaas.mart_conversations
+
+      WHERE organization_id = %s{{extra_where}} AND lower(channel) = ''instagram''
+
+      '
+    default_zero: true
+  logged_in_eligible_seconds:
+    product: ccaas
+    result_column: logged_in_eligible_seconds
+    time_column: started_at
+    table: mart_agent_presence_history
+    sql: 'SELECT SUM(interval_seconds) AS logged_in_eligible_seconds
+
+      FROM ccass_marts_aiccaas.mart_agent_presence_history
+
+      WHERE organization_id = %s{{extra_where}} AND is_logged_in_eligible = true
+
+      '
+  missed_assignments:
+    product: ccaas
+    result_column: missed_assignments
+    time_column: offered_at
+    table: mart_conversation_assignments
+    sql: 'SELECT COUNT(assignment_id)::bigint AS missed_assignments
+
+      FROM ccass_marts_aiccaas.mart_conversation_assignments
+
+      WHERE organization_id = %s{{extra_where}} AND lower(state) IN (''rejected'',
+      ''expired'')
+
+      '
+  open_agent_tasks:
+    product: ccaas
+    result_column: open_agent_tasks
+    time_column: created_at
+    table: mart_agent_tasks
+    sql: 'SELECT COUNT(task_id)::bigint AS open_agent_tasks
+
+      FROM ccass_marts_aiccaas.mart_agent_tasks
+
+      WHERE organization_id = %s{{extra_where}} AND lower(status) = ''open''
+
+      '
+  resolution_rate:
+    product: ccaas
+    result_column: resolution_rate
+    time_column: created_at
+    table: mart_conversations
+    sql: "SELECT\n  (COUNT(*) FILTER (WHERE is_resolved = true)::bigint)::float\n\
+      \  / NULLIF((COUNT(conversation_id)::bigint), 0) AS resolution_rate\nFROM ccass_marts_aiccaas.mart_conversations\n\
+      WHERE organization_id = %s{{extra_where}}\n"
+    default_zero: true
+  resolved_conversations_count:
+    product: ccaas
+    result_column: resolved_conversations_count
+    time_column: created_at
+    table: mart_conversations
+    sql: 'SELECT COUNT(*) FILTER (WHERE is_resolved = true)::bigint AS resolved_conversations_count
+
+      FROM ccass_marts_aiccaas.mart_conversations
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  resolved_dispositions:
+    product: ccaas
+    result_column: resolved_dispositions
+    time_column: applied_at
+    table: mart_conversation_dispositions
+    sql: 'SELECT COUNT(disposition_entry_id)::bigint AS resolved_dispositions
+
+      FROM ccass_marts_aiccaas.mart_conversation_dispositions
+
+      WHERE organization_id = %s{{extra_where}} AND lower(resolution_code) = ''resolved''
+
+      '
+  social_media_volume:
+    product: ccaas
+    result_column: social_media_volume
+    time_column: created_at
+    table: mart_conversations
+    sql: 'SELECT COUNT(conversation_id)::bigint AS social_media_volume
+
+      FROM ccass_marts_aiccaas.mart_conversations
+
+      WHERE organization_id = %s{{extra_where}} AND lower(channel) IN (''whatsapp'',
+      ''instagram'', ''facebook'')
+
+      '
+    default_zero: true
+  suggestion_tasks:
+    product: ccaas
+    result_column: suggestion_tasks
+    time_column: created_at
+    table: mart_agent_tasks
+    sql: 'SELECT COUNT(task_id)::bigint AS suggestion_tasks
+
+      FROM ccass_marts_aiccaas.mart_agent_tasks
+
+      WHERE organization_id = %s{{extra_where}} AND lower(task_type) = ''suggestion''
+
+      '
+  tool_executions_succeeded:
+    product: ccaas
+    result_column: tool_executions_succeeded
+    time_column: created_at
+    table: mart_copilot_skill_executions
+    sql: 'SELECT COUNT(execution_id)::bigint AS tool_executions_succeeded
+
+      FROM ccass_marts_aiccaas.mart_copilot_skill_executions
+
+      WHERE organization_id = %s{{extra_where}} AND lower(execution_status) = ''succeeded''
+
+      '
+  tool_executions_total:
+    product: ccaas
+    result_column: tool_executions_total
+    time_column: created_at
+    table: mart_copilot_skill_executions
+    sql: 'SELECT COUNT(execution_id)::bigint AS tool_executions_total
+
+      FROM ccass_marts_aiccaas.mart_copilot_skill_executions
+
+      WHERE organization_id = %s{{extra_where}} AND lower(execution_status) IN (''succeeded'',
+      ''failed'', ''cancelled'')
+
+      '
+  tool_success_rate:
+    product: ccaas
+    result_column: tool_success_rate
+    time_column: created_at
+    table: mart_copilot_skill_executions
+    sql: "SELECT\n  (COUNT(execution_id)::bigint)::float\n  / NULLIF((COUNT(execution_id)::bigint),\
+      \ 0) AS tool_success_rate\nFROM ccass_marts_aiccaas.mart_copilot_skill_executions\n\
+      WHERE organization_id = %s{{extra_where}} AND lower(execution_status) = 'succeeded'\n"
+    default_zero: true
+  total_active_agent_count:
+    product: ccaas
+    result_column: total_active_agent_count
+    time_column: updated_at
+    table: mart_agent_capacity
+    sql: 'SELECT SUM(active_count) AS total_active_agent_count
+
+      FROM ccass_marts_aiccaas.mart_agent_capacity
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+    default_zero: true
+  total_agent_capacity:
+    product: ccaas
+    result_column: total_agent_capacity
+    time_column: updated_at
+    table: mart_agent_capacity
+    sql: 'SELECT SUM(max_concurrency) AS total_agent_capacity
+
+      FROM ccass_marts_aiccaas.mart_agent_capacity
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  total_agents:
+    product: ccaas
+    result_column: total_agents
+    time_column: created_at
+    table: mart_agents
+    sql: 'SELECT COUNT(agent_id)::bigint AS total_agents
+
+      FROM ccass_marts_aiccaas.mart_agents
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  total_agents_setup:
+    product: ccaas
+    result_column: total_agents_setup
+    time_column: created_at
+    table: mart_setup_users
+    sql: 'SELECT COUNT(user_id)::bigint AS total_agents_setup
+
+      FROM ccass_marts_aiccaas.mart_setup_users
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  total_assignments:
+    product: ccaas
+    result_column: total_assignments
+    time_column: offered_at
+    table: mart_conversation_assignments
+    sql: 'SELECT COUNT(assignment_id)::bigint AS total_assignments
+
+      FROM ccass_marts_aiccaas.mart_conversation_assignments
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  total_queue_agent_assignments:
+    product: ccaas
+    result_column: total_queue_agent_assignments
+    time_column: created_at
+    table: mart_setup_ccaas_queue_agents
+    sql: 'SELECT COUNT(queue_agent_id)::bigint AS total_queue_agent_assignments
+
+      FROM ccass_marts_aiccaas.mart_setup_ccaas_queue_agents
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  total_queues_configured:
+    product: ccaas
+    result_column: total_queues_configured
+    time_column: created_at
+    table: mart_setup_ccaas_queues
+    sql: 'SELECT COUNT(queue_id)::bigint AS total_queues_configured
+
+      FROM ccass_marts_aiccaas.mart_setup_ccaas_queues
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  total_sla_states:
+    product: ccaas
+    result_column: total_sla_states
+    time_column: updated_at
+    table: mart_conversation_sla_state
+    sql: 'SELECT COUNT(sla_state_id)::bigint AS total_sla_states
+
+      FROM ccass_marts_aiccaas.mart_conversation_sla_state
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  total_teams:
+    product: ccaas
+    result_column: total_teams
+    time_column: created_at
+    table: mart_setup_teams
+    sql: 'SELECT COUNT(team_id)::bigint AS total_teams
+
+      FROM ccass_marts_aiccaas.mart_setup_teams
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  total_transfers:
+    product: ccaas
+    result_column: total_transfers
+    time_column: requested_at
+    table: mart_conversation_transfers
+    sql: 'SELECT COUNT(transfer_id)::bigint AS total_transfers
+
+      FROM ccass_marts_aiccaas.mart_conversation_transfers
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  unique_contacts_handled:
+    product: ccaas
+    result_column: unique_contacts_handled
+    time_column: created_at
+    table: mart_conversations
+    sql: 'SELECT COUNT(DISTINCT contact_id)::bigint AS unique_contacts_handled
+
+      FROM ccass_marts_aiccaas.mart_conversations
+
+      WHERE organization_id = %s{{extra_where}}
+
+      '
+  webchat_volume:
+    product: ccaas
+    result_column: webchat_volume
+    time_column: created_at
+    table: mart_conversations
+    sql: 'SELECT COUNT(conversation_id)::bigint AS webchat_volume
+
+      FROM ccass_marts_aiccaas.mart_conversations
+
+      WHERE organization_id = %s{{extra_where}} AND lower(channel) = ''webchat''
+
+      '
+    default_zero: true
+  whatsapp_volume:
+    product: ccaas
+    result_column: whatsapp_volume
+    time_column: created_at
+    table: mart_conversations
+    sql: 'SELECT COUNT(conversation_id)::bigint AS whatsapp_volume
+
+      FROM ccass_marts_aiccaas.mart_conversations
+
+      WHERE organization_id = %s{{extra_where}} AND lower(channel) = ''whatsapp''
+
+      '
+    default_zero: true

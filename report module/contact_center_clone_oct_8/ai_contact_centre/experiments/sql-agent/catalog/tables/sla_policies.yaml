@@ -1,0 +1,14 @@
+name: ccass.sla_policies
+alias: p
+schema: ccass
+grain: policy
+purpose: Tenant SLA thresholds. Dashboard KPI still uses 60s unless this path is requested.
+columns:
+  - { name: id, type: bigint, pk: true, description: Policy id }
+  - { name: organization_id, type: bigint, description: Tenant id }
+  - { name: name, type: text, description: Policy name }
+  - { name: first_response_seconds, type: int, description: First-response target }
+  - { name: resolution_seconds, type: int, description: Resolution target }
+  - { name: is_active, type: boolean, description: Active }
+sample_rows:
+  - { id: 1, name: Standard chat SLA, first_response_seconds: 60, resolution_seconds: 3600, is_active: true }

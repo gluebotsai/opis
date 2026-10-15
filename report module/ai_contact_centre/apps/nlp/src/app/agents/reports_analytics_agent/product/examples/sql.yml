@@ -1,0 +1,37 @@
+# Free-SQL few-shots only. Runtime similarity-picks a few. Never inject whole.
+version: 1
+examples:
+  - goal: list conversations for a customer named Acme
+    sql: |
+      SELECT customer_name, channel, status, queue_name, created_at
+      FROM rpt.conversations
+      WHERE customer_name ILIKE '%acme%'
+      ORDER BY created_at DESC
+      LIMIT 50
+  - goal: conversations whose subject mentions billing
+    sql: |
+      SELECT subject, channel, status, queue_name, created_at
+      FROM rpt.conversations
+      WHERE subject ILIKE '%billing%'
+      LIMIT 50
+  - goal: who is ready right now
+    sql: |
+      SELECT a.display_name, p.presence_state
+      FROM rpt.agents a
+      JOIN rpt.presence p ON p.agent_id = a.id
+      WHERE p.presence_state = 'ready'
+      LIMIT 50
+  - goal: list conversations that were transferred
+    sql: |
+      SELECT customer_name, channel, status, queue_name, transferred_at, created_at
+      FROM rpt.conversations
+      WHERE transferred_at IS NOT NULL
+      ORDER BY transferred_at DESC
+      LIMIT 50
+  - goal: missed contacts with reason offer timeout
+    sql: |
+      SELECT missed_at, reason_label, queue_name, agent_name, customer_name
+      FROM rpt.missed_contacts
+      WHERE reason_label = 'offer_timeout'
+      ORDER BY missed_at DESC
+      LIMIT 50

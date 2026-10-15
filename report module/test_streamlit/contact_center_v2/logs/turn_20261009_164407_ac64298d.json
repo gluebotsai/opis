@@ -1,0 +1,62 @@
+{
+  "turn_id": "ac64298d",
+  "timestamp": "2026-10-09T11:14:07.960742+00:00",
+  "question": "give me the conversation count breakdown by the channel",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1016,
+    "role": "admin",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>Conversation count by channel</strong></p>\n<p>For all time, the total number of started conversations is:</p>\n<ul>\n<li><strong>webchat</strong>: <strong>364</strong> conversations</li>\n<li><strong>call</strong>: <strong>212</strong> conversations</li>\n<li><strong>facebook</strong>: <strong>10</strong> conversations</li>\n<li><strong>instagram</strong>: <strong>10</strong> conversations</li>\n<li><strong>whatsapp</strong>: <strong>28</strong> conversations</li>\n<li><strong>email</strong>: <strong>6</strong> conversations</li>\n</ul>\n<p>Would you like to see how these conversation volumes have changed day by day?</p>",
+  "card": "card: bar r1",
+  "facts": "result_id: r1\nwindow: all time\nkpi: total\ncertified: true\nunit: conversations\ntask_goal: Count the number of started conversations split by channel.\nanswer_type: number\nrow_count: 6\nrow 1: channel=email; total=6\nrow 2: channel=facebook; total=10\nrow 3: channel=instagram; total=10\nrow 4: channel=webchat; total=364\nrow 5: channel=whatsapp; total=28\nrow 6: channel=call; total=212",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1016,
+      "role": "admin",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "give me the conversation count breakdown by the channel",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants to see the total number of conversations broken down by channel.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Count the number of started conversations split by channel.",
+          "time": "all time",
+          "scope": "org",
+          "slice": [
+            "channel"
+          ],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": true,
+        "kpi_id": "total",
+        "row_count": 6
+      }
+    ],
+    "facts": "result_id: r1\nwindow: all time\nkpi: total\ncertified: true\nunit: conversations\ntask_goal: Count the number of started conversations split by channel.\nanswer_type: number\nrow_count: 6\nrow 1: channel=email; total=6\nrow 2: channel=facebook; total=10\nrow 3: channel=instagram; total=10\nrow 4: channel=webchat; total=364\nrow 5: channel=whatsapp; total=28\nrow 6: channel=call; total=212",
+    "grounded": true,
+    "card": "card: bar r1"
+  },
+  "error": null
+}

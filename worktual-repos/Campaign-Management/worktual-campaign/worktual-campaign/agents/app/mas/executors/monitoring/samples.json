@@ -1,0 +1,32 @@
+[
+  {
+    "id": "monitor-campaign-report",
+    "title": "Load campaign performance report",
+    "turns": [
+      {
+        "role": "user",
+        "content": "Show the report for campaign 1060"
+      },
+      {
+        "role": "assistant",
+        "content": "<p>Here is the performance summary for campaign <strong>1060</strong>.</p>",
+        "tools": ["GET_CAMPAIGN_REPORT"]
+      }
+    ]
+  },
+  {
+    "id": "monitor-list-live",
+    "title": "List campaigns to monitor",
+    "turns": [
+      {
+        "role": "user",
+        "content": "Which campaigns are live right now?"
+      },
+      {
+        "role": "assistant",
+        "content": "<p>Here are the campaigns available to monitor.</p>",
+        "tools": ["LIST_MONITOR_CAMPAIGNS"]
+      }
+    ]
+  }
+]

@@ -1,0 +1,36 @@
+# Module: compliance
+module: compliance
+layer: product
+depends_on: [core]
+usecase: >
+  Super Agent policy (consent, recording) and Real-Time Compliance
+  (disclosures, prohibited language, risky actions on live turns).
+
+classes:
+  - id: RecordingPolicy
+    definition: Whether the channel may record and what must be disclosed.
+    properties: [recordingAllowed, disclosureRequired]
+    relations:
+      onChannel: Channel
+      requiresConsent: Consent
+
+  - id: ComplianceViolation
+    definition: Detected prohibited language or missing disclosure.
+    properties: [code, severity]
+    relations:
+      onInteraction: Conversation
+
+relations:
+  - { from: RecordingPolicy, type: ON_CHANNEL, to: Channel }
+  - { from: RecordingPolicy, type: REQUIRES, to: Consent }
+  - { from: ComplianceViolation, type: ON, to: Conversation }
+
+actions:
+  - id: action.check_compliance
+    operates_on: [Conversation, RecordingPolicy]
+    mutates: false
+    requires: []
+
+  - id: action.block_risky_action
+    operates_on: [ComplianceViolation]
+    definition: Harness/policy blocks the tool; agent must not proceed.

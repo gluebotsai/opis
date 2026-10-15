@@ -1,0 +1,224 @@
+version: 1
+examples:
+
+  - intent: "conversation_volume"
+    user_query: "What is the total number of customer conversations across all time?"
+    cypher: |
+      MATCH (c:Conversation)
+      RETURN count(c) AS total_conversations,
+             count(DISTINCT c.visitor_id) AS unique_customers
+      LIMIT 100
+
+  - intent: "average_handle_time"
+    user_query: "What is our average handle time across calls and webchat?"
+    cypher: |
+      MATCH (c:Conversation)
+      WHERE c.created_at IS NOT NULL AND c.ended_at IS NOT NULL
+      RETURN coalesce(c.channel, 'all') AS channel,
+             count(c) AS conversations_measured,
+             round(avg(duration.between(c.created_at, c.ended_at).seconds), 1) AS avg_handle_time_seconds,
+             round(avg(duration.between(c.created_at, c.ended_at).seconds) / 60.0, 2) AS avg_handle_time_minutes
+      ORDER BY conversations_measured DESC
+      LIMIT 10
+
+  - intent: "resolution_rate"
+    user_query: "What is our first contact resolution rate and outcome breakdown?"
+    cypher: |
+      MATCH (c:Conversation)
+      WHERE c.resolution_code IS NOT NULL
+      RETURN count(c) AS total_evaluated,
+             count(CASE WHEN toLower(c.resolution_code) = 'resolved' THEN 1 END) AS resolved_count,
+             count(CASE WHEN toLower(c.resolution_code) = 'unresolved' THEN 1 END) AS unresolved_count,
+             CASE WHEN count(c) > 0 
+                  THEN round(100.0 * count(CASE WHEN toLower(c.resolution_code) = 'resolved' THEN 1 END) / count(c), 2)
+                  ELSE 0.0 
+             END AS resolution_rate_pct
+      LIMIT 10
+
+  - intent: "unresolved_causes"
+    user_query: "Why were customer conversations unresolved and what were the root causes?"
+    cypher: |
+      MATCH (c:Conversation)
+      WHERE toLower(c.resolution_code) = 'unresolved' AND c.custom_conclusion IS NOT NULL
+      RETURN c.id AS conversation_id,
+             c.channel AS channel,
+             c.custom_conclusion AS root_cause,
+             coalesce(c.end_reason, 'unspecified') AS end_reason,
+             coalesce(c.end_actor, 'agent') AS end_actor
+      LIMIT 10
+
+  - intent: "queue_performance"
+    user_query: "Which support queues have handled the most conversations?"
+    cypher: |
+      MATCH (c:Conversation)-[:ROUTED_TO]->(q)
+      WHERE q:ContactCentreQueue OR q:Queue OR q:LiveRoutingProfile
+      RETURN coalesce(q.name, q.queue_name, 'Queue ' + toString(q.id)) AS queue_name,
+             count(c) AS conversation_volume
+      ORDER BY conversation_volume DESC
+      LIMIT 10
+
+  - intent: "queue_wait_times"
+    user_query: "What is our average queue wait time before an agent is assigned?"
+    cypher: |
+      MATCH (c:Conversation)-[:ROUTED_TO]->(q)
+      WHERE c.queued_at IS NOT NULL AND c.assigned_at IS NOT NULL
+      RETURN coalesce(q.name, 'Support Queue') AS queue_name,
+             count(c) AS conversations_queued,
+             round(avg(duration.between(c.queued_at, c.assigned_at).seconds), 1) AS avg_wait_time_sec,
+             min(duration.between(c.queued_at, c.assigned_at).seconds) AS min_wait_sec,
+             max(duration.between(c.queued_at, c.assigned_at).seconds) AS max_wait_sec
+      ORDER BY conversations_queued DESC
+      LIMIT 10
+
+  - intent: "first_response_time"
+    user_query: "What is our average first response time across customer channels?"
+    cypher: |
+      MATCH (c:Conversation)
+      WHERE c.first_response_at IS NOT NULL
+      RETURN c.channel AS channel,
+             count(c) AS conversations_measured,
+             round(avg(duration.between(c.created_at, c.first_response_at).seconds), 1) AS avg_frt_seconds,
+             round(avg(duration.between(c.created_at, c.first_response_at).seconds) / 60.0, 2) AS avg_frt_minutes
+      ORDER BY conversations_measured DESC
+      LIMIT 10
+
+  - intent: "agent_workload"
+    user_query: "How many conversations has each support agent handled?"
+    cypher: |
+      MATCH (c:Conversation)-[:HANDLED_BY]->(s)
+      WHERE s:ContactCentreAgent OR s:Staff OR s:ContactCentreStaff
+      RETURN coalesce(s.display_name, s.email, s.support_email, 'Agent ' + toString(s.id)) AS agent_name,
+             count(c) AS handled_count,
+             round(avg(duration.between(c.created_at, c.ended_at).seconds), 1) AS avg_duration_sec
+      ORDER BY handled_count DESC
+      LIMIT 10
+
+  - intent: "unresolved_transfers_root_cause"
+    user_query: "Why do unresolved conversations happen more often in queues with frequent transfers?"
+    cypher: |
+      MATCH (c:Conversation)
+      WHERE toLower(c.resolution_code) = 'unresolved'
+      OPTIONAL MATCH (c)-[:ROUTED_TO]->(q)
+      OPTIONAL MATCH (c)-[:HANDLED_BY]->(a)
+      RETURN coalesce(q.name, q.queue_name, 'Queue ' + toString(c.queue_id)) AS queue_name,
+             coalesce(c.queue_id, q.id) AS queue_id,
+             coalesce(a.display_name, a.email, 'Agent ' + toString(c.assigned_agent_id)) AS agent_name,
+             coalesce(c.assigned_agent_id, a.id) AS assigned_agent_id,
+             coalesce(c.end_actor, 'unspecified') AS end_actor,
+             coalesce(c.end_reason, 'unspecified') AS end_reason,
+             coalesce(c.disposition_code, 'none') AS disposition_code,
+             count(c) AS unresolved_count,
+             round(avg(duration.between(c.created_at, c.ended_at).seconds), 1) AS avg_duration_sec,
+             collect(DISTINCT c.custom_conclusion)[..3] AS sample_conclusions
+      ORDER BY unresolved_count DESC
+      LIMIT 10
+
+  - intent: "abandonment_analysis"
+    user_query: "Why did conversations disconnect and how many were customer-initiated?"
+    cypher: |
+      MATCH (c:Conversation)
+      WHERE c.end_reason IN ['idle_timeout', 'visitor_disconnected', 'customer_abandon', 'caller_disconnected', 'customer_ended', 'browser_disconnected']
+         OR c.end_actor = 'customer'
+      RETURN coalesce(c.end_reason, 'disconnected') AS end_reason,
+             coalesce(c.end_actor, 'customer') AS end_actor,
+             count(*) AS dropped_conversations
+      ORDER BY dropped_conversations DESC
+      LIMIT 10
+
+  - intent: "channel_distribution"
+    user_query: "What is the breakdown of conversations across channels like webchat and voice?"
+    cypher: |
+      MATCH (c:Conversation)
+      RETURN coalesce(c.channel, 'unknown') AS channel,
+             count(*) AS volume
+      ORDER BY volume DESC
+      LIMIT 10
+
+  - intent: "channel_comparison_root_cause"
+    user_query: "Why is web-chat higher volume than email, and why do channels differ?"
+    cypher: |
+      MATCH (c:Conversation)
+      WHERE c.channel IS NOT NULL
+      WITH c.channel AS channel,
+           count(c) AS conversation_volume,
+           count(DISTINCT c.visitor_id) AS unique_visitors,
+           collect(DISTINCT coalesce(c.end_reason, 'active/in_progress'))[..4] AS common_end_reasons,
+           collect(DISTINCT coalesce(c.subject, 'Storefront Live Chat'))[..4] AS sample_subjects,
+           count(CASE WHEN c.bot_active = true THEN 1 END) AS bot_active_count,
+           count(CASE WHEN toLower(c.end_actor) = 'customer' THEN 1 END) AS customer_ended_count,
+           round(avg(duration.between(c.created_at, c.ended_at).seconds), 1) AS avg_duration_seconds
+      RETURN channel,
+             conversation_volume,
+             unique_visitors,
+             bot_active_count,
+             customer_ended_count,
+             sample_subjects,
+             common_end_reasons,
+             avg_duration_seconds
+      ORDER BY conversation_volume DESC
+      LIMIT 10
+
+  - intent: "conversation_summaries"
+    user_query: "Show me recent conversation resolution summaries and subjects"
+    cypher: |
+      MATCH (c:Conversation)
+      WHERE c.resolution_summary IS NOT NULL OR c.subject IS NOT NULL
+      RETURN c.id AS conversation_id,
+             c.subject AS subject,
+             coalesce(c.resolution_summary, c.custom_conclusion, 'Session ended') AS resolution_summary,
+             c.channel AS channel,
+             c.created_at AS created_at
+      ORDER BY c.created_at DESC
+      LIMIT 5
+
+  - intent: "business_hours_and_shifts"
+    user_query: "What are our contact center operating hours and shift schedules?"
+    cypher: |
+      MATCH (bh:BusinessHours)-[:HAS_SHIFT]->(sh:Shift)
+      RETURN bh.name AS schedule_name,
+             bh.timezone AS timezone,
+             sh.day_of_week AS day_of_week,
+             sh.shift_type AS shift_type,
+             sh.start_time AS start_time,
+             sh.end_time AS end_time
+      ORDER BY sh.day_of_week, sh.start_time
+      LIMIT 14
+
+  - intent: "bot_escalation_and_missed_contacts"
+    user_query: "Why do missed conversations happen more often after bot escalation?"
+    cypher: |
+      MATCH (c:Conversation)
+      WHERE c.handoff_reason IS NOT NULL 
+         OR exists((c)-[:HAS]->(:MissedContact))
+         OR any(f IN coalesce(c.facts, []) WHERE f IN ['live_agent_unavailable', 'no_ready_agents'])
+      OPTIONAL MATCH (c)-[:HAS]->(mc:MissedContact)
+      OPTIONAL MATCH (c)-[:ROUTED_TO]->(q)
+      OPTIONAL MATCH (c)-[:HANDLED_BY]->(a)
+      RETURN c.id AS conversation_id,
+             c.channel AS channel,
+             c.handoff_reason AS handoff_reason,
+             coalesce(mc.reason, 'none') AS missed_contact_reason,
+             coalesce(mc.custom_reasonCode, 'none') AS missed_reason_code,
+             coalesce(q.name, 'Support Queue') AS queue_name,
+             coalesce(a.display_name, 'None (Unassigned)') AS assigned_agent,
+             c.status AS status,
+             coalesce(c.resolution_code, 'none') AS resolution_code,
+             c.end_actor AS end_actor,
+             c.end_reason AS end_reason,
+             c.facts AS telemetry_facts,
+             c.summary AS system_summary
+      ORDER BY c.id DESC
+      LIMIT 20
+
+  - intent: "bot_sessions_and_handoff_volume"
+    user_query: "Why do some bot sessions generate more messages before escalation than others?"
+    cypher: |
+      MATCH (c:Conversation)
+      RETURN c.channel AS channel,
+             count(c) AS total_conversations,
+             count(CASE WHEN c.handoff_reason IS NOT NULL THEN 1 END) AS handoffs_requested,
+             count(CASE WHEN exists((c)-[:HAS]->(:MissedContact)) THEN 1 END) AS missed_contacts_logged,
+             count(CASE WHEN any(f IN coalesce(c.facts, []) WHERE f = 'no_ready_agents') THEN 1 END) AS no_ready_agent_failures,
+             count(CASE WHEN c.assigned_agent_id IS NOT NULL THEN 1 END) AS transferred_to_human_staff,
+             round(avg(duration.between(c.created_at, c.ended_at).seconds), 1) AS avg_duration_seconds
+      ORDER BY total_conversations DESC

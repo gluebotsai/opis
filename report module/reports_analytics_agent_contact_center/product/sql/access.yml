@@ -1,0 +1,119 @@
+version: 1
+# Runtime enforces this file. Identity comes only from trusted context.
+# SQL-only Contact Center reporting (2 role tiers: admin, agent).
+
+roles:
+  admin:
+    default_scope: org
+    my_conversations_column: assigned_agent_id
+    can_create_conversations: false
+  agent:
+    default_scope: own
+    my_conversations_column: assigned_agent_id
+    can_create_conversations: false
+
+scope_levels:
+  - org
+  - own
+  - queue
+  - agent
+
+matrix:
+  org:
+    admin: all
+    agent: deny
+  own:
+    admin: all
+    agent: all
+  queue:
+    admin: all
+    agent: all_in_my_queues
+  agent:
+    admin: all
+    agent: deny
+
+queue_membership:
+  table: ccass.queue_members
+  queue_column: queue_id
+  user_column: agent_id
+
+column_masking:
+  personal_data_roles:
+    admin: show
+    agent: show_own_scope
+
+# ---------------------------------------------------------------------------
+# Virtual views for LLM-written SQL (sql_guard). One entry per role.
+# Scoped CTEs injected at execution time.
+#
+#   scope:  SQL predicate on the view's source columns (applied inside the CTE)
+#   mask:   column -> SQL expression that replaces the value for this role
+#
+# Macros filled by Python with bound parameters:
+#   {org_id} {user_id} {queue_ids}
+#   {visible_conversations_where} = the role's conversations scope
+# ---------------------------------------------------------------------------
+views:
+
+  admin:
+    conversations:        { scope: "TRUE" }
+    conversation_facts:   { scope: "TRUE" }
+    assignments:          { scope: "TRUE" }
+    transfers:            { scope: "TRUE" }
+    presence:             { scope: "TRUE" }
+    messages:             { scope: "TRUE" }
+    bot_turns:            { scope: "TRUE" }
+    copilot_turns:        { scope: "TRUE" }
+    missed_contacts:      { scope: "TRUE" }
+    calls:                { scope: "TRUE" }
+    agents:               { scope: "TRUE" }
+    queues:               { scope: "TRUE" }
+    sentiment:            { scope: "TRUE" }
+    tasks:                { scope: "TRUE" }
+    capacity:             { scope: "TRUE" }
+    routing_attempts:     { scope: "TRUE" }
+
+  agent:
+    conversations:
+      scope: "(assigned_agent_id = {user_id} OR queue_id = ANY({queue_ids}))"
+      mask:
+        assigned_agent_id: "CASE WHEN assigned_agent_id IS NULL OR assigned_agent_id = {user_id} THEN assigned_agent_id ELSE -1 END"
+        agent_name: "CASE WHEN assigned_agent_id IS NULL OR assigned_agent_id = {user_id} THEN agent_name ELSE 'Another agent' END"
+    conversation_facts:
+      scope: "(assigned_agent_id = {user_id} OR queue_id = ANY({queue_ids}))"
+      mask:
+        assigned_agent_id: "CASE WHEN assigned_agent_id IS NULL OR assigned_agent_id = {user_id} THEN assigned_agent_id ELSE -1 END"
+        agent_name: "CASE WHEN assigned_agent_id IS NULL OR assigned_agent_id = {user_id} THEN agent_name ELSE 'Another agent' END"
+    assignments:
+      scope: "queue_id = ANY({queue_ids})"
+      mask:
+        agent_id: "CASE WHEN agent_id = {user_id} THEN agent_id ELSE -1 END"
+        agent_name: "CASE WHEN agent_id = {user_id} THEN agent_name ELSE 'Another agent' END"
+    transfers:
+      scope: "(from_agent_id = {user_id} OR to_agent_id = {user_id} OR from_queue_id = ANY({queue_ids}) OR to_queue_id = ANY({queue_ids}))"
+    presence:
+      scope: "agent_id = {user_id}"
+    messages:
+      scope: "conversation_id IN (SELECT id FROM ccass.conversations WHERE {visible_conversations_where})"
+    bot_turns:
+      scope: "conversation_id IN (SELECT id FROM ccass.conversations WHERE {visible_conversations_where})"
+    copilot_turns:
+      scope: "agent_id = {user_id}"
+    missed_contacts:
+      scope: "agent_id = {user_id}"
+    calls:
+      scope: "queue_id = ANY({queue_ids})"
+      mask:
+        agent_ext: "CASE WHEN agent_ext = {user_ext} THEN agent_ext ELSE NULL END"
+    agents:
+      scope: "(id = {user_id} OR id IN (SELECT agent_id FROM ccass.queue_members WHERE queue_id = ANY({queue_ids})))"
+    queues:
+      scope: "id = ANY({queue_ids})"
+    sentiment:
+      scope: "conversation_id IN (SELECT id FROM ccass.conversations WHERE {visible_conversations_where})"
+    tasks:
+      scope: "assigned_user_id = {user_id}"
+    capacity:
+      scope: "agent_id = {user_id}"
+    routing_attempts:
+      scope: "queue_id = ANY({queue_ids})"

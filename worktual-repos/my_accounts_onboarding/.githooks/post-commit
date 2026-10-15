@@ -1,0 +1,15 @@
+#!/bin/sh
+
+# Skip when this hook already amended the commit (prevents infinite loop).
+if [ -n "$COMMIT_TRACE_AMEND" ]; then
+  exit 0
+fi
+
+node scripts/update-commit-trace.mjs || exit 0
+
+if git diff --quiet COMMIT_TRACE.md; then
+  exit 0
+fi
+
+git add COMMIT_TRACE.md
+COMMIT_TRACE_AMEND=1 GIT_EDITOR=true git commit --amend --no-edit --no-verify >/dev/null 2>&1 || true

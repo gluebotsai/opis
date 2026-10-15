@@ -1,0 +1,61 @@
+{
+  "turn_id": "8b8b732b",
+  "timestamp": "2026-10-12T12:39:11.839611+00:00",
+  "question": "What percentage of customers had their issue resolved on the first interaction?",
+  "identity": {
+    "organization_id": 1003,
+    "user_id": 1017,
+    "role": "agent",
+    "queue_ids": [],
+    "time_phrase": ""
+  },
+  "llm": {
+    "base": "http://173.234.75.166:8011/v1",
+    "model": "worktual-gemma"
+  },
+  "answer": "<p><strong>First interaction resolution rate</strong></p>\n<p>The resolution rate for all time is not available in Contact Center reports.</p>\n<p>Would you like to see your total handled conversation count for this period?</p>",
+  "card": "card: none",
+  "facts": "result_id: r1\nwindow: all time\ncertified: false\ntask_goal: Calculate the rate of conversations resolved on the first interaction.\nanswer_type: number\nrow_count: 1\nrow 1: ?column?=None",
+  "trace": {
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1017,
+      "role": "agent",
+      "queue_ids": [],
+      "time_phrase": "",
+      "timezone": "UTC"
+    },
+    "question": "What percentage of customers had their issue resolved on the first interaction?",
+    "plan": {
+      "kind": "plan",
+      "understanding": "The user wants to know the percentage of conversations that were resolved on the first interaction.",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "path": "certified_metric",
+          "goal": "Calculate the rate of conversations resolved on the first interaction.",
+          "time": "all time",
+          "scope": "agent",
+          "slice": [],
+          "answer_type": "number"
+        }
+      ]
+    },
+    "free_sql_fallback": true,
+    "sql": [
+      {
+        "result_id": "r1",
+        "status": "ok",
+        "error_type": null,
+        "certified": false,
+        "kpi_id": null,
+        "row_count": 1
+      }
+    ],
+    "facts": "result_id: r1\nwindow: all time\ncertified: false\ntask_goal: Calculate the rate of conversations resolved on the first interaction.\nanswer_type: number\nrow_count: 1\nrow 1: ?column?=None",
+    "grounded": true,
+    "card": "card: none"
+  },
+  "error": null
+}

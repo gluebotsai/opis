@@ -1,0 +1,351 @@
+# Ticketing NL coverage report
+Generated: 2026-10-01T16:22:54.607430+00:00
+Gate: `test_streamlit/ticketing` Streamlit **http://localhost:8503**
+Identity used for automated turns (typed into the same gate contract): org `1012`, user `1033`, role `admin`, queues `[1060, 1061, 1062, 1063, 1064, 1065, 1066]`
+
+## 1. Certified KPI `run_kpi` matrix (live Postgres)
+- OK `ticket_count` dim=`-` status=ok err=None rows=1 
+- OK `ticket_count` dim=`queue` status=ok err=None rows=7 
+- OK `ticket_count` dim=`agent` status=ok err=None rows=4 
+- OK `ticket_count` dim=`resolver` status=ok err=None rows=4 
+- OK `ticket_count` dim=`status` status=ok err=None rows=6 
+- OK `ticket_count` dim=`priority` status=ok err=None rows=4 
+- OK `ticket_count` dim=`channel` status=ok err=None rows=5 
+- OK `ticket_count` dim=`category` status=ok err=None rows=69 
+- OK `ticket_count` dim=`customer` status=ok err=None rows=14127 
+- OK `ticket_count` dim=`created_by` status=ok err=None rows=14115 
+- OK `ticket_count` dim=`month` status=ok err=None rows=14 
+- OK `ticket_count` dim=`week` status=ok err=None rows=54 
+- OK `ticket_count` dim=`day` status=ok err=None rows=370 
+- OK `avg_tickets_per_day` dim=`-` status=ok err=None rows=1 
+- OK `avg_tickets_per_day` dim=`queue` status=ok err=None rows=7 
+- OK `avg_tickets_per_day` dim=`agent` status=ok err=None rows=4 
+- OK `avg_tickets_per_day` dim=`resolver` status=ok err=None rows=4 
+- OK `avg_tickets_per_day` dim=`priority` status=ok err=None rows=4 
+- OK `avg_open_ticket_age` dim=`-` status=ok err=None rows=1 
+- OK `avg_open_ticket_age` dim=`queue` status=ok err=None rows=7 
+- OK `avg_open_ticket_age` dim=`agent` status=ok err=None rows=3 
+- OK `avg_open_ticket_age` dim=`resolver` status=ok err=None rows=4 
+- OK `avg_open_ticket_age` dim=`priority` status=ok err=None rows=4 
+- OK `days_since_last_ticket` dim=`-` status=ok err=None rows=1 
+- OK `resolution_rate` dim=`-` status=ok err=None rows=1 
+- OK `resolution_rate` dim=`queue` status=ok err=None rows=7 
+- OK `resolution_rate` dim=`agent` status=ok err=None rows=4 
+- OK `resolution_rate` dim=`resolver` status=ok err=None rows=4 
+- OK `resolution_rate` dim=`priority` status=ok err=None rows=4 
+- OK `assignment_rate` dim=`-` status=ok err=None rows=1 
+- OK `assignment_rate` dim=`queue` status=ok err=None rows=7 
+- OK `assignment_rate` dim=`priority` status=ok err=None rows=4 
+- OK `reopen_count` dim=`-` status=ok err=None rows=1 
+- OK `reopen_count` dim=`queue` status=ok err=None rows=7 
+- OK `reopen_count` dim=`agent` status=ok err=None rows=3 
+- OK `reopen_count` dim=`resolver` status=ok err=None rows=4 
+- OK `reopen_count` dim=`priority` status=ok err=None rows=4 
+- OK `reopen_rate` dim=`-` status=ok err=None rows=1 
+- OK `reopen_rate` dim=`queue` status=ok err=None rows=7 
+- OK `reopen_rate` dim=`agent` status=ok err=None rows=4 
+- OK `reopen_rate` dim=`resolver` status=ok err=None rows=4 
+- OK `reopen_rate` dim=`priority` status=ok err=None rows=4 
+- OK `escalation_rate` dim=`-` status=ok err=None rows=1 
+- OK `escalation_rate` dim=`queue` status=ok err=None rows=7 
+- OK `escalation_rate` dim=`priority` status=ok err=None rows=4 
+- OK `reassignment_rate` dim=`-` status=ok err=None rows=1 
+- OK `reassignment_rate` dim=`queue` status=ok err=None rows=7 
+- OK `avg_first_response_time` dim=`-` status=ok err=None rows=1 
+- OK `avg_first_response_time` dim=`queue` status=ok err=None rows=7 
+- OK `avg_first_response_time` dim=`agent` status=ok err=None rows=4 
+- OK `avg_first_response_time` dim=`resolver` status=ok err=None rows=4 
+- OK `avg_first_response_time` dim=`priority` status=ok err=None rows=4 
+- OK `avg_resolution_time` dim=`-` status=ok err=None rows=1 
+- OK `avg_resolution_time` dim=`queue` status=ok err=None rows=7 
+- OK `avg_resolution_time` dim=`agent` status=ok err=None rows=3 
+- OK `avg_resolution_time` dim=`resolver` status=ok err=None rows=4 
+- OK `avg_resolution_time` dim=`priority` status=ok err=None rows=4 
+- OK `avg_resolution_variance_vs_sla` dim=`-` status=ok err=None rows=1 
+- OK `avg_resolution_variance_vs_sla` dim=`queue` status=ok err=None rows=7 
+- OK `avg_resolution_variance_vs_sla` dim=`agent` status=ok err=None rows=3 
+- OK `avg_resolution_variance_vs_sla` dim=`resolver` status=ok err=None rows=4 
+- OK `avg_resolution_variance_vs_sla` dim=`priority` status=ok err=None rows=4 
+- OK `first_response_sla_compliance` dim=`-` status=ok err=None rows=1 
+- OK `first_response_sla_compliance` dim=`queue` status=ok err=None rows=7 
+- OK `first_response_sla_compliance` dim=`agent` status=ok err=None rows=4 
+- OK `first_response_sla_compliance` dim=`resolver` status=ok err=None rows=4 
+- OK `first_response_sla_compliance` dim=`priority` status=ok err=None rows=4 
+- OK `resolution_sla_compliance` dim=`-` status=ok err=None rows=1 
+- OK `resolution_sla_compliance` dim=`queue` status=ok err=None rows=7 
+- OK `resolution_sla_compliance` dim=`agent` status=ok err=None rows=4 
+- OK `resolution_sla_compliance` dim=`resolver` status=ok err=None rows=4 
+- OK `resolution_sla_compliance` dim=`priority` status=ok err=None rows=4 
+- OK `sla_breach_rate` dim=`-` status=ok err=None rows=1 
+- OK `sla_breach_rate` dim=`queue` status=ok err=None rows=7 
+- OK `sla_breach_rate` dim=`agent` status=ok err=None rows=4 
+- OK `sla_breach_rate` dim=`resolver` status=ok err=None rows=4 
+- OK `sla_breach_rate` dim=`priority` status=ok err=None rows=4 
+- OK `first_response_at_risk_count` dim=`-` status=ok err=None rows=1 
+- OK `first_response_at_risk_count` dim=`queue` status=ok err=None rows=0 
+- OK `first_response_at_risk_count` dim=`priority` status=ok err=None rows=0 
+- OK `resolution_at_risk_count` dim=`-` status=ok err=None rows=1 
+- OK `resolution_at_risk_count` dim=`queue` status=ok err=None rows=1 
+- OK `resolution_at_risk_count` dim=`priority` status=ok err=None rows=1 
+- OK `no_sla_count` dim=`-` status=ok err=None rows=1 
+- OK `no_sla_count` dim=`queue` status=ok err=None rows=0 
+- OK `no_sla_count` dim=`priority` status=ok err=None rows=0 
+- OK `queues_at_risk` dim=`-` status=ok err=None rows=1 
+- OK `queues_at_risk` dim=`queue` status=ok err=None rows=1 
+- OK `average_overdue_hours` dim=`-` status=ok err=None rows=1 
+- OK `average_overdue_hours` dim=`queue` status=ok err=None rows=7 
+- OK `average_overdue_hours` dim=`agent` status=ok err=None rows=4 
+- OK `average_overdue_hours` dim=`resolver` status=ok err=None rows=4 
+- OK `average_overdue_hours` dim=`priority` status=ok err=None rows=4 
+- OK `avg_csat` dim=`-` status=ok err=None rows=1 
+- OK `avg_csat` dim=`queue` status=ok err=None rows=7 
+- OK `avg_csat` dim=`agent` status=ok err=None rows=3 
+- OK `avg_csat` dim=`resolver` status=ok err=None rows=4 
+- OK `csat_response_rate` dim=`-` status=ok err=None rows=1 
+- OK `csat_response_rate` dim=`queue` status=ok err=None rows=7 
+- OK `csat_distribution_rate` dim=`-` status=ok err=None rows=1 
+- OK `customers_served` dim=`-` status=ok err=None rows=1 
+- OK `customers_served` dim=`queue` status=ok err=None rows=7 
+- OK `accounts_served` dim=`-` status=ok err=None rows=1 
+- OK `accounts_served` dim=`queue` status=ok err=None rows=0 
+- OK `active_customers` dim=`-` status=ok err=None rows=1 
+- OK `total_customers` dim=`-` status=ok err=None rows=1 
+- OK `active_agents` dim=`-` status=ok err=None rows=1 
+- OK `total_users` dim=`-` status=ok err=None rows=1 
+- OK `queue_count` dim=`-` status=ok err=None rows=1 
+- OK `queue_coverage` dim=`-` status=ok err=None rows=1 
+- OK `distinct_agents_in_queues` dim=`-` status=ok err=None rows=1 
+- OK `distinct_queues_covered` dim=`-` status=ok err=None rows=1 
+- OK `note_count` dim=`-` status=ok err=None rows=1 
+- OK `note_count` dim=`queue` status=ok err=None rows=6 
+- OK `escalation_count` dim=`-` status=ok err=None rows=1 
+- OK `escalation_count` dim=`queue` status=ok err=None rows=3 
+- OK `reassignment_count` dim=`-` status=ok err=None rows=1 
+- OK `reassignment_count` dim=`queue` status=ok err=None rows=1 
+- OK `kb_article_count` dim=`-` status=ok err=None rows=1 
+- OK `kb_article_count` dim=`category` status=ok err=None rows=10 
+- OK `kb_views` dim=`-` status=ok err=None rows=1 
+- OK `recommendation_count` dim=`-` status=ok err=None rows=1 
+- OK `recommendation_acceptance_rate` dim=`-` status=ok err=None rows=1 
+- OK `approval_count` dim=`-` status=ok err=None rows=1 
+- OK `approval_rate` dim=`-` status=ok err=None rows=1 
+- OK `unread_notifications` dim=`-` status=ok err=None rows=1 
+**matrix_fails=0**
+
+## 2. Live SELECT checks
+- `ticket_count` status=ok n=1 sample=[{'n': 20043}]
+- `by_status` status=ok n=6 sample=[{'status': 'Closed', 'n': 12112}, {'status': 'Overdue', 'n': 3828}, {'status': 'Open', 'n': 2323}]
+- `queues` status=ok n=7 sample=[{'id': 1065, 'queue_name': 'Customer Account & Access Support'}, {'id': 1066, 'queue_name': 'Offers & Loyalty Support'}, {'id': 1060, 'queue_name': 'Order Management & Fulfillment'}]
+
+## 3. Conversational KPI NL
+- HIT expect=`ticket_count` got=`ticket_count` dim=None n=1 err=None | How many tickets are there?
+  - plan=[{'executor': 'sql', 'kpi': 'ticket_count', 'dimension': None, 'time': 'all time', 'goal': 'Total ticket count'}]
+  - ans=Ticket count for period_applied overall is **20043**.
+- HIT expect=`avg_tickets_per_day` got=`avg_tickets_per_day` dim=None n=1 err=None | What is the average tickets per day?
+  - plan=[{'executor': 'sql', 'kpi': 'avg_tickets_per_day', 'dimension': None, 'time': 'all time', 'goal': 'Calculate average tickets per day'}]
+  - ans=The average tickets per day for period_applied overall is **54.122161600638655**.
+- HIT expect=`avg_open_ticket_age` got=`avg_open_ticket_age` dim=None n=1 err=None | What is the average open ticket age?
+  - plan=[{'executor': 'sql', 'kpi': 'avg_open_ticket_age', 'dimension': None, 'time': 'all time', 'goal': 'Average open ticket age'}]
+  - ans=The average open ticket age for period_applied overall is **155.7232933396047974**.
+- HIT expect=`days_since_last_ticket` got=`days_since_last_ticket` dim=None n=1 err=None | How many days since the last ticket?
+  - plan=[{'executor': 'sql', 'kpi': 'days_since_last_ticket', 'dimension': None, 'time': 'all time', 'goal': 'Days since the last ticket was created'}]
+  - ans=days_since_last_ticket for period_applied overall is **0.21261891579861111111**
+- HIT expect=`resolution_rate` got=`resolution_rate` dim=None n=1 err=None | What is the ticket resolution rate?
+  - plan=[{'executor': 'sql', 'kpi': 'resolution_rate', 'dimension': None, 'time': 'all time', 'goal': 'Calculate the ticket resolution rate'}]
+  - ans=The ticket resolution rate for overall is **0.6051988225315571**.
+- HIT expect=`assignment_rate` got=`assignment_rate` dim=None n=1 err=None | What is the assignment rate?
+  - plan=[{'executor': 'sql', 'kpi': 'assignment_rate', 'dimension': None, 'time': 'all time', 'goal': 'Assignment rate for the organization'}]
+  - ans=The assignment rate for overall is **0.9997505363468543**.
+- HIT expect=`reopen_count` got=`reopen_count` dim=None n=1 err=None | How many tickets were reopened?
+  - plan=[{'executor': 'sql', 'kpi': 'reopen_count', 'dimension': None, 'time': 'all time', 'goal': 'Total number of reopened tickets'}]
+  - ans=The reopen_count for period_applied overall is **1758**.
+- HIT expect=`reopen_rate` got=`reopen_rate` dim=None n=1 err=None | What is the reopen rate?
+  - plan=[{'executor': 'sql', 'kpi': 'reopen_rate', 'dimension': None, 'time': 'all time', 'goal': 'Calculate the reopen rate'}]
+  - ans=The reopen rate for period_applied overall is **0.1265841013824885**.
+- HIT expect=`escalation_rate` got=`escalation_rate` dim=None n=1 err=None | What is the escalation rate?
+  - plan=[{'executor': 'sql', 'kpi': 'escalation_rate', 'dimension': None, 'time': 'all time', 'goal': 'Get the escalation rate'}]
+  - ans=The escalation rate for overall is **0.00019957092251658934**.
+- HIT expect=`reassignment_rate` got=`reassignment_rate` dim=None n=1 err=None | What is the reassignment rate?
+  - plan=[{'executor': 'sql', 'kpi': 'reassignment_rate', 'dimension': None, 'time': 'all time', 'goal': 'Calculate the reassignment rate'}]
+  - ans=The reassignment rate for period_applied overall is **4.990518015770037e-05**.
+- HIT expect=`avg_first_response_time` got=`avg_first_response_time` dim=None n=1 err=None | What is the average first response time?
+  - plan=[{'executor': 'sql', 'kpi': 'avg_first_response_time', 'dimension': None, 'time': 'all time', 'goal': 'Average first response time across all time'}]
+  - ans=The average first response time for period_applied overall is **4.67677102010197856250**.
+- HIT expect=`avg_resolution_time` got=`avg_resolution_time` dim=None n=1 err=None | What is the average resolution time?
+  - plan=[{'executor': 'sql', 'kpi': 'avg_resolution_time', 'dimension': None, 'time': 'all time', 'goal': 'Average resolution time'}]
+  - ans=The average resolution time for period_applied overall is **19.61161887663758358537**.
+- HIT expect=`avg_resolution_variance_vs_sla` got=`avg_resolution_variance_vs_sla` dim=None n=1 err=None | What is average resolution variance versus SLA?
+  - plan=[{'executor': 'sql', 'kpi': 'avg_resolution_variance_vs_sla', 'dimension': None, 'time': 'all time', 'goal': 'Calculate average resolution variance versus SLA'}]
+  - ans=The average resolution variance versus SLA for overall is **-24.63603301551403773916**.
+- HIT expect=`first_response_sla_compliance` got=`first_response_sla_compliance` dim=None n=1 err=None | What is first response SLA compliance?
+  - plan=[{'executor': 'sql', 'kpi': 'first_response_sla_compliance', 'dimension': None, 'time': 'all time', 'goal': 'First response SLA compliance'}]
+  - ans=First response SLA compliance for overall is **0.34904954348151473**.
+- HIT expect=`resolution_sla_compliance` got=`resolution_sla_compliance` dim=None n=1 err=None | What is resolution SLA compliance?
+  - plan=[{'executor': 'sql', 'kpi': 'resolution_sla_compliance', 'dimension': None, 'time': 'all time', 'goal': 'Resolution SLA compliance rate'}]
+  - ans=resolution_sla_compliance for overall is **0.5160437147562253**
+- HIT expect=`sla_breach_rate` got=`sla_breach_rate` dim=None n=1 err=None | What is the SLA breach rate?
+  - plan=[{'executor': 'sql', 'kpi': 'sla_breach_rate', 'dimension': None, 'time': 'all time', 'goal': 'SLA breach rate'}]
+  - ans=The SLA breach rate for period_applied overall is **0.48395628524377465**.
+- HIT expect=`first_response_at_risk_count` got=`first_response_at_risk_count` dim=None n=1 err=None | How many tickets are at risk for first response SLA?
+  - plan=[{'executor': 'sql', 'kpi': 'first_response_at_risk_count', 'dimension': None, 'time': 'all time', 'goal': 'Count of tickets at risk for first response SLA'}]
+  - ans=First response SLA at risk count for overall is **0**.
+- HIT expect=`resolution_at_risk_count` got=`resolution_at_risk_count` dim=None n=1 err=None | How many tickets are at risk for resolution SLA?
+  - plan=[{'executor': 'sql', 'kpi': 'resolution_at_risk_count', 'dimension': None, 'time': 'all time', 'goal': 'Count of tickets at risk for resolution SLA'}]
+  - ans=The resolution at risk ticket count for overall is **1**.
+- HIT expect=`no_sla_count` got=`no_sla_count` dim=None n=1 err=None | How many tickets have no SLA?
+  - plan=[{'executor': 'sql', 'kpi': 'no_sla_count', 'dimension': None, 'time': 'all time', 'goal': 'Count of tickets with no SLA'}]
+  - ans=The no SLA ticket count for period_applied overall is **0**.
+- HIT expect=`queues_at_risk` got=`queues_at_risk` dim=None n=1 err=None | Which queues are at risk?
+  - plan=[{'executor': 'sql', 'kpi': 'queues_at_risk', 'dimension': None, 'time': 'all time', 'goal': 'Identify queues currently at risk'}]
+  - ans=The number of queues at risk for period_applied overall is **1** (Order Management & Fulfillment).
+- HIT expect=`average_overdue_hours` got=`average_overdue_hours` dim=None n=1 err=None | What is the average overdue hours?
+  - plan=[{'executor': 'sql', 'kpi': 'average_overdue_hours', 'dimension': None, 'time': 'all time', 'goal': 'Calculate the average overdue hours'}]
+  - ans=The average overdue hours for overall is **119.43572396017297380945**.
+- HIT expect=`avg_csat` got=`avg_csat` dim=None n=1 err=None | What is the average CSAT?
+  - plan=[{'executor': 'sql', 'kpi': 'avg_csat', 'dimension': None, 'time': 'all time', 'goal': 'Calculate the average CSAT score'}]
+  - ans=The average CSAT for period_applied overall is **3.86**.
+- HIT expect=`csat_response_rate` got=`csat_response_rate` dim=None n=1 err=None | What is the CSAT response rate?
+  - plan=[{'executor': 'sql', 'kpi': 'csat_response_rate', 'dimension': None, 'time': 'all time', 'goal': 'CSAT response rate'}]
+  - ans=The CSAT response rate for period_applied overall is **0.5511129431162407**.
+- HIT expect=`csat_distribution_rate` got=`csat_distribution_rate` dim=None n=1 err=None | What is the CSAT distribution?
+  - plan=[{'executor': 'sql', 'kpi': 'csat_distribution_rate', 'dimension': None, 'time': 'all time', 'goal': 'Get CSAT distribution rate'}]
+  - ans=The CSAT distribution rate for overall is **0.7071054599850412** promoter, **0.12834704562453253** neutral, and **0.16454749439042632** detractor, based on **6685** rated tickets.
+- HIT expect=`customers_served` got=`customers_served` dim=None n=1 err=None | How many customers were served?
+  - plan=[{'executor': 'sql', 'kpi': 'customers_served', 'dimension': None, 'time': 'all time', 'goal': 'Total customers served'}]
+  - ans=Customers served overall was **17098**.
+- HIT expect=`accounts_served` got=`accounts_served` dim=None n=1 err=None | How many accounts were served?
+  - plan=[{'executor': 'sql', 'kpi': 'accounts_served', 'dimension': None, 'time': 'all time', 'goal': 'Total number of accounts served'}]
+  - ans=Accounts served for period_applied overall was **0**.
+- HIT expect=`active_customers` got=`active_customers` dim=None n=1 err=None | How many active customers are there?
+  - plan=[{'executor': 'sql', 'kpi': 'active_customers', 'dimension': None, 'time': 'all time', 'goal': 'Count of active customers'}]
+  - ans=There are **17,098** active customers for period_applied overall.
+- HIT expect=`total_customers` got=`total_customers` dim=None n=1 err=None | How many total customers are there?
+  - plan=[{'executor': 'sql', 'kpi': 'total_customers', 'dimension': None, 'time': 'all time', 'goal': 'Total number of customers'}]
+  - ans=Total customers for period_applied overall is **101056**.
+- HIT expect=`active_agents` got=`active_agents` dim=None n=1 err=None | How many active agents are there?
+  - plan=[{'executor': 'sql', 'kpi': 'active_agents', 'dimension': None, 'time': 'all time', 'goal': 'Count of active agents'}]
+  - ans=There are **3** active agents for period_applied overall.
+- HIT expect=`total_users` got=`total_users` dim=None n=1 err=None | How many total users are there?
+  - plan=[{'executor': 'sql', 'kpi': 'total_users', 'dimension': None, 'time': 'all time', 'goal': 'Total number of users in the organization'}]
+  - ans=Total users for period_applied overall is **8**.
+- HIT expect=`queue_count` got=`queue_count` dim=None n=1 err=None | How many queues are there?
+  - plan=[{'executor': 'sql', 'kpi': 'queue_count', 'dimension': None, 'time': 'all time', 'goal': 'Total number of queues'}]
+  - ans=There are **7** queues for the period applied: overall (no date filter, UTC).
+- HIT expect=`queue_coverage` got=`queue_coverage` dim=None n=1 err=None | What is queue coverage?
+  - plan=[{'executor': 'sql', 'kpi': 'queue_coverage', 'dimension': None, 'time': 'all time', 'goal': 'Get total queue coverage'}]
+  - ans=queue_coverage for overall is **25**.
+- HIT expect=`distinct_agents_in_queues` got=`distinct_agents_in_queues` dim=None n=1 err=None | How many distinct agents are in queues?
+  - plan=[{'executor': 'sql', 'kpi': 'distinct_agents_in_queues', 'dimension': None, 'time': 'all time', 'goal': 'Count of distinct agents in queues'}]
+  - ans=There are **7** distinct agents in queues for the period applied: overall (no date filter, UTC).
+- HIT expect=`distinct_queues_covered` got=`distinct_queues_covered` dim=None n=1 err=None | How many distinct queues are covered?
+  - plan=[{'executor': 'sql', 'kpi': 'distinct_queues_covered', 'dimension': None, 'time': 'all time', 'goal': 'Count of distinct queues covered'}]
+  - ans=The number of distinct queues covered for period_applied overall is **7**.
+- HIT expect=`note_count` got=`note_count` dim=None n=1 err=None | How many ticket notes are there?
+  - plan=[{'executor': 'sql', 'kpi': 'note_count', 'dimension': None, 'time': 'all time', 'goal': 'Total count of ticket notes'}]
+  - ans=There are **37** ticket notes for the period applied: overall (no date filter, UTC).
+- HIT expect=`escalation_count` got=`escalation_count` dim=None n=1 err=None | How many escalations are there?
+  - plan=[{'executor': 'sql', 'kpi': 'escalation_count', 'dimension': None, 'time': 'all time', 'goal': 'Total number of escalations'}]
+  - ans=escalation_count for period_applied overall is **5**.
+- HIT expect=`reassignment_count` got=`reassignment_count` dim=None n=1 err=None | How many reassignments are there?
+  - plan=[{'executor': 'sql', 'kpi': 'reassignment_count', 'dimension': None, 'time': 'all time', 'goal': 'Total number of reassignments'}]
+  - ans=reassignment_count for period_applied overall is **1**.
+- HIT expect=`kb_article_count` got=`kb_article_count` dim=None n=1 err=None | How many knowledge base articles are there?
+  - plan=[{'executor': 'sql', 'kpi': 'kb_article_count', 'dimension': None, 'time': 'all time', 'goal': 'Total number of knowledge base articles'}]
+  - ans=The kb_article_count for period_applied overall is **58**.
+- HIT expect=`kb_views` got=`kb_views` dim=None n=1 err=None | How many KB views are there?
+  - plan=[{'executor': 'sql', 'kpi': 'kb_views', 'dimension': None, 'time': 'all time', 'goal': 'Total KB views'}]
+  - ans=KB views for period_applied overall are **24**.
+- HIT expect=`recommendation_count` got=`recommendation_count` dim=None n=1 err=None | How many recommendations are there?
+  - plan=[{'executor': 'sql', 'kpi': 'recommendation_count', 'dimension': None, 'time': 'all time', 'goal': 'Total count of recommendations'}]
+  - ans=There are **1044** recommendations for period_applied overall.
+- HIT expect=`recommendation_acceptance_rate` got=`recommendation_acceptance_rate` dim=None n=1 err=None | What is the recommendation acceptance rate?
+  - plan=[{'executor': 'sql', 'kpi': 'recommendation_acceptance_rate', 'dimension': None, 'time': 'all time', 'goal': 'Recommendation acceptance rate'}]
+  - ans=The recommendation acceptance rate for overall is **0.0**.
+- HIT expect=`approval_count` got=`approval_count` dim=None n=1 err=None | How many approvals are there?
+  - plan=[{'executor': 'sql', 'kpi': 'approval_count', 'dimension': None, 'time': 'all time', 'goal': 'Total number of approvals'}]
+  - ans=There are **3426** approvals for period_applied overall.
+- HIT expect=`approval_rate` got=`approval_rate` dim=None n=1 err=None | What is the approval rate?
+  - plan=[{'executor': 'sql', 'kpi': 'approval_rate', 'dimension': None, 'time': 'all time', 'goal': 'Get the approval rate'}]
+  - ans=The approval rate for overall is not available.
+- HIT expect=`unread_notifications` got=`unread_notifications` dim=None n=1 err=None | How many unread notifications are there?
+  - plan=[{'executor': 'sql', 'kpi': 'unread_notifications', 'dimension': None, 'time': 'all time', 'goal': 'Count of unread notifications'}]
+  - ans=There are **561,186** unread notifications for period_applied overall.
+**kpi_id_misses=0/44**
+
+## 4. Conversational dimensions
+- CERT `ticket_count` want_dim=`queue` got_kpi=`ticket_count` got_dim=`queue` n=7 err=None | How many tickets by queue?
+  - plan=[{'executor': 'sql', 'kpi': 'ticket_count', 'dimension': 'queue', 'time': 'all time', 'goal': 'Ticket count by queue'}]
+- CERT `ticket_count` want_dim=`agent` got_kpi=`ticket_count` got_dim=`agent` n=4 err=None | How many tickets by agent?
+  - plan=[{'executor': 'sql', 'kpi': 'ticket_count', 'dimension': 'agent', 'time': 'all time', 'goal': 'Ticket count by agent'}]
+- CERT `ticket_count` want_dim=`resolver` got_kpi=`ticket_count` got_dim=`resolver` n=4 err=None | Ticket count by resolver
+  - plan=[{'executor': 'sql', 'kpi': 'ticket_count', 'dimension': 'resolver', 'time': 'all time', 'goal': 'Ticket count by resolver'}]
+- CERT `ticket_count` want_dim=`status` got_kpi=`ticket_count` got_dim=`status` n=6 err=None | Ticket count by status
+  - plan=[{'executor': 'sql', 'kpi': 'ticket_count', 'dimension': 'status', 'time': 'all time', 'goal': 'Ticket count by status across all time'}]
+- CERT `ticket_count` want_dim=`priority` got_kpi=`ticket_count` got_dim=`priority` n=4 err=None | Tickets by priority
+  - plan=[{'executor': 'sql', 'kpi': 'ticket_count', 'dimension': 'priority', 'time': 'all time', 'goal': 'Ticket count by priority across all time'}]
+- CERT `ticket_count` want_dim=`channel` got_kpi=`ticket_count` got_dim=`channel` n=5 err=None | Tickets by channel
+  - plan=[{'executor': 'sql', 'kpi': 'ticket_count', 'dimension': 'channel', 'time': 'all time', 'goal': 'Ticket count by channel across all time'}]
+- CERT `ticket_count` want_dim=`category` got_kpi=`ticket_count` got_dim=`category` n=69 err=None | Tickets by category
+  - plan=[{'executor': 'sql', 'kpi': 'ticket_count', 'dimension': 'category', 'time': 'all time', 'goal': 'Ticket count by category'}]
+- CERT `ticket_count` want_dim=`customer` got_kpi=`ticket_count` got_dim=`customer` n=14127 err=None | Tickets by customer
+  - plan=[{'executor': 'sql', 'kpi': 'ticket_count', 'dimension': 'customer', 'time': 'all time', 'goal': 'Ticket count by customer'}]
+- CERT `ticket_count` want_dim=`created_by` got_kpi=`ticket_count` got_dim=`created_by` n=14115 err=None | Tickets by created by
+  - plan=[{'executor': 'sql', 'kpi': 'ticket_count', 'dimension': 'created_by', 'time': 'all time', 'goal': 'Ticket count by creator'}]
+- CERT `ticket_count` want_dim=`month` got_kpi=`ticket_count` got_dim=`month` n=14 err=None | Ticket volume by month
+  - plan=[{'executor': 'sql', 'kpi': 'ticket_count', 'dimension': 'month', 'time': 'all time', 'goal': 'Ticket count by month'}]
+- CERT `ticket_count` want_dim=`week` got_kpi=`ticket_count` got_dim=`week` n=54 err=None | Ticket volume by week
+  - plan=[{'executor': 'sql', 'kpi': 'ticket_count', 'dimension': 'week', 'time': 'all time', 'goal': 'Ticket count by week across all time'}]
+- CERT `ticket_count` want_dim=`day` got_kpi=`ticket_count` got_dim=`day` n=370 err=None | Ticket volume by day
+  - plan=[{'executor': 'sql', 'kpi': 'ticket_count', 'dimension': 'day', 'time': 'all time', 'goal': 'Ticket count by day across all time'}]
+- CERT `resolution_rate` want_dim=`queue` got_kpi=`resolution_rate` got_dim=`queue` n=7 err=None | Resolution rate by queue
+  - plan=[{'executor': 'sql', 'kpi': 'resolution_rate', 'dimension': 'queue', 'time': 'all time', 'goal': 'Resolution rate by queue across all time'}]
+- CERT `avg_csat` want_dim=`agent` got_kpi=`avg_csat` got_dim=`agent` n=3 err=None | Average CSAT by agent
+  - plan=[{'executor': 'sql', 'kpi': 'avg_csat', 'dimension': 'agent', 'time': 'all time', 'goal': 'Average CSAT by agent across all time'}]
+- CERT `sla_breach_rate` want_dim=`priority` got_kpi=`sla_breach_rate` got_dim=`priority` n=4 err=None | SLA breach rate by priority
+  - plan=[{'executor': 'sql', 'kpi': 'sla_breach_rate', 'dimension': 'priority', 'time': 'all time', 'goal': 'SLA breach rate broken down by priority'}]
+**dimension_checks_not_ok=0/15**
+
+## 5. Time windows
+- OK time_plan=`last 7 days` n=1 err=None | How many tickets in the last 7 days?
+  - ans=ticket_count for period_applied past 7 days (UTC) was **2025**.
+- OK time_plan=`last 30 days` n=1 err=None | How many tickets in the last 30 days?
+  - ans=ticket_count for past 30 days (UTC) was **10258**.
+- OK time_plan=`last 1 day` n=1 err=None | How many tickets in the last 1 day?
+  - ans=ticket_count for period_applied past 1 days (UTC) was **6**.
+- OK time_plan=`2026-09-01 to 2026-09-15` n=1 err=None | How many tickets from 2026-09-01 to 2026-09-15?
+  - ans=ticket_count for 2026-09-01 to 2026-09-15 was **3117**.
+
+## 6. Free-flow list/find SQL
+- OK tool=`run_sql` kpi=`None` n=7 err=None | List queues
+  - plan=[{'executor': 'sql', 'kpi': None, 'dimension': None, 'time': 'all time', 'goal': 'List all queues'}]
+  - ans=There are **7** queues for period_applied overall.
+- OK tool=`run_sql` kpi=`None` n=1 err=None | Find teams named billing
+  - plan=[{'executor': 'sql', 'kpi': None, 'dimension': None, 'time': 'all time', 'goal': "List queues where name is like 'billing'"}]
+  - ans=There is 1 queue named 'billing' for the period_applied overall: Payments & Billing Support.
+- OK tool=`run_sql` kpi=`None` n=6 err=None | List all ticket statuses
+  - plan=[{'executor': 'sql', 'kpi': None, 'dimension': None, 'time': 'all time', 'goal': 'List all distinct ticket statuses'}]
+  - ans=The ticket statuses for period_applied overall are Closed, Open, Overdue, Pending, Reopened, and Resolved.
+- OK tool=`run_sql` kpi=`None` n=8 err=None | List agents
+  - plan=[{'executor': 'sql', 'kpi': None, 'dimension': None, 'time': 'all time', 'goal': 'List all agents'}]
+  - ans=There are 8 agents overall.
+- OK tool=`run_sql` kpi=`None` n=500 err=None | List open tickets
+  - plan=[{'executor': 'sql', 'kpi': None, 'dimension': None, 'time': 'all time', 'goal': "List all tickets with status 'Open'"}]
+  - ans=There are 500 open tickets for the period_applied overall.
+- OK tool=`run_sql` kpi=`None` n=1 err=None | Find ticket number 104
+  - plan=[{'executor': 'sql', 'kpi': None, 'dimension': None, 'time': 'all time', 'goal': 'Find ticket number 104'}]
+  - ans=Ticket #104 was found with a status of Closed for the period applied: overall.
+
+## 7. Knowledge graph NL
+- KG exec=['sql', 'sql', 'kg'] tool=`run_kpi` n=0 err=None | Why are tickets stuck or overdue?
+  - plan=[{'executor': 'sql', 'kpi': 'resolution_at_risk_count', 'dimension': 'queue', 'time': 'all time', 'goal': 'Count of tickets at risk of breaching SLA by queue'}, {'executor': 'sql', 'kpi': 'average_overdue_hours', 'dimension': 'priority', 'time': 'all time', 'goal': 'Average overdue hours broken down by priority'}, {'executor': 'kg', 'kpi': None, 'dimension': None, 'time': 'all time', 'goal': 'Identify drivers and note history for overdue tickets'}]
+  - ans=Average overdue hours across all priorities for the overall period are: **127.68** for medium, **125.37** for low, **115.46** for high, and **77.17** for urgent.
+- FAIL exec=['kg'] tool=`kg` n=0 err=NO_TOOL | Walk the staffing path for a queue
+  - plan=[{'executor': 'kg', 'kpi': None, 'dimension': None, 'time': 'all time', 'goal': 'staffing path for queue'}]
+  - ans=No staffing path was found for the queue.
+- NOT_KG exec=['sql'] tool=`run_sql` n=50 err=None | Show the neighborhood around a ticket
+  - plan=[{'executor': 'sql', 'kpi': None, 'dimension': None, 'time': 'all time', 'goal': 'Find ticket number from user input or list recent tickets to identify target'}]
+  - ans=No ticket number was specified to identify a neighborhood.
+- KG exec=['sql', 'kg'] tool=`run_sql` n=50 err=None | Who wrote notes on recent tickets?
+  - plan=[{'executor': 'sql', 'kpi': None, 'dimension': None, 'time': 'all time', 'goal': 'List recent tickets with their most recent note timestamps'}, {'executor': 'kg', 'kpi': None, 'dimension': None, 'time': 'all time', 'goal': 'Find the path from recent tickets to the users who wrote the notes'}]
+  - ans=No users were found who wrote notes on the recent tickets for the period applied: overall (no date filter, UTC).
+

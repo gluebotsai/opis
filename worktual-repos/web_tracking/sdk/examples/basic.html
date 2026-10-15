@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>WorktualAnalytics Example</title>
+  <!-- Serve from sdk/ root: cd sdk && python3 -m http.server 8080 -->
+  <script src="/dist/webtracking.js"></script>
+</head>
+<body>
+  <h1>Worktual Analytics SDK Example</h1>
+  <p>Run from the <code>sdk/</code> folder, then open <code>http://localhost:8080/examples/basic.html</code></p>
+  <button id="track-btn">Track Custom Event</button>
+  <script>
+    WorktualAnalytics.init({
+      domainId: 12345,
+      endpoint: 'http://localhost:7860/v1/tracking/collect',
+      debug: true,
+      autoTrack: true,
+      batching: false,
+      respectDNT: false,
+      respectGPC: false,
+      // Prompt for browser GPS when the visitor allows (requires HTTPS in production).
+      geolocation: true,
+    });
+    document.getElementById('track-btn').addEventListener('click', function () {
+      WorktualAnalytics.track('button_clicked', { buttonId: 'track-btn' });
+      WorktualAnalytics.flush();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,229 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  TENANT_ADMIN
+  MANAGER
+  AGENT
+}
+
+enum AgentStatus {
+  OFFLINE
+  AVAILABLE
+  BUSY
+  ON_BREAK
+  WRAP_UP
+}
+
+enum CallDirection {
+  INBOUND
+  OUTBOUND
+  INTERNAL
+}
+
+enum CallStatus {
+  INITIATED
+  RINGING
+  ANSWERED
+  ON_HOLD
+  TRANSFERRED
+  COMPLETED
+  BUSY
+  NO_ANSWER
+  FAILED
+}
+
+model Tenant {
+  id        String   @id @default(uuid())
+  name      String
+  apiKey    String   @unique @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users         User[]
+  agents        Agent[]
+  sipExtensions SipExtension[]
+  numbers       PhoneNumber[]
+  queues        Queue[]
+  activeCalls   ActiveCall[]
+  callHistory   CallHistory[]
+  recordings    Recording[]
+  webhooks      Webhook[]
+  settings      Setting[]
+  conferences   Conference[]
+  auditLogs     AuditLog[]
+}
+
+model User {
+  id        String   @id @default(uuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(TENANT_ADMIN)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Agent {
+  id          String      @id @default(uuid())
+  tenantId    String
+  tenant      Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name        String
+  email       String
+  status      AgentStatus @default(OFFLINE)
+  lastLoginAt DateTime?
+  lastLogoutAt DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  sipExtension SipExtension?
+  queueMembers QueueMember[]
+}
+
+model SipExtension {
+  id        String   @id @default(uuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  extension String
+  password  String
+  agentId   String?  @unique
+  agent     Agent?   @relation(fields: [agentId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tenantId, extension])
+}
+
+model PhoneNumber {
+  id         String   @id @default(uuid())
+  tenantId   String
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  number     String   @unique
+  provider   String   @default("AIRTEL")
+  assignedTo String?
+  routeTo    String?  // queue ID or extension for inbound DID routing
+  callerId   String?  // outbound caller ID mapping
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Queue {
+  id        String   @id @default(uuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name      String
+  strategy  String   @default("ringall")
+  timeout   Int      @default(30)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members QueueMember[]
+}
+
+model QueueMember {
+  id        String   @id @default(uuid())
+  queueId   String
+  queue     Queue    @relation(fields: [queueId], references: [id], onDelete: Cascade)
+  agentId   String
+  agent     Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  penalty   Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@unique([queueId, agentId])
+}
+
+// GAP 4 FIX: ActiveCall model for real-time live call tracking
+model ActiveCall {
+  id              String   @id @default(uuid())
+  tenantId        String
+  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  asteriskChannel String   @unique
+  bridgeId        String?
+  callHistoryId   String?
+  direction       CallDirection
+  fromNumber      String
+  toNumber        String
+  status          CallStatus @default(RINGING)
+  startedAt       DateTime   @default(now())
+}
+
+model CallHistory {
+  id             String        @id @default(uuid())
+  tenantId       String
+  tenant         Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  asteriskCallId String?
+  direction      CallDirection
+  fromNumber     String
+  toNumber       String
+  status         CallStatus    @default(INITIATED)
+  startTime      DateTime      @default(now())
+  answerTime     DateTime?
+  endTime        DateTime?
+  duration       Int           @default(0)
+  recordingUrl   String?
+
+  recordings Recording[]
+}
+
+model Recording {
+  id            String      @id @default(uuid())
+  tenantId      String
+  tenant        Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  callHistoryId String
+  callHistory   CallHistory @relation(fields: [callHistoryId], references: [id], onDelete: Cascade)
+  filePath      String
+  fileSize      Int         @default(0)
+  duration      Int         @default(0)
+  createdAt     DateTime    @default(now())
+}
+
+model Webhook {
+  id        String   @id @default(uuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  url       String
+  secret    String
+  events    String[]
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Setting {
+  id        String   @id @default(uuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  key       String
+  value     String
+  updatedAt DateTime @updatedAt
+
+  @@unique([tenantId, key])
+}
+
+model Conference {
+  id        String   @id @default(uuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name      String
+  bridgeId  String?
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  action    String
+  actor     String
+  details   Json?
+  createdAt DateTime @default(now())
+}

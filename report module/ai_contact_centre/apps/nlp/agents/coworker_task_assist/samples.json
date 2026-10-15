@@ -1,0 +1,28 @@
+{
+  "conversations": [
+    {
+      "id": "task-assist-propose",
+      "title": "Propose a follow-up without executing",
+      "turns": [
+        { "role": "user", "content": "What should I do next for this customer?" },
+        {
+          "role": "assistant",
+          "content": "<p>Next action: create a callback task for the missed WhatsApp. I will not create it until you approve.</p>",
+          "tools": ["get_conversation_context"]
+        }
+      ]
+    },
+    {
+      "id": "task-assist-execute-approved",
+      "title": "Execute only after explicit approval",
+      "turns": [
+        { "role": "user", "content": "Yes, create that callback" },
+        {
+          "role": "assistant",
+          "content": "<p>Created the callback task.</p>",
+          "tools": ["list_tasks", "update_task"]
+        }
+      ]
+    }
+  ]
+}

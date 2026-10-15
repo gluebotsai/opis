@@ -1,0 +1,496 @@
+version: 1
+product: crm
+engine: postgres
+default_schema: crm_marts
+tenant_column: organization_id
+tables:
+- name: mart_companies
+  schema: crm_marts
+  grain: null
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: null
+  tenant_column: organization_id
+  columns:
+  - business_type
+  - channel_role
+  - company_id
+  - company_industry
+  - created_at
+  - organization_id
+  - owner_name
+  - parent_company_name
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - business_type
+  - company_industry
+  - channel_role
+  - owner_name
+  - parent_company_name
+  description: B2B client companies, franchises, and total location rollups.
+- name: mart_contact_activities
+  schema: crm_marts
+  grain: null
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: null
+  tenant_column: organization_id
+  columns:
+  - activity_type
+  - business_type
+  - contact_activity_id
+  - contact_lifecycle_stage
+  - created_at
+  - folder
+  - organization_id
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - business_type
+  - activity_type
+  - folder
+  - contact_lifecycle_stage
+  description: Contact-level sales activities, outreach, and tasks.
+- name: mart_contacts
+  schema: crm_marts
+  grain: null
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: null
+  tenant_column: organization_id
+  columns:
+  - business_type
+  - contact_id
+  - created_at
+  - lead_band
+  - lead_score
+  - lead_source
+  - lead_status
+  - lifecycle_stage
+  - organization_id
+  - owner_name
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - business_type
+  - created_at
+  - lifecycle_stage
+  - lead_source
+  - lead_status
+  - owner_name
+  - lead_score
+  - lead_band
+  description: Core marts model for CRM contact profiles overlaid on CDP records with
+    lead scoring.
+- name: mart_contracts
+  schema: crm_marts
+  grain: null
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: null
+  tenant_column: organization_id
+  columns:
+  - business_type
+  - channel_role
+  - contract_id
+  - organization_id
+  - starts_at
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - starts_at
+  - business_type
+  - channel_role
+  description: Contract mart with ARR, expiry, and 90-day renewal status.
+- name: mart_deal_activities
+  schema: crm_marts
+  grain: null
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: null
+  tenant_column: organization_id
+  columns:
+  - activity_type
+  - business_type
+  - created_at
+  - deal_activity_id
+  - deal_stage
+  - organization_id
+  - owner_name
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - business_type
+  - activity_type
+  - owner_name
+  - deal_stage
+  description: Deal-related sales activities, tasks, and completion tracking.
+- name: mart_deals
+  schema: crm_marts
+  grain: null
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: null
+  tenant_column: organization_id
+  columns:
+  - business_type
+  - closed_at
+  - created_at
+  - deal_id
+  - deal_status_proxy
+  - lost_reason
+  - organization_id
+  - owner_name
+  - owner_team_id
+  - stage
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - business_type
+  - created_at
+  - closed_at
+  - stage
+  - deal_status_proxy
+  - lost_reason
+  - owner_name
+  - owner_team_id
+  description: Core marts model for CRM deals, pipeline amounts, stages, and sales
+    cycle performance.
+- name: mart_invoice_lines
+  schema: crm_marts
+  grain: null
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: null
+  tenant_column: organization_id
+  columns:
+  - business_type
+  - created_at
+  - invoice_line_id
+  - invoice_status
+  - line_kind
+  - organization_id
+  - product_category
+  - product_name
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - business_type
+  - invoice_status
+  - line_kind
+  - product_name
+  - product_category
+  description: Invoice line items joined with product catalog.
+- name: mart_invoices
+  schema: crm_marts
+  grain: null
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: null
+  tenant_column: organization_id
+  columns:
+  - business_type
+  - created_by_name
+  - invoice_id
+  - invoice_status
+  - issue_date
+  - organization_id
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - business_type
+  - issue_date
+  - invoice_status
+  - created_by_name
+  description: Invoices mart with outstanding/paid status and payment collection duration.
+- name: mart_order_lines
+  schema: crm_marts
+  grain: null
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: null
+  tenant_column: organization_id
+  columns:
+  - business_type
+  - created_at
+  - order_line_id
+  - order_status
+  - organization_id
+  - product_billing_type
+  - product_brand
+  - product_category
+  - product_name
+  - product_sku
+  - product_subcategory
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - business_type
+  - order_status
+  - product_name
+  - product_sku
+  - product_category
+  - product_subcategory
+  - product_brand
+  - product_billing_type
+  description: Order line items joined with product catalog for SKU/category GMV analysis.
+- name: mart_orders
+  schema: crm_marts
+  grain: null
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: null
+  tenant_column: organization_id
+  columns:
+  - business_type
+  - contact_lifecycle_stage
+  - created_at
+  - created_by_name
+  - order_id
+  - order_status
+  - organization_id
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - business_type
+  - created_at
+  - order_status
+  - contact_lifecycle_stage
+  - created_by_name
+  description: Sales orders mart across B2B, B2C, and B2B2C business motions.
+- name: mart_proposals
+  schema: crm_marts
+  grain: null
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: null
+  tenant_column: organization_id
+  columns:
+  - business_type
+  - created_at
+  - organization_id
+  - owner_name
+  - proposal_id
+  - proposal_status
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - business_type
+  - created_at
+  - proposal_status
+  - owner_name
+  description: Proposals mart joined with parent deal details.
+- name: mart_quote_lines
+  schema: crm_marts
+  grain: null
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: null
+  tenant_column: organization_id
+  columns:
+  - business_type
+  - created_at
+  - organization_id
+  - owner_name
+  - product_category
+  - product_name
+  - quote_line_id
+  - quote_status
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - created_at
+  - business_type
+  - quote_status
+  - product_name
+  - product_category
+  - owner_name
+  description: Quote line items joined with product catalog.
+- name: mart_quotes
+  schema: crm_marts
+  grain: null
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: null
+  tenant_column: organization_id
+  columns:
+  - business_type
+  - created_at
+  - deal_stage
+  - organization_id
+  - owner_name
+  - quote_id
+  - quote_status
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - business_type
+  - created_at
+  - quote_status
+  - deal_stage
+  - owner_name
+  description: Quotes mart joined with parent deal stage and owner details.
+- name: mart_contact_order_summary
+  schema: crm_marts
+  grain: null
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: null
+  tenant_column: organization_id
+  columns:
+  - first_order_at
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - first_order_at
+  description: null
+- name: mart_deal_daily_summary
+  schema: crm_marts
+  grain: null
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: null
+  tenant_column: organization_id
+  columns:
+  - business_type
+  - organization_id
+  - period_date
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - business_type
+  - period_date
+  description: null
+- name: mart_deal_owner_daily_summary
+  schema: crm_marts
+  grain: null
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: null
+  tenant_column: organization_id
+  columns:
+  - business_type
+  - organization_id
+  - owner_name
+  - period_date
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - business_type
+  - owner_name
+  - period_date
+  description: null
+- name: mart_contact_daily_summary
+  schema: crm_marts
+  grain: null
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: null
+  tenant_column: organization_id
+  columns:
+  - business_type
+  - organization_id
+  - period_date
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - business_type
+  - period_date
+  description: null
+- name: mart_proposal_daily_summary
+  schema: crm_marts
+  grain: null
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: null
+  tenant_column: organization_id
+  columns:
+  - business_type
+  - organization_id
+  - period_date
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - business_type
+  - period_date
+  description: null
+- name: mart_order_line_daily_summary
+  schema: crm_marts
+  grain: null
+  preferred_source: mart
+  sql_agent_read: true
+  row_scope_column: null
+  tenant_column: organization_id
+  columns:
+  - business_type
+  - organization_id
+  - period_date
+  primary_key: null
+  foreign_keys: null
+  semantic_dimensions:
+  - organization_id
+  - business_type
+  - period_date
+  description: null
+joins:
+- from: mart_deals
+  to: mart_contacts
+  keys:
+  - left: contact_id
+    right: contact_id
+  - left: organization_id
+    right: organization_id
+  cardinality: many_to_one
+  purpose: Deal primary contact
+- from: mart_deals
+  to: mart_companies
+  keys:
+  - left: company_id
+    right: company_id
+  - left: organization_id
+    right: organization_id
+  cardinality: many_to_one
+  purpose: Deal account company
+- from: mart_orders
+  to: mart_contacts
+  keys:
+  - left: contact_id
+    right: contact_id
+  - left: organization_id
+    right: organization_id
+  cardinality: many_to_one
+  purpose: Order buyer contact
+- from: mart_contact_campaign_engagement
+  to: mart_contacts
+  keys:
+  - left: contact_id
+    right: contact_id
+  - left: organization_id
+    right: organization_id
+  cardinality: one_to_one
+  purpose: Campaign engagement on contact (sql_agent_only)
+synonyms:
+  team: queue_name

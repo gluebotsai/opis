@@ -1,0 +1,448 @@
+version: 1
+# Contact Center access. Deny before the executor. Do not retry a deny.
+roles:
+  admin:
+    default_scope: org
+    my_rows_column: assigned_user_id
+    stored_names: [admin, administrator, manager, supervisor]
+  agent:
+    default_scope: own
+    my_rows_column: assigned_user_id
+    also_match: assigned_agent_id
+    stored_names: [agent]
+
+scope_levels:
+  - org
+  - own
+  - queue
+
+matrix:
+  org:
+    admin: all
+    agent: deny
+  own:
+    admin: all
+    agent: all
+  # Agent queue scope: engine ANDs UI queue_ids (intake extra). Do not invent ids in SQL.
+  queue:
+    admin: all
+    agent: all
+
+personal_data_columns:
+  - customer_name
+  - body
+  - suggestion_text
+  - final_text
+  - notes
+
+views:
+  admin:
+    conversations:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    messages:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    message_receipts:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    message_delivery_attempts:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    assignments:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    transfers:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    applied_dispositions:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    disposition_catalog:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    sentiment_turns:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    participants:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    notes:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    sla_state:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    routing_attempts:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    nlp_turns:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    nlp_conversations:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    copilot_turns:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    missed_contacts:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    missed_reasons:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    tasks:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    callback_attempts:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    not_ready_escalations:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    agent_capacity:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    agents:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    users:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    teams:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    queues:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    setup_queues:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    queue_members:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    setup_queue_agents:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    skills:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    agent_skills:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    queue_skills:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    presence:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    presence_history:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    presence_reasons:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    routing_policies:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    queue_routing_profiles:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    live_queue_snapshot:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    business_hours:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    shifts:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    holiday_calendars:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    holidays:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    sla_policies:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    call_cdr:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    voice_outcomes:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    webchat_sessions:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    channel_configs:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    webchat_configs:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    email_configs:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    social_configs:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    automation_policies:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    mailbox_policies:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    whatsapp_policies:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    voice_dids:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    recording_settings:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    sip_domains:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    sip_extensions:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    customers:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    identity_keys:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    knowledge_documents:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    roles:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    user_product_access:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    analytics_incidents:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    forecast_runs:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    workforce_plans:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+  agent:
+    conversations:
+      scope: "(assigned_user_id = {user_id} OR assigned_agent_id IN (SELECT a.id FROM rpt.agents a WHERE a.setup_user_id = {user_id}))"
+      hide: []
+      mask: {}
+    messages:
+      scope: "conversation_id IN (SELECT c.id FROM rpt.conversations c)"
+      hide: []
+      mask: {}
+    message_receipts:
+      scope: "conversation_id IN (SELECT c.id FROM rpt.conversations c)"
+      hide: []
+      mask: {}
+    message_delivery_attempts:
+      scope: "conversation_id IN (SELECT c.id FROM rpt.conversations c)"
+      hide: []
+      mask: {}
+    assignments:
+      scope: "conversation_id IN (SELECT c.id FROM rpt.conversations c)"
+      hide: []
+      mask: {}
+    transfers:
+      scope: "conversation_id IN (SELECT c.id FROM rpt.conversations c)"
+      hide: []
+      mask: {}
+    applied_dispositions:
+      scope: "conversation_id IN (SELECT c.id FROM rpt.conversations c)"
+      hide: []
+      mask: {}
+    disposition_catalog:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    sentiment_turns:
+      scope: "conversation_id IN (SELECT c.id FROM rpt.conversations c)"
+      hide: []
+      mask: {}
+    participants:
+      scope: "conversation_id IN (SELECT c.id FROM rpt.conversations c)"
+      hide: []
+      mask: {}
+    notes:
+      scope: "conversation_id IN (SELECT c.id FROM rpt.conversations c)"
+      hide: []
+      mask: {}
+    sla_state:
+      scope: "conversation_id IN (SELECT c.id FROM rpt.conversations c)"
+      hide: []
+      mask: {}
+    routing_attempts:
+      scope: "conversation_id IN (SELECT c.id FROM rpt.conversations c)"
+      hide: []
+      mask: {}
+    nlp_turns:
+      scope: "conversation_id IN (SELECT c.id FROM rpt.conversations c)"
+      hide: []
+      mask: {}
+    nlp_conversations:
+      scope: "conversation_id IN (SELECT c.id FROM rpt.conversations c)"
+      hide: []
+      mask: {}
+    copilot_turns:
+      scope: "conversation_id IN (SELECT c.id FROM rpt.conversations c)"
+      hide: []
+      mask: {}
+    missed_contacts:
+      scope: "conversation_id IN (SELECT c.id FROM rpt.conversations c)"
+      hide: []
+      mask: {}
+    missed_reasons:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    tasks:
+      scope: "assigned_user_id = {user_id}"
+      hide: []
+      mask: {}
+    callback_attempts:
+      scope: "conversation_id IN (SELECT c.id FROM rpt.conversations c)"
+      hide: []
+      mask: {}
+    not_ready_escalations:
+      scope: "setup_user_id = {user_id}"
+      hide: []
+      mask: {}
+    agent_capacity:
+      scope: "agent_id IN (SELECT a.id FROM rpt.agents a WHERE a.setup_user_id = {user_id})"
+      hide: []
+      mask: {}
+    agents:
+      scope: "setup_user_id = {user_id}"
+      hide: []
+      mask: {}
+    users:
+      scope: "id = {user_id}"
+      hide: []
+      mask: {}
+    teams:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    queues:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    queue_members:
+      scope: "agent_id IN (SELECT a.id FROM rpt.agents a WHERE a.setup_user_id = {user_id})"
+      hide: []
+      mask: {}
+    skills:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    agent_skills:
+      scope: "agent_id IN (SELECT a.id FROM rpt.agents a WHERE a.setup_user_id = {user_id})"
+      hide: []
+      mask: {}
+    queue_skills:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    presence:
+      scope: "agent_id IN (SELECT a.id FROM rpt.agents a WHERE a.setup_user_id = {user_id})"
+      hide: []
+      mask: {}
+    presence_history:
+      scope: "agent_id IN (SELECT a.id FROM rpt.agents a WHERE a.setup_user_id = {user_id})"
+      hide: []
+      mask: {}
+    presence_reasons:
+      scope: "TRUE"
+      hide: []
+      mask: {}
+    call_cdr:
+      scope: "session_id IN (SELECT c.external_thread_id FROM rpt.conversations c)"
+      hide: []
+      mask: {}
+    voice_outcomes:
+      scope: "conversation_id IN (SELECT c.id FROM rpt.conversations c)"
+      hide: []
+      mask: {}
+    webchat_sessions:
+      scope: "conversation_id IN (SELECT c.id FROM rpt.conversations c)"
+      hide: []
+      mask: {}
+    customers:
+      scope: "cdp_id IN (SELECT c.contact_id FROM rpt.conversations c)"
+      hide: []
+      mask: {}

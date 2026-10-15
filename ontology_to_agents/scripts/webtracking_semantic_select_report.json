@@ -1,0 +1,702 @@
+{
+  "organization_id": 1003,
+  "product": "webtracking",
+  "agent": "webtracking.reporting_mas",
+  "mode": "SELECT-only template SQL against ClickHouse",
+  "summary": {
+    "total": 85,
+    "ok": 84,
+    "fail": 1,
+    "non_zero_values": 39,
+    "elapsed_s": 102.0
+  },
+  "metrics": [
+    {
+      "metric": "average_order_value",
+      "status": "ok",
+      "value": null,
+      "table": "mart_conversion_events",
+      "elapsed_ms": 12521.7,
+      "error": null
+    },
+    {
+      "metric": "average_session_duration",
+      "status": "ok",
+      "value": 3305.0188679245284,
+      "table": "mart_web_sessions",
+      "elapsed_ms": 1831.9,
+      "error": null
+    },
+    {
+      "metric": "avg_cls",
+      "status": "ok",
+      "value": null,
+      "table": "mart_performance_events",
+      "elapsed_ms": 1761.5,
+      "error": null
+    },
+    {
+      "metric": "avg_fcp_ms",
+      "status": "ok",
+      "value": null,
+      "table": "mart_performance_events",
+      "elapsed_ms": 1629.4,
+      "error": null
+    },
+    {
+      "metric": "avg_inp_ms",
+      "status": "ok",
+      "value": null,
+      "table": "mart_performance_events",
+      "elapsed_ms": 920.2,
+      "error": null
+    },
+    {
+      "metric": "avg_lcp_ms",
+      "status": "ok",
+      "value": null,
+      "table": "mart_performance_events",
+      "elapsed_ms": 932.8,
+      "error": null
+    },
+    {
+      "metric": "avg_scroll_depth",
+      "status": "ok",
+      "value": 0.0,
+      "table": "mart_page_views",
+      "elapsed_ms": 915.8,
+      "error": null
+    },
+    {
+      "metric": "avg_time_on_page_seconds",
+      "status": "ok",
+      "value": 0.0,
+      "table": "mart_page_views",
+      "elapsed_ms": 916.4,
+      "error": null
+    },
+    {
+      "metric": "avg_ttfb_ms",
+      "status": "ok",
+      "value": null,
+      "table": "mart_performance_events",
+      "elapsed_ms": 1147.7,
+      "error": null
+    },
+    {
+      "metric": "bounce_count",
+      "status": "ok",
+      "value": 77,
+      "table": "mart_web_sessions",
+      "elapsed_ms": 1090.7,
+      "error": null
+    },
+    {
+      "metric": "bounce_rate",
+      "status": "ok",
+      "value": 0.29056603773584905,
+      "table": "mart_web_sessions",
+      "elapsed_ms": 1026.5,
+      "error": null
+    },
+    {
+      "metric": "campaign_attributed_session_rate",
+      "status": "ok",
+      "value": 0.0,
+      "table": "mart_web_sessions",
+      "elapsed_ms": 1022.9,
+      "error": null
+    },
+    {
+      "metric": "campaign_attributed_sessions",
+      "status": "ok",
+      "value": 0,
+      "table": "mart_web_sessions",
+      "elapsed_ms": 1027.8,
+      "error": null
+    },
+    {
+      "metric": "cart_add_count",
+      "status": "ok",
+      "value": 0,
+      "table": "mart_product_interactions",
+      "elapsed_ms": 944.5,
+      "error": null
+    },
+    {
+      "metric": "cart_add_rate",
+      "status": "ok",
+      "value": 0.0,
+      "table": "mart_web_sessions",
+      "elapsed_ms": 1042.6,
+      "error": null
+    },
+    {
+      "metric": "checkout_conversion_rate",
+      "status": "ok",
+      "value": null,
+      "table": "mart_conversion_events",
+      "elapsed_ms": 929.8,
+      "error": null
+    },
+    {
+      "metric": "checkout_start_count",
+      "status": "ok",
+      "value": 0,
+      "table": "mart_product_interactions",
+      "elapsed_ms": 921.2,
+      "error": null
+    },
+    {
+      "metric": "checkout_start_rate",
+      "status": "ok",
+      "value": 0.0,
+      "table": "mart_web_sessions",
+      "elapsed_ms": 1054.3,
+      "error": null
+    },
+    {
+      "metric": "clicks_per_session",
+      "status": "ok",
+      "value": 7.867924528301887,
+      "table": "mart_interaction_events",
+      "elapsed_ms": 748.9,
+      "error": null,
+      "note": "retried with 2 org params inlined"
+    },
+    {
+      "metric": "consent_action_count",
+      "status": "ok",
+      "value": 0,
+      "table": "mart_cookie_operations",
+      "elapsed_ms": 942.1,
+      "error": null
+    },
+    {
+      "metric": "conversion_rate",
+      "status": "ok",
+      "value": 0.0,
+      "table": "mart_web_sessions",
+      "elapsed_ms": 1766.9,
+      "error": null
+    },
+    {
+      "metric": "custom_event_session_count",
+      "status": "ok",
+      "value": 252,
+      "table": "mart_custom_events",
+      "elapsed_ms": 1102.7,
+      "error": null
+    },
+    {
+      "metric": "custom_event_session_rate",
+      "status": "ok",
+      "value": 0.9509433962264151,
+      "table": "mart_custom_events",
+      "elapsed_ms": 1097.1,
+      "error": null,
+      "note": "retried with 2 org params inlined"
+    },
+    {
+      "metric": "dead_click_rate",
+      "status": "ok",
+      "value": 0.3320754716981132,
+      "table": "mart_web_sessions",
+      "elapsed_ms": 1232.0,
+      "error": null
+    },
+    {
+      "metric": "dead_click_session_count",
+      "status": "ok",
+      "value": 88,
+      "table": "mart_web_sessions",
+      "elapsed_ms": 1185.5,
+      "error": null
+    },
+    {
+      "metric": "dead_clicks",
+      "status": "ok",
+      "value": 592,
+      "table": "mart_interaction_events",
+      "elapsed_ms": 1097.2,
+      "error": null
+    },
+    {
+      "metric": "distinct_custom_event_types",
+      "status": "ok",
+      "value": 8,
+      "table": "mart_custom_events",
+      "elapsed_ms": 1108.7,
+      "error": null
+    },
+    {
+      "metric": "engaged_session_count",
+      "status": "ok",
+      "value": 188,
+      "table": "mart_web_sessions",
+      "elapsed_ms": 1223.7,
+      "error": null
+    },
+    {
+      "metric": "engagement_rate",
+      "status": "ok",
+      "value": 0.7094339622641509,
+      "table": "mart_web_sessions",
+      "elapsed_ms": 1060.6,
+      "error": null
+    },
+    {
+      "metric": "error_count",
+      "status": "ok",
+      "value": 0,
+      "table": "mart_error_events",
+      "elapsed_ms": 939.2,
+      "error": null
+    },
+    {
+      "metric": "error_session_count",
+      "status": "ok",
+      "value": 0,
+      "table": "mart_web_sessions",
+      "elapsed_ms": 1227.4,
+      "error": null
+    },
+    {
+      "metric": "error_session_rate",
+      "status": "ok",
+      "value": 0.0,
+      "table": "mart_web_sessions",
+      "elapsed_ms": 1201.5,
+      "error": null
+    },
+    {
+      "metric": "events_per_session",
+      "status": "ok",
+      "value": 12.067924528301887,
+      "table": "mart_interaction_events",
+      "elapsed_ms": 907.6,
+      "error": null,
+      "note": "retried with 2 org params inlined"
+    },
+    {
+      "metric": "form_abandon_rate",
+      "status": "ok",
+      "value": 0.4869109947643979,
+      "table": "mart_form_events",
+      "elapsed_ms": 939.1,
+      "error": null
+    },
+    {
+      "metric": "form_abandons",
+      "status": "ok",
+      "value": 93,
+      "table": "mart_form_events",
+      "elapsed_ms": 942.9,
+      "error": null
+    },
+    {
+      "metric": "form_failures",
+      "status": "ok",
+      "value": 0,
+      "table": "mart_form_events",
+      "elapsed_ms": 940.8,
+      "error": null
+    },
+    {
+      "metric": "form_starts",
+      "status": "ok",
+      "value": 191,
+      "table": "mart_form_events",
+      "elapsed_ms": 932.2,
+      "error": null
+    },
+    {
+      "metric": "form_submit_rate",
+      "status": "ok",
+      "value": 0.41379310344827586,
+      "table": "mart_form_events",
+      "elapsed_ms": 941.2,
+      "error": null
+    },
+    {
+      "metric": "form_submits",
+      "status": "ok",
+      "value": 108,
+      "table": "mart_form_events",
+      "elapsed_ms": 957.7,
+      "error": null
+    },
+    {
+      "metric": "form_success_rate",
+      "status": "ok",
+      "value": 0.18518518518518517,
+      "table": "mart_form_events",
+      "elapsed_ms": 946.2,
+      "error": null
+    },
+    {
+      "metric": "form_successes",
+      "status": "ok",
+      "value": 20,
+      "table": "mart_form_events",
+      "elapsed_ms": 935.8,
+      "error": null
+    },
+    {
+      "metric": "form_views",
+      "status": "ok",
+      "value": 261,
+      "table": "mart_form_events",
+      "elapsed_ms": 933.4,
+      "error": null
+    },
+    {
+      "metric": "identified_session_count",
+      "status": "ok",
+      "value": 0,
+      "table": "mart_web_sessions",
+      "elapsed_ms": 1054.6,
+      "error": null
+    },
+    {
+      "metric": "identified_session_rate",
+      "status": "ok",
+      "value": 0.0,
+      "table": "mart_web_sessions",
+      "elapsed_ms": 1045.0,
+      "error": null
+    },
+    {
+      "metric": "identified_visitor_count",
+      "status": "ok",
+      "value": 0,
+      "table": "mart_web_visitors",
+      "elapsed_ms": 1137.9,
+      "error": null
+    },
+    {
+      "metric": "landing_page_conversion_rate",
+      "status": "ok",
+      "value": 0.0,
+      "table": "mart_conversion_events",
+      "elapsed_ms": 905.3,
+      "error": null,
+      "note": "retried with 2 org params inlined"
+    },
+    {
+      "metric": "lifetime_new_visitor_count",
+      "status": "ok",
+      "value": 77,
+      "table": "mart_web_visitors",
+      "elapsed_ms": 961.0,
+      "error": null
+    },
+    {
+      "metric": "lifetime_returning_visitor_count",
+      "status": "ok",
+      "value": 43,
+      "table": "mart_web_visitors",
+      "elapsed_ms": 1163.4,
+      "error": null
+    },
+    {
+      "metric": "new_visitor_count",
+      "status": "ok",
+      "value": 77,
+      "table": "mart_web_sessions",
+      "elapsed_ms": 1203.5,
+      "error": null
+    },
+    {
+      "metric": "new_visitor_rate",
+      "status": "ok",
+      "value": 0.6416666666666667,
+      "table": "mart_web_sessions",
+      "elapsed_ms": 914.6,
+      "error": null,
+      "note": "retried with 2 org params inlined"
+    },
+    {
+      "metric": "online_visitors",
+      "status": "ok",
+      "value": 0,
+      "table": "mart_web_sessions",
+      "elapsed_ms": 1193.4,
+      "error": null
+    },
+    {
+      "metric": "page_views",
+      "status": "ok",
+      "value": 470,
+      "table": "mart_page_views",
+      "elapsed_ms": 1115.0,
+      "error": null
+    },
+    {
+      "metric": "pages_per_session",
+      "status": "ok",
+      "value": 1.7735849056603774,
+      "table": "mart_page_views",
+      "elapsed_ms": 924.7,
+      "error": null,
+      "note": "retried with 2 org params inlined"
+    },
+    {
+      "metric": "performance_event_count",
+      "status": "ok",
+      "value": 0,
+      "table": "mart_performance_events",
+      "elapsed_ms": 1093.6,
+      "error": null
+    },
+    {
+      "metric": "poor_vitals_event_count",
+      "status": "ok",
+      "value": 0,
+      "table": "mart_performance_events",
+      "elapsed_ms": 923.6,
+      "error": null
+    },
+    {
+      "metric": "poor_vitals_rate",
+      "status": "ok",
+      "value": null,
+      "table": "mart_performance_events",
+      "elapsed_ms": 937.7,
+      "error": null
+    },
+    {
+      "metric": "product_interaction_count",
+      "status": "ok",
+      "value": 0,
+      "table": "mart_product_interactions",
+      "elapsed_ms": 956.3,
+      "error": null
+    },
+    {
+      "metric": "product_view_rate",
+      "status": "ok",
+      "value": 0.0,
+      "table": "mart_web_sessions",
+      "elapsed_ms": 1081.8,
+      "error": null
+    },
+    {
+      "metric": "purchase_count",
+      "status": "ok",
+      "value": 0,
+      "table": "mart_conversion_events",
+      "elapsed_ms": 1097.7,
+      "error": null
+    },
+    {
+      "metric": "rage_click_rate",
+      "status": "ok",
+      "value": 0.04150943396226415,
+      "table": "mart_web_sessions",
+      "elapsed_ms": 1204.6,
+      "error": null
+    },
+    {
+      "metric": "rage_click_session_count",
+      "status": "ok",
+      "value": 11,
+      "table": "mart_web_sessions",
+      "elapsed_ms": 1033.7,
+      "error": null
+    },
+    {
+      "metric": "rage_clicks",
+      "status": "ok",
+      "value": 59,
+      "table": "mart_interaction_events",
+      "elapsed_ms": 935.7,
+      "error": null
+    },
+    {
+      "metric": "returning_visitor_count",
+      "status": "ok",
+      "value": 43,
+      "table": "mart_web_sessions",
+      "elapsed_ms": 1051.2,
+      "error": null
+    },
+    {
+      "metric": "returning_visitor_rate",
+      "status": "ok",
+      "value": 0.35833333333333334,
+      "table": "mart_web_sessions",
+      "elapsed_ms": 749.3,
+      "error": null,
+      "note": "retried with 2 org params inlined"
+    },
+    {
+      "metric": "scroll_engagement_rate",
+      "status": "ok",
+      "value": 0.0,
+      "table": "mart_web_sessions",
+      "elapsed_ms": 1045.5,
+      "error": null
+    },
+    {
+      "metric": "search_session_count",
+      "status": "ok",
+      "value": 0,
+      "table": "mart_web_sessions",
+      "elapsed_ms": 1023.1,
+      "error": null
+    },
+    {
+      "metric": "search_usage_rate",
+      "status": "ok",
+      "value": 0.0,
+      "table": "mart_web_sessions",
+      "elapsed_ms": 1043.5,
+      "error": null
+    },
+    {
+      "metric": "sessions_with_cart_add",
+      "status": "ok",
+      "value": 0,
+      "table": "mart_web_sessions",
+      "elapsed_ms": 1562.3,
+      "error": null
+    },
+    {
+      "metric": "sessions_with_checkout_start",
+      "status": "ok",
+      "value": 0,
+      "table": "mart_web_sessions",
+      "elapsed_ms": 1197.0,
+      "error": null
+    },
+    {
+      "metric": "sessions_with_conversions",
+      "status": "ok",
+      "value": 0,
+      "table": "mart_web_sessions",
+      "elapsed_ms": 1036.1,
+      "error": null
+    },
+    {
+      "metric": "sessions_with_deep_scroll",
+      "status": "ok",
+      "value": 0,
+      "table": "mart_web_sessions",
+      "elapsed_ms": 1029.4,
+      "error": null
+    },
+    {
+      "metric": "sessions_with_product_views",
+      "status": "ok",
+      "value": 0,
+      "table": "mart_web_sessions",
+      "elapsed_ms": 1025.3,
+      "error": null
+    },
+    {
+      "metric": "signup_count",
+      "status": "ok",
+      "value": 0,
+      "table": "mart_conversion_events",
+      "elapsed_ms": 926.8,
+      "error": null
+    },
+    {
+      "metric": "total_clicks",
+      "status": "ok",
+      "value": 2085,
+      "table": "mart_interaction_events",
+      "elapsed_ms": 928.8,
+      "error": null
+    },
+    {
+      "metric": "total_conversion_value",
+      "status": "ok",
+      "value": "0.00",
+      "table": "mart_conversion_events",
+      "elapsed_ms": 926.7,
+      "error": null
+    },
+    {
+      "metric": "total_conversions",
+      "status": "ok",
+      "value": 0,
+      "table": "mart_conversion_events",
+      "elapsed_ms": 985.4,
+      "error": null
+    },
+    {
+      "metric": "total_custom_events",
+      "status": "ok",
+      "value": 41584,
+      "table": "mart_custom_events",
+      "elapsed_ms": 1092.9,
+      "error": null
+    },
+    {
+      "metric": "total_events",
+      "status": "ok",
+      "value": 3198,
+      "table": "mart_interaction_events",
+      "elapsed_ms": 942.3,
+      "error": null
+    },
+    {
+      "metric": "total_revenue",
+      "status": "ok",
+      "value": "0.00",
+      "table": "mart_conversion_events",
+      "elapsed_ms": 926.3,
+      "error": null
+    },
+    {
+      "metric": "tracking_consent_denied_count",
+      "status": "ok",
+      "value": 0,
+      "table": "mart_cookie_operations",
+      "elapsed_ms": 927.6,
+      "error": null
+    },
+    {
+      "metric": "tracking_consent_grant_rate",
+      "status": "ok",
+      "value": null,
+      "table": "mart_cookie_operations",
+      "elapsed_ms": 1096.9,
+      "error": null
+    },
+    {
+      "metric": "tracking_consent_granted_count",
+      "status": "ok",
+      "value": 0,
+      "table": "mart_cookie_operations",
+      "elapsed_ms": 1103.2,
+      "error": null
+    },
+    {
+      "metric": "unique_visitors",
+      "status": "ok",
+      "value": 120,
+      "table": "mart_web_sessions",
+      "elapsed_ms": 1240.1,
+      "error": null
+    },
+    {
+      "metric": "visitor_identification_rate",
+      "status": "error",
+      "value": null,
+      "table": "mart_web_visitors",
+      "elapsed_ms": 1096.0,
+      "error": "DatabaseError: Received ClickHouse exception, code: 47, server response: Code: 47. DB::Exception: Unknown expression or function identifier `visitor_id` in scope SELECT countIf(is_identified_flag = 1) / nullIf(uniqExact(visitor_id), 0) AS visitor_identification_rate FROM webtracking_marts.mart_web_visitors WHERE organization_id = 1003. (UNKNOWN_IDENTIFIER) (for url http://10.180.0.126:8123)"
+    },
+    {
+      "metric": "web_session_volume",
+      "status": "ok",
+      "value": 265,
+      "table": "mart_web_sessions",
+      "elapsed_ms": 1206.0,
+      "error": null
+    }
+  ]
+}

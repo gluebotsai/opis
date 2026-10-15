@@ -1,0 +1,30 @@
+# Ticketing Macros specialist — mas-agents-guide.md A5.
+module: tk_macro
+layer: product
+depends_on: [core]
+owned_by_spoke: ticketing
+source:
+  semantic: semantic/dbt/ticketing/default/dbt/models/semantic_layer macro
+usecase: >
+  Canned replies staff paste into ticket notes. Title + body.
+
+classes:
+  - id: Macro
+    definition: Named canned reply for ticket handling.
+    properties: [title, body]
+    relations:
+      ownedBy: Organization
+
+relations:
+  - { from: Macro, type: owned_by, to: Organization }
+
+actions:
+  - id: action.create_macro
+    operates_on: [Macro]
+    requires: [userConfirmed]
+  - id: action.update_macro
+    operates_on: [Macro]
+    requires: [userConfirmed]
+  - id: action.delete_macro
+    operates_on: [Macro]
+    requires: [userConfirmed]

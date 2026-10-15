@@ -1,0 +1,278 @@
+{
+  "question": "Which factors are associated with stalled deals?",
+  "answer": "There are 13 active opportunities currently flagged with forecast risk, representing a pipeline value of \u20b9148,250.00 (INR) and $45,123.94 (USD).\n\n| Deal Title | Stage | Amount | Currency | Confidence % |\n| :--- | :--- | :--- | :--- | :--- |\n| positron \u2014 gugan s | qualification | 123,250.00 | INR | 5% |\n| kavin-crm | qualification | 20,000.00 | INR | 10% |\n| CRM | propose | 15,000.00 | USD | 5% |\n| crm | propose | 15,000.00 | USD | 5% |\n| CRM | propose | 15,000.00 | USD | 5% |\n| hexaware \u2014 Hitler hit | discover | 5,000.00 | INR | 0% |\n| GRT Jewellers \u2014 Nandhu A | propose | 123.94 | USD | 5% |\n| Lakshmi P | qualification | 0 | INR | 0% |\n| Aspero\u2014 dpzoro Customer | discover | 0 | INR | 5% |\n| HCL \u2014 yaswanth M G | qualification | 0 | INR | 5% |\n\nStalled deals are primarily driven by three systemic factors:\n* **Zero Engagement Signals:** A consistent pattern of zero recorded activity exists across all stages, specifically noted in deals like `kavin-crm` and `Aspero\u2014 dpzoro Customer`.\n* **Quote and Documentation Gaps:** Deals in the `propose` stage, such as the multiple `CRM` entries and `GRT Jewellers \u2014 Nandhu A`, are stalled due to having only draft quotes rather than finalized versions.\n* **Forecast Unreliability:** Many deals, including `positron \u2014 gugan s`, lack expected close dates, making them impossible to include in reliable forecast roll-ups.\n\nYou should audit the draft quotes for the `CRM` deals and `GRT Jewellers \u2014 Nandhu A` to establish timelines, and assign follow-up tasks to the owners of `positron \u2014 gugan s` and `kavin-crm` to generate engagement signals.",
+  "trace": {
+    "question": "Which factors are associated with stalled deals?",
+    "identity": {
+      "organization_id": 1003,
+      "user_id": 1017,
+      "role": "admin"
+    },
+    "model": "worktual-gemma",
+    "tasks": [
+      {
+        "status": "ok",
+        "store": "sql",
+        "sql": "WITH rpt_deals AS (\nSELECT src.id, src.organization_id, src.title, src.stage, src.amount, src.currency_code, src.stage_weight, src.weighted_amount, src.company_id, src.company_name, src.company_industry, src.location_id, src.contact_id, src.contact_name, src.contact_email, src.owner_user_id, src.owner_name, src.created_at, src.closed_at, src.close_ts, src.updated_at, src.expected_close_date, src.lost_reason, src.is_open, src.is_won, src.is_lost, src.aging_days, src.forecast_category, src.forecast_reason, src.forecast_flagged FROM (\nSELECT \n  d.id,\n  d.organization_id,\n  d.title,\n  d.stage,\n  COALESCE(d.amount, 0) AS amount,\n  CASE\n    WHEN pq.currency IS NOT NULL AND pq.currency <> 'USD' THEN pq.currency\n    WHEN o.country IS NOT NULL AND o.country <> 'US' AND cc.curr IS NOT NULL THEN cc.curr\n    WHEN pq.currency = 'USD' THEN 'USD'\n    WHEN o.country = 'US' THEN 'USD'\n    ELSE 'USD'\n  END AS currency_code,\n  CASE d.stage\n    WHEN 'qualification' THEN 0.10\n    WHEN 'discover' THEN 0.25\n    WHEN 'propose' THEN 0.50\n    WHEN 'negotiate' THEN 0.75\n    WHEN 'closed_won' THEN 1.00\n    WHEN 'closed_lost' THEN 0.00\n    ELSE 0.00\n  END AS stage_weight,\n  ROUND(COALESCE(d.amount, 0) * (\n    CASE d.stage\n      WHEN 'qualification' THEN 0.10\n      WHEN 'discover' THEN 0.25\n      WHEN 'propose' THEN 0.50\n      WHEN 'negotiate' THEN 0.75\n      WHEN 'closed_won' THEN 1.00\n      WHEN 'closed_lost' THEN 0.00\n      ELSE 0.00\n    END\n  ), 2) AS weighted_amount,\n  d.company_id,\n  c.name AS company_name,\n  c.industry AS company_industry,\n  d.location_id,\n  d.contact_id,\n  COALESCE(d.contact_name, cdp.first_name || ' ' || COALESCE(cdp.last_name, '')) AS contact_name,\n  COALESCE(d.contact_email, id_k.key_value) AS contact_email,\n  d.owner_user_id,\n  su.first_name || ' ' || COALESCE(su.last_name, '') AS owner_name,\n  d.created_at,\n  d.closed_at,\n  COALESCE(d.closed_at, d.created_at) AS close_ts,\n  d.updated_at,\n  d.expected_close_date,\n  d.lost_reason,\n  (d.stage IN ('qualification', 'discover', 'propose', 'negotiate')) AS is_open,\n  (d.stage = 'closed_won') AS is_won,\n  (d.stage = 'closed_lost') AS is_lost,\n  FLOOR(EXTRACT(EPOCH FROM (NOW() - d.created_at))/86400)::integer AS aging_days,\n  d.forecast_category,\n  d.forecast_reason,\n  d.forecast_flagged\nFROM crm.deals d\nLEFT JOIN crm.companies c ON c.id = d.company_id AND c.organization_id = d.organization_id\nLEFT JOIN accounts.setup_users su ON su.id = d.owner_user_id\nLEFT JOIN accounts.organizations o ON o.id = d.organization_id\nLEFT JOIN cdp.customer_profile cdp ON cdp.cdp_id = d.contact_id\nLEFT JOIN LATERAL (\n  SELECT ik.key_value \n  FROM cdp.identity_keys ik \n  WHERE ik.cdp_id = d.contact_id AND ik.key_type = 'email' AND ik.organization_id = d.organization_id \n  ORDER BY ik.created_at ASC \n  LIMIT 1\n) id_k ON TRUE\nLEFT JOIN LATERAL (\n  SELECT q.currency \n  FROM crm.quotes q \n  WHERE q.deal_id = d.id AND q.organization_id = d.organization_id \n  ORDER BY CASE WHEN q.status = 'accepted' THEN 1 WHEN q.status = 'sent' THEN 2 ELSE 3 END, q.updated_at DESC \n  LIMIT 1\n) pq ON TRUE\nLEFT JOIN LATERAL (\n  SELECT CASE o.country \n    WHEN 'India' THEN 'INR' \n    WHEN 'United Kingdom' THEN 'GBP' \n    WHEN 'Germany' THEN 'EUR' \n    WHEN 'Canada' THEN 'CAD' \n    WHEN 'Australia' THEN 'AUD' \n    ELSE 'USD' \n  END AS curr\n) cc ON TRUE\nWHERE d.organization_id = %(_org_id)s\n) src WHERE TRUE\n)\nSELECT CAST(COUNT(*) AS BIGINT) AS active_opportunities FROM rpt_deals AS deals WHERE is_open = TRUE AND TRUE AND TRUE AND TRUE LIMIT 500",
+        "views": [
+          "deals"
+        ],
+        "guard_notes": [
+          "row cap 500 applied"
+        ],
+        "bound_params": {
+          "_org_id": 1003,
+          "_user_id": 1017,
+          "user_id": 1017,
+          "organization_id": 1003,
+          "org_id": 1003,
+          "tenant_id": 1003,
+          "current_user_id": 1017
+        },
+        "rows": [
+          {
+            "active_opportunities": 13
+          }
+        ],
+        "kpi_id": "active_opportunities",
+        "time_status": "all_time",
+        "attempts": [
+          {
+            "raw": "{\"tool\":\"run_kpi\",\"kpi_id\":\"active_opportunities\",\"dimension\":null}",
+            "call": {
+              "kind": "run_kpi",
+              "kpi_id": "active_opportunities"
+            }
+          }
+        ],
+        "time_echo": "overall (no date filter, UTC)",
+        "tool": "run_kpi",
+        "requested_kpi": "active_opportunities",
+        "requested_dimension": null,
+        "task": {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "active_opportunities",
+          "goal": "Count of active deals to establish baseline",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "kpi",
+          "depends_on": []
+        }
+      },
+      {
+        "status": "ok",
+        "rows": [
+          {
+            "deal_id": "cmtlcopyi001p1a9vpooi9rs3",
+            "title": "positron \u2014 gugan s",
+            "stage": "qualification",
+            "amount": 123250.0,
+            "currency": "INR",
+            "forecast_category": "omitted",
+            "forecast_reason": "The deal is in qualification with no expected close date, zero activity, and only a draft quote, making it unrealistic to include in the current forecast.",
+            "confidence_percent": 5,
+            "last_updated": "2026-10-01T11:51:25.405000000+00:00",
+            "created_at": "2026-09-03T09:56:36.330000000+00:00"
+          },
+          {
+            "deal_id": "cmuqjbnjv0018zu5t7tloh0rn",
+            "title": "kavin-crm",
+            "stage": "qualification",
+            "amount": 20000.0,
+            "currency": "INR",
+            "forecast_category": "omitted",
+            "forecast_reason": "The deal is in the qualification stage with zero activity signals or quotes, making a close date 13 days away unrealistic. The lack of any engagement evidence suggests this deal should be excluded from the current forecast.",
+            "confidence_percent": 10,
+            "last_updated": "2026-10-02T13:05:35.889000000+00:00",
+            "created_at": "2026-10-02T05:40:57.211000000+00:00"
+          },
+          {
+            "deal_id": "cmul9ofkg01vvqm0u2khw3xn6",
+            "title": "CRM",
+            "stage": "propose",
+            "amount": 15000.0,
+            "currency": "USD",
+            "forecast_category": "omitted",
+            "forecast_reason": "The deal is in the propose stage with no expected close date, zero activity, and only a draft quote, making it unrealistic to include in any current forecast roll-up.",
+            "confidence_percent": 5,
+            "last_updated": "2026-10-02T13:05:37.550000000+00:00",
+            "created_at": "2026-09-28T13:12:06.352000000+00:00"
+          },
+          {
+            "deal_id": "cmuctclg2005o1ago5703inxa",
+            "title": "crm",
+            "stage": "propose",
+            "amount": 15000.0,
+            "currency": "USD",
+            "forecast_category": "omitted",
+            "forecast_reason": "The deal has no expected close date, zero activity, and only a draft quote, making it impossible to forecast realistically in the current stage.",
+            "confidence_percent": 5,
+            "last_updated": "2026-10-02T13:05:38.217000000+00:00",
+            "created_at": "2026-09-22T15:12:50.835000000+00:00"
+          },
+          {
+            "deal_id": "cmumhu64r01yaqm0up65tavy0",
+            "title": "CRM",
+            "stage": "propose",
+            "amount": 15000.0,
+            "currency": "USD",
+            "forecast_category": "omitted",
+            "forecast_reason": "The deal is in the propose stage with no expected close date, zero activity, and only a draft quote, making it unrealistic to include in the current forecast.",
+            "confidence_percent": 5,
+            "last_updated": "2026-10-02T13:05:38.897000000+00:00",
+            "created_at": "2026-09-29T09:48:17.163000000+00:00"
+          },
+          {
+            "deal_id": "cmtci1gpm000f1a860hip0f2p",
+            "title": "hexaware \u2014 Hitler hit",
+            "stage": "discover",
+            "amount": 5000.0,
+            "currency": "INR",
+            "forecast_category": "omitted",
+            "forecast_reason": "No expected close date is set and there is zero activity or evidence to support the qualification stage, making it impossible to forecast.",
+            "confidence_percent": 0,
+            "last_updated": "2026-10-02T15:21:36.323000000+00:00",
+            "created_at": "2026-08-28T05:16:33.370000000+00:00"
+          },
+          {
+            "deal_id": "cmu28ch7200lbs70uocmqjzrt",
+            "title": "GRT Jewellers \u2014 Nandhu A",
+            "stage": "propose",
+            "amount": 123.94,
+            "currency": "USD",
+            "forecast_category": "omitted",
+            "forecast_reason": "The deal is in the 'propose' stage but has no expected close date, zero activity, and only a draft quote, making it unrealistic to include in the current forecast.",
+            "confidence_percent": 5,
+            "last_updated": "2026-10-02T13:05:42.414000000+00:00",
+            "created_at": "2026-09-15T05:27:11.630000000+00:00"
+          },
+          {
+            "deal_id": "cmtn4ovi300a4o40ul729d1ud",
+            "title": "Lakshmi P",
+            "stage": "qualification",
+            "amount": 0,
+            "currency": "INR",
+            "forecast_category": "omitted",
+            "forecast_reason": "No expected close date is set and there is zero activity or evidence to support the deal's progression, making it unrealistic to include in a forecast.",
+            "confidence_percent": 0,
+            "last_updated": "2026-10-02T13:35:36.166000000+00:00",
+            "created_at": "2026-09-04T15:48:18.939000000+00:00"
+          },
+          {
+            "deal_id": "cmu1dirbz002k1anxhf42gtz5",
+            "title": "Aspero\u2014 dpzoro Customer",
+            "stage": "discover",
+            "amount": 0,
+            "currency": "INR",
+            "forecast_category": "omitted",
+            "forecast_reason": "The deal has no expected close date, zero activity, and no evidence of engagement, making it impossible to forecast realistically.",
+            "confidence_percent": 5,
+            "last_updated": "2026-09-30T06:27:23.710000000",
+            "created_at": "2026-09-14T15:04:16.605000000"
+          },
+          {
+            "deal_id": "cmu6v7vbu005io50uh7bpe00x",
+            "title": "HCL \u2014 yaswanth M G",
+            "stage": "qualification",
+            "amount": 0,
+            "currency": "INR",
+            "forecast_category": "omitted",
+            "forecast_reason": "The deal is in the qualification stage with no expected close date, zero activity, and no evidence of engagement, making it unrealistic to include in any forecast.",
+            "confidence_percent": 5,
+            "last_updated": "2026-10-02T13:05:43.092000000+00:00",
+            "created_at": "2026-09-18T11:18:32.539000000+00:00"
+          },
+          {
+            "deal_id": "cmu8k810304kmlb0u4hi6w7a4",
+            "title": "pricing",
+            "stage": "propose",
+            "amount": 0.0,
+            "currency": "USD",
+            "forecast_category": "omitted",
+            "forecast_reason": "The deal is in the propose stage but has no expected close date, zero activity, and only a draft quote with no value, making it unrealistic to include in the current forecast.",
+            "confidence_percent": 5,
+            "last_updated": "2026-09-30T12:37:37.086000000+00:00",
+            "created_at": "2026-09-19T15:46:16.467000000+00:00"
+          },
+          {
+            "deal_id": "cmucsr2pw001upg0ubbvbzhw8",
+            "title": "Lokesh deal",
+            "stage": "negotiate",
+            "amount": 0,
+            "currency": "INR",
+            "forecast_category": "omitted",
+            "forecast_reason": "The deal is in the negotiate stage but has no expected close date, zero activity, and no evidence of engagement, making it unrealistic to include in a forecast.",
+            "confidence_percent": 5,
+            "last_updated": "2026-09-30T12:21:27.875000000+00:00",
+            "created_at": "2026-09-22T14:56:06.789000000+00:00"
+          },
+          {
+            "deal_id": "cmugumk9x004fmo0ubruzr8uq",
+            "title": "Netflix \u2014 Kirti Patidar",
+            "stage": "discover",
+            "amount": 0,
+            "currency": "INR",
+            "forecast_category": "omitted",
+            "forecast_reason": "The deal has no expected close date, no amount, and zero activity or evidence, making it impossible to forecast and unrealistic to include in a pipeline roll-up.",
+            "confidence_percent": 0,
+            "last_updated": "2026-09-30T12:21:26.785000000+00:00",
+            "created_at": "2026-09-25T10:59:40.197000000+00:00"
+          }
+        ],
+        "sql": "MATCH (d:Deal)\nWHERE toLower(d.stage) IN ['qualification', 'discover', 'propose', 'negotiate']\n  AND ($can_view_all = true OR d.owner_user_id = $effective_user_id)\n  AND (d.forecast_flagged = true OR toLower(d.forecast_category) = 'omitted')\n  AND (coalesce($deal_title, '') = '' OR toLower(d.title) CONTAINS toLower($deal_title))\nOPTIONAL MATCH (d)-[:HAS]->(q:Quote)\nWITH d, collect(q) AS quotes\nWITH d,\n     [q IN quotes WHERE toLower(q.approval_status) = 'approved'][0] AS approved_quote,\n     quotes[0] AS any_quote\nWITH d,\n     coalesce(approved_quote.currency, any_quote.currency, d.currency, $default_currency, 'INR') AS currency,\n     coalesce(approved_quote.total, any_quote.total, d.amount, 0) AS final_amount\nRETURN d.id AS deal_id,\n       d.title AS title,\n       d.stage AS stage,\n       final_amount AS amount,\n       currency,\n       d.forecast_category AS forecast_category,\n       coalesce(d.forecast_reason, 'No forecast reason recorded') AS forecast_reason,\n       d.forecast_confidence_percent AS confidence_percent,\n       d.updated_at AS last_updated,\n       d.created_at AS created_at\nORDER BY amount DESC\nLIMIT 20",
+        "tool": "kg",
+        "attempts_made": 1,
+        "kg_notes": "### Stalled Deal Pipeline Analysis\n\nThe analysis of stalled deals identifies a total pipeline value of **\u20b9148,250.00 (INR)** and **$45,123.94 (USD)** currently flagged with forecast risk. These deals are characterized by a lack of engagement, missing close dates, and minimal documentation.\n\n| Deal Title | Stage | Amount | Currency | Confidence % |\n| :--- | :--- | :--- | :--- | :--- |\n| positron \u2014 gugan s | qualification | 123,250.00 | INR | 5% |\n| kavin-crm | qualification | 20,000.00 | INR | 10% |\n| CRM | propose | 15,000.00 | USD | 5% |\n| crm | propose | 15,000.00 | USD | 5% |\n| CRM | propose | 15,000.00 | USD | 5% |\n| hexaware \u2014 Hitler hit | discover | 5,000.00 | INR | 0% |\n| GRT Jewellers \u2014 Nandhu A | propose | 123.94 | USD | 5% |\n| Lakshmi P | qualification | 0 | INR | 0% |\n| Aspero\u2014 dpzoro Customer | discover | 0 | INR | 5% |\n| HCL \u2014 yaswanth M G | qualification | 0 | INR | 5% |\n| **Total** | | **\u20b9148,250.00 / $45,123.94** | | |\n\n### Commercial Diagnosis of Stalled Factors\n\nThe primary drivers for these stalled deals are systemic gaps in activity and documentation:\n\n*   **Zero Engagement Signals:** Across all stages\u2014from `discover` to `propose`\u2014there is a consistent pattern of zero recorded activity. Deals such as `kavin-crm` and `Aspero\u2014 dpzoro Customer` show no evidence of engagement or recent contact.\n*   **Quote and Documentation Gaps:** Several deals in the `propose` stage, including `CRM` (multiple entries) and `GRT Jewellers \u2014 Nandhu A`, are stalled because they only possess draft quotes rather than finalized versions. For $0 deals like `Lakshmi P` and `HCL \u2014 yaswanth M G`, the lack of quotes or line items prevents any meaningful progression.\n*   **Forecast Unreliability:** A significant portion of the stalled value is tied to deals with no expected close dates. This is particularly evident in `positron \u2014 gugan s` and the various `propose` stage deals, where the lack of a timeline makes them unrealistic for current forecast roll-ups.\n\n### Recommended Next Steps\n\n*   **Audit Draft Quotes:** Review the draft quotes for the three `CRM` deals and `GRT Jewellers \u2014 Nandhu A` to convert them into finalized versions and establish expected close dates.\n*   **Activity Injection:** Assign immediate follow-up tasks to the owners of `positron \u2014 gugan s` and `kavin-crm` to generate the first recorded activity signals required to move them out of the qualification stage.\n*   **Data Hygiene Cleanup:** Re-evaluate the $0 deals (`Lakshmi P`, `Aspero\u2014 dpzoro Customer`, and `HCL \u2014 yaswanth M G`) to determine if they should be moved to a \"Lost\" status or if they require immediate discovery to establish value.",
+        "task": {
+          "id": "t2",
+          "executor": "kg",
+          "kpi": null,
+          "goal": "Analyze stalled deals: stages, amounts, quotes, recent activities, and owner notes",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "why_breakdown",
+          "depends_on": [
+            "t1"
+          ]
+        }
+      }
+    ],
+    "domain_raw": "```json\n{\n  \"kind\": \"plan\",\n  \"depth\": \"deep\",\n  \"tasks\": [\n    {\n      \"id\": \"t1\",\n      \"executor\": \"sql\",\n      \"kpi\": \"active_opportunities\",\n      \"goal\": \"Count of active deals to establish baseline\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"dimension\": null,\n      \"answer_type\": \"kpi\",\n      \"depends_on\": []\n    },\n    {\n      \"id\": \"t2\",\n      \"executor\": \"kg\",\n      \"kpi\": null,\n      \"goal\": \"Analyze stalled deals: stages, amounts, quotes, recent activities, and owner notes\",\n      \"time\": \"all time\",\n      \"scope\": \"org\",\n      \"dimension\": null,\n      \"answer_type\": \"why_breakdown\",\n      \"depends_on\": [\"t1\"]\n    }\n  ]\n}\n```",
+    "plan": {
+      "kind": "plan",
+      "depth": "deep",
+      "tasks": [
+        {
+          "id": "t1",
+          "executor": "sql",
+          "kpi": "active_opportunities",
+          "goal": "Count of active deals to establish baseline",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "kpi",
+          "depends_on": []
+        },
+        {
+          "id": "t2",
+          "executor": "kg",
+          "kpi": null,
+          "goal": "Analyze stalled deals: stages, amounts, quotes, recent activities, and owner notes",
+          "time": "all time",
+          "scope": "org",
+          "dimension": null,
+          "answer_type": "why_breakdown",
+          "depends_on": [
+            "t1"
+          ]
+        }
+      ]
+    },
+    "facts": "time_requested: all time\nperiod_applied: overall (no date filter, UTC)\ntime_status: all_time\ncatalog_kpi: active_opportunities\npopulation: open deals only\nRESULT: active_opportunities = 13\n\ntime_requested: all time\ntime_status: kg\nRESULT: 13 group(s)\ngroup_by: stage\n  deal_id=cmtlcopyi001p1a9vpooi9rs3 | title=positron \u2014 gugan s | stage=qualification | amount=123250.0 | currency=INR | forecast_category=omitted | forecast_reason=The deal is in qualification with no expected close date, zero activity, and only a draft quote, making it unrealistic to include in the current forecast. | confidence_percent=5 | last_updated=2026-10-01T11:51:25.405000000+00:00 | created_at=2026-09-03T09:56:36.330000000+00:00\n  deal_id=cmuqjbnjv0018zu5t7tloh0rn | title=kavin-crm | stage=qualification | amount=20000.0 | currency=INR | forecast_category=omitted | forecast_reason=The deal is in the qualification stage with zero activity signals or quotes, making a close date 13 days away unrealistic. The lack of any engagement evidence suggests this deal should be excluded from the current forecast. | confidence_percent=10 | last_updated=2026-10-02T13:05:35.889000000+00:00 | created_at=2026-10-02T05:40:57.211000000+00:00\n  deal_id=cmul9ofkg01vvqm0u2khw3xn6 | title=CRM | stage=propose | amount=15000.0 | currency=USD | forecast_category=omitted | forecast_reason=The deal is in the propose stage with no expected close date, zero activity, and only a draft quote, making it unrealistic to include in any current forecast roll-up. | confidence_percent=5 | last_updated=2026-10-02T13:05:37.550000000+00:00 | created_at=2026-09-28T13:12:06.352000000+00:00\n  deal_id=cmuctclg2005o1ago5703inxa | title=crm | stage=propose | amount=15000.0 | currency=USD | forecast_category=omitted | forecast_reason=The deal has no expected close date, zero activity, and only a draft quote, making it impossible to forecast realistically in the current stage. | confidence_percent=5 | last_updated=2026-10-02T13:05:38.217000000+00:00 | created_at=2026-09-22T15:12:50.835000000+00:00\n  deal_id=cmumhu64r01yaqm0up65tavy0 | title=CRM | stage=propose | amount=15000.0 | currency=USD | forecast_category=omitted | forecast_reason=The deal is in the propose stage with no expected close date, zero activity, and only a draft quote, making it unrealistic to include in the current forecast. | confidence_percent=5 | last_updated=2026-10-02T13:05:38.897000000+00:00 | created_at=2026-09-29T09:48:17.163000000+00:00\n  deal_id=cmtci1gpm000f1a860hip0f2p | title=hexaware \u2014 Hitler hit | stage=discover | amount=5000.0 | currency=INR | forecast_category=omitted | forecast_reason=No expected close date is set and there is zero activity or evidence to support the qualification stage, making it impossible to forecast. | confidence_percent=0 | last_updated=2026-10-02T15:21:36.323000000+00:00 | created_at=2026-08-28T05:16:33.370000000+00:00\n  deal_id=cmu28ch7200lbs70uocmqjzrt | title=GRT Jewellers \u2014 Nandhu A | stage=propose | amount=123.94 | currency=USD | forecast_category=omitted | forecast_reason=The deal is in the 'propose' stage but has no expected close date, zero activity, and only a draft quote, making it unrealistic to include in the current forecast. | confidence_percent=5 | last_updated=2026-10-02T13:05:42.414000000+00:00 | created_at=2026-09-15T05:27:11.630000000+00:00\n  deal_id=cmtn4ovi300a4o40ul729d1ud | title=Lakshmi P | stage=qualification | amount=0 | currency=INR | forecast_category=omitted | forecast_reason=No expected close date is set and there is zero activity or evidence to support the deal's progression, making it unrealistic to include in a forecast. | confidence_percent=0 | last_updated=2026-10-02T13:35:36.166000000+00:00 | created_at=2026-09-04T15:48:18.939000000+00:00\n  deal_id=cmu1dirbz002k1anxhf42gtz5 | title=Aspero\u2014 dpzoro Customer | stage=discover | amount=0 | currency=INR | forecast_category=omitted | forecast_reason=The deal has no expected close date, zero activity, and no evidence of engagement, making it impossible to forecast realistically. | confidence_percent=5 | last_updated=2026-09-30T06:27:23.710000000 | created_at=2026-09-14T15:04:16.605000000\n  deal_id=cmu6v7vbu005io50uh7bpe00x | title=HCL \u2014 yaswanth M G | stage=qualification | amount=0 | currency=INR | forecast_category=omitted | forecast_reason=The deal is in the qualification stage with no expected close date, zero activity, and no evidence of engagement, making it unrealistic to include in any forecast. | confidence_percent=5 | last_updated=2026-10-02T13:05:43.092000000+00:00 | created_at=2026-09-18T11:18:32.539000000+00:00\n  deal_id=cmu8k810304kmlb0u4hi6w7a4 | title=pricing | stage=propose | amount=0.0 | currency=USD | forecast_category=omitted | forecast_reason=The deal is in the propose stage but has no expected close date, zero activity, and only a draft quote with no value, making it unrealistic to include in the current forecast. | confidence_percent=5 | last_updated=2026-09-30T12:37:37.086000000+00:00 | created_at=2026-09-19T15:46:16.467000000+00:00\n  deal_id=cmucsr2pw001upg0ubbvbzhw8 | title=Lokesh deal | stage=negotiate | amount=0 | currency=INR | forecast_category=omitted | forecast_reason=The deal is in the negotiate stage but has no expected close date, zero activity, and no evidence of engagement, making it unrealistic to include in a forecast. | confidence_percent=5 | last_updated=2026-09-30T12:21:27.875000000+00:00 | created_at=2026-09-22T14:56:06.789000000+00:00\n  deal_id=cmugumk9x004fmo0ubruzr8uq | title=Netflix \u2014 Kirti Patidar | stage=discover | amount=0 | currency=INR | forecast_category=omitted | forecast_reason=The deal has no expected close date, no amount, and zero activity or evidence, making it impossible to forecast and unrealistic to include in a pipeline roll-up. | confidence_percent=0 | last_updated=2026-09-30T12:21:26.785000000+00:00 | created_at=2026-09-25T10:59:40.197000000+00:00\nkg_notes:\n### Stalled Deal Pipeline Analysis\n\nThe analysis of stalled deals identifies a total pipeline value of **\u20b9148,250.00 (INR)** and **$45,123.94 (USD)** currently flagged with forecast risk. These deals are characterized by a lack of engagement, missing close dates, and minimal documentation.\n\n| Deal Title | Stage | Amount | Currency | Confidence % |\n| :--- | :--- | :--- | :--- | :--- |\n| positron \u2014 gugan s | qualification | 123,250.00 | INR | 5% |\n| kavin-crm | qualification | 20,000.00 | INR | 10% |\n| CRM | propose | 15,000.00 | USD | 5% |\n| crm | propose | 15,000.00 | USD | 5% |\n| CRM | propose | 15,000.00 | USD | 5% |\n| hexaware \u2014 Hitler hit | discover | 5,000.00 | INR | 0% |\n| GRT Jewellers \u2014 Nandhu A | propose | 123.94 | USD | 5% |\n| Lakshmi P | qualification | 0 | INR | 0% |\n| Aspero\u2014 dpzoro Customer | discover | 0 | INR | 5% |\n| HCL \u2014 yaswanth M G | qualification | 0 | INR | 5% |\n| **Total** | | **\u20b9148,250.00 / $45,123.94** | | |\n\n### Commercial Diagnosis of Stalled Factors\n\nThe primary drivers for these stalled deals are systemic gaps in activity and documentation:\n\n*   **Zero Engagement Signals:** Across all stages\u2014from `discover` to `propose`\u2014there is a consistent pattern of zero recorded activity. Deals such as `kavin-crm` and `Aspero\u2014 dpzoro Customer` show no evidence of engagement or recent contact.\n*   **Quote and Documentation Gaps:** Several deals in the `propose` stage, including `CRM` (multiple entries) and `GRT Jewellers \u2014 Nandhu A`, are stalled because they only possess draft quotes rather than finalized versions. For $0 deals like `Lakshmi P` and `HCL \u2014 yaswanth M G`, the lack of quotes or line items prevents any meaningful progression.\n*   **Forecast Unreliability:** A significant portion of the stalled value is tied to deals with no expected close dates. This is particularly evident in `positron \u2014 gugan s` and the various `propose` stage deals, where the lack of a timeline makes them unrealistic for current forecast roll-ups.\n\n### Recommended Next Steps\n\n*   **Audit Draft Quotes:** Review the draft quotes for the three `CRM` deals and `GRT Jewellers \u2014 Nandhu A` to convert them into finalized versions and establish expected close dates.\n*   **Activity Injection:** Assign immediate follow-up tasks to the owners of `positron \u2014 gugan s` and `kavin-crm` to generate the first recorded activity signals required to move them out of the qualification stage.\n*   **Data Hygiene Cleanup:** Re-evaluate the $0 deals (`Lakshmi P`, `Aspero\u2014 dpzoro Customer`, and `HCL \u2014 yaswanth M G`) to determine if they should be moved to a \"Lost\" status or if they require immediate discovery to establish value.",
+    "grounded": true,
+    "briefing_raw": "There are 13 active opportunities currently flagged with forecast risk, representing a pipeline value of \u20b9148,250.00 (INR) and $45,123.94 (USD).\n\n| Deal Title | Stage | Amount | Currency | Confidence % |\n| :--- | :--- | :--- | :--- | :--- |\n| positron \u2014 gugan s | qualification | 123,250.00 | INR | 5% |\n| kavin-crm | qualification | 20,000.00 | INR | 10% |\n| CRM | propose | 15,000.00 | USD | 5% |\n| crm | propose | 15,000.00 | USD | 5% |\n| CRM | propose | 15,000.00 | USD | 5% |\n| hexaware \u2014 Hitler hit | discover | 5,000.00 | INR | 0% |\n| GRT Jewellers \u2014 Nandhu A | propose | 123.94 | USD | 5% |\n| Lakshmi P | qualification | 0 | INR | 0% |\n| Aspero\u2014 dpzoro Customer | discover | 0 | INR | 5% |\n| HCL \u2014 yaswanth M G | qualification | 0 | INR | 5% |\n\nStalled deals are primarily driven by three systemic factors:\n* **Zero Engagement Signals:** A consistent pattern of zero recorded activity exists across all stages, specifically noted in deals like `kavin-crm` and `Aspero\u2014 dpzoro Customer`.\n* **Quote and Documentation Gaps:** Deals in the `propose` stage, such as the multiple `CRM` entries and `GRT Jewellers \u2014 Nandhu A`, are stalled due to having only draft quotes rather than finalized versions.\n* **Forecast Unreliability:** Many deals, including `positron \u2014 gugan s`, lack expected close dates, making them impossible to include in reliable forecast roll-ups.\n\nYou should audit the draft quotes for the `CRM` deals and `GRT Jewellers \u2014 Nandhu A` to establish timelines, and assign follow-up tasks to the owners of `positron \u2014 gugan s` and `kavin-crm` to generate engagement signals."
+  }
+}

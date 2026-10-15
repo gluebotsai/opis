@@ -1,0 +1,50 @@
+# CRM pipeline — onto Opportunity / crm.deals
+module: crm_deal
+layer: domain
+depends_on: [core, cdp, crm_account]
+owned_by_spoke: crm
+usecase: Sales pipeline, win/loss, ARR on contracts.
+
+classes:
+  - id: Deal
+    extends: WorkItem
+    definition: Sales opportunity tracked through stages to won/lost.
+    properties: [name, amount, stage, closeDate]
+    classified_by: [deal.stage]
+    relations:
+      primaryContact: Contact
+      forAccount: Account
+      hasQuote: Quote
+      hasContract: Contract
+
+  - id: Contract
+    definition: Subscription or agreement with renewal.
+    properties: [arr, autoRenew, endsAt]
+    relations:
+      of: Account
+
+relations:
+  - { from: Deal, type: belongs_to, to: Account }
+  - { from: Deal, type: PRIMARY_CONTACT, to: Contact }
+  - { from: Contract, type: WITH_ACCOUNT, to: Account }
+
+actions:
+  - id: action.create_deal
+    operates_on: [Deal]
+    requires: [userConfirmed]
+  - id: action.update_deal_stage
+    operates_on: [Deal]
+    requires: [userConfirmed]
+
+metric_ids:
+  - deal_volume
+  - open_pipeline_value
+  - won_deal_rate
+  - won_deals_metric
+  - loss_rate
+  - average_deal_value
+  - average_sales_cycle_days
+  - pipeline_coverage_ratio
+  - sales_agent_win_rate
+  - active_arr
+  - contract_renewal_rate

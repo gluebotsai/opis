@@ -1,0 +1,40 @@
+# Dependencies & build artifacts
+node_modules
+**/node_modules
+dist
+**/dist
+build
+.next
+out
+*.tsbuildinfo
+
+# Env & secrets (mount via env_file at runtime)
+.env
+.env.*
+!.env.example
+backend/.env
+agents/.env
+frontend/.env.local
+
+# Git & IDE
+.git
+.gitignore
+.idea
+.vscode
+
+# Agents local runtime
+agents/.venv
+agents/data
+agents/**/__pycache__
+**/__pycache__
+
+# Legacy / demo / docs (not needed in images)
+_legacy_next
+demo
+docs
+*.md
+!deploy/README.md
+
+# Uploads & certs (use volumes in compose)
+backend/uploads
+demo/webpush-site/.certs

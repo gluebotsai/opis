@@ -1,0 +1,3 @@
+# Chat width
+
+798px is the widest a chat reply may grow. It is a ceiling, not a fixed size. When the chat panel is the wide one, center the messages and the composer and stop them at 798px. If that panel is already thinner than 798px, use the panel width and do not stretch the messages out to 798px. If the panel is wider than 798px, keep the messages at 798px in the center and leave the extra space empty on both sides. When the chat panel is the narrow one, turn the cap off and let the messages use the full width of that narrower column. Do not write 798px, max-width, or width in the reply HTML. The chat shell applies the cap.

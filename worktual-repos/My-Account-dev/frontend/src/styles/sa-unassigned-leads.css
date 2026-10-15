@@ -1,0 +1,159 @@
+/**
+ * Partner referrals awaiting assignment — admin panel + table.
+ * Assign select + Assign action stay visible; table scrolls horizontally when needed.
+ */
+
+.sa-unassigned-leads.admin-users-panel {
+  flex: 0 0 auto;
+  height: auto;
+  min-height: 0;
+}
+
+.sa-unassigned-leads__table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.sa-unassigned-leads__table {
+  min-width: 720px;
+}
+
+/* Text Assign — not 56px icon sticky */
+.sa-unassigned-leads .admin-users-table th.sa-unassigned-leads__col--actions,
+.sa-unassigned-leads .admin-users-table td.sa-unassigned-leads__col--actions,
+.sa-unassigned-leads .admin-users-table th:last-child,
+.sa-unassigned-leads .admin-users-table td:last-child {
+  background: var(--bg-surface);
+  box-shadow: -6px 0 10px rgba(11, 11, 16, 0.04);
+  max-width: none;
+  min-width: 6.5rem;
+  overflow: visible;
+  position: sticky;
+  right: 0;
+  text-overflow: clip;
+  width: 6.5rem;
+  white-space: nowrap;
+  z-index: 1;
+}
+
+.sa-unassigned-leads .admin-users-table thead th:last-child {
+  z-index: 4;
+}
+
+.sa-unassigned-leads__col--assign {
+  min-width: 14rem;
+}
+
+.sa-unassigned-leads__company {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.sa-unassigned-leads__company strong {
+  color: var(--text-primary);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sa-unassigned-leads__pill {
+  background: color-mix(in srgb, #653ae0 12%, var(--bg-surface));
+  border-radius: 999px;
+  color: #653ae0;
+  display: inline-block;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  width: fit-content;
+}
+
+.sa-unassigned-leads__select {
+  display: block;
+  min-width: 0;
+  width: 100%;
+}
+
+.sa-unassigned-leads__select select {
+  -webkit-appearance: none;
+  appearance: none;
+  background-color: var(--bg-surface);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%237E7E88' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-position: right 16px center;
+  background-repeat: no-repeat;
+  background-size: 16px 16px;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  color: var(--text-primary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.875rem;
+  min-height: 36px;
+  padding: 6px 48px 6px 16px;
+  width: 100%;
+}
+
+.sa-unassigned-leads__select select::-ms-expand {
+  display: none;
+}
+
+.sa-unassigned-leads__select select:hover {
+  background-color: var(--bg-canvas-subtle);
+  border-color: var(--border-strong);
+}
+
+.sa-unassigned-leads__select select:focus,
+.sa-unassigned-leads__select select:focus-visible {
+  border-color: #5f1fb0;
+  box-shadow: 0 0 0 3px color-mix(in srgb, #5f1fb0 18%, transparent);
+  outline: none;
+}
+
+.sa-unassigned-leads__assign {
+  background: transparent;
+  border: 0;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 4px 6px;
+}
+
+.sa-unassigned-leads__assign:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.sa-unassigned-leads__assign:disabled {
+  color: var(--text-disabled);
+  cursor: not-allowed;
+}
+
+.sa-unassigned-leads__empty {
+  align-content: center;
+  align-items: center;
+  display: grid;
+  gap: 12px;
+  grid-auto-rows: max-content;
+  justify-items: center;
+  padding: 40px 24px;
+  text-align: center;
+}
+
+.sa-unassigned-leads__empty h3 {
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.sa-unassigned-leads__empty p {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin: 0;
+  max-width: 360px;
+}
+
+.sa-unassigned-leads__empty svg {
+  color: var(--text-secondary);
+}
